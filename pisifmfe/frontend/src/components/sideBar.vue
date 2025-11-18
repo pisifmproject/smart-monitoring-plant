@@ -1,0 +1,334 @@
+<script setup lang="ts">
+import { ref, watchEffect } from "vue";
+import { useRoute, RouterLink } from "vue-router";
+
+const route = useRoute();
+
+// State untuk setiap menu utama
+const openMenus = ref<Record<string, boolean>>({
+  utility: false,
+  lvmdp: false,
+  // Siap untuk menu tambahan:
+  // production: false,
+  // packing: false,
+});
+
+const showText = ref(true);
+
+// Auto-buka dropdown ketika berada di route terkait
+watchEffect(() => {
+  const routeName = String(route.name || "");
+
+  // Buka Utility jika di lvmdp*
+  if (routeName.startsWith("lvmdp")) {
+    openMenus.value.utility = true;
+    openMenus.value.lvmdp = true;
+  }
+});
+
+// Menu struktur (nested, mudah di-extend)
+const mainMenus = [
+  {
+    id: "utility",
+    name: "Utility",
+    icon: "⚙️",
+    children: [
+      {
+        id: "lvmdp",
+        name: "LVMDP",
+        icon: "⚡",
+        children: [
+          { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1" },
+          { id: "lvmdp2", name: "LVMDP 2", routeName: "lvmdp2" },
+          { id: "lvmdp3", name: "LVMDP 3", routeName: "lvmdp3" },
+          { id: "lvmdp4", name: "LVMDP 4", routeName: "lvmdp4" },
+        ],
+      },
+      // Siap untuk submenu Utility lainnya:
+      // { id: "settings", name: "Settings", icon: "⚙️", routeName: "settings" },
+    ],
+  },
+  // Siap untuk menu tambahan:
+  // {
+  //   id: "production",
+  //   name: "Production",
+  //   icon: "🏭",
+  //   children: [
+  //     { id: "prod-line1", name: "Line 1", routeName: "prod-line1" },
+  //     { id: "prod-line2", name: "Line 2", routeName: "prod-line2" },
+  //   ],
+  // },
+  // {
+  //   id: "packing",
+  //   name: "Packing",
+  //   icon: "📦",
+  //   children: [
+  //     { id: "packing-a", name: "Zone A", routeName: "packing-a" },
+  //     { id: "packing-b", name: "Zone B", routeName: "packing-b" },
+  //   ],
+  // },
+];
+
+function toggleMenu(menuId: string) {
+  openMenus.value[menuId] = !openMenus.value[menuId];
+}
+
+function isMenuOpen(menuId: string): boolean {
+  return openMenus.value[menuId] ?? false;
+}
+</script>
+
+<template>
+  <aside class="sidebar">
+    <h2 class="sidebar-title">
+      <span class="title-icon">⚡</span>
+      <span>PISIFM</span>
+    </h2>
+
+    <nav class="menu">
+      <!-- Menu utama dengan nested structure -->
+      <template v-for="mainMenu in mainMenus" :key="mainMenu.id">
+        <!-- Level 1: Main Menu (dengan children) -->
+        <button
+          v-if="mainMenu.children"
+          class="group-trigger"
+          @click="toggleMenu(mainMenu.id)"
+          :aria-expanded="isMenuOpen(mainMenu.id) ? 'true' : 'false'"
+        >
+          <span class="flex items-center gap-2">
+            <span class="text-base">{{ mainMenu.icon }}</span>
+            <span>{{ mainMenu.name }}</span>
+          </span>
+          <span class="chev" :class="{ rot: isMenuOpen(mainMenu.id) }">▾</span>
+        </button>
+
+        <!-- Submenu Level 1 -->
+        <transition name="fade">
+          <div v-show="isMenuOpen(mainMenu.id)" class="submenu level-1">
+            <!-- Level 2: Submenu items -->
+            <template v-for="subMenu in mainMenu.children" :key="subMenu.id">
+              <!-- Jika submenu punya children lagi (nested level 2) -->
+              <button
+                v-if="subMenu.children"
+                class="group-trigger level-2"
+                @click="toggleMenu(subMenu.id)"
+                :aria-expanded="isMenuOpen(subMenu.id) ? 'true' : 'false'"
+              >
+                <span class="flex items-center gap-2">
+                  <span class="text-sm" v-if="subMenu.icon">{{
+                    subMenu.icon
+                  }}</span>
+                  <span>{{ subMenu.name }}</span>
+                </span>
+                <span class="chev" :class="{ rot: isMenuOpen(subMenu.id) }"
+                  >▾</span
+                >
+              </button>
+
+              <!-- Jika submenu adalah route (leaf node) -->
+              <RouterLink
+                v-else-if="subMenu.routeName"
+                :to="{ name: subMenu.routeName }"
+                class="submenu-item level-2"
+                active-class="active"
+              >
+                <div class="h-2.5 w-2.5 rounded-full bg-slate-600" />
+                <span>{{ subMenu.name }}</span>
+              </RouterLink>
+
+              <!-- Submenu Level 2 (nested children) -->
+              <transition name="fade">
+                <div
+                  v-show="subMenu.children && isMenuOpen(subMenu.id)"
+                  class="submenu level-2"
+                >
+                  <RouterLink
+                    v-for="childMenu in subMenu.children"
+                    :key="childMenu.id"
+                    :to="{ name: childMenu.routeName }"
+                    class="submenu-item level-3"
+                    active-class="active"
+                  >
+                    <div class="h-2.5 w-2.5 rounded-full bg-slate-600" />
+                    <span>{{ childMenu.name }}</span>
+                  </RouterLink>
+                </div>
+              </transition>
+            </template>
+          </div>
+        </transition>
+      </template>
+    </nav>
+  </aside>
+</template>
+
+<style scoped>
+.sidebar {
+  background: linear-gradient(135deg, #1a1f2e 0%, #111827 100%);
+  width: 240px;
+  min-height: 100vh;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #e2e8f0;
+  border-right: 1px solid rgba(226, 232, 240, 0.1);
+}
+
+.sidebar-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0ea5e9;
+  text-align: center;
+  margin-bottom: 16px;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.title-icon {
+  font-size: 1.5rem;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* tombol group - Level 1 (Utility, Production, Packing) */
+.group-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 1rem;
+  text-align: left;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  width: 100%;
+}
+
+.group-trigger:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Level 2: Submenu trigger (LVMDP, Settings, etc inside Utility) */
+.group-trigger.level-2 {
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: none;
+  background: rgba(255, 255, 255, 0.03);
+  margin-left: 12px;
+}
+
+.group-trigger.level-2:hover {
+  background-color: rgba(14, 165, 233, 0.1);
+}
+
+.chev {
+  transition: transform 0.2s ease;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.chev.rot {
+  transform: rotate(180deg);
+}
+
+/* submenu - container */
+.submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 12px;
+  margin-top: 6px;
+}
+
+.submenu.level-1 {
+  border-left: 2px solid rgba(14, 165, 233, 0.3);
+  padding-left: 16px;
+  margin-left: 0;
+}
+
+.submenu.level-2 {
+  border-left: 2px solid rgba(14, 165, 233, 0.2);
+  padding-left: 16px;
+}
+
+/* submenu item - leaf node (actual link) */
+.submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+/* Level 2 submenu items (direct children of Utility) */
+.submenu-item.level-2 {
+  padding: 8px 12px;
+}
+
+/* Level 3 submenu items (LVMDP 1-4, under LVMDP) */
+.submenu-item.level-3 {
+  padding: 7px 12px;
+  font-size: 0.95rem;
+  margin-left: 8px;
+}
+
+.submenu-item:hover {
+  background-color: rgba(14, 165, 233, 0.15);
+  color: #fff;
+}
+
+.submenu-item.active {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+  font-weight: 500;
+}
+
+.submenu-item :deep(.h-2\.5) {
+  transition: all 0.2s ease;
+}
+
+.submenu-item.active :deep(.h-2\.5) {
+  background-color: #fff !important;
+}
+
+/* animasi muncul */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

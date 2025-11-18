@@ -1,0 +1,14 @@
+{
+  "name": "pisifm-monorepo-helper",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix pisifmbe install && npm --prefix pisifmfe/frontend install",
+    "start:be": "npm --prefix pisifmbe run dev",
+    "start:fe": "npm --prefix pisifmfe/frontend run dev",
+    "dev": "npx concurrently \"npm --prefix pisifmbe run dev\" \"npm --prefix pisifmfe/frontend run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
+}

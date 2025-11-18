@@ -1,0 +1,459 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.User": {
+      "name": "User",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "User_email_key": {
+          "name": "User_email_key",
+          "columns": [
+            {
+              "expression": "email",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "User_id_not_null": {
+          "name": "User_id_not_null",
+          "value": "NOT NULL id"
+        },
+        "User_email_not_null": {
+          "name": "User_email_not_null",
+          "value": "NOT NULL email"
+        }
+      },
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.LVMDP_1": {
+      "name": "LVMDP_1",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "waktu": {
+          "name": "waktu",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "total_kwh": {
+          "name": "total_kwh",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cos_phi": {
+          "name": "cos_phi",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "freq": {
+          "name": "freq",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_line": {
+          "name": "avg_line_line",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_neut": {
+          "name": "avg_line_neut",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_current": {
+          "name": "avg_current",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "LVMDP_1_id_not_null": {
+          "name": "LVMDP_1_id_not_null",
+          "value": "NOT NULL id"
+        },
+        "LVMDP_1_waktu_not_null": {
+          "name": "LVMDP_1_waktu_not_null",
+          "value": "NOT NULL waktu"
+        },
+        "LVMDP_1_total_kwh_not_null": {
+          "name": "LVMDP_1_total_kwh_not_null",
+          "value": "NOT NULL total_kwh"
+        },
+        "LVMDP_1_cos_phi_not_null": {
+          "name": "LVMDP_1_cos_phi_not_null",
+          "value": "NOT NULL cos_phi"
+        },
+        "LVMDP_1_freq_not_null": {
+          "name": "LVMDP_1_freq_not_null",
+          "value": "NOT NULL freq"
+        },
+        "LVMDP_1_avg_line_line_not_null": {
+          "name": "LVMDP_1_avg_line_line_not_null",
+          "value": "NOT NULL avg_line_line"
+        },
+        "LVMDP_1_avg_line_neut_not_null": {
+          "name": "LVMDP_1_avg_line_neut_not_null",
+          "value": "NOT NULL avg_line_neut"
+        },
+        "LVMDP_1_avg_current_not_null": {
+          "name": "LVMDP_1_avg_current_not_null",
+          "value": "NOT NULL avg_current"
+        }
+      },
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.LVMDP_2": {
+      "name": "LVMDP_2",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "waktu": {
+          "name": "waktu",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "total_kwh": {
+          "name": "total_kwh",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cos_phi": {
+          "name": "cos_phi",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "freq": {
+          "name": "freq",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_line": {
+          "name": "avg_line_line",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_neut": {
+          "name": "avg_line_neut",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_current": {
+          "name": "avg_current",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "LVMDP_2_id_not_null": {
+          "name": "LVMDP_2_id_not_null",
+          "value": "NOT NULL id"
+        },
+        "LVMDP_2_waktu_not_null": {
+          "name": "LVMDP_2_waktu_not_null",
+          "value": "NOT NULL waktu"
+        },
+        "LVMDP_2_total_kwh_not_null": {
+          "name": "LVMDP_2_total_kwh_not_null",
+          "value": "NOT NULL total_kwh"
+        },
+        "LVMDP_2_cos_phi_not_null": {
+          "name": "LVMDP_2_cos_phi_not_null",
+          "value": "NOT NULL cos_phi"
+        },
+        "LVMDP_2_freq_not_null": {
+          "name": "LVMDP_2_freq_not_null",
+          "value": "NOT NULL freq"
+        },
+        "LVMDP_2_avg_line_line_not_null": {
+          "name": "LVMDP_2_avg_line_line_not_null",
+          "value": "NOT NULL avg_line_line"
+        },
+        "LVMDP_2_avg_line_neut_not_null": {
+          "name": "LVMDP_2_avg_line_neut_not_null",
+          "value": "NOT NULL avg_line_neut"
+        },
+        "LVMDP_2_avg_current_not_null": {
+          "name": "LVMDP_2_avg_current_not_null",
+          "value": "NOT NULL avg_current"
+        }
+      },
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.LVMDP_3": {
+      "name": "LVMDP_3",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "waktu": {
+          "name": "waktu",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "total_kwh": {
+          "name": "total_kwh",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cos_phi": {
+          "name": "cos_phi",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "freq": {
+          "name": "freq",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_line": {
+          "name": "avg_line_line",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_neut": {
+          "name": "avg_line_neut",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_current": {
+          "name": "avg_current",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "LVMDP_3_id_not_null": {
+          "name": "LVMDP_3_id_not_null",
+          "value": "NOT NULL id"
+        },
+        "LVMDP_3_waktu_not_null": {
+          "name": "LVMDP_3_waktu_not_null",
+          "value": "NOT NULL waktu"
+        },
+        "LVMDP_3_total_kwh_not_null": {
+          "name": "LVMDP_3_total_kwh_not_null",
+          "value": "NOT NULL total_kwh"
+        },
+        "LVMDP_3_cos_phi_not_null": {
+          "name": "LVMDP_3_cos_phi_not_null",
+          "value": "NOT NULL cos_phi"
+        },
+        "LVMDP_3_freq_not_null": {
+          "name": "LVMDP_3_freq_not_null",
+          "value": "NOT NULL freq"
+        },
+        "LVMDP_3_avg_line_line_not_null": {
+          "name": "LVMDP_3_avg_line_line_not_null",
+          "value": "NOT NULL avg_line_line"
+        },
+        "LVMDP_3_avg_line_neut_not_null": {
+          "name": "LVMDP_3_avg_line_neut_not_null",
+          "value": "NOT NULL avg_line_neut"
+        },
+        "LVMDP_3_avg_current_not_null": {
+          "name": "LVMDP_3_avg_current_not_null",
+          "value": "NOT NULL avg_current"
+        }
+      },
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.LVMDP_4": {
+      "name": "LVMDP_4",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "waktu": {
+          "name": "waktu",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "total_kwh": {
+          "name": "total_kwh",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cos_phi": {
+          "name": "cos_phi",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "freq": {
+          "name": "freq",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_line": {
+          "name": "avg_line_line",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_neut": {
+          "name": "avg_line_neut",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_current": {
+          "name": "avg_current",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "LVMDP_4_id_not_null": {
+          "name": "LVMDP_4_id_not_null",
+          "value": "NOT NULL id"
+        },
+        "LVMDP_4_waktu_not_null": {
+          "name": "LVMDP_4_waktu_not_null",
+          "value": "NOT NULL waktu"
+        },
+        "LVMDP_4_total_kwh_not_null": {
+          "name": "LVMDP_4_total_kwh_not_null",
+          "value": "NOT NULL total_kwh"
+        },
+        "LVMDP_4_cos_phi_not_null": {
+          "name": "LVMDP_4_cos_phi_not_null",
+          "value": "NOT NULL cos_phi"
+        },
+        "LVMDP_4_freq_not_null": {
+          "name": "LVMDP_4_freq_not_null",
+          "value": "NOT NULL freq"
+        },
+        "LVMDP_4_avg_line_line_not_null": {
+          "name": "LVMDP_4_avg_line_line_not_null",
+          "value": "NOT NULL avg_line_line"
+        },
+        "LVMDP_4_avg_line_neut_not_null": {
+          "name": "LVMDP_4_avg_line_neut_not_null",
+          "value": "NOT NULL avg_line_neut"
+        },
+        "LVMDP_4_avg_current_not_null": {
+          "name": "LVMDP_4_avg_current_not_null",
+          "value": "NOT NULL avg_current"
+        }
+      },
+      "policies": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {}
+  }
+}

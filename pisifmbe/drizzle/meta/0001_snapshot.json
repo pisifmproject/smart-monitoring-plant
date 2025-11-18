@@ -1,0 +1,314 @@
+{
+  "id": "fd43f7f8-471e-4306-bb6f-cb60d159e98c",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.LVMDP_1": {
+      "name": "LVMDP_1",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "waktu": {
+          "name": "waktu",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "total_kwh": {
+          "name": "total_kwh",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cos_phi": {
+          "name": "cos_phi",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "freq": {
+          "name": "freq",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_line": {
+          "name": "avg_line_line",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_neut": {
+          "name": "avg_line_neut",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_current": {
+          "name": "avg_current",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.LVMDP_2": {
+      "name": "LVMDP_2",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "waktu": {
+          "name": "waktu",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "total_kwh": {
+          "name": "total_kwh",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cos_phi": {
+          "name": "cos_phi",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "freq": {
+          "name": "freq",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_line": {
+          "name": "avg_line_line",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_neut": {
+          "name": "avg_line_neut",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_current": {
+          "name": "avg_current",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.LVMDP_3": {
+      "name": "LVMDP_3",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "waktu": {
+          "name": "waktu",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "total_kwh": {
+          "name": "total_kwh",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cos_phi": {
+          "name": "cos_phi",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "freq": {
+          "name": "freq",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_line": {
+          "name": "avg_line_line",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_neut": {
+          "name": "avg_line_neut",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_current": {
+          "name": "avg_current",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.LVMDP_4": {
+      "name": "LVMDP_4",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "waktu": {
+          "name": "waktu",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "total_kwh": {
+          "name": "total_kwh",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cos_phi": {
+          "name": "cos_phi",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "freq": {
+          "name": "freq",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_line": {
+          "name": "avg_line_line",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_line_neut": {
+          "name": "avg_line_neut",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avg_current": {
+          "name": "avg_current",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.User": {
+      "name": "User",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "User_email_key": {
+          "name": "User_email_key",
+          "columns": [
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
