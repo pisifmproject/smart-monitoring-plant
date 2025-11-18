@@ -49,24 +49,24 @@ const mainMenus = [
     ],
   },
   // Siap untuk menu tambahan:
-  // {
-  //   id: "production",
-  //   name: "Production",
-  //   icon: "🏭",
-  //   children: [
-  //     { id: "prod-line1", name: "Line 1", routeName: "prod-line1" },
-  //     { id: "prod-line2", name: "Line 2", routeName: "prod-line2" },
-  //   ],
-  // },
-  // {
-  //   id: "packing",
-  //   name: "Packing",
-  //   icon: "📦",
-  //   children: [
-  //     { id: "packing-a", name: "Zone A", routeName: "packing-a" },
-  //     { id: "packing-b", name: "Zone B", routeName: "packing-b" },
-  //   ],
-  // },
+  {
+    id: "production",
+    name: "Production",
+    icon: "🏭",
+    children: [
+        { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1" },
+
+    ],
+  },
+  {
+    id: "packing",
+    name: "Packing",
+    icon: "📦",
+    children: [
+        { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1" },
+
+    ],
+  },
 ];
 
 function toggleMenu(menuId: string) {
