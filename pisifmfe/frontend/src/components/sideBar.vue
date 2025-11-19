@@ -44,28 +44,25 @@ const mainMenus = [
           { id: "lvmdp4", name: "LVMDP 4", routeName: "lvmdp4" },
         ],
       },
-      // Siap untuk submenu Utility lainnya:
-      // { id: "settings", name: "Settings", icon: "⚙️", routeName: "settings" },
+      // {
+      //   id: "report",
+      //   name: "Daily Reports",
+      //   icon: "📄",
+      //   routeName: "dailyReport",
+      // },
     ],
   },
-  // Siap untuk menu tambahan:
   {
     id: "production",
     name: "Production",
     icon: "🏭",
-    children: [
-        { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1" },
-
-    ],
+    children: [{ id: "lvmdp2", name: "MESIN X", routeName: "lvmdp2" }],
   },
   {
     id: "packing",
     name: "Packing",
     icon: "📦",
-    children: [
-        { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1" },
-
-    ],
+    children: [{ id: "lvmdp3", name: "MESIN Y", routeName: "lvmdp3" }],
   },
 ];
 
@@ -109,14 +106,14 @@ function isMenuOpen(menuId: string): boolean {
             <template v-for="subMenu in mainMenu.children" :key="subMenu.id">
               <!-- Jika submenu punya children lagi (nested level 2) -->
               <button
-                v-if="subMenu.children"
+                v-if="(subMenu as any).children"
                 class="group-trigger level-2"
                 @click="toggleMenu(subMenu.id)"
                 :aria-expanded="isMenuOpen(subMenu.id) ? 'true' : 'false'"
               >
                 <span class="flex items-center gap-2">
-                  <span class="text-sm" v-if="subMenu.icon">{{
-                    subMenu.icon
+                  <span class="text-sm" v-if="(subMenu as any).icon">{{
+                    (subMenu as any).icon
                   }}</span>
                   <span>{{ subMenu.name }}</span>
                 </span>
@@ -127,8 +124,8 @@ function isMenuOpen(menuId: string): boolean {
 
               <!-- Jika submenu adalah route (leaf node) -->
               <RouterLink
-                v-else-if="subMenu.routeName"
-                :to="{ name: subMenu.routeName }"
+                v-else-if="(subMenu as any).routeName"
+                :to="{ name: (subMenu as any).routeName }"
                 class="submenu-item level-2"
                 active-class="active"
               >
@@ -139,11 +136,11 @@ function isMenuOpen(menuId: string): boolean {
               <!-- Submenu Level 2 (nested children) -->
               <transition name="fade">
                 <div
-                  v-show="subMenu.children && isMenuOpen(subMenu.id)"
+                  v-show="(subMenu as any).children && isMenuOpen(subMenu.id)"
                   class="submenu level-2"
                 >
                   <RouterLink
-                    v-for="childMenu in subMenu.children"
+                    v-for="childMenu in (subMenu as any).children"
                     :key="childMenu.id"
                     :to="{ name: childMenu.routeName }"
                     class="submenu-item level-3"

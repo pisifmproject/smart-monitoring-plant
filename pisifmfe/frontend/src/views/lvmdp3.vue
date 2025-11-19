@@ -4,6 +4,7 @@ import ShiftCard from "@/components/shiftCard.vue";
 import Gauge from "@/components/gaugeSimple.vue";
 import StatusBar from "@/components/statusBar.vue";
 import DailyReportTable from "@/components/dailyReportTable.vue";
+import ReportButton from "@/components/reportButton.vue";
 import { useLvmdpLive } from "@/composables/useLvmdpLive";
 import { useShiftAverages } from "@/composables/useShiftAverage";
 
@@ -14,6 +15,11 @@ const { isConnected, power, freq, cosPhi } = useLvmdpLive(3);
 <template>
   <div class="wrap">
     <div class="inner">
+      <!-- Report Button -->
+      <div class="report-button-container">
+        <ReportButton :panelId="3" />
+      </div>
+
       <!-- Shift Performance Section -->
       <div class="section-header">
         <h2 class="section-title">Shift Performance</h2>
@@ -71,7 +77,7 @@ const { isConnected, power, freq, cosPhi } = useLvmdpLive(3);
       </div>
 
       <!-- Daily Reports Table -->
-      <DailyReportTable :panelId="3" />
+      <!-- <DailyReportTable :panelId="3" /> -->
     </div>
   </div>
 </template>
@@ -160,6 +166,14 @@ const { isConnected, power, freq, cosPhi } = useLvmdpLive(3);
   .section-title {
     font-size: 1.75rem;
   }
+}
+
+/* Report Button Container */
+.report-button-container {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
 }
 
 /* Desktop: 3 kolom */

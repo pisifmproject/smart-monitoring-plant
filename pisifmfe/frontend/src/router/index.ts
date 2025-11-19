@@ -9,6 +9,7 @@ const Lvmdp1 = () => import("../views/lvmdp1.vue");
 const Lvmdp2 = () => import("../views/lvmdp2.vue");
 const Lvmdp3 = () => import("../views/lvmdp3.vue");
 const Lvmdp4 = () => import("../views/lvmdp4.vue");
+const DailyReport = () => import("../views/dailyReport.vue");
 
 export default createRouter({
   history: createWebHistory(),
@@ -22,6 +23,7 @@ export default createRouter({
         { path: "lvmdp2", name: "lvmdp2", component: Lvmdp2 },
         { path: "lvmdp3", name: "lvmdp3", component: Lvmdp3 },
         { path: "lvmdp4", name: "lvmdp4", component: Lvmdp4 },
+        { path: "daily-report", name: "dailyReport", component: DailyReport },
       ],
     },
   ],

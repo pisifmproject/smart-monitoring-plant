@@ -13,15 +13,15 @@ export type LvmdpRaw = {
 };
 
 export const api = axios.create({
-  baseURL: "/api",          // akan diproxy ke :2000 saat dev
+  baseURL: "/api", // akan diproxy ke :2000 saat dev
   withCredentials: true,
 });
 
 // ---------- LIST ----------
-export async function getLvmdp(id: 1|2|3|4): Promise<LvmdpRow[]> {
+export async function getLvmdp(id: 1 | 2 | 3 | 4): Promise<LvmdpRow[]> {
   // backend kamu masih /lvmdp1, /lvmdp2, ...
   const { data } = await api.get(`/lvmdp${id}`);
-  return Array.isArray(data) ? data : (data?.data ?? []);
+  return Array.isArray(data) ? data : data?.data ?? [];
 }
 // helper lama tetap ada biar mudah pindah
 export const getLvmdp1 = () => getLvmdp(1);
@@ -40,8 +40,10 @@ export const getLvmdp2Latest = () => getLvmdpLatest(2);
 export const getLvmdp3Latest = () => getLvmdpLatest(3);
 export const getLvmdp4Latest = () => getLvmdpLatest(4);
 
-export async function getShiftAvg(panelId: 1|2|3|4, date?: string) {
-  const path = {1:"/lvmdp1",2:"/lvmdp2",3:"/lvmdp3",4:"/lvmdp4"}[panelId];
+export async function getShiftAvg(panelId: 1 | 2 | 3 | 4, date?: string) {
+  const path = { 1: "/lvmdp1", 2: "/lvmdp2", 3: "/lvmdp3", 4: "/lvmdp4" }[
+    panelId
+  ];
   const { data } = await api.get(`${path}/shift-avg`, { params: { date } });
   return data as {
     shift1: { avgPower: number; avgCurrent: number; count: number };
@@ -59,5 +61,18 @@ export async function getDailyReportAll(panelId: 1 | 2 | 3 | 4) {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.data)) return data.data;
   if (Array.isArray(data?.data?.reports)) return data.data.reports;
+  return [];
+}
+
+// ---------- DAILY HOURLY REPORT ----------
+export async function getDailyHourly(panelId: 1 | 2 | 3 | 4, date: string) {
+  // Backend yang kita harapkan:
+  // GET /api/lvmdp1/daily-report/hourly/:date  -> Array of hourly data
+  const { data } = await api.get(
+    `/lvmdp${panelId}/daily-report/hourly/${date}`
+  );
+
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
   return [];
 }

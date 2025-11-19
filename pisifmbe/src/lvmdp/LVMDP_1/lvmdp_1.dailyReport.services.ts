@@ -4,6 +4,7 @@ import {
   getDailyReportByDate,
   getDailyReportByMonth,
   getAllDailyReports,
+  getHourlyAggregatesForDate,
 } from "./lvmdp_1.dailyReport.repository";
 import { getShiftAveragesLVMDP1 } from "./lvmdp_1.services";
 import crypto from "crypto";
@@ -103,4 +104,24 @@ export const fetchMonthlyReport = async (year: number, month: number) => {
 
 export const fetchAllDailyReports = async () => {
   return await getAllDailyReports();
+};
+
+// export const fetchHourlyAggregates = async (dateStr: string) => {
+//   if (!isValidDateFormat(dateStr)) {
+//     throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
+//   }
+//   const { getHourlyAggregatesForDate } = await import(
+//     "./lvmdp_1.dailyReport.repository"
+//   );
+//   return await getHourlyAggregatesForDate(dateStr);
+// };
+
+export const fetchHourlyAggregates = async (dateStr: string) => {
+  // validasi format YYYY-MM-DD biar aman
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!regex.test(dateStr)) {
+    throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
+  }
+
+  return await getHourlyAggregatesForDate(dateStr);
 };
