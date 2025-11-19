@@ -58,7 +58,7 @@ const step = (v: number) => {
 // }, 1000);
 
 const PORT = Number(process.env.PORT) || 2000;
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`API & WS running on http://localhost:${PORT}`);
   // start daily report scheduler (generate reports for yesterday at 00:05 every day)
   try {
