@@ -1,13 +1,48 @@
-// src/lvmdp/LVMDP_1/lvmdp_1.dailyReport.controller.ts
+// src/lvmdp/LVMDP_4/lvmdp_4.dailyReport.controller.ts
 import express from "express";
 import {
   generateAndSaveDailyReport,
   fetchDailyReport,
   fetchMonthlyReport,
   fetchAllDailyReports,
+  fetchHourlyAggregates,
 } from "./lvmdp_4.dailyReport.services";
 
 const router = express.Router();
+
+function formatLocalYMD(d: any) {
+  if (!d) return "";
+
+  // Jika sudah Date
+  if (d instanceof Date && !isNaN(d.getTime())) {
+    const year = d.getFullYear(); // pakai waktu lokal server (+07)
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  // Jika string/number: coba parsing
+  const parsed = Date.parse(String(d));
+  if (!Number.isNaN(parsed)) {
+    const dt = new Date(parsed);
+    const year = dt.getFullYear();
+    const month = String(dt.getMonth() + 1).padStart(2, "0");
+    const day = String(dt.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  // Jika objek dengan property reportDate atau tanggal
+  if (typeof d === "object") {
+    const maybe = d.reportDate ?? d.tanggal ?? null;
+    if (maybe) return formatLocalYMD(maybe);
+  }
+
+  // fallback: coba ekstrak yyyy-mm-dd dari string
+  const m = String(d).match(/(\d{4}-\d{2}-\d{2})/);
+  if (m) return m[1];
+
+  return String(d);
+}
 
 /**
  * GET /api/lvmdp1/daily-report/all
@@ -19,15 +54,23 @@ const router = express.Router();
 router.get("/all", async (_req, res) => {
   try {
     const reports = await fetchAllDailyReports();
+
+    const data = reports.map((r) => ({
+      ...r,
+      // field tambahan khusus buat frontend
+      date: formatLocalYMD(r.reportDate as Date),
+    }));
+
+    // kirim data yang sudah dinormalisasi
     res.json({
       success: true,
-      data: reports,
+      data,
     });
   } catch (err: any) {
-    console.error("fetchAllDailyReports error:", err);
+    // console.error("fetchAllDailyReports error:", err);
     res.status(500).json({
       success: false,
-      message: err?.message || "Failed to load daily reports",
+      message: err?.message ?? "Failed get daily reports",
     });
   }
 });
@@ -44,7 +87,8 @@ router.get("/month", async (req, res) => {
     if (!year || !month) {
       return res.status(400).json({
         success: false,
-        message: "Query year dan month wajib diisi. Contoh: ?year=2025&month=11",
+        message:
+          "Query year dan month wajib diisi. Contoh: ?year=2025&month=11",
       });
     }
 
@@ -62,6 +106,49 @@ router.get("/month", async (req, res) => {
     });
   }
 });
+
+/**
+ * GET /api/lvmdp1/daily-report/hourly/:date
+ * :date = 'YYYY-MM-DD'
+ * Ambil hourly aggregates untuk satu hari
+ */
+// router.get("/hourly/:date", async (req, res) => {
+//   try {
+//     const dateStr = req.params.date;
+//     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+//     if (!dateRegex.test(dateStr)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `Invalid date format: ${dateStr}. Expected YYYY-MM-DD`,
+//       });
+//     }
+
+//     const hourlyData = await fetchHourlyAggregates(dateStr);
+
+//     res.json({
+//       success: true,
+//       data: hourlyData,
+//     });
+//   } catch (err: any) {
+//     console.error("fetchHourlyAggregates error:", err);
+//     res.status(500).json({
+//       success: false,
+//       message: err?.message || "Failed to load hourly data",
+//     });
+//   }
+// });
+
+router.get("/hourly/:date", async (req, res) => {
+  try {
+    const { date } = req.params; // 'YYYY-MM-DD'
+    const rows = await fetchHourlyAggregates(date);
+    res.json(rows);
+  } catch (err: any) {
+    console.error("fetchHourlyAggregates error:", err);
+    res.status(500).json({ message: err.message || "Internal server error" });
+  }
+});
+
 
 /**
  * GET /api/lvmdp1/daily-report/:date

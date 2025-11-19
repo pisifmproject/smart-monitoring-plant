@@ -5,6 +5,7 @@ import {
   fetchDailyReport,
   fetchMonthlyReport,
   fetchAllDailyReports,
+  fetchHourlyAggregates,
 } from "./lvmdp_1.dailyReport.services";
 
 const router = express.Router();
@@ -105,6 +106,49 @@ router.get("/month", async (req, res) => {
     });
   }
 });
+
+/**
+ * GET /api/lvmdp1/daily-report/hourly/:date
+ * :date = 'YYYY-MM-DD'
+ * Ambil hourly aggregates untuk satu hari
+ */
+// router.get("/hourly/:date", async (req, res) => {
+//   try {
+//     const dateStr = req.params.date;
+//     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+//     if (!dateRegex.test(dateStr)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `Invalid date format: ${dateStr}. Expected YYYY-MM-DD`,
+//       });
+//     }
+
+//     const hourlyData = await fetchHourlyAggregates(dateStr);
+
+//     res.json({
+//       success: true,
+//       data: hourlyData,
+//     });
+//   } catch (err: any) {
+//     console.error("fetchHourlyAggregates error:", err);
+//     res.status(500).json({
+//       success: false,
+//       message: err?.message || "Failed to load hourly data",
+//     });
+//   }
+// });
+
+router.get("/hourly/:date", async (req, res) => {
+  try {
+    const { date } = req.params; // 'YYYY-MM-DD'
+    const rows = await fetchHourlyAggregates(date);
+    res.json(rows);
+  } catch (err: any) {
+    console.error("fetchHourlyAggregates error:", err);
+    res.status(500).json({ message: err.message || "Internal server error" });
+  }
+});
+
 
 /**
  * GET /api/lvmdp1/daily-report/:date

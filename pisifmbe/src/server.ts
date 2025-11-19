@@ -27,7 +27,6 @@
 import http from "http";
 import app from "./index";
 import { initSocket, io } from "./socket";
-import { roomFor } from "./socket"; // <- pakai helper roomFor
 import { initDailyReportScheduler } from "./cron/dailyReportScheduler";
 
 const server = http.createServer(app);

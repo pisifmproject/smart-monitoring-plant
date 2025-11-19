@@ -11,16 +11,16 @@ export default defineConfig({
   },
   server: {
     host: "0.0.0.0",
-    port: 5173,
+    port: 30,
     proxy: {
       "/api": {
         target: "http://localhost:2000", // sesuaikan dengan PORT backend
-        changeOrigin: true
+        changeOrigin: true,
       },
       "/socket.io": {
         target: "http://localhost:2000", // sesuaikan dengan PORT backend
-        ws: true
-      }
-    }
-  }
+        ws: true,
+      },
+    },
+  },
 });
