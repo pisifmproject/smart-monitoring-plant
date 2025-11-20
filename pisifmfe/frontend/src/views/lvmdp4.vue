@@ -77,7 +77,7 @@ const { isConnected, power, freq, cosPhi } = useLvmdpLive(4);
       </div>
 
       <!-- Daily Reports Table -->
-      <!-- <DailyReportTable :panelId="4" /> -->
+      <!-- <DailyReportTable :panelId="3" /> -->
     </div>
   </div>
 </template>

@@ -166,6 +166,113 @@ watch(selectedDate, () => {
   loadHourlyReports();
 });
 
+// CSV Export functions
+function escapeCSV(value: any): string {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function generateShiftCSV(): string {
+  const headers = [
+    "LVMDP",
+    "Tanggal",
+    "Shift",
+    "Total kWh",
+    "Avg kWh",
+    "Avg Current (A)",
+    "Power Factor",
+  ];
+
+  const rows = shiftReports.value.map((row) => [
+    `LVMDP ${panelId}`,
+    formatDate(selectedDate.value),
+    `Shift ${row.shift}`,
+    row.totalKwh,
+    row.avgKwh,
+    row.iavg,
+    row.cosPhi,
+  ]);
+
+  const csvContent = [
+    headers.map(escapeCSV).join(","),
+    ...rows.map((row) => row.map(escapeCSV).join(",")),
+  ].join("\n");
+
+  return csvContent;
+}
+
+function generateHourlyCSV(): string {
+  const headers = [
+    "LVMDP",
+    "Tanggal",
+    "Waktu",
+    "Total kWh",
+    "Avg kWh",
+    "Power Factor",
+    "Avg Current (A)",
+  ];
+
+  const rows = hourlyReports.value.map((row) => [
+    `LVMDP ${panelId}`,
+    formatDate(selectedDate.value),
+    formatTime(row.hour),
+    row.totalKwh,
+    row.avgKwh,
+    row.cosPhi,
+    row.avgCurrent,
+  ]);
+
+  const csvContent = [
+    headers.map(escapeCSV).join(","),
+    ...rows.map((row) => row.map(escapeCSV).join(",")),
+  ].join("\n");
+
+  return csvContent;
+}
+
+function downloadCSV(content: string, filename: string) {
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function downloadByDate() {
+  const dateFormatted = selectedDate.value.replace(/-/g, "-");
+  const shiftCSV = generateShiftCSV();
+  const hourlyCSV = generateHourlyCSV();
+
+  downloadCSV(shiftCSV, `LVMDP${panelId}_ShiftReport_${dateFormatted}.csv`);
+  setTimeout(() => {
+    downloadCSV(hourlyCSV, `LVMDP${panelId}_HourlyReport_${dateFormatted}.csv`);
+  }, 100);
+}
+
+function downloadByMonth() {
+  const [year, month] = selectedDate.value.split("-");
+  const monthFormatted = `${year}-${month}`;
+  // This would require fetching monthly data - for now we'll just use current data
+  const shiftCSV = generateShiftCSV();
+  const hourlyCSV = generateHourlyCSV();
+
+  downloadCSV(shiftCSV, `LVMDP${panelId}_ShiftReport_${monthFormatted}.csv`);
+  setTimeout(() => {
+    downloadCSV(
+      hourlyCSV,
+      `LVMDP${panelId}_HourlyReport_${monthFormatted}.csv`
+    );
+  }, 100);
+}
+
 onMounted(() => {
   loadShiftReports();
   loadHourlyReports();
@@ -182,16 +289,44 @@ onMounted(() => {
             <h1 class="page-title">Daily Report</h1>
             <p class="page-subtitle">LVMDP {{ panelId }}</p>
           </div>
-          <div class="date-picker-group">
-            <label class="date-label">Select Date:</label>
-            <input
-              v-model="selectedDate"
-              type="date"
-              :min="minDate"
-              :max="maxDate"
-              class="date-input"
-            />
-            <span class="date-display">{{ formatDate(selectedDate) }}</span>
+          <div class="header-controls">
+            <div class="date-picker-group">
+              <label class="date-label">Select Date:</label>
+              <input
+                v-model="selectedDate"
+                type="date"
+                :min="minDate"
+                :max="maxDate"
+                class="date-input"
+              />
+              <span class="date-display">{{ formatDate(selectedDate) }}</span>
+            </div>
+
+            <!-- Download Dropdown -->
+            <div class="download-menu">
+              <button class="download-button" title="Download as CSV">
+                <span class="download-icon">📥</span>
+                <span class="download-text">Download</span>
+              </button>
+              <div class="download-dropdown">
+                <button
+                  class="dropdown-item"
+                  @click="downloadByDate"
+                  title="Download data for selected date"
+                >
+                  <span class="icon">📅</span>
+                  <span>By Date</span>
+                </button>
+                <button
+                  class="dropdown-item"
+                  @click="downloadByMonth"
+                  title="Download data for selected month"
+                >
+                  <span class="icon">📆</span>
+                  <span>By Month</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -258,8 +393,8 @@ onMounted(() => {
                   <th>Time</th>
                   <th>Total kWh</th>
                   <th>Avg kWh</th>
-                  <th>Power Factor</th>
                   <th>Avg Current (A)</th>
+                  <th>Power Factor</th>
                 </tr>
               </thead>
               <tbody>
@@ -271,8 +406,8 @@ onMounted(() => {
                   <td class="time">{{ formatTime(row.hour) }}</td>
                   <td class="numeric">{{ formatNumber(row.totalKwh) }}</td>
                   <td class="numeric">{{ formatNumber(row.avgKwh) }}</td>
-                  <td class="numeric">{{ formatNumber(row.cosPhi) }}</td>
                   <td class="numeric">{{ formatNumber(row.avgCurrent) }}</td>
+                  <td class="numeric">{{ formatNumber(row.cosPhi) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -379,6 +514,95 @@ onMounted(() => {
   font-size: 0.9rem;
   opacity: 0.85;
   font-weight: 500;
+}
+
+/* Header Controls */
+.header-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Download Menu */
+.download-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.download-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.download-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.download-icon {
+  font-size: 1.1rem;
+}
+
+.download-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  margin-top: 8px;
+  min-width: 180px;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.download-menu:hover .download-dropdown {
+  display: flex;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: #1e293b;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.dropdown-item:hover {
+  background: #f1f5f9;
+  color: #0ea5e9;
+}
+
+.dropdown-item:first-child {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dropdown-item .icon {
+  font-size: 1rem;
 }
 
 /* Tabs */

@@ -85,44 +85,47 @@ const getShiftAveragesLVMDP4 = async (dateStr?: string) => {
   return out;
 };
 
+/**
+ * Ambil hourly aggregates untuk satu hari, dihitung dari raw data
+ * Konsisten dengan metode shift calculation
+ */
 const getHourlyAveragesLVMDP4 = async (dateStr?: string) => {
   const today = dateStr ?? new Date().toISOString().slice(0, 10);
-  const allRows = await findLVMDPs();
+  const allRows = await getAllLVMDPs();
 
-  // Group by hour (local +07:00 timezone)
+  // Kelompokkan per jam
   const hourlyMap = new Map<string, any[]>();
 
   for (const r of allRows) {
     const t: Date = r.waktu instanceof Date ? r.waktu : new Date(r.waktu);
-    // Convert UTC to local +07:00
-    const localTime = new Date(t.getTime() + 7 * 60 * 60 * 1000);
-    const dateOnly = localTime.toISOString().slice(0, 10);
+    const rowDateStr = new Intl.DateTimeFormat("sv-SE").format(t); // YYYY-MM-DD
 
-    // Only include rows from the requested date
-    if (dateOnly !== today) continue;
+    if (rowDateStr !== today) continue;
 
-    const hour = String(localTime.getHours()).padStart(2, "0");
-    const hourKey = `${hour}:00`;
+    // Ambil jam (format: HH:00)
+    const hourStr = `${String(t.getHours()).padStart(2, "0")}:00`;
+    const key = `${today}T${hourStr}`;
 
-    if (!hourlyMap.has(hourKey)) {
-      hourlyMap.set(hourKey, []);
+    if (!hourlyMap.has(key)) {
+      hourlyMap.set(key, []);
     }
-    hourlyMap.get(hourKey)!.push(r);
+    hourlyMap.get(key)!.push(r);
   }
 
-  // Compute averages for each hour
-  const hours = Array.from(hourlyMap.keys()).sort();
-  const result = hours.map((hour) => {
-    const rows = hourlyMap.get(hour)!;
-    const avg = computeAverages(rows);
-    return {
-      hour,
-      totalKwh: avg.totalKwh, // Sum of kWh for this hour
-      avgKwh: avg.avgKwh, // Average kWh
-      avgCurrent: avg.avgCurrent,
-      cosPhi: avg.avgCosPhi, // Average power factor
-    };
-  });
+  // Compute averages per jam
+  const result = Array.from(hourlyMap.entries())
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    .map(([hour, rows]) => {
+      const avg = computeAverages(rows);
+      return {
+        hour: new Date(hour),
+        totalKwh: avg.totalKwh, // Sum of kWh for this hour
+        avgKwh: avg.avgKwh, // Average kWh
+        avgCurrent: avg.avgCurrent,
+        cosPhi: avg.avgCosPhi, // Average power factor
+        count: avg.count,
+      };
+    });
 
   return result;
 };
