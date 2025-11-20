@@ -26,8 +26,8 @@ const loadingHourly = ref(false);
 const errorShift = ref<string | null>(null);
 const errorHourly = ref<string | null>(null);
 
-// Local storage cache
-const cacheKey = (date: string) => `lvmdp_${panelId}_hourly_v2_${date}`;
+// Local storage cache - v4: updated hourly calculation to use raw data
+const cacheKey = (date: string) => `lvmdp_${panelId}_hourly_v4_${date}`;
 
 const numberFormatter = new Intl.NumberFormat("id-ID", {
   minimumFractionDigits: 2,
@@ -85,31 +85,36 @@ async function loadShiftReports() {
         shiftReports.value = [
           {
             shift: 1,
-            kwh: report.shift1AvgKwh || 0,
+            totalKwh: report.shift1TotalKwh || 0,
+            avgKwh: report.shift1AvgKwh || 0,
             iavg: report.shift1AvgCurrent || 0,
+            cosPhi: report.shift1CosPhi || 0,
           },
           {
             shift: 2,
-            kwh: report.shift2AvgKwh || 0,
+            totalKwh: report.shift2TotalKwh || 0,
+            avgKwh: report.shift2AvgKwh || 0,
             iavg: report.shift2AvgCurrent || 0,
+            cosPhi: report.shift2CosPhi || 0,
           },
           {
             shift: 3,
-            kwh: report.shift3AvgKwh || 0,
+            totalKwh: report.shift3TotalKwh || 0,
+            avgKwh: report.shift3AvgKwh || 0,
             iavg: report.shift3AvgCurrent || 0,
+            cosPhi: report.shift3CosPhi || 0,
           },
         ];
       } else {
         shiftReports.value = [
-          { shift: 1, kwh: 0, iavg: 0 },
-          { shift: 2, kwh: 0, iavg: 0 },
-          { shift: 3, kwh: 0, iavg: 0 },
+          { shift: 1, totalKwh: 0, avgKwh: 0, iavg: 0, cosPhi: 0 },
+          { shift: 2, totalKwh: 0, avgKwh: 0, iavg: 0, cosPhi: 0 },
+          { shift: 3, totalKwh: 0, avgKwh: 0, iavg: 0, cosPhi: 0 },
         ];
       }
     }
   } catch (err) {
     errorShift.value = String(err);
-    console.error("Failed to load shift reports:", err);
   } finally {
     loadingShift.value = false;
   }
@@ -134,8 +139,10 @@ async function loadHourlyReports() {
       const normalized = data.map((row: any) => ({
         hour: row.hour,
         totalKwh: row.totalKwh ?? row.avg_total_kwh ?? row.total_kwh ?? 0,
+        avgKwh: row.avgKwh ?? row.avg_kwh ?? 0,
         cosPhi: row.cosPhi ?? row.avg_cos_phi ?? row.cos_phi ?? 0,
-        avgCurrent: row.avgCurrent ?? row.avg_avg_current ?? row.avg_current ?? 0,
+        avgCurrent:
+          row.avgCurrent ?? row.avg_avg_current ?? row.avg_current ?? 0,
       }));
 
       hourlyReports.value = normalized;
@@ -148,7 +155,6 @@ async function loadHourlyReports() {
     }
   } catch (err) {
     errorHourly.value = String(err);
-    console.error("Failed to load hourly reports:", err);
   } finally {
     loadingHourly.value = false;
   }
@@ -216,7 +222,9 @@ onMounted(() => {
                 <tr>
                   <th>Shift</th>
                   <th>Total kWh</th>
+                  <th>Avg kWh</th>
                   <th>Avg Current (A)</th>
+                  <th>Power Factor</th>
                 </tr>
               </thead>
               <tbody>
@@ -226,8 +234,10 @@ onMounted(() => {
                   class="shift-row"
                 >
                   <td class="shift-name">SHIFT {{ row.shift }}</td>
-                  <td class="numeric">{{ formatNumber(row.kwh) }}</td>
+                  <td class="numeric">{{ formatNumber(row.totalKwh) }}</td>
+                  <td class="numeric">{{ formatNumber(row.avgKwh) }}</td>
                   <td class="numeric">{{ formatNumber(row.iavg) }}</td>
+                  <td class="numeric">{{ formatNumber(row.cosPhi) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -247,6 +257,7 @@ onMounted(() => {
                 <tr>
                   <th>Time</th>
                   <th>Total kWh</th>
+                  <th>Avg kWh</th>
                   <th>Power Factor</th>
                   <th>Avg Current (A)</th>
                 </tr>
@@ -259,6 +270,7 @@ onMounted(() => {
                 >
                   <td class="time">{{ formatTime(row.hour) }}</td>
                   <td class="numeric">{{ formatNumber(row.totalKwh) }}</td>
+                  <td class="numeric">{{ formatNumber(row.avgKwh) }}</td>
                   <td class="numeric">{{ formatNumber(row.cosPhi) }}</td>
                   <td class="numeric">{{ formatNumber(row.avgCurrent) }}</td>
                 </tr>

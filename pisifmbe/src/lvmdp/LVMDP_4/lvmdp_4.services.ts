@@ -12,8 +12,10 @@ const SHIFT = [
 
 type ShiftAvg = {
   count: number;
-  avgKwh: number;
+  totalKwh: number; // Sum of all kWh
+  avgKwh: number; // Average of kWh
   avgCurrent: number;
+  avgCosPhi: number; // Average of power factor
 };
 
 /**
@@ -38,20 +40,25 @@ function makeRange(dateStr: string, startHHMM: string, endHHMM: string) {
 function computeAverages(rows: Array<any>): ShiftAvg {
   let sumKwh = 0;
   let sumI = 0;
+  let sumCosPhi = 0;
   let n = 0;
 
   for (const r of rows) {
     const kwh = Number(r.totalKwh) || 0;
     const I = Number(r.avgCurrent) || 0;
+    const cosPhi = Number(r.cosPhi) || 0;
     sumKwh += kwh;
     sumI += I;
+    sumCosPhi += cosPhi;
     n++;
   }
 
   return {
     count: n,
-    avgKwh: n ? sumKwh / n : 0,
+    totalKwh: sumKwh, // Sum of all kWh
+    avgKwh: n ? sumKwh / n : 0, // Average of kWh
     avgCurrent: n ? sumI / n : 0,
+    avgCosPhi: n ? sumCosPhi / n : 0, // Average power factor
   };
 }
 
@@ -72,13 +79,6 @@ const getShiftAveragesLVMDP4 = async (dateStr?: string) => {
       return inRange(t, start, end);
     });
 
-    console.log(
-      `[SHIFT ${
-        s.key
-      }] Date: ${today}, TimeRange: ${start.toISOString()} ~ ${end.toISOString()}, Found ${
-        rows.length
-      } rows`
-    );
     out[s.key] = computeAverages(rows);
   }
 
@@ -117,9 +117,10 @@ const getHourlyAveragesLVMDP4 = async (dateStr?: string) => {
     const avg = computeAverages(rows);
     return {
       hour,
-      totalKwh: avg.avgKwh,
+      totalKwh: avg.totalKwh, // Sum of kWh for this hour
+      avgKwh: avg.avgKwh, // Average kWh
       avgCurrent: avg.avgCurrent,
-      cosPhi: 0,
+      cosPhi: avg.avgCosPhi, // Average power factor
     };
   });
 

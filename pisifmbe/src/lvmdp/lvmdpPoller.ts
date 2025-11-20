@@ -36,8 +36,6 @@ export function startLvmdpPolling(
   // kalau sudah jalan, jangan start dua kali
   if (timers[panelId]) return;
 
-  console.log(`[LVMDP ${panelId}] polling start (${intervalMs} ms)`);
-
   timers[panelId] = setInterval(async () => {
     try {
       const row = await fetchLatest();
@@ -54,20 +52,18 @@ export function startLvmdpPolling(
       lastKey[panelId] = key;
 
       // emit ke room socket: "lvmdp:raw"
-      io()
-        .to(roomFor(panelId))
-        .emit("lvmdp:raw", {
-          panelId,
-          waktu: row.waktu,
-          totalKwh: row.totalKwh,
-          cosPhi: row.cosPhi,
-          freq: row.freq,
-          avgLineLine: row.avgLineLine,
-          avgLineNeut: row.avgLineNeut,
-          avgCurrent: row.avgCurrent,
-        });
+      io().to(roomFor(panelId)).emit("lvmdp:raw", {
+        panelId,
+        waktu: row.waktu,
+        totalKwh: row.totalKwh,
+        cosPhi: row.cosPhi,
+        freq: row.freq,
+        avgLineLine: row.avgLineLine,
+        avgLineNeut: row.avgLineNeut,
+        avgCurrent: row.avgCurrent,
+      });
     } catch (err) {
-      console.error(`[LVMDP ${panelId}] polling error`, err);
+      // silently handle polling errors
     }
   }, intervalMs);
 }
@@ -79,5 +75,4 @@ export function stopLvmdpPolling(panelId: number) {
   clearInterval(t);
   timers[panelId] = null;
   lastKey[panelId] = null;
-  console.log(`[LVMDP ${panelId}] polling stopped`);
 }

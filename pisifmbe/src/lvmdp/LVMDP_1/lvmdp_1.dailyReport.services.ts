@@ -6,7 +6,10 @@ import {
   getAllDailyReports,
   getHourlyAggregatesForDate,
 } from "./lvmdp_1.dailyReport.repository";
-import { getShiftAveragesLVMDP1 } from "./lvmdp_1.services";
+import {
+  getShiftAveragesLVMDP1,
+  getHourlyAveragesLVMDP1,
+} from "./lvmdp_1.services";
 import crypto from "crypto";
 
 /* ===========================
@@ -123,5 +126,5 @@ export const fetchHourlyAggregates = async (dateStr: string) => {
     throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
   }
 
-  return await getHourlyAggregatesForDate(dateStr);
+  return await getHourlyAveragesLVMDP1(dateStr);
 };

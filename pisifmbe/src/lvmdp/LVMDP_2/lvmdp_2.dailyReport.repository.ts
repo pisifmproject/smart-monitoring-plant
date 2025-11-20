@@ -167,7 +167,7 @@ export const getHourlyAggregatesForDate = async (dateStr: string) => {
     sql`
       SELECT
         DATE_TRUNC('hour', waktu AT TIME ZONE 'Asia/Jakarta') AS hour,
-        AVG(CAST(total_kwh AS FLOAT)) AS total_kwh,
+        AVG(total_kwh)::float AS total_kwh,
         AVG(cos_phi)::float     AS cos_phi,
         AVG(avg_current)::float AS avg_current
       FROM public.v_lvmdp_2

@@ -58,9 +58,6 @@ router.get("/all", async (req, res) => {
     // Jika belum ada data sama sekali, generate on-the-fly dari raw data
     if (reports.length === 0) {
       try {
-        console.log(
-          `[AUTO-GEN] No reports found, computing on-the-fly for recent dates`
-        );
         const { getShiftAveragesLVMDP1 } = await import("./lvmdp_1.services");
 
         // Generate for last 30 days
@@ -79,12 +76,18 @@ router.get("/all", async (req, res) => {
             computedReports.push({
               reportDate: dateStr,
               date: dateStr,
+              shift1TotalKwh: shifts.shift1?.totalKwh || 0,
               shift1AvgKwh: shifts.shift1?.avgKwh || 0,
               shift1AvgCurrent: shifts.shift1?.avgCurrent || 0,
+              shift1CosPhi: shifts.shift1?.avgCosPhi || 0,
+              shift2TotalKwh: shifts.shift2?.totalKwh || 0,
               shift2AvgKwh: shifts.shift2?.avgKwh || 0,
               shift2AvgCurrent: shifts.shift2?.avgCurrent || 0,
+              shift2CosPhi: shifts.shift2?.avgCosPhi || 0,
+              shift3TotalKwh: shifts.shift3?.totalKwh || 0,
               shift3AvgKwh: shifts.shift3?.avgKwh || 0,
               shift3AvgCurrent: shifts.shift3?.avgCurrent || 0,
+              shift3CosPhi: shifts.shift3?.avgCosPhi || 0,
             });
           } catch (e) {
             // skip error dates
@@ -96,13 +99,19 @@ router.get("/all", async (req, res) => {
           data: computedReports,
         });
       } catch (genErr) {
-        console.error(`[AUTO-GEN] Failed to compute on-the-fly:`, genErr);
         // lanjut dengan empty array
       }
     }
 
     const data = reports.map((r) => ({
       ...r,
+      // Compute totalKwh from avgKwh * count
+      shift1TotalKwh: (r.shift1AvgKwh || 0) * (r.shift1Count || 1),
+      shift1CosPhi: 0, // Will be calculated fresh from raw data on-the-fly if needed
+      shift2TotalKwh: (r.shift2AvgKwh || 0) * (r.shift2Count || 1),
+      shift2CosPhi: 0,
+      shift3TotalKwh: (r.shift3AvgKwh || 0) * (r.shift3Count || 1),
+      shift3CosPhi: 0,
       // field tambahan khusus buat frontend
       date: formatLocalYMD((r.reportDate as any) || r.reportDate),
     }));
@@ -145,7 +154,6 @@ router.get("/month", async (req, res) => {
       data: reports,
     });
   } catch (err: any) {
-    console.error("fetchMonthlyReport error:", err);
     res.status(500).json({
       success: false,
       message: err?.message || "Failed to load monthly report",
@@ -196,14 +204,14 @@ router.get("/hourly/:date", async (req, res) => {
     // Format untuk frontend
     const formatted = hourlyData.map((h) => ({
       hour: h.hour,
-      total_kwh: h.total_kwh,
-      cos_phi: h.cos_phi || 0,
-      avg_current: h.avg_current,
+      totalKwh: h.totalKwh,
+      avgKwh: h.avgKwh,
+      cosPhi: h.cosPhi || 0,
+      avgCurrent: h.avgCurrent,
     }));
 
     res.json(formatted);
   } catch (err: any) {
-    console.error("getHourlyAveragesLVMDP1 error:", err);
     res.status(500).json({ message: err.message || "Internal server error" });
   }
 });
@@ -240,7 +248,6 @@ router.get("/:date", async (req, res) => {
       data: first,
     });
   } catch (err: any) {
-    console.error("fetchDailyReport error:", err);
     res.status(500).json({
       success: false,
       message: err?.message || "Failed to load daily report",
@@ -278,7 +285,6 @@ router.post("/generate", async (req, res) => {
       data: Array.isArray(saved) ? saved[0] : saved,
     });
   } catch (err: any) {
-    console.error("generateAndSaveDailyReport error:", err);
     res.status(500).json({
       success: false,
       message: err?.message || "Failed to generate daily report",
