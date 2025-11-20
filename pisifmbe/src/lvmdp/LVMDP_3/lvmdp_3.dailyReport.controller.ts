@@ -51,14 +51,60 @@ function formatLocalYMD(d: any) {
  * NOTE: route /all HARUS di atas "/:date" supaya "all"
  * tidak masuk ke param :date.
  */
-router.get("/all", async (_req, res) => {
+router.get("/all", async (req, res) => {
   try {
-    const reports = await fetchAllDailyReports();
+    let reports = await fetchAllDailyReports();
+
+    // Jika belum ada data sama sekali, generate on-the-fly dari raw data
+    if (reports.length === 0) {
+      try {
+        console.log(
+          `[AUTO-GEN] No reports found, computing on-the-fly for recent dates`
+        );
+        const { getShiftAveragesLVMDP3 } = await import("./lvmdp_3.services");
+
+        // Generate for last 30 days
+        const dates = [];
+        for (let i = 0; i < 30; i++) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dateStr = new Intl.DateTimeFormat("sv-SE").format(d);
+          dates.push(dateStr);
+        }
+
+        const computedReports = [];
+        for (const dateStr of dates) {
+          try {
+            const shifts = await getShiftAveragesLVMDP3(dateStr);
+            computedReports.push({
+              reportDate: dateStr,
+              date: dateStr,
+              shift1AvgKwh: shifts.shift1?.avgKwh || 0,
+              shift1AvgCurrent: shifts.shift1?.avgCurrent || 0,
+              shift2AvgKwh: shifts.shift2?.avgKwh || 0,
+              shift2AvgCurrent: shifts.shift2?.avgCurrent || 0,
+              shift3AvgKwh: shifts.shift3?.avgKwh || 0,
+              shift3AvgCurrent: shifts.shift3?.avgCurrent || 0,
+            });
+          } catch (e) {
+            // skip error dates
+          }
+        }
+
+        return res.json({
+          success: true,
+          data: computedReports,
+        });
+      } catch (genErr) {
+        console.error(`[AUTO-GEN] Failed to compute on-the-fly:`, genErr);
+        // lanjut dengan empty array
+      }
+    }
 
     const data = reports.map((r) => ({
       ...r,
       // field tambahan khusus buat frontend
-      date: formatLocalYMD(r.reportDate as Date),
+      date: formatLocalYMD((r.reportDate as any) || r.reportDate),
     }));
 
     // kirim data yang sudah dinormalisasi
@@ -141,6 +187,22 @@ router.get("/month", async (req, res) => {
 router.get("/hourly/:date", async (req, res) => {
   try {
     const { date } = req.params; // 'YYYY-MM-DD'
+
+    // Auto-generate shift report untuk tanggal ini kalau belum ada
+    const { getDailyReportByDate } = await import(
+      "./lvmdp_3.dailyReport.repository"
+    );
+    const existing = await getDailyReportByDate(new Date(date));
+    if (!existing || existing.length === 0) {
+      try {
+        console.log(`[AUTO-GEN-HOURLY] Generating shift report for ${date}`);
+        await generateAndSaveDailyReport(date);
+      } catch (genErr) {
+        console.error(`[AUTO-GEN-HOURLY] Failed:`, genErr);
+        // lanjut, tidak perlu error
+      }
+    }
+
     const rows = await fetchHourlyAggregates(date);
     res.json(rows);
   } catch (err: any) {
@@ -148,7 +210,6 @@ router.get("/hourly/:date", async (req, res) => {
     res.status(500).json({ message: err.message || "Internal server error" });
   }
 });
-
 
 /**
  * GET /api/lvmdp1/daily-report/:date

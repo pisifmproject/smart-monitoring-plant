@@ -84,4 +84,46 @@ const getShiftAveragesLVMDP4 = async (dateStr?: string) => {
 
   return out;
 };
-export { getAllLVMDPs, getShiftAveragesLVMDP4 };
+
+const getHourlyAveragesLVMDP4 = async (dateStr?: string) => {
+  const today = dateStr ?? new Date().toISOString().slice(0, 10);
+  const allRows = await findLVMDPs();
+
+  // Group by hour (local +07:00 timezone)
+  const hourlyMap = new Map<string, any[]>();
+
+  for (const r of allRows) {
+    const t: Date = r.waktu instanceof Date ? r.waktu : new Date(r.waktu);
+    // Convert UTC to local +07:00
+    const localTime = new Date(t.getTime() + 7 * 60 * 60 * 1000);
+    const dateOnly = localTime.toISOString().slice(0, 10);
+
+    // Only include rows from the requested date
+    if (dateOnly !== today) continue;
+
+    const hour = String(localTime.getHours()).padStart(2, "0");
+    const hourKey = `${hour}:00`;
+
+    if (!hourlyMap.has(hourKey)) {
+      hourlyMap.set(hourKey, []);
+    }
+    hourlyMap.get(hourKey)!.push(r);
+  }
+
+  // Compute averages for each hour
+  const hours = Array.from(hourlyMap.keys()).sort();
+  const result = hours.map((hour) => {
+    const rows = hourlyMap.get(hour)!;
+    const avg = computeAverages(rows);
+    return {
+      hour,
+      totalKwh: avg.avgKwh,
+      avgCurrent: avg.avgCurrent,
+      cosPhi: 0,
+    };
+  });
+
+  return result;
+};
+
+export { getAllLVMDPs, getShiftAveragesLVMDP4, getHourlyAveragesLVMDP4 };

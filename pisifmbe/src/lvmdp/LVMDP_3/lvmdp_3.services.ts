@@ -84,4 +84,49 @@ const getShiftAveragesLVMDP3 = async (dateStr?: string) => {
 
   return out;
 };
-export { getAllLVMDPs, getShiftAveragesLVMDP3 };
+
+/**
+ * Ambil hourly aggregates untuk satu hari, dihitung dari raw data
+ * Konsisten dengan metode shift calculation
+ */
+const getHourlyAveragesLVMDP3 = async (dateStr?: string) => {
+  const today = dateStr ?? new Date().toISOString().slice(0, 10);
+  const allRows = await getAllLVMDPs();
+
+  // Kelompokkan per jam
+  const hourlyMap = new Map<string, any[]>();
+
+  for (const r of allRows) {
+    const t: Date = r.waktu instanceof Date ? r.waktu : new Date(r.waktu);
+    const rowDateStr = new Intl.DateTimeFormat("sv-SE").format(t); // YYYY-MM-DD
+
+    if (rowDateStr !== today) continue;
+
+    // Ambil jam (format: HH:00)
+    const hourStr = `${String(t.getHours()).padStart(2, "0")}:00`;
+    const key = `${today}T${hourStr}`;
+
+    if (!hourlyMap.has(key)) {
+      hourlyMap.set(key, []);
+    }
+    hourlyMap.get(key)!.push(r);
+  }
+
+  // Compute averages per jam
+  const result = Array.from(hourlyMap.entries())
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    .map(([hour, rows]) => {
+      const avg = computeAverages(rows);
+      return {
+        hour: new Date(hour),
+        total_kwh: avg.avgKwh,
+        avg_current: avg.avgCurrent,
+        cos_phi: 0,
+        count: avg.count,
+      };
+    });
+
+  return result;
+};
+
+export { getAllLVMDPs, getShiftAveragesLVMDP3, getHourlyAveragesLVMDP3 };

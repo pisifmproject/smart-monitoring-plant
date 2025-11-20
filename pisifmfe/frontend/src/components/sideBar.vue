@@ -1,3 +1,12 @@
+@media (max-width: 768px) { .sidebar { position: fixed; left: 0; top: 0; width:
+80vw; max-width: 320px; height: 100vh; min-height: 100vh; z-index: 1000;
+background: linear-gradient(135deg, #1a1f2e 0%, #111827 100%); box-shadow: 2px 0
+16px rgba(0,0,0,0.18); transform: translateX(0); transition: transform 0.3s
+cubic-bezier(0.4,0,0.2,1); border-right: 1px solid rgba(226,232,240,0.1); }
+.sidebar-title { font-size: 1.1rem; margin-bottom: 10px; } .menu { gap: 4px; }
+.group-trigger { font-size: 0.95rem; padding: 8px 10px; } .submenu.level-1,
+.submenu.level-2 { padding-left: 10px; } .submenu-item.level-2,
+.submenu-item.level-3 { padding: 7px 10px; font-size: 0.92rem; } }
 <script setup lang="ts">
 import { ref, watchEffect } from "vue";
 import { useRoute, RouterLink } from "vue-router";
@@ -170,6 +179,8 @@ function isMenuOpen(menuId: string): boolean {
   gap: 16px;
   color: #e2e8f0;
   border-right: 1px solid rgba(226, 232, 240, 0.1);
+  position: relative;
+  z-index: 50;
 }
 
 .sidebar-title {
@@ -327,5 +338,53 @@ function isMenuOpen(menuId: string): boolean {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 80vw;
+    max-width: 300px;
+    height: 100vh;
+    min-height: 100vh;
+    padding: 20px 12px;
+    z-index: 1000;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .sidebar-title {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+
+  .menu {
+    gap: 4px;
+    overflow-y: auto;
+    max-height: calc(100vh - 100px);
+  }
+
+  .group-trigger {
+    font-size: 0.95rem;
+    padding: 8px 10px;
+  }
+
+  .group-trigger.level-2 {
+    font-size: 0.9rem;
+    padding: 7px 8px;
+  }
+
+  .submenu.level-1,
+  .submenu.level-2 {
+    padding-left: 10px;
+  }
+
+  .submenu-item.level-2,
+  .submenu-item.level-3 {
+    padding: 6px 8px;
+    font-size: 0.9rem;
+  }
 }
 </style>

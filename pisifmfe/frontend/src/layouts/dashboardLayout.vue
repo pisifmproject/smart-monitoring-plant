@@ -41,8 +41,13 @@ const toggleSidebar = () => {
 
 <template>
   <div class="layout">
-    <!-- SIDEBAR: gunakan komponen SideBar -->
-    <SideBar v-if="isSidebarOpen" />
+    <!-- SIDEBAR: gunakan komponen SideBar dengan class binding -->
+    <SideBar
+      :class="{
+        'sidebar-visible': isSidebarOpen,
+        'sidebar-hidden': !isSidebarOpen,
+      }"
+    />
 
     <!-- BACKDROP (HP / tablet) -->
     <div
@@ -113,28 +118,19 @@ const toggleSidebar = () => {
 /* ======================
    SIDEBAR
 ====================== */
-.sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: 240px;
-  background: linear-gradient(135deg, #1a1f2e 0%, #111827 100%);
-  color: #e2e8f0;
-  padding: 24px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transform: translateX(-100%);
-  transition: transform 0.2s ease;
-  z-index: 40;
-  border-right: 1px solid rgba(226, 232, 240, 0.1);
+.sidebar-visible {
+  transform: translateX(0) !important;
+  opacity: 1 !important;
 }
 
-.sidebar-open {
-  transform: translateX(0);
+.sidebar-hidden {
+  transform: translateX(-100%) !important;
+  opacity: 0 !important;
 }
 
-.sidebar-closed {
-  transform: translateX(-100%);
+/* Smooth transition untuk sidebar state */
+.layout > :nth-child(1) {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
 
 .sidebar-title {
@@ -386,13 +382,13 @@ const toggleSidebar = () => {
     width: 100%;
   }
 
-  .sidebar {
-    position: relative;
-    transform: translateX(0);
-  }
-
-  .sidebar-closed {
-    display: none;
+  .sidebar-visible,
+  .sidebar-hidden {
+    position: relative !important;
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+    width: 240px;
+    z-index: 50;
   }
 
   .main {
