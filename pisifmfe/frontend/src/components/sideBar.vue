@@ -44,7 +44,7 @@ const mainMenus = [
     children: [
       {
         id: "lvmdp",
-        name: "LVMDP",
+        name: "Electrical",
         icon: "⚡",
         children: [
           { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1" },
@@ -87,7 +87,7 @@ function isMenuOpen(menuId: string): boolean {
 <template>
   <aside class="sidebar">
     <h2 class="sidebar-title">
-      <span class="title-icon">⚡</span>
+      <!-- <span class="title-icon">⚡</span> -->
       <span>PISIFM</span>
     </h2>
 
