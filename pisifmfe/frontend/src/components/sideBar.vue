@@ -1,15 +1,14 @@
-@media (max-width: 768px) { .sidebar { position: fixed; left: 0; top: 0; width:
-80vw; max-width: 320px; height: 100vh; min-height: 100vh; z-index: 1000;
-background: linear-gradient(135deg, #1a1f2e 0%, #111827 100%); box-shadow: 2px 0
-16px rgba(0,0,0,0.18); transform: translateX(0); transition: transform 0.3s
-cubic-bezier(0.4,0,0.2,1); border-right: 1px solid rgba(226,232,240,0.1); }
-.sidebar-title { font-size: 1.1rem; margin-bottom: 10px; } .menu { gap: 4px; }
-.group-trigger { font-size: 0.95rem; padding: 8px 10px; } .submenu.level-1,
-.submenu.level-2 { padding-left: 10px; } .submenu-item.level-2,
-.submenu-item.level-3 { padding: 7px 10px; font-size: 0.92rem; } }
 <script setup lang="ts">
 import { ref, watchEffect } from "vue";
 import { useRoute, RouterLink } from "vue-router";
+import {
+  Cog,
+  Zap,
+  Factory,
+  Package,
+  BriefcaseConveyorBelt,
+  CircleSmall,
+} from "lucide-vue-next";
 
 const route = useRoute();
 
@@ -18,8 +17,8 @@ const openMenus = ref<Record<string, boolean>>({
   utility: false,
   lvmdp: false,
   // Siap untuk menu tambahan:
-  // production: false,
-  // packing: false,
+  production: false,
+  packing: false,
 });
 
 const showText = ref(true);
@@ -30,8 +29,8 @@ watchEffect(() => {
 
   // Buka Utility jika di lvmdp*
   if (routeName.startsWith("lvmdp")) {
-    openMenus.value.utility = true;
-    openMenus.value.lvmdp = true;
+    // openMenus.value.utility = true;
+    // openMenus.value.lvmdp = true;
   }
 });
 
@@ -40,38 +39,49 @@ const mainMenus = [
   {
     id: "utility",
     name: "Utility",
-    icon: "⚙️",
+    icon: Cog,
     children: [
       {
         id: "lvmdp",
         name: "Electrical",
-        icon: "⚡",
+        icon: Zap,
         children: [
-          { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1" },
-          { id: "lvmdp2", name: "LVMDP 2", routeName: "lvmdp2" },
-          { id: "lvmdp3", name: "LVMDP 3", routeName: "lvmdp3" },
-          { id: "lvmdp4", name: "LVMDP 4", routeName: "lvmdp4" },
+          { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1"},
+          { id: "lvmdp2", name: "LVMDP 2", routeName: "lvmdp2"},
+          { id: "lvmdp3", name: "LVMDP 3", routeName: "lvmdp3"},
+          { id: "lvmdp4", name: "LVMDP 4", routeName: "lvmdp4"},
         ],
       },
-      // {
-      //   id: "report",
-      //   name: "Daily Reports",
-      //   icon: "📄",
-      //   routeName: "dailyReport",
-      // },
     ],
   },
   {
     id: "production",
     name: "Production",
-    icon: "🏭",
-    children: [{ id: "lvmdp2", name: "MESIN X", routeName: "lvmdp2" }],
+    icon: Factory,
+    children: [
+      { id: "lineA", 
+        name: "Line A", 
+        icon: BriefcaseConveyorBelt,
+        children: [
+          { id: "PC39", name: "PC39", routeName: "lvmdp2"},
+        ],
+      },
+    ],
   },
   {
     id: "packing",
     name: "Packing",
-    icon: "📦",
-    children: [{ id: "lvmdp3", name: "MESIN Y", routeName: "lvmdp3" }],
+    icon: Package,
+    children: [
+      { id: "lvmdp3", 
+        name: "Line A", 
+        icon: BriefcaseConveyorBelt,
+        children: [
+          { id: "Weigher", name: "Weigher", routeName: "lvmdp3" },
+          { id: "BagMaker", name: "BagMaker", routeName: "lvmdp4" },
+        ],
+      },
+    ],
   },
 ];
 
@@ -102,7 +112,11 @@ function isMenuOpen(menuId: string): boolean {
           :aria-expanded="isMenuOpen(mainMenu.id) ? 'true' : 'false'"
         >
           <span class="flex items-center gap-2">
-            <span class="text-base">{{ mainMenu.icon }}</span>
+            <component
+              v-if="mainMenu.icon"
+              :is="mainMenu.icon"
+              class="w-4 h-4"
+            />
             <span>{{ mainMenu.name }}</span>
           </span>
           <span class="chev" :class="{ rot: isMenuOpen(mainMenu.id) }">▾</span>
@@ -121,9 +135,11 @@ function isMenuOpen(menuId: string): boolean {
                 :aria-expanded="isMenuOpen(subMenu.id) ? 'true' : 'false'"
               >
                 <span class="flex items-center gap-2">
-                  <span class="text-sm" v-if="(subMenu as any).icon">{{
-                    (subMenu as any).icon
-                  }}</span>
+                  <component 
+                  v-if="subMenu.icon" 
+                  :is="subMenu.icon" 
+                  class="w-4 h-4" 
+                  />
                   <span>{{ subMenu.name }}</span>
                 </span>
                 <span class="chev" :class="{ rot: isMenuOpen(subMenu.id) }"
@@ -138,7 +154,10 @@ function isMenuOpen(menuId: string): boolean {
                 class="submenu-item level-2"
                 active-class="active"
               >
-                <div class="h-2.5 w-2.5 rounded-full bg-slate-600" />
+                <component
+                  :is="subMenu.icon || CircleSmall"
+                  class="w-3 h-3"
+                />
                 <span>{{ subMenu.name }}</span>
               </RouterLink>
 

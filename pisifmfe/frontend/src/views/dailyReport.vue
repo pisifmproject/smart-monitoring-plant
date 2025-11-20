@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import { getDailyReportAll, getDailyHourly } from "@/lib/api";
+import { Download, CalendarSearch, HardDriveUpload } from "lucide-vue-next";
 
 const route = useRoute();
-const panelId = (parseInt(String(route.query.panel || 1)) || 1) as
-  | 1
-  | 2
-  | 3
-  | 4;
+const panelId = (parseInt(String(route.query.panel || 1)) || 1) as 1 | 2 | 3 | 4;
 
 // Date picker
 const selectedDate = ref<string>(new Date().toISOString().split("T")[0]);
 const minDate = ref<string>("2024-01-01");
 const maxDate = computed(() => new Date().toISOString().split("T")[0]);
+
+const dateInput = ref<HTMLInputElement | null>(null);
+function openDatePicker() {
+  const el = dateInput.value as HTMLInputElement & { showPicker?: () => void };
+  if (el?.showPicker) el.showPicker();
+  else if (el) el.focus();
+}
 
 // Tab state
 const activeTab = ref<"shift" | "hourly">("shift");
@@ -26,7 +30,16 @@ const loadingHourly = ref(false);
 const errorShift = ref<string | null>(null);
 const errorHourly = ref<string | null>(null);
 
-// Local storage cache - v4: updated hourly calculation to use raw data
+// Download dropdown state
+const showDownloadMenu = ref(false);
+const handleWindowClick = () => {
+  showDownloadMenu.value = false;
+};
+function toggleDownloadMenu() {
+  showDownloadMenu.value = !showDownloadMenu.value;
+}
+
+// Local storage cache
 const cacheKey = (date: string) => `lvmdp_${panelId}_hourly_v4_${date}`;
 
 const numberFormatter = new Intl.NumberFormat("id-ID", {
@@ -81,7 +94,6 @@ async function loadShiftReports() {
 
       if (filtered.length > 0) {
         const report = filtered[0];
-        // Map database structure to shift array
         shiftReports.value = [
           {
             shift: 1,
@@ -126,14 +138,12 @@ async function loadHourlyReports() {
   errorHourly.value = null;
 
   try {
-    // Check local storage cache first
     const cached = localStorage.getItem(cacheKey(selectedDate.value));
     if (cached) {
       hourlyReports.value = JSON.parse(cached);
       return;
     }
 
-    // Fetch from API
     const data = await getDailyHourly(panelId, selectedDate.value);
     if (Array.isArray(data)) {
       const normalized = data.map((row: any) => ({
@@ -146,8 +156,6 @@ async function loadHourlyReports() {
       }));
 
       hourlyReports.value = normalized;
-
-      // Save to local storage
       localStorage.setItem(
         cacheKey(selectedDate.value),
         JSON.stringify(normalized)
@@ -160,13 +168,12 @@ async function loadHourlyReports() {
   }
 }
 
-// Load data when date changes
 watch(selectedDate, () => {
   loadShiftReports();
   loadHourlyReports();
 });
 
-// CSV Export functions
+// CSV Export
 function escapeCSV(value: any): string {
   if (value === null || value === undefined) return "";
   const str = String(value);
@@ -197,12 +204,10 @@ function generateShiftCSV(): string {
     row.cosPhi,
   ]);
 
-  const csvContent = [
+  return [
     headers.map(escapeCSV).join(","),
     ...rows.map((row) => row.map(escapeCSV).join(",")),
   ].join("\n");
-
-  return csvContent;
 }
 
 function generateHourlyCSV(): string {
@@ -226,12 +231,10 @@ function generateHourlyCSV(): string {
     row.avgCurrent,
   ]);
 
-  const csvContent = [
+  return [
     headers.map(escapeCSV).join(","),
     ...rows.map((row) => row.map(escapeCSV).join(",")),
   ].join("\n");
-
-  return csvContent;
 }
 
 function downloadCSV(content: string, filename: string) {
@@ -255,12 +258,12 @@ function downloadByDate() {
   setTimeout(() => {
     downloadCSV(hourlyCSV, `LVMDP${panelId}_HourlyReport_${dateFormatted}.csv`);
   }, 100);
+  showDownloadMenu.value = false;
 }
 
 function downloadByMonth() {
   const [year, month] = selectedDate.value.split("-");
   const monthFormatted = `${year}-${month}`;
-  // This would require fetching monthly data - for now we'll just use current data
   const shiftCSV = generateShiftCSV();
   const hourlyCSV = generateHourlyCSV();
 
@@ -271,11 +274,17 @@ function downloadByMonth() {
       `LVMDP${panelId}_HourlyReport_${monthFormatted}.csv`
     );
   }, 100);
+  showDownloadMenu.value = false;
 }
 
 onMounted(() => {
   loadShiftReports();
   loadHourlyReports();
+  window.addEventListener("click", handleWindowClick);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("click", handleWindowClick);
 });
 </script>
 
@@ -289,32 +298,52 @@ onMounted(() => {
             <h1 class="page-title">Daily Report</h1>
             <p class="page-subtitle">LVMDP {{ panelId }}</p>
           </div>
+
           <div class="header-controls">
-            <div class="date-picker-group">
-              <label class="date-label">Select Date:</label>
-              <input
-                v-model="selectedDate"
-                type="date"
-                :min="minDate"
-                :max="maxDate"
-                class="date-input"
-              />
-              <span class="date-display">{{ formatDate(selectedDate) }}</span>
+            <!-- DATE PICKER -->
+            <div class="date-picker-group" @click="openDatePicker">
+              <span class="date-label">Select Date:</span>
+
+              <div class="date-input-wrapper">
+                <input
+                  ref="dateInput"
+                  v-model="selectedDate"
+                  type="date"
+                  :min="minDate"
+                  :max="maxDate"
+                  class="date-input"
+                />
+              </div>
+
+              <span class="date-display">
+                {{ formatDate(selectedDate) }}
+              </span>
             </div>
 
-            <!-- Download Dropdown -->
-            <div class="download-menu">
-              <button class="download-button" title="Download as CSV">
-                <span class="download-icon">📥</span>
+            <!-- Download Dropdown (click toggle) -->
+            <div class="download-menu" @click.stop>
+              <button
+                type="button"
+                class="download-button"
+                title="Download as CSV"
+                @click="toggleDownloadMenu"
+              >
+                <Download class="download-icon-svg" />
                 <span class="download-text">Download</span>
               </button>
-              <div class="download-dropdown">
+
+              <div
+                v-if="showDownloadMenu"
+                class="download-dropdown"
+              >
                 <button
                   class="dropdown-item"
                   @click="downloadByDate"
                   title="Download data for selected date"
                 >
-                  <span class="icon">📅</span>
+                  <span class="icon">
+                    <CalendarSearch class="icon-svg" />
+                  </span>
                   <span>By Date</span>
                 </button>
                 <button
@@ -322,7 +351,9 @@ onMounted(() => {
                   @click="downloadByMonth"
                   title="Download data for selected month"
                 >
-                  <span class="icon">📆</span>
+                  <span class="icon">
+                    <HardDriveUpload class="icon-svg" />
+                  </span>
                   <span>By Month</span>
                 </button>
               </div>
@@ -381,7 +412,9 @@ onMounted(() => {
 
         <!-- Hourly Reports Tab -->
         <div v-if="activeTab === 'hourly'" class="tab-content">
-          <div v-if="loadingHourly" class="loading">Loading hourly data...</div>
+          <div v-if="loadingHourly" class="loading">
+            Loading hourly data...
+          </div>
           <div v-else-if="errorHourly" class="error">{{ errorHourly }}</div>
           <div v-else class="hourly-table-wrapper">
             <div v-if="hourlyReports.length === 0" class="empty-state">
@@ -471,11 +504,21 @@ onMounted(() => {
   margin: 0;
 }
 
+/* Header Controls */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Date picker group */
 .date-picker-group {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  cursor: pointer;
 }
 
 .date-label {
@@ -483,15 +526,28 @@ onMounted(() => {
   font-size: 0.95rem;
 }
 
-.date-input {
-  padding: 10px 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
+/* Hanya kotak tanggal yang dibungkus */
+.date-input-wrapper {
+  padding: 2px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.3);
+  border: 1px solid rgba(148, 163, 184, 0.7);
   transition: all 0.2s ease;
+}
+
+.date-picker-group:hover .date-input-wrapper {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: rgba(248, 250, 252, 0.9);
+}
+
+.date-input {
+  border: none;
+  background: transparent;
+  color: #f9fafb;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .date-input::-webkit-calendar-picker-indicator {
@@ -499,29 +555,14 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.date-input:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
 .date-input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.2);
-  border-color: white;
 }
 
 .date-display {
   font-size: 0.9rem;
-  opacity: 0.85;
+  opacity: 0.9;
   font-weight: 500;
-}
-
-/* Header Controls */
-.header-controls {
-  display: flex;
-  align-items: flex-end;
-  gap: 20px;
-  flex-wrap: wrap;
 }
 
 /* Download Menu */
@@ -554,8 +595,9 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.download-icon {
-  font-size: 1.1rem;
+.download-icon-svg {
+  width: 18px;
+  height: 18px;
 }
 
 .download-dropdown {
@@ -566,15 +608,11 @@ onMounted(() => {
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   margin-top: 8px;
-  min-width: 180px;
-  display: none;
+  min-width: 190px;
+  display: flex;
   flex-direction: column;
   overflow: hidden;
   z-index: 100;
-}
-
-.download-menu:hover .download-dropdown {
-  display: flex;
 }
 
 .dropdown-item {
@@ -602,7 +640,14 @@ onMounted(() => {
 }
 
 .dropdown-item .icon {
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* Tabs */
@@ -801,13 +846,13 @@ onMounted(() => {
     font-size: 1.5rem;
   }
 
-  .date-picker-group {
+  .header-controls {
     width: 100%;
+    justify-content: space-between;
   }
 
-  .date-input {
+  .date-picker-group {
     flex: 1;
-    min-width: 180px;
   }
 
   .content-section {
