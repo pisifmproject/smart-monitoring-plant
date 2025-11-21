@@ -1,6 +1,36 @@
+<!-- frontend/src/views/landing.vue -->
 <script setup lang="ts">
-import { RouterLink } from "vue-router";
-import brandLogo from "../components/brandLogo.vue";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+// Modal states
+const showPasswordModal = ref(false);
+const password = ref("");
+const errorMsg = ref("");
+
+// buka modal ketika tombol MASUK diklik
+function openPasswordModal() {
+  showPasswordModal.value = true;
+  password.value = "";
+  errorMsg.value = "";
+}
+
+// tutup modal
+function closePasswordModal() {
+  showPasswordModal.value = false;
+}
+
+// cek password
+function submitPassword() {
+  if (password.value === "pisifm00") {
+    showPasswordModal.value = false;
+    router.push("/app/lvmdp1"); // arahkan seperti sebelumnya
+  } else {
+    errorMsg.value = "Eitsss...Password salah!!!";
+  }
+}
 </script>
 
 <template>
@@ -30,53 +60,38 @@ import brandLogo from "../components/brandLogo.vue";
       <!-- Hero Section -->
       <div class="flex-1 flex items-center justify-center px-4 py-20 md:py-0">
         <div class="max-w-4xl w-full text-center">
-          <!-- Logo with glow -->
           <div class="mb-8 flex justify-center animate-fade-in">
             <div class="relative">
               <div
                 class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl blur-xl opacity-20"
               />
-              <!-- <brandLogo
-                src="/Logo.jpg"
-                mode="intrinsic"
-                :max="160"
-                :rounded="true"
-                :glow="true"
-                class="relative"
-              /> -->
             </div>
           </div>
 
-          <!-- Main Title with gradient -->
           <h1
             class="text-5xl md:text-7xl font-bold leading-tight mb-4 animate-fade-in-delayed-1"
           >
             <span class="block mb-2">Project</span>
             <span
               class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-500"
-            >
-              Information System </span
+              >Information System</span
             ><br />
-            <span class="text-lg md:text-2xl font-medium text-slate-300 mt-4"
-              >for Indofood Fortuna Makmur</span
-            >
+            <span class="text-lg md:text-2xl font-medium text-slate-300 mt-4">
+              for Indofood Fortuna Makmur
+            </span>
           </h1>
 
-          <!-- Subtitle -->
           <p
             class="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl mx-auto animate-fade-in-delayed-2"
-          >
-            <!-- Monitor dan kontrol semua lini produksi dengan dashboard real-time
-            yang powerful dan intuitif -->
-          </p>
+          ></p>
 
-          <!-- CTA Buttons -->
+          <!-- CTA Button -->
           <div
             class="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-in-delayed-3"
           >
-            <RouterLink
-              to="/app/lvmdp1"
-              class="group inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 font-semibold text-slate-950 shadow-lg shadow-cyan-500/40 transition-all hover:shadow-xl hover:shadow-cyan-500/60 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
+            <button
+              @click="openPasswordModal"
+              class="group inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 font-semibold text-slate-950 shadow-lg shadow-cyan-500/40 transition-all hover:shadow-xl hover:shadow-cyan-500/60 hover:scale-105"
             >
               <span>🚀 MASUK</span>
               <svg
@@ -92,7 +107,7 @@ import brandLogo from "../components/brandLogo.vue";
                   d="m9 5 7 7-7 7"
                 />
               </svg>
-            </RouterLink>
+            </button>
           </div>
         </div>
       </div>
@@ -107,10 +122,43 @@ import brandLogo from "../components/brandLogo.vue";
         </p>
       </div>
     </div>
+
+    <!-- Password Modal -->
+    <div
+      v-if="showPasswordModal"
+      class="pw-backdrop"
+      @click="closePasswordModal"
+    >
+      <div class="pw-modal" @click.stop>
+        <h3 class="pw-title">Masukkan Password</h3>
+
+        <input
+          v-model="password"
+          type="password"
+          class="pw-input"
+          placeholder="Password"
+          @keyup.enter="submitPassword"
+        />
+
+        <p v-if="errorMsg" class="pw-error">
+          {{ errorMsg }}
+        </p>
+
+        <div class="pw-actions">
+          <button class="pw-btn pw-btn-secondary" @click="closePasswordModal">
+            Batal
+          </button>
+          <button class="pw-btn pw-btn-primary" @click="submitPassword">
+            Masuk
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* === Animations === */
 @keyframes float-slow {
   0% {
     transform: translateY(0px) translateX(0);
@@ -168,5 +216,91 @@ import brandLogo from "../components/brandLogo.vue";
 
 .animate-fade-in-delayed-3 {
   animation: fade-in 0.8s ease-out 0.6s backwards;
+}
+
+/* === Password Modal === */
+.pw-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.pw-modal {
+  background: #0f172a;
+  color: #e5e7eb;
+  padding: 24px 20px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.pw-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.pw-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.pw-input:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.5);
+}
+
+.pw-error {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #fecaca;
+}
+
+.pw-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.pw-btn {
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.pw-btn-primary {
+  background: #0ea5e9;
+  color: white;
+}
+
+.pw-btn-primary:hover {
+  background: #0284c7;
+}
+
+.pw-btn-secondary {
+  background: transparent;
+  color: #e5e7eb;
+  border: 1px solid #64748b;
+}
+
+.pw-btn-secondary:hover {
+  background: rgba(148, 163, 184, 0.12);
 }
 </style>
