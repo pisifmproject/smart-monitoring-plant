@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import ReportButton from "@/components/reportButton.vue";
 
@@ -14,6 +14,10 @@ const productionData = ref({
   availability: 0,
   performance: 0,
   quality: 0,
+  kwhMeter: 0,
+  powerConsumption: 0,
+  voltageInput: 0,
+  currentAmpere: 0,
 });
 
 const shiftSummary = ref({
@@ -49,6 +53,10 @@ const fetchProductionData = async () => {
         availability: result.data.availability || 0,
         performance: result.data.performance || 0,
         quality: result.data.quality || 0,
+        kwhMeter: result.data.kwhMeter || 0,
+        powerConsumption: result.data.powerConsumption || 0,
+        voltageInput: result.data.voltageInput || 0,
+        currentAmpere: result.data.currentAmpere || 0,
       };
 
       // Jika ada data shift summary dari backend
@@ -92,7 +100,7 @@ onMounted(() => {
         <div class="header-content">
           <div>
             <h1 class="page-title">Production Line</h1>
-            <p class="page-subtitle">Line D - FCP</p>
+            <p class="page-subtitle">Line A - FCP</p>
           </div>
           <div class="status-badge" :class="status">
             {{ status.toUpperCase() }}
@@ -146,6 +154,118 @@ onMounted(() => {
           <div class="oee-card">
             <div class="oee-label">Quality</div>
             <div class="oee-value">{{ productionData.quality }}%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KWH Meter Section -->
+      <div class="kwh-section">
+        <h2 class="section-title">
+          <span class="title-icon">⚡</span>
+          Power Consumption Monitor
+        </h2>
+        <div class="kwh-grid">
+          <div class="kwh-card highlight">
+            <div class="kwh-icon">🔋</div>
+            <div class="kwh-content">
+              <div class="kwh-label">Total KWH</div>
+              <div class="kwh-value">
+                {{ productionData.kwhMeter.toLocaleString() }}
+              </div>
+              <div class="kwh-unit">kWh</div>
+            </div>
+          </div>
+          <div class="kwh-card">
+            <div class="kwh-icon">⚡</div>
+            <div class="kwh-content">
+              <div class="kwh-label">Power</div>
+              <div class="kwh-value">
+                {{ productionData.powerConsumption.toLocaleString() }}
+              </div>
+              <div class="kwh-unit">kW</div>
+            </div>
+          </div>
+          <div class="kwh-card">
+            <div class="kwh-icon">🔌</div>
+            <div class="kwh-content">
+              <div class="kwh-label">Voltage</div>
+              <div class="kwh-value">{{ productionData.voltageInput }}</div>
+              <div class="kwh-unit">V</div>
+            </div>
+          </div>
+          <div class="kwh-card">
+            <div class="kwh-icon">〰️</div>
+            <div class="kwh-content">
+              <div class="kwh-label">Current</div>
+              <div class="kwh-value">{{ productionData.currentAmpere }}</div>
+              <div class="kwh-unit">A</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Power Gauge -->
+        <div class="power-gauge-container">
+          <div class="gauge-wrapper">
+            <div class="gauge-title">Real-time Power Consumption</div>
+            <div class="gauge-circle">
+              <svg viewBox="0 0 200 200" class="gauge-svg">
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="80"
+                  fill="none"
+                  stroke="#e2e8f0"
+                  stroke-width="20"
+                />
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="80"
+                  fill="none"
+                  stroke="url(#powerGradient)"
+                  stroke-width="20"
+                  stroke-linecap="round"
+                  :stroke-dasharray="`${
+                    (productionData.powerConsumption / 1000) * 502
+                  } 502`"
+                  transform="rotate(-90 100 100)"
+                  class="gauge-progress"
+                />
+                <defs>
+                  <linearGradient
+                    id="powerGradient"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="0%"
+                  >
+                    <stop
+                      offset="0%"
+                      style="stop-color: #10b981; stop-opacity: 1"
+                    />
+                    <stop
+                      offset="50%"
+                      style="stop-color: #f59e0b; stop-opacity: 1"
+                    />
+                    <stop
+                      offset="100%"
+                      style="stop-color: #ef4444; stop-opacity: 1"
+                    />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="gauge-center">
+                <div class="gauge-value">
+                  {{ productionData.powerConsumption }}
+                </div>
+                <div class="gauge-label">kW</div>
+              </div>
+            </div>
+            <div class="gauge-indicators">
+              <span class="indicator low">0 kW</span>
+              <span class="indicator mid">500 kW</span>
+              <span class="indicator high">1000 kW</span>
+            </div>
           </div>
         </div>
       </div>
@@ -258,6 +378,175 @@ onMounted(() => {
 .status-badge.offline {
   background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
   color: white;
+}
+
+/* KWH Meter Section */
+.kwh-section {
+  padding: 32px 24px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.title-icon {
+  font-size: 1.5rem;
+  margin-right: 8px;
+}
+
+.kwh-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.kwh-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s ease;
+}
+
+.kwh-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.kwh-card.highlight {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.kwh-icon {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.kwh-content {
+  flex: 1;
+}
+
+.kwh-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.kwh-card .kwh-label {
+  color: #64748b;
+}
+
+.kwh-card.highlight .kwh-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.kwh-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.kwh-card .kwh-value {
+  color: #1e293b;
+}
+
+.kwh-card.highlight .kwh-value {
+  color: white;
+}
+
+.kwh-unit {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.kwh-card .kwh-unit {
+  color: #64748b;
+}
+
+.kwh-card.highlight .kwh-unit {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Power Gauge */
+.power-gauge-container {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.gauge-wrapper {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.gauge-title {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 24px;
+}
+
+.gauge-circle {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 24px;
+}
+
+.gauge-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+}
+
+.gauge-progress {
+  transition: stroke-dasharray 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gauge-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.gauge-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.gauge-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.gauge-indicators {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.indicator.low {
+  color: #10b981;
+}
+
+.indicator.mid {
+  color: #f59e0b;
+}
+
+.indicator.high {
+  color: #ef4444;
 }
 
 .status-badge.idle {
