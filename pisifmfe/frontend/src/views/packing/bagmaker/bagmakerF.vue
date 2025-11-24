@@ -9,8 +9,8 @@ const hasData = ref(false);
 const bagmakerData = ref({
   targetBags: 0,
   actualBags: 0,
-  goodBags: 100,
-  notGoodBags: 10,
+  goodBags: 0,
+  notGoodBags: 0,
   totalEfficiency: 0,
   efficiencyWeigher: 0,
   efficiencyBagMaker: 0,
@@ -102,7 +102,7 @@ onMounted(() => {
             <div class="icon-circle">📦</div>
             <div>
               <h1 class="page-title">BagMaker Production</h1>
-              <p class="page-subtitle">Line A • Real-time Monitoring</p>
+              <p class="page-subtitle">Line F • Real-time Monitoring</p>
             </div>
           </div>
           <div class="status-badge" :class="status">
@@ -116,7 +116,7 @@ onMounted(() => {
         <!-- Report Button -->
         <div class="report-section">
           <ReportButton
-            routeName="dailyReportBagmakerA"
+            routeName="dailyReportBagmakerF"
             label="View Daily Report"
           />
         </div>
@@ -127,51 +127,61 @@ onMounted(() => {
             <span class="heading-icon">📈</span>
             Production Overview
           </h2>
-          <div class="metrics-grid">
-            <div class="metric-card primary">
-              <div class="metric-icon">🎯</div>
-              <div class="metric-content">
+          <div class="metrics-grid-2x2">
+            <div class="metric-card-large primary">
+              <div class="card-header">
+                <div class="metric-icon-large">🎯</div>
                 <div class="metric-label">Target Production</div>
-                <div class="metric-value">
+              </div>
+              <div class="card-body">
+                <div class="metric-value-large">
                   {{ bagmakerData.targetBags.toLocaleString() }}
                 </div>
-                <div class="metric-unit">bags</div>
+                <div class="metric-unit-large">bags</div>
               </div>
             </div>
 
-            <div class="metric-card success">
-              <div class="metric-icon">✓</div>
-              <div class="metric-content">
+            <div class="metric-card-large success">
+              <div class="card-header">
+                <div class="metric-icon-large">✓</div>
                 <div class="metric-label">Actual Production</div>
-                <div class="metric-value">
+              </div>
+              <div class="card-body">
+                <div class="metric-value-large">
                   {{ bagmakerData.actualBags.toLocaleString() }}
                 </div>
-                <div class="metric-unit">bags produced</div>
+                <div class="metric-unit-large">bags produced</div>
               </div>
             </div>
 
-            <div class="metric-card accent">
-              <div class="metric-icon">⚡</div>
-              <div class="metric-content">
+            <div class="metric-card-large accent">
+              <div class="card-header">
+                <div class="metric-icon-large">⚡</div>
                 <div class="metric-label">Total Efficiency</div>
-                <div class="metric-value">
+              </div>
+              <div class="card-body">
+                <div class="metric-value-large">
                   {{ bagmakerData.totalEfficiency }}%
                 </div>
-                <div class="metric-progress">
+                <div class="metric-progress-large">
                   <div
-                    class="progress-fill"
+                    class="progress-fill-large"
                     :style="{ width: bagmakerData.totalEfficiency + '%' }"
                   ></div>
                 </div>
               </div>
             </div>
 
-            <div class="metric-card info">
-              <div class="metric-icon">🚀</div>
-              <div class="metric-content">
+            <div class="metric-card-large info">
+              <div class="card-header">
+                <div class="metric-icon-large">🚀</div>
                 <div class="metric-label">Current Speed</div>
-                <div class="metric-value">{{ bagmakerData.actualSpeed }}</div>
-                <div class="metric-unit">bags per minute</div>
+              </div>
+              <div class="card-body">
+                <div class="metric-value-large">
+                  {{ bagmakerData.actualSpeed }}
+                </div>
+                <div class="metric-unit-large">bags per minute</div>
               </div>
             </div>
           </div>
@@ -464,12 +474,16 @@ onMounted(() => {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .bagmaker-container {
   max-width: 1600px;
   margin: 0 auto;
   background: #f8f9fc;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Header */
@@ -477,6 +491,8 @@ onMounted(() => {
   background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
   padding: 32px 40px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .header-content {
@@ -566,6 +582,8 @@ onMounted(() => {
   padding: 32px 40px;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Report Section */
@@ -595,94 +613,109 @@ onMounted(() => {
   margin-bottom: 40px;
 }
 
-.metrics-grid {
+.metrics-grid-2x2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 24px;
+  width: 100%;
 }
 
-.metric-card {
+.metric-card-large {
   background: white;
-  border-radius: 20px;
-  padding: 28px;
+  border-radius: 16px;
+  padding: 24px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: center;
-  gap: 20px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
 }
 
-.metric-card:hover {
+.metric-card-large:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
 }
 
-.metric-card.primary {
+.metric-card-large.primary {
   border-color: #8b5cf6;
   background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
 }
 
-.metric-card.success {
+.metric-card-large.success {
   border-color: #10b981;
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
 }
 
-.metric-card.accent {
+.metric-card-large.accent {
   border-color: #f59e0b;
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
 }
 
-.metric-card.info {
+.metric-card-large.info {
   border-color: #06b6d4;
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
 }
 
-.metric-icon {
-  font-size: 3rem;
-  flex-shrink: 0;
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.metric-content {
+.metric-icon-large {
+  font-size: 2.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.card-body {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .metric-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 8px;
 }
 
-.metric-value {
+.metric-value-large {
   font-size: 2.5rem;
   font-weight: 800;
   color: #1e293b;
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
-.metric-unit {
+.metric-unit-large {
   font-size: 0.875rem;
-  color: #94a3b8;
-  font-weight: 500;
+  color: #64748b;
+  font-weight: 600;
 }
 
-.metric-progress {
+.metric-progress-large {
   margin-top: 12px;
-  height: 8px;
+  height: 10px;
   background: #e2e8f0;
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.progress-fill {
+.progress-fill-large {
   height: 100%;
   background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
-  border-radius: 4px;
-  transition: width 0.6s ease;
+  border-radius: 6px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
 }
 
 /* Efficiency Dashboard */
@@ -697,50 +730,50 @@ onMounted(() => {
 
 .efficiency-item {
   background: white;
-  border-radius: 20px;
-  padding: 32px;
+  border-radius: 16px;
+  padding: 24px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .efficiency-label {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 1.125rem;
+  gap: 10px;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: #334155;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .label-icon {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .efficiency-display {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
 }
 
 .efficiency-number {
-  font-size: 3rem;
+  font-size: 2.25rem;
   font-weight: 800;
   color: #1e293b;
-  min-width: 140px;
+  min-width: 110px;
 }
 
 .efficiency-bar-container {
   flex: 1;
-  height: 40px;
+  height: 32px;
   background: #e2e8f0;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
   position: relative;
 }
 
 .efficiency-bar {
   height: 100%;
-  border-radius: 20px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -773,17 +806,20 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 24px;
   margin-bottom: 24px;
+  width: 100%;
 }
 
 .quality-stat {
   background: white;
-  border-radius: 20px;
-  padding: 32px;
+  border-radius: 16px;
+  padding: 24px;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  border-left: 6px solid;
+  border-left: 5px solid;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .good-stat {
@@ -797,7 +833,7 @@ onMounted(() => {
 }
 
 .stat-icon {
-  font-size: 3.5rem;
+  font-size: 2.5rem;
 }
 
 .stat-content {
@@ -805,22 +841,22 @@ onMounted(() => {
 }
 
 .stat-value {
-  font-size: 3rem;
+  font-size: 2.25rem;
   font-weight: 800;
   color: #1e293b;
   line-height: 1;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .stat-label {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #64748b;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .stat-percentage {
-  font-size: 1.25rem;
+  font-size: 1.0625rem;
   font-weight: 700;
 }
 
@@ -837,14 +873,17 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
+  width: 100%;
 }
 
 .detection-card {
   background: white;
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 12px;
+  padding: 20px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+  min-width: 0;
   transition: all 0.3s ease;
   border: 2px solid #f1f5f9;
 }
@@ -856,26 +895,26 @@ onMounted(() => {
 }
 
 .detection-icon {
-  font-size: 2.5rem;
-  margin-bottom: 12px;
+  font-size: 2rem;
+  margin-bottom: 10px;
 }
 
 .detection-label {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #64748b;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .detection-value {
-  font-size: 2.25rem;
+  font-size: 1.875rem;
   font-weight: 800;
   color: #1e293b;
   margin-bottom: 4px;
 }
 
 .detection-status {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: #94a3b8;
   font-weight: 500;
 }
@@ -887,48 +926,48 @@ onMounted(() => {
 
 .waste-monitor {
   background: white;
-  border-radius: 20px;
-  padding: 36px;
+  border-radius: 16px;
+  padding: 28px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .waste-header {
   display: flex;
   align-items: center;
-  gap: 24px;
-  margin-bottom: 24px;
+  gap: 20px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
 .waste-icon-large {
-  font-size: 4rem;
+  font-size: 3rem;
   opacity: 0.9;
 }
 
 .waste-info {
   flex: 1;
-  min-width: 200px;
+  min-width: 180px;
 }
 
 .waste-title {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #64748b;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .waste-percentage {
-  font-size: 3.5rem;
+  font-size: 2.75rem;
   font-weight: 800;
   color: #1e293b;
   line-height: 1;
 }
 
 .waste-badge {
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 50px;
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   white-space: nowrap;
 }
 
@@ -948,7 +987,7 @@ onMounted(() => {
 }
 
 .waste-bar-wrapper {
-  height: 32px;
+  height: 28px;
   background: linear-gradient(
     90deg,
     #10b981 0%,
@@ -958,9 +997,9 @@ onMounted(() => {
     #ef4444 5%,
     #ef4444 100%
   );
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: visible;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
   position: relative;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -1000,8 +1039,8 @@ onMounted(() => {
 .waste-marker::before {
   content: "";
   position: absolute;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   top: 50%;
   left: 50%;
@@ -1011,17 +1050,17 @@ onMounted(() => {
 
 .waste-marker.marker-excellent::before {
   background: #10b981;
-  border: 3px solid white;
+  border: 2.5px solid white;
 }
 
 .waste-marker.marker-acceptable::before {
   background: #f59e0b;
-  border: 3px solid white;
+  border: 2.5px solid white;
 }
 
 .waste-marker.marker-high::before {
   background: #ef4444;
-  border: 3px solid white;
+  border: 2.5px solid white;
 }
 
 .marker-value {
@@ -1201,23 +1240,27 @@ onMounted(() => {
     padding: 24px 24px;
   }
 
-  .metrics-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
+  .metrics-grid-2x2 {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 
-  .metric-value {
-    font-size: 2rem;
+  .metric-value-large {
+    font-size: 3rem;
+  }
+
+  .metric-icon-large {
+    font-size: 3rem;
   }
 }
 
 @media (max-width: 768px) {
   .content-wrapper {
-    padding: 20px 16px;
+    padding: 16px 12px;
   }
 
   .header-section {
-    padding: 20px 16px;
+    padding: 20px 12px;
   }
 
   .page-title {
@@ -1234,17 +1277,47 @@ onMounted(() => {
     font-size: 1.25rem;
   }
 
-  .metrics-grid {
+  .metrics-grid-2x2 {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .quality-summary {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .metric-card-large {
+    padding: 20px;
+    min-height: 130px;
+  }
+
+  .metric-value-large {
+    font-size: 2rem;
+  }
+
+  .metric-icon-large {
+    font-size: 2rem;
   }
 
   .efficiency-display {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
 
   .efficiency-number {
     min-width: auto;
+  }
+
+  .efficiency-bar-container {
+    width: 100%;
+    height: 28px;
+  }
+
+  .bar-label {
+    font-size: 0.75rem;
+    padding-right: 12px;
   }
 
   .waste-header {
@@ -1253,12 +1326,46 @@ onMounted(() => {
   }
 
   .detection-grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
+  }
+
+  .detection-card {
+    padding: 16px;
+  }
+
+  .quality-stat {
+    padding: 20px;
   }
 
   .shift-cards {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-wrapper {
+    padding: 12px 8px;
+  }
+
+  .header-section {
+    padding: 16px 8px;
+  }
+
+  .metric-card-large {
+    padding: 16px;
+  }
+
+  .detection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .waste-monitor {
+    padding: 20px;
+  }
+
+  .efficiency-item {
+    padding: 16px;
   }
 }
 </style>
