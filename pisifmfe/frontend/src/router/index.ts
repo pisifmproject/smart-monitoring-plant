@@ -4,62 +4,62 @@ import { createRouter, createWebHistory } from "vue-router";
 const Landing = () => import("../views/landing.vue");
 const DashboardLayout = () => import("../layouts/dashboardLayout.vue");
 const LvmdpDailyReport = () =>
-  import("../views/dailyReport/lvmdpDailyReport.vue");
+  import("../views/dailyReport/lvmdp/lvmdpDailyReport.vue");
 
 // Daily Report pages
 const ProductionPC39DailyReport = () =>
-  import("../views/dailyReport/productionPC39DailyReport.vue");
+  import("../views/dailyReport/production/productionPC39DailyReport.vue");
 const ProductionPC14DailyReport = () =>
-  import("../views/dailyReport/productionPC14DailyReport.vue");
+  import("../views/dailyReport/production/productionPC14DailyReport.vue");
 const ProductionTS1000DailyReport = () =>
-  import("../views/dailyReport/productionTS1000DailyReport.vue");
+  import("../views/dailyReport/production/productionTS1000DailyReport.vue");
 const ProductionFCPDailyReport = () =>
-  import("../views/dailyReport/productionFCPDailyReport.vue");
+  import("../views/dailyReport/production/productionFCPDailyReport.vue");
 const ProductionTWS56DailyReport = () =>
-  import("../views/dailyReport/productionTWS56DailyReport.vue");
+  import("../views/dailyReport/production/productionTWS56DailyReport.vue");
 const ProductionTWS72DailyReport = () =>
-  import("../views/dailyReport/productionTWS72DailyReport.vue");
+  import("../views/dailyReport/production/productionTWS72DailyReport.vue");
 const ProductionCOPACKDailyReport = () =>
-  import("../views/dailyReport/productionCOPACKDailyReport.vue");
+  import("../views/dailyReport/production/productionCOPACKDailyReport.vue");
 const ProductionIHPDailyReport = () =>
-  import("../views/dailyReport/productionIHPDailyReport.vue");
+  import("../views/dailyReport/production/productionIHPDailyReport.vue");
 const WeigherADailyReport = () =>
-  import("../views/dailyReport/weigherADailyReport.vue");
+  import("../views/dailyReport/weigher/weigherADailyReport.vue");
 const WeigherBDailyReport = () =>
-  import("../views/dailyReport/weigherBDailyReport.vue");
+  import("../views/dailyReport/weigher/weigherBDailyReport.vue");
 const WeigherCDailyReport = () =>
-  import("../views/dailyReport/weigherCDailyReport.vue");
+  import("../views/dailyReport/weigher/weigherCDailyReport.vue");
 const WeigherDDailyReport = () =>
-  import("../views/dailyReport/weigherDDailyReport.vue");
+  import("../views/dailyReport/weigher/weigherDDailyReport.vue");
 const WeigherEDailyReport = () =>
-  import("../views/dailyReport/weigherEDailyReport.vue");
+  import("../views/dailyReport/weigher/weigherEDailyReport.vue");
 const WeigherFDailyReport = () =>
-  import("../views/dailyReport/weigherFDailyReport.vue");
+  import("../views/dailyReport/weigher/weigherFDailyReport.vue");
 const WeigherGDailyReport = () =>
-  import("../views/dailyReport/weigherGDailyReport.vue");
+  import("../views/dailyReport/weigher/weigherGDailyReport.vue");
 const WeigherHDailyReport = () =>
-  import("../views/dailyReport/weigherHDailyReport.vue");
+  import("../views/dailyReport/weigher/weigherHDailyReport.vue");
 const WeigherIDailyReport = () =>
-  import("../views/dailyReport/weigherIDailyReport.vue");
+  import("../views/dailyReport/weigher/weigherIDailyReport.vue");
 
 const BagmakerADailyReport = () =>
-  import("../views/dailyReport/bagmakerADailyReport.vue");
+  import("../views/dailyReport/bagmaker/bagmakerADailyReport.vue");
 const BagmakerBDailyReport = () =>
-  import("../views/dailyReport/bagmakerBDailyReport.vue");
+  import("../views/dailyReport/bagmaker/bagmakerBDailyReport.vue");
 const BagmakerCDailyReport = () =>
-  import("../views/dailyReport/bagmakerCDailyReport.vue");
+  import("../views/dailyReport/bagmaker/bagmakerCDailyReport.vue");
 const BagmakerDDailyReport = () =>
-  import("../views/dailyReport/bagmakerDDailyReport.vue");
+  import("../views/dailyReport/bagmaker/bagmakerDDailyReport.vue");
 const BagmakerEDailyReport = () =>
-  import("../views/dailyReport/bagmakerEDailyReport.vue");
+  import("../views/dailyReport/bagmaker/bagmakerEDailyReport.vue");
 const BagmakerFDailyReport = () =>
-  import("../views/dailyReport/bagmakerFDailyReport.vue");
+  import("../views/dailyReport/bagmaker/bagmakerFDailyReport.vue");
 const BagmakerGDailyReport = () =>
-  import("../views/dailyReport/bagmakerGDailyReport.vue");
+  import("../views/dailyReport/bagmaker/bagmakerGDailyReport.vue");
 const BagmakerHDailyReport = () =>
-  import("../views/dailyReport/bagmakerHDailyReport.vue");
+  import("../views/dailyReport/bagmaker/bagmakerHDailyReport.vue");
 const BagmakerIDailyReport = () =>
-  import("../views/dailyReport/bagmakerIDailyReport.vue");
+  import("../views/dailyReport/bagmaker/bagmakerIDailyReport.vue");
 
 // --- LVMDP pages
 const Lvmdp1 = () => import("../views/lvmdp/lvmdp1.vue");
@@ -79,26 +79,26 @@ const IHP = () => import("../views/production/ihp.vue");
 
 // --- Packing pages
 // Weigher views
-const WeigherA = () => import("../views/packing/weigherA.vue");
-const WeigherB = () => import("../views/packing/weigherB.vue");
-const WeigherC = () => import("../views/packing/weigherC.vue");
-const WeigherD = () => import("../views/packing/weigherD.vue");
-const WeigherE = () => import("../views/packing/weigherE.vue");
-const WeigherF = () => import("../views/packing/weigherF.vue");
-const WeigherG = () => import("../views/packing/weigherG.vue");
-const WeigherH = () => import("../views/packing/weigherH.vue");
-const WeigherI = () => import("../views/packing/weigherI.vue");
+const WeigherA = () => import("../views/packing/weigher/weigherA.vue");
+const WeigherB = () => import("../views/packing/weigher/weigherB.vue");
+const WeigherC = () => import("../views/packing/weigher/weigherC.vue");
+const WeigherD = () => import("../views/packing/weigher/weigherD.vue");
+const WeigherE = () => import("../views/packing/weigher/weigherE.vue");
+const WeigherF = () => import("../views/packing/weigher/weigherF.vue");
+const WeigherG = () => import("../views/packing/weigher/weigherG.vue");
+const WeigherH = () => import("../views/packing/weigher/weigherH.vue");
+const WeigherI = () => import("../views/packing/weigher/weigherI.vue");
 
 // BagMaker views
-const BagMakerA = () => import("../views/packing/bagmakerA.vue");
-const BagMakerB = () => import("../views/packing/bagmakerB.vue");
-const BagMakerC = () => import("../views/packing/bagmakerC.vue");
-const BagMakerD = () => import("../views/packing/bagmakerD.vue");
-const BagMakerE = () => import("../views/packing/bagmakerE.vue");
-const BagMakerF = () => import("../views/packing/bagmakerF.vue");
-const BagMakerG = () => import("../views/packing/bagmakerG.vue");
-const BagMakerH = () => import("../views/packing/bagmakerH.vue");
-const BagMakerI = () => import("../views/packing/bagmakerI.vue");
+const BagMakerA = () => import("../views/packing/bagmaker/bagmakerA.vue");
+const BagMakerB = () => import("../views/packing/bagmaker/bagmakerB.vue");
+const BagMakerC = () => import("../views/packing/bagmaker/bagmakerC.vue");
+const BagMakerD = () => import("../views/packing/bagmaker/bagmakerD.vue");
+const BagMakerE = () => import("../views/packing/bagmaker/bagmakerE.vue");
+const BagMakerF = () => import("../views/packing/bagmaker/bagmakerF.vue");
+const BagMakerG = () => import("../views/packing/bagmaker/bagmakerG.vue");
+const BagMakerH = () => import("../views/packing/bagmaker/bagmakerH.vue");
+const BagMakerI = () => import("../views/packing/bagmaker/bagmakerI.vue");
 
 export default createRouter({
   history: createWebHistory(),
