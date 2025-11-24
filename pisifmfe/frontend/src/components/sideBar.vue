@@ -318,7 +318,7 @@ function isMenuOpen(menuId: string): boolean {
                 class="submenu-item level-2"
                 active-class="active"
               >
-                <component :is="subMenu.icon || CircleSmall" class="w-3 h-3" />
+                <div class="h-2.5 w-2.5 rounded-full bg-slate-600" />
                 <span>{{ subMenu.name }}</span>
               </RouterLink>
 
@@ -352,15 +352,19 @@ function isMenuOpen(menuId: string): boolean {
 .sidebar {
   background: linear-gradient(135deg, #1a1f2e 0%, #111827 100%);
   width: 240px;
-  min-height: 100vh;
+  height: 100vh;
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   color: #e2e8f0;
   border-right: 1px solid rgba(226, 232, 240, 0.1);
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
   z-index: 50;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .sidebar-title {

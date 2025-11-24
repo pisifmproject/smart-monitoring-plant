@@ -1,34 +1,86 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import ReportButton from "@/components/reportButton.vue";
 
-// Placeholder data - akan diganti dengan real API call nanti
+const lineId = "LINE_C_WEIGHER";
+const loading = ref(false);
+const hasData = ref(false);
+
 const weigherData = ref({
-  lineId: "LINE_C_WEIGHER",
-  status: "running",
-  targetPacks: 5000,
-  actualPacks: 4750,
-  rejectCount: 45,
-  avgWeight: 1.02,
-  minWeight: 0.98,
-  maxWeight: 1.05,
-  efficiency: 95.0,
+  targetPacks: 0,
+  actualPacks: 0,
+  rejectCount: 0,
+  avgWeight: 0,
+  minWeight: 0,
+  maxWeight: 0,
+  efficiency: 0,
 });
 
 const shiftSummary = ref({
-  shift1: { target: 5000, actual: 4800, reject: 50, efficiency: 96.0 },
-  shift2: { target: 5000, actual: 4900, reject: 40, efficiency: 98.0 },
-  shift3: { target: 5000, actual: 4700, reject: 60, efficiency: 94.0 },
+  shift1: { target: 0, actual: 0, reject: 0, efficiency: 0 },
+  shift2: { target: 0, actual: 0, reject: 0, efficiency: 0 },
+  shift3: { target: 0, actual: 0, reject: 0, efficiency: 0 },
 });
 
-// Function to fetch weigher data (placeholder)
+// Status computed berdasarkan ada tidaknya data
+const status = computed(() => (hasData.value ? "running" : "offline"));
+
+// Function to fetch weigher data from backend
 const fetchWeigherData = async () => {
-  // TODO: Implement API call
-  console.log("Fetching weigher data...");
+  loading.value = true;
+  try {
+    const response = await fetch(
+      `http://localhost:2000/api/packing/weigher/${lineId}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      hasData.value = true;
+      weigherData.value = {
+        targetPacks: result.data.targetPacks || 0,
+        actualPacks: result.data.actualPacks || 0,
+        rejectCount: result.data.rejectCount || 0,
+        avgWeight: result.data.avgWeight || 0,
+        minWeight: result.data.minWeight || 0,
+        maxWeight: result.data.maxWeight || 0,
+        efficiency: result.data.efficiency || 0,
+      };
+
+      // Jika ada data shift summary dari backend
+      if (result.data.shifts) {
+        result.data.shifts.forEach((shift: any) => {
+          const shiftKey =
+            `shift${shift.shiftNumber}` as keyof typeof shiftSummary.value;
+          if (shiftSummary.value[shiftKey]) {
+            shiftSummary.value[shiftKey] = {
+              target: shift.target || 0,
+              actual: shift.actual || 0,
+              reject: shift.reject || 0,
+              efficiency: shift.efficiency || 0,
+            };
+          }
+        });
+      }
+    } else {
+      hasData.value = false;
+    }
+  } catch (err) {
+    console.error("Error fetching weigher data:", err);
+    hasData.value = false;
+  } finally {
+    loading.value = false;
+  }
 };
 
 onMounted(() => {
   fetchWeigherData();
+  // Refresh every 30 seconds
+  setInterval(fetchWeigherData, 30000);
 });
 </script>
 
@@ -39,12 +91,12 @@ onMounted(() => {
       <div class="header-section">
         <div class="header-content">
           <div>
-            <h1 class="page-title"> Weigher</h1>
+            <h1 class="page-title">Weigher</h1>
             <p class="page-subtitle">Packing Line C</p>
           </div>
           <div class="header-actions">
-            <div class="status-badge" :class="weigherData.status">
-              {{ weigherData.status.toUpperCase() }}
+            <div class="status-badge" :class="status">
+              {{ status.toUpperCase() }}
             </div>
           </div>
         </div>
@@ -52,7 +104,10 @@ onMounted(() => {
 
       <!-- Daily Report Button -->
       <div class="report-button-container">
-        <ReportButton routeName="dailyReportWeigherC" label="Daily Report - Weigher C" />
+        <ReportButton
+          routeName="dailyReportWeigherC"
+          label="Daily Report - Weigher C"
+        />
       </div>
 
       <!-- Main Metrics -->
@@ -130,11 +185,14 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Placeholder Note -->
+      <!-- Status Note -->
       <div class="note-section">
         <p class="note-text">
-          ðŸ“ <strong>Note:</strong> This is a template page. Connect to real API
-          endpoints to display live weigher data.
+          <span v-if="loading">⏳ Loading data...</span>
+          <span v-else-if="!hasData"
+            >📝 <strong>Note:</strong> Waiting for data from API</span
+          >
+          <span v-else>✅ Connected to API</span>
         </p>
       </div>
     </div>
@@ -193,28 +251,52 @@ onMounted(() => {
 
 .status-badge {
   padding: 8px 20px;
-  border-radius: 20px;
+  border-radius: 24px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .status-badge.running {
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-badge.offline {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
   color: white;
 }
 
 .status-badge.idle {
-  background: #f59e0b;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
 }
 
 .status-badge.down {
-  background: #ef4444;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
 }
 
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
 /* Report Button */
-.report-button-container { padding: 24px; margin: 20px 24px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; }
+.report-button-container {
+  padding: 24px;
+  margin: 20px 24px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
 
 /* Metrics Section */
 .metrics-section {
@@ -418,5 +500,3 @@ onMounted(() => {
   }
 }
 </style>
-
-

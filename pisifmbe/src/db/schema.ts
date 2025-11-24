@@ -195,3 +195,183 @@ export const packingLineABagMaker = pgTable("packing_line_a_bagmaker", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+/* ===========================
+   ADDITIONAL PRODUCTION LINES
+=========================== */
+
+// Production Line A - PC14
+export const productionLineAPC14 = pgTable("production_line_a_pc14", {
+  id: text("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull(),
+  lineId: text("line_id").notNull().default("LINE_A_PC14"),
+  targetProduction: integer("target_production").default(0),
+  actualProduction: integer("actual_production").default(0),
+  defectCount: integer("defect_count").default(0),
+  status: text("status").default("idle"),
+  oeePercentage: doublePrecision("oee_percentage").default(0),
+  availability: doublePrecision("availability").default(0),
+  performance: doublePrecision("performance").default(0),
+  quality: doublePrecision("quality").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Production Line A - TS1000
+export const productionLineATS1000 = pgTable("production_line_a_ts1000", {
+  id: text("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull(),
+  lineId: text("line_id").notNull().default("LINE_A_TS1000"),
+  targetProduction: integer("target_production").default(0),
+  actualProduction: integer("actual_production").default(0),
+  defectCount: integer("defect_count").default(0),
+  status: text("status").default("idle"),
+  oeePercentage: doublePrecision("oee_percentage").default(0),
+  availability: doublePrecision("availability").default(0),
+  performance: doublePrecision("performance").default(0),
+  quality: doublePrecision("quality").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Production Line A - FCP
+export const productionLineAFCP = pgTable("production_line_a_fcp", {
+  id: text("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull(),
+  lineId: text("line_id").notNull().default("LINE_A_FCP"),
+  targetProduction: integer("target_production").default(0),
+  actualProduction: integer("actual_production").default(0),
+  defectCount: integer("defect_count").default(0),
+  status: text("status").default("idle"),
+  oeePercentage: doublePrecision("oee_percentage").default(0),
+  availability: doublePrecision("availability").default(0),
+  performance: doublePrecision("performance").default(0),
+  quality: doublePrecision("quality").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Production Line A - TWS56
+export const productionLineATWS56 = pgTable("production_line_a_tws56", {
+  id: text("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull(),
+  lineId: text("line_id").notNull().default("LINE_A_TWS56"),
+  targetProduction: integer("target_production").default(0),
+  actualProduction: integer("actual_production").default(0),
+  defectCount: integer("defect_count").default(0),
+  status: text("status").default("idle"),
+  oeePercentage: doublePrecision("oee_percentage").default(0),
+  availability: doublePrecision("availability").default(0),
+  performance: doublePrecision("performance").default(0),
+  quality: doublePrecision("quality").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Production Line A - TWS72
+export const productionLineATWS72 = pgTable("production_line_a_tws72", {
+  id: text("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull(),
+  lineId: text("line_id").notNull().default("LINE_A_TWS72"),
+  targetProduction: integer("target_production").default(0),
+  actualProduction: integer("actual_production").default(0),
+  defectCount: integer("defect_count").default(0),
+  status: text("status").default("idle"),
+  oeePercentage: doublePrecision("oee_percentage").default(0),
+  availability: doublePrecision("availability").default(0),
+  performance: doublePrecision("performance").default(0),
+  quality: doublePrecision("quality").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Production Line A - COPACK
+export const productionLineACOPACK = pgTable("production_line_a_copack", {
+  id: text("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull(),
+  lineId: text("line_id").notNull().default("LINE_A_COPACK"),
+  targetProduction: integer("target_production").default(0),
+  actualProduction: integer("actual_production").default(0),
+  defectCount: integer("defect_count").default(0),
+  status: text("status").default("idle"),
+  oeePercentage: doublePrecision("oee_percentage").default(0),
+  availability: doublePrecision("availability").default(0),
+  performance: doublePrecision("performance").default(0),
+  quality: doublePrecision("quality").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Production Line A - IHP
+export const productionLineAIHP = pgTable("production_line_a_ihp", {
+  id: text("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull(),
+  lineId: text("line_id").notNull().default("LINE_A_IHP"),
+  targetProduction: integer("target_production").default(0),
+  actualProduction: integer("actual_production").default(0),
+  defectCount: integer("defect_count").default(0),
+  status: text("status").default("idle"),
+  oeePercentage: doublePrecision("oee_percentage").default(0),
+  availability: doublePrecision("availability").default(0),
+  performance: doublePrecision("performance").default(0),
+  quality: doublePrecision("quality").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+/* ===========================
+   ADDITIONAL PACKING LINES (B-I)
+=========================== */
+
+// Helper function to create packing line schemas (untuk menghindari repetisi)
+const createPackingWeigherTable = (line: string) =>
+  pgTable(`packing_line_${line.toLowerCase()}_weigher`, {
+    id: text("id").primaryKey(),
+    timestamp: timestamp("timestamp").notNull(),
+    lineId: text("line_id").notNull().default(`LINE_${line}_WEIGHER`),
+    targetPacks: integer("target_packs").default(0),
+    actualPacks: integer("actual_packs").default(0),
+    rejectCount: integer("reject_count").default(0),
+    avgWeight: doublePrecision("avg_weight").default(0),
+    minWeight: doublePrecision("min_weight").default(0),
+    maxWeight: doublePrecision("max_weight").default(0),
+    status: text("status").default("idle"),
+    efficiency: doublePrecision("efficiency").default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  });
+
+const createPackingBagMakerTable = (line: string) =>
+  pgTable(`packing_line_${line.toLowerCase()}_bagmaker`, {
+    id: text("id").primaryKey(),
+    timestamp: timestamp("timestamp").notNull(),
+    lineId: text("line_id").notNull().default(`LINE_${line}_BAGMAKER`),
+    targetBags: integer("target_bags").default(0),
+    actualBags: integer("actual_bags").default(0),
+    defectBags: integer("defect_bags").default(0),
+    status: text("status").default("idle"),
+    efficiency: doublePrecision("efficiency").default(0),
+    speedRpm: doublePrecision("speed_rpm").default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  });
+
+// Packing Lines B-I Weigher
+export const packingLineBWeigher = createPackingWeigherTable("B");
+export const packingLineCWeigher = createPackingWeigherTable("C");
+export const packingLineDWeigher = createPackingWeigherTable("D");
+export const packingLineEWeigher = createPackingWeigherTable("E");
+export const packingLineFWeigher = createPackingWeigherTable("F");
+export const packingLineGWeigher = createPackingWeigherTable("G");
+export const packingLineHWeigher = createPackingWeigherTable("H");
+export const packingLineIWeigher = createPackingWeigherTable("I");
+
+// Packing Lines B-I BagMaker
+export const packingLineBBagMaker = createPackingBagMakerTable("B");
+export const packingLineCBagMaker = createPackingBagMakerTable("C");
+export const packingLineDBagMaker = createPackingBagMakerTable("D");
+export const packingLineEBagMaker = createPackingBagMakerTable("E");
+export const packingLineFBagMaker = createPackingBagMakerTable("F");
+export const packingLineGBagMaker = createPackingBagMakerTable("G");
+export const packingLineHBagMaker = createPackingBagMakerTable("H");
+export const packingLineIBagMaker = createPackingBagMakerTable("I");

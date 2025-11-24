@@ -1,34 +1,86 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import ReportButton from "@/components/reportButton.vue";
 
-// Placeholder data - akan diganti dengan real API call nanti
+const lineId = "LINE_A_TWS72";
+const loading = ref(false);
+const hasData = ref(false);
+
 const productionData = ref({
-  lineId: "LINE_A_TWS72",
-  status: "running",
-  targetProduction: 1000,
-  actualProduction: 850,
-  defectCount: 12,
-  oeePercentage: 92.5,
-  availability: 95.0,
-  performance: 97.5,
-  quality: 98.8,
+  targetProduction: 0,
+  actualProduction: 0,
+  defectCount: 0,
+  oeePercentage: 0,
+  availability: 0,
+  performance: 0,
+  quality: 0,
 });
 
 const shiftSummary = ref({
-  shift1: { target: 1000, actual: 950, defect: 10, oee: 92.5 },
-  shift2: { target: 1000, actual: 980, defect: 5, oee: 95.0 },
-  shift3: { target: 1000, actual: 920, defect: 15, oee: 89.0 },
+  shift1: { target: 0, actual: 0, defect: 0, oee: 0 },
+  shift2: { target: 0, actual: 0, defect: 0, oee: 0 },
+  shift3: { target: 0, actual: 0, defect: 0, oee: 0 },
 });
 
-// Function to fetch production data (placeholder)
+// Status computed berdasarkan ada tidaknya data
+const status = computed(() => (hasData.value ? "running" : "offline"));
+
+// Function to fetch production data from backend
 const fetchProductionData = async () => {
-  // TODO: Implement API call
-  console.log("Fetching production data...");
+  loading.value = true;
+  try {
+    const response = await fetch(
+      `http://localhost:2000/api/production/${lineId}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      hasData.value = true;
+      productionData.value = {
+        targetProduction: result.data.targetProduction || 0,
+        actualProduction: result.data.actualProduction || 0,
+        defectCount: result.data.defectCount || 0,
+        oeePercentage: result.data.oeePercentage || 0,
+        availability: result.data.availability || 0,
+        performance: result.data.performance || 0,
+        quality: result.data.quality || 0,
+      };
+
+      // Jika ada data shift summary dari backend
+      if (result.data.shifts) {
+        result.data.shifts.forEach((shift: any) => {
+          const shiftKey =
+            `shift${shift.shiftNumber}` as keyof typeof shiftSummary.value;
+          if (shiftSummary.value[shiftKey]) {
+            shiftSummary.value[shiftKey] = {
+              target: shift.target || 0,
+              actual: shift.actual || 0,
+              defect: shift.defect || 0,
+              oee: shift.oee || 0,
+            };
+          }
+        });
+      }
+    } else {
+      hasData.value = false;
+    }
+  } catch (err) {
+    console.error("Error fetching production data:", err);
+    hasData.value = false;
+  } finally {
+    loading.value = false;
+  }
 };
 
 onMounted(() => {
   fetchProductionData();
+  // Refresh every 30 seconds
+  setInterval(fetchProductionData, 30000);
 });
 </script>
 
@@ -40,20 +92,17 @@ onMounted(() => {
         <div class="header-content">
           <div>
             <h1 class="page-title">Production Line</h1>
-            <p class="page-subtitle">Line G - TWS72</p>
+            <p class="page-subtitle">Line A - TWS72</p>
           </div>
-          <div class="status-badge" :class="productionData.status">
-            {{ productionData.status.toUpperCase() }}
+          <div class="status-badge" :class="status">
+            {{ status.toUpperCase() }}
           </div>
         </div>
       </div>
 
       <!-- Daily Report Button -->
       <div class="report-button-container">
-        <ReportButton
-          routeName="dailyReportTWS72"
-          label="Daily Report - TWS72"
-        />
+        <ReportButton routeName="dailyReportTWS72" label="Daily Report - TWS72" />
       </div>
 
       <!-- Main Metrics -->
@@ -133,10 +182,14 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Placeholder Note -->
+      <!-- Status Note -->
       <div class="note-section">
         <p class="note-text">
-          📝 <strong>Note:</strong> Data Dummy Belum connect ke API
+          <span v-if="loading">⏳ Loading data...</span>
+          <span v-else-if="!hasData"
+            >📝 <strong>Note:</strong> Waiting for data from API</span
+          >
+          <span v-else>✅ Connected to API</span>
         </p>
       </div>
     </div>
@@ -189,24 +242,42 @@ onMounted(() => {
 
 .status-badge {
   padding: 8px 20px;
-  border-radius: 20px;
+  border-radius: 24px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .status-badge.running {
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-badge.offline {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
   color: white;
 }
 
 .status-badge.idle {
-  background: #f59e0b;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
 }
 
 .status-badge.down {
-  background: #ef4444;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
 }
 
 /* Metrics Section */

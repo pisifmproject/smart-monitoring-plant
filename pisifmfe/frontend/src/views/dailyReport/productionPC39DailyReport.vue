@@ -77,6 +77,11 @@ async function loadShiftReports() {
     const response = await fetch(
       `http://localhost:2000/api/daily-report/production/${lineId}?date=${selectedDate.value}`
     );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const result = await response.json();
 
     if (result.success && result.data?.shifts) {
@@ -85,8 +90,9 @@ async function loadShiftReports() {
       shiftReports.value = [];
     }
   } catch (err) {
-    errorShift.value = String(err);
+    console.error("Error loading shift reports:", err);
     shiftReports.value = [];
+    errorShift.value = null; // Don't show error, just show empty state
   } finally {
     loadingShift.value = false;
   }
@@ -101,6 +107,11 @@ async function loadHourlyReports() {
     const response = await fetch(
       `http://localhost:2000/api/daily-report/production/${lineId}?date=${selectedDate.value}`
     );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const result = await response.json();
 
     if (result.success && result.data?.shifts) {
@@ -124,9 +135,13 @@ async function loadHourlyReports() {
           });
         }
       });
+    } else {
+      hourlyReports.value = [];
     }
   } catch (err) {
-    errorHourly.value = String(err);
+    console.error("Error loading hourly reports:", err);
+    hourlyReports.value = [];
+    errorHourly.value = null; // Don't show error, just show empty state
   } finally {
     loadingHourly.value = false;
   }
@@ -351,7 +366,9 @@ onUnmounted(() => {
         <!-- Shift Reports Tab -->
         <div v-if="activeTab === 'shift'" class="tab-content">
           <div v-if="loadingShift" class="loading">Loading shift data...</div>
-          <div v-else-if="errorShift" class="error">{{ errorShift }}</div>
+          <div v-else-if="shiftReports.length === 0" class="empty-state">
+            <p>No shift data available for this date</p>
+          </div>
           <div v-else class="shift-table-wrapper">
             <table class="shift-table">
               <thead>
@@ -393,12 +410,11 @@ onUnmounted(() => {
         <!-- Hourly Reports Tab -->
         <div v-if="activeTab === 'hourly'" class="tab-content">
           <div v-if="loadingHourly" class="loading">Loading hourly data...</div>
-          <div v-else-if="errorHourly" class="error">{{ errorHourly }}</div>
+          <div v-else-if="hourlyReports.length === 0" class="empty-state">
+            <p>No hourly data available for this date</p>
+          </div>
           <div v-else class="hourly-table-wrapper">
-            <div v-if="hourlyReports.length === 0" class="empty-state">
-              <p>No hourly data available for this date</p>
-            </div>
-            <table v-else class="hourly-table">
+            <table class="hourly-table">
               <thead>
                 <tr>
                   <th>Time</th>

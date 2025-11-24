@@ -258,6 +258,8 @@ const toggleSidebar = () => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  margin-left: 240px;
+  transition: margin-left 0.3s ease;
 }
 
 .topbar {
@@ -281,16 +283,21 @@ const toggleSidebar = () => {
   background: #f1f5f9;
   color: #0f172a;
   cursor: pointer;
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .hamb:hover {
   background: #e2e8f0;
   border-color: #cbd5e1;
   transform: translateY(-1px);
+}
+
+.hamb:active {
+  transform: scale(0.95);
 }
 
 .breadcrumb {
@@ -352,15 +359,15 @@ const toggleSidebar = () => {
   max-width: 1200px; /* bisa kamu atur, misalnya 1100 / 1300 */
 }
 
-/* Offset untuk balance ketika sidebar hidden (compensate fixed sidebar width) */
-.page.sidebar-closed-state {
-  padding-right: 240px;
+/* Adjust main area when sidebar is hidden */
+.sidebar-hidden ~ .main {
+  margin-left: 0;
 }
 
-/* Remove offset di mobile */
+/* Remove margin on mobile */
 @media (max-width: 1024px) {
-  .page.sidebar-closed-state {
-    padding-right: 0;
+  .main {
+    margin-left: 0;
   }
 }
 
@@ -374,25 +381,32 @@ const toggleSidebar = () => {
   opacity: 0;
 }
 
-/* DESKTOP: sidebar nempel kiri, nggak pakai transform */
+/* DESKTOP: sidebar toggle behavior */
 @media (min-width: 1024px) {
   .layout {
-    display: grid;
-    grid-template-columns: auto 1fr;
+    display: flex;
     width: 100%;
   }
 
-  .sidebar-visible,
-  .sidebar-hidden {
-    position: relative !important;
+  .sidebar-visible {
     transform: translateX(0) !important;
     opacity: 1 !important;
-    width: 240px;
-    z-index: 50;
+  }
+
+  .sidebar-hidden {
+    transform: translateX(-100%) !important;
+    opacity: 0 !important;
+    pointer-events: none;
   }
 
   .main {
     min-height: 100vh;
+  }
+
+  /* Ensure hamburger is always visible */
+  .hamb {
+    display: inline-flex !important;
+    visibility: visible !important;
   }
 }
 </style>
