@@ -2,10 +2,20 @@
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import { getDailyReportAll, getDailyHourly } from "@/lib/api";
-import { Download, CalendarSearch, HardDriveUpload } from "lucide-vue-next";
+import {
+  Download,
+  CalendarSearch,
+  HardDriveUpload,
+  ClockFading,
+  FileChartColumn,
+} from "lucide-vue-next";
 
 const route = useRoute();
-const panelId = (parseInt(String(route.query.panel || 1)) || 1) as 1 | 2 | 3 | 4;
+const panelId = (parseInt(String(route.query.panel || 1)) || 1) as
+  | 1
+  | 2
+  | 3
+  | 4;
 
 // Date picker
 const selectedDate = ref<string>(new Date().toISOString().split("T")[0]);
@@ -332,10 +342,7 @@ onUnmounted(() => {
                 <span class="download-text">Download</span>
               </button>
 
-              <div
-                v-if="showDownloadMenu"
-                class="download-dropdown"
-              >
+              <div v-if="showDownloadMenu" class="download-dropdown">
                 <button
                   class="dropdown-item"
                   @click="downloadByDate"
@@ -370,8 +377,8 @@ onUnmounted(() => {
           :class="['tab-button', { active: activeTab === tab }]"
           @click="activeTab = tab as any"
         >
-          <span v-if="tab === 'shift'" class="tab-icon">📊</span>
-          <span v-else class="tab-icon">⏰</span>
+          <FileChartColumn v-if="tab === 'shift'" class="tab-icon-svg" />
+          <ClockFading v-else class="tab-icon-svg" />
           {{ tab === "shift" ? "Shift Reports" : "Hourly Reports" }}
         </button>
       </div>
@@ -412,9 +419,7 @@ onUnmounted(() => {
 
         <!-- Hourly Reports Tab -->
         <div v-if="activeTab === 'hourly'" class="tab-content">
-          <div v-if="loadingHourly" class="loading">
-            Loading hourly data...
-          </div>
+          <div v-if="loadingHourly" class="loading">Loading hourly data...</div>
           <div v-else-if="errorHourly" class="error">{{ errorHourly }}</div>
           <div v-else class="hourly-table-wrapper">
             <div v-if="hourlyReports.length === 0" class="empty-state">
@@ -693,8 +698,9 @@ onUnmounted(() => {
   background: linear-gradient(to right, #0ea5e9, #06b6d4);
 }
 
-.tab-icon {
-  font-size: 1.2rem;
+.tab-icon-svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* Content Section */
