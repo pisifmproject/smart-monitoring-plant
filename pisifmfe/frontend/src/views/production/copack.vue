@@ -92,7 +92,7 @@ onMounted(() => {
         <div class="header-content">
           <div>
             <h1 class="page-title">Production Line</h1>
-            <p class="page-subtitle">Line A - COPACK</p>
+            <p class="page-subtitle">Line H - COPACK</p>
           </div>
           <div class="status-badge" :class="status">
             {{ status.toUpperCase() }}
