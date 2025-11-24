@@ -10,6 +10,9 @@ import lvmdp1DailyReportController from "./lvmdp/LVMDP_1/lvmdp_1.dailyReport.con
 import lvmdp2DailyReportController from "./lvmdp/LVMDP_2/lvmdp_2.dailyReport.controller";
 import lvmdp3DailyReportController from "./lvmdp/LVMDP_3/lvmdp_3.dailyReport.controller";
 import lvmdp4DailyReportController from "./lvmdp/LVMDP_4/lvmdp_4.dailyReport.controller";
+import productionController from "./production/production.controller";
+import packingController from "./packing/packing.controller";
+import dailyReportRouter from "./routes/dailyReport.router";
 import "./utils/pgTimezoneFix";
 
 const app = express();
@@ -38,6 +41,13 @@ app.use("/api/lvmdp3", lvmdp3Controller);
 app.use("/api/lvmdp3/daily-report", lvmdp3DailyReportController);
 app.use("/api/lvmdp4", lvmdp4Controller);
 app.use("/api/lvmdp4/daily-report", lvmdp4DailyReportController);
+
+// Production & Packing routes
+app.use("/api/production", productionController);
+app.use("/api/packing", packingController);
+
+// Daily Report routes
+app.use("/api/daily-report", dailyReportRouter);
 
 // app.listen(PORT, () => {
 //   console.log(`Server is running on port ${PORT}`);

@@ -46,10 +46,10 @@ const mainMenus = [
         name: "Electrical",
         icon: Zap,
         children: [
-          { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1"},
-          { id: "lvmdp2", name: "LVMDP 2", routeName: "lvmdp2"},
-          { id: "lvmdp3", name: "LVMDP 3", routeName: "lvmdp3"},
-          { id: "lvmdp4", name: "LVMDP 4", routeName: "lvmdp4"},
+          { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1" },
+          { id: "lvmdp2", name: "LVMDP 2", routeName: "lvmdp2" },
+          { id: "lvmdp3", name: "LVMDP 3", routeName: "lvmdp3" },
+          { id: "lvmdp4", name: "LVMDP 4", routeName: "lvmdp4" },
         ],
       },
     ],
@@ -59,13 +59,14 @@ const mainMenus = [
     name: "Production",
     icon: Factory,
     children: [
-      { id: "lineA", 
-        name: "Line A", 
-        icon: BriefcaseConveyorBelt,
-        children: [
-          { id: "PC39", name: "PC39", routeName: "lvmdp2"},
-        ],
-      },
+      { id: "pc39", name: "PC39", routeName: "pc39", icon: CircleSmall },
+      { id: "pc14", name: "PC14", routeName: "pc14", icon: CircleSmall },
+      { id: "ts1000", name: "TS1000", routeName: "ts1000", icon: CircleSmall },
+      { id: "fcp", name: "FCP", routeName: "fcp", icon: CircleSmall },
+      { id: "tws56", name: "TWS56", routeName: "tws56", icon: CircleSmall },
+      { id: "tws72", name: "TWS72", routeName: "tws72", icon: CircleSmall },
+      { id: "copack", name: "COPACK", routeName: "copack", icon: CircleSmall },
+      { id: "ihp", name: "IHP", routeName: "ihp", icon: CircleSmall },
     ],
   },
   {
@@ -73,12 +74,175 @@ const mainMenus = [
     name: "Packing",
     icon: Package,
     children: [
-      { id: "lvmdp3", 
-        name: "Line A", 
+      {
+        id: "packLineA",
+        name: "Line A",
         icon: BriefcaseConveyorBelt,
         children: [
-          { id: "Weigher", name: "Weigher", routeName: "lvmdp3" },
-          { id: "BagMaker", name: "BagMaker", routeName: "lvmdp4" },
+          {
+            id: "weigherA",
+            name: "Weigher",
+            routeName: "weigherA",
+            icon: CircleSmall,
+          },
+          {
+            id: "bagmakerA",
+            name: "BagMaker",
+            routeName: "bagmakerA",
+            icon: CircleSmall,
+          },
+        ],
+      },
+      {
+        id: "packLineB",
+        name: "Line B",
+        icon: BriefcaseConveyorBelt,
+        children: [
+          {
+            id: "weigherB",
+            name: "Weigher",
+            routeName: "weigherB",
+            icon: CircleSmall,
+          },
+          {
+            id: "bagmakerB",
+            name: "BagMaker",
+            routeName: "bagmakerB",
+            icon: CircleSmall,
+          },
+        ],
+      },
+      {
+        id: "packLineC",
+        name: "Line C",
+        icon: BriefcaseConveyorBelt,
+        children: [
+          {
+            id: "weigherC",
+            name: "Weigher",
+            routeName: "weigherC",
+            icon: CircleSmall,
+          },
+          {
+            id: "bagmakerC",
+            name: "BagMaker",
+            routeName: "bagmakerC",
+            icon: CircleSmall,
+          },
+        ],
+      },
+      {
+        id: "packLineD",
+        name: "Line D",
+        icon: BriefcaseConveyorBelt,
+        children: [
+          {
+            id: "weigherD",
+            name: "Weigher",
+            routeName: "weigherD",
+            icon: CircleSmall,
+          },
+          {
+            id: "bagmakerD",
+            name: "BagMaker",
+            routeName: "bagmakerD",
+            icon: CircleSmall,
+          },
+        ],
+      },
+      {
+        id: "packLineE",
+        name: "Line E",
+        icon: BriefcaseConveyorBelt,
+        children: [
+          {
+            id: "weigherE",
+            name: "Weigher",
+            routeName: "weigherE",
+            icon: CircleSmall,
+          },
+          {
+            id: "bagmakerE",
+            name: "BagMaker",
+            routeName: "bagmakerE",
+            icon: CircleSmall,
+          },
+        ],
+      },
+      // {
+      //   id: "packLineF",
+      //   name: "Line F",
+      //   icon: BriefcaseConveyorBelt,
+      //   children: [
+      //     {
+      //       id: "weigherF",
+      //       name: "Weigher",
+      //       routeName: "weigherF",
+      //       icon: CircleSmall,
+      //     },
+      //     {
+      //       id: "bagmakerF",
+      //       name: "BagMaker",
+      //       routeName: "bagmakerF",
+      //       icon: CircleSmall,
+      //     },
+      //   ],
+      // },
+      {
+        id: "packLineG",
+        name: "Line G",
+        icon: BriefcaseConveyorBelt,
+        children: [
+          {
+            id: "weigherG",
+            name: "Weigher",
+            routeName: "weigherG",
+            icon: CircleSmall,
+          },
+          {
+            id: "bagmakerG",
+            name: "BagMaker",
+            routeName: "bagmakerG",
+            icon: CircleSmall,
+          },
+        ],
+      },
+      {
+        id: "packLineH",
+        name: "Line H",
+        icon: BriefcaseConveyorBelt,
+        children: [
+          {
+            id: "weigherH",
+            name: "Weigher",
+            routeName: "weigherH",
+            icon: CircleSmall,
+          },
+          {
+            id: "bagmakerH",
+            name: "BagMaker",
+            routeName: "bagmakerH",
+            icon: CircleSmall,
+          },
+        ],
+      },
+      {
+        id: "packLineI",
+        name: "Line I",
+        icon: BriefcaseConveyorBelt,
+        children: [
+          {
+            id: "weigherI",
+            name: "Weigher",
+            routeName: "weigherI",
+            icon: CircleSmall,
+          },
+          {
+            id: "bagmakerI",
+            name: "BagMaker",
+            routeName: "bagmakerI",
+            icon: CircleSmall,
+          },
         ],
       },
     ],
@@ -135,10 +299,10 @@ function isMenuOpen(menuId: string): boolean {
                 :aria-expanded="isMenuOpen(subMenu.id) ? 'true' : 'false'"
               >
                 <span class="flex items-center gap-2">
-                  <component 
-                  v-if="subMenu.icon" 
-                  :is="subMenu.icon" 
-                  class="w-4 h-4" 
+                  <component
+                    v-if="subMenu.icon"
+                    :is="subMenu.icon"
+                    class="w-4 h-4"
                   />
                   <span>{{ subMenu.name }}</span>
                 </span>
@@ -154,10 +318,7 @@ function isMenuOpen(menuId: string): boolean {
                 class="submenu-item level-2"
                 active-class="active"
               >
-                <component
-                  :is="subMenu.icon || CircleSmall"
-                  class="w-3 h-3"
-                />
+                <component :is="subMenu.icon || CircleSmall" class="w-3 h-3" />
                 <span>{{ subMenu.name }}</span>
               </RouterLink>
 

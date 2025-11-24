@@ -1,25 +1,30 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { useRouter } from "vue-router";
 
-defineProps<{
-  panelId: 1 | 2 | 3 | 4;
+const props = defineProps<{
+  panelId?: number;
+  label?: string;
+  routeName?: string;
 }>();
 
 const router = useRouter();
 
-function openReport(panelId: number) {
-  router.push({
-    name: "dailyReport",
-    query: { panel: panelId },
-  });
+function openReport() {
+  if (props.routeName) {
+    router.push({ name: props.routeName });
+  } else if (props.panelId) {
+    router.push({
+      name: "dailyReport",
+      query: { panel: props.panelId },
+    });
+  }
 }
 </script>
 
 <template>
-  <button class="report-button" @click="openReport(panelId)">
+  <button class="report-button" @click="openReport">
     <span class="report-icon">📄</span>
-    <span class="report-text">Daily Report</span>
+    <span class="report-text">{{ label || "Daily Report" }}</span>
   </button>
 </template>
 
