@@ -3,7 +3,8 @@ import { createRouter, createWebHistory } from "vue-router";
 
 const Landing = () => import("../views/landing.vue");
 const DashboardLayout = () => import("../layouts/dashboardLayout.vue");
-const DailyReport = () => import("../views/dailyReport.vue");
+const LvmdpDailyReport = () =>
+  import("../views/dailyReport/lvmdpDailyReport.vue");
 
 // Daily Report pages
 const ProductionPC39DailyReport = () =>
@@ -112,7 +113,11 @@ export default createRouter({
         { path: "lvmdp2", name: "lvmdp2", component: Lvmdp2 },
         { path: "lvmdp3", name: "lvmdp3", component: Lvmdp3 },
         { path: "lvmdp4", name: "lvmdp4", component: Lvmdp4 },
-        { path: "daily-report", name: "dailyReport", component: DailyReport },
+        {
+          path: "daily-report",
+          name: "dailyReport",
+          component: LvmdpDailyReport,
+        },
 
         // Production routes
         { path: "production/pc39", name: "pc39", component: PC39 },
