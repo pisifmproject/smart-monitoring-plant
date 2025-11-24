@@ -67,3 +67,4 @@ export function initDailyReportScheduler() {
 export async function runDailyReportFor(dateStr: string) {
   await generateForDate(dateStr);
 }
+ 
