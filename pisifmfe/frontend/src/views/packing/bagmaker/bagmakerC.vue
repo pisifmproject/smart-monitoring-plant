@@ -622,21 +622,21 @@ onMounted(() => {
 
 .metric-card-large {
   background: white;
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 14px;
+  padding: 20px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
   box-sizing: border-box;
   min-width: 0;
-  min-height: 140px;
+  min-height: 120px;
   display: flex;
   flex-direction: column;
 }
 
 .metric-card-large:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
 }
 
 .metric-card-large.primary {
@@ -662,12 +662,12 @@ onMounted(() => {
 .card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .metric-icon-large {
-  font-size: 2.5rem;
+  font-size: 2.125rem;
   line-height: 1;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
@@ -680,7 +680,7 @@ onMounted(() => {
 }
 
 .metric-label {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #475569;
   text-transform: uppercase;
@@ -688,24 +688,24 @@ onMounted(() => {
 }
 
 .metric-value-large {
-  font-size: 2.5rem;
+  font-size: 2.125rem;
   font-weight: 800;
   color: #1e293b;
   line-height: 1;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .metric-unit-large {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: #64748b;
   font-weight: 600;
 }
 
 .metric-progress-large {
-  margin-top: 12px;
-  height: 10px;
+  margin-top: 10px;
+  height: 8px;
   background: #e2e8f0;
-  border-radius: 5px;
+  border-radius: 4px;
   overflow: hidden;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -1288,16 +1288,16 @@ onMounted(() => {
   }
 
   .metric-card-large {
-    padding: 20px;
-    min-height: 130px;
+    padding: 16px;
+    min-height: 110px;
   }
 
   .metric-value-large {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   .metric-icon-large {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   .efficiency-display {
