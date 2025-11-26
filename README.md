@@ -1,6 +1,6 @@
 # 📋 PISIFM Frontend - Environment Documentation
 
-**Developer**: Septian Bagus Jumantoro
+**Developer**: Septian Bagus Jumantoro  
 **Last Updated**: November 26, 2025  
 **License**: Confidential - PT Indofood Fortuna Makmur Internal Use Only
 
