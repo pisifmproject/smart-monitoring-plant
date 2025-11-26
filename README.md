@@ -3,7 +3,7 @@
 **Last Updated**: November 26, 2025  
 **Version**: 2.0  
 **License**: Confidential - PT Indofood Fortuna Makmur Internal Use Only
-**Developer**: Septian Bagus Jumantoro
+**Developer**: Confidential - PT Indofood Fortuna Makmur Internal Use Only
 
 ---
 
