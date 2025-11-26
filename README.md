@@ -1,9 +1,9 @@
 # 📋 PISIFM Frontend - Environment Documentation
 
-**Modified**: Septian Bagus Jumantoro
 **Last Updated**: November 26, 2025  
 **Version**: 2.0  
 **License**: Confidential - PT Indofood Fortuna Makmur Internal Use Only
+**Developer**: Septian Bagus Jumantoro
 
 ---
 
@@ -330,5 +330,3 @@ VITE_SOCKET_URL=http://localhost:2000
 - Design philosophy: Proporsional, elegant, not too big, not too small
 
 ---
-
-
