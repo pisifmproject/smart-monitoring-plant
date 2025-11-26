@@ -1,4 +1,4 @@
-# 📋 PISIFM Frontend - Environment Documentation
+# 📋 PISIFM - Environment Documentation
 
 **Developer**: Septian Bagus Jumantoro  
 **Last Updated**: November 26, 2025  
