@@ -28,11 +28,32 @@ const mapRow = (r: any): Lvmdp3Row => ({
   avgCurrent: toNumber(r.avg_current),
 });
 
-export async function findLVMDPs() {
+export async function findLVMDPs(dateFrom?: string, dateTo?: string) {
   try {
-    const result = await db.execute(
-      sql`SELECT * FROM public.v_lvmdp_3 ORDER BY waktu DESC`
-    );
+    let query;
+    if (dateFrom && dateTo) {
+      // Date range query
+      query = sql`SELECT * FROM public.v_lvmdp_3 
+                  WHERE waktu >= ${dateFrom}::date 
+                  AND waktu < (${dateTo}::date + interval '1 day')
+                  ORDER BY waktu ASC`;
+    } else if (dateFrom) {
+      // Single date filter - only get data for this specific date
+      query = sql`SELECT * FROM public.v_lvmdp_3 
+                  WHERE waktu >= ${dateFrom}::date 
+                  AND waktu < (${dateFrom}::date + interval '1 day')
+                  ORDER BY waktu ASC`;
+    } else {
+      // No filter, get only last 7 days (reduced from 31)
+      query = sql`SELECT * FROM public.v_lvmdp_3 
+                  WHERE waktu >= CURRENT_DATE - interval '7 days'
+                  ORDER BY waktu DESC
+                  LIMIT 10000`;
+    }
+
+    const t0 = Date.now();
+    const result = await db.execute(query);
+    const t1 = Date.now();
 
     let rows: any[] = [];
     if (Array.isArray(result)) {
@@ -43,6 +64,7 @@ export async function findLVMDPs() {
       }
     }
 
+    console.log(`[REPO LVMDP3] Query: ${t1 - t0}ms, Rows: ${rows.length}`);
     return rows.map(mapRow);
   } catch (error) {
     console.error("Error in findLVMDPs:", error);

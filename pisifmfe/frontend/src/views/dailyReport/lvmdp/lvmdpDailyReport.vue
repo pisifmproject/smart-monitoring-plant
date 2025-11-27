@@ -40,6 +40,13 @@ const loadingHourly = ref(false);
 const errorShift = ref<string | null>(null);
 const errorHourly = ref<string | null>(null);
 
+// Debounce timer for date changes
+let dateChangeTimer: NodeJS.Timeout | null = null;
+
+// Request tracking to prevent race conditions
+let currentShiftRequest = 0;
+let currentHourlyRequest = 0;
+
 // Download dropdown state
 const showDownloadMenu = ref(false);
 const handleWindowClick = () => {
@@ -50,7 +57,8 @@ function toggleDownloadMenu() {
 }
 
 // Local storage cache
-const cacheKey = (date: string) => `lvmdp_${panelId}_hourly_v4_${date}`;
+// v10: Enhanced race condition fix - clear old data immediately + strict validation
+const cacheKey = (date: string) => `lvmdp_${panelId}_hourly_v10_${date}`;
 
 const numberFormatter = new Intl.NumberFormat("id-ID", {
   minimumFractionDigits: 2,
@@ -90,21 +98,47 @@ function formatDate(dateStr: string) {
   }
 }
 
+// Cache for shift reports to avoid repeated API calls
+const shiftReportsCache = new Map<string, any[]>();
+
 // Fetch all daily reports for shift summaries
 async function loadShiftReports() {
   loadingShift.value = true;
   errorShift.value = null;
+
+  // Increment request counter to track this specific request
+  const requestId = ++currentShiftRequest;
+  const targetDate = selectedDate.value;
+
   try {
+    // Check cache first
+    const cacheKey = `shift_${panelId}_${targetDate}`;
+    if (shiftReportsCache.has(cacheKey)) {
+      // Still check if this is the latest request
+      if (requestId !== currentShiftRequest) return;
+      shiftReports.value = shiftReportsCache.get(cacheKey)!;
+      loadingShift.value = false;
+      return;
+    }
+
     const data = await getDailyReportAll(panelId);
+
+    // Check if this request is still valid (user hasn't changed date)
+    if (
+      requestId !== currentShiftRequest ||
+      targetDate !== selectedDate.value
+    ) {
+      return; // Discard stale response
+    }
     if (Array.isArray(data)) {
-      const filtered = data.filter((row) => {
+      // Use find instead of filter for single result
+      const report = data.find((row) => {
         const rowDate = row.date || row.reportDate;
-        return rowDate === selectedDate.value;
+        return rowDate === targetDate;
       });
 
-      if (filtered.length > 0) {
-        const report = filtered[0];
-        shiftReports.value = [
+      if (report) {
+        const result = [
           {
             shift: 1,
             totalKwh: report.shift1TotalKwh || 0,
@@ -127,18 +161,52 @@ async function loadShiftReports() {
             cosPhi: report.shift3CosPhi || 0,
           },
         ];
+
+        // Final check before updating - prevent race condition
+        if (
+          requestId !== currentShiftRequest ||
+          targetDate !== selectedDate.value
+        ) {
+          return;
+        }
+
+        shiftReports.value = result;
+        shiftReportsCache.set(cacheKey, result);
       } else {
-        shiftReports.value = [
+        const emptyResult = [
           { shift: 1, totalKwh: 0, avgKwh: 0, iavg: 0, cosPhi: 0 },
           { shift: 2, totalKwh: 0, avgKwh: 0, iavg: 0, cosPhi: 0 },
           { shift: 3, totalKwh: 0, avgKwh: 0, iavg: 0, cosPhi: 0 },
         ];
+
+        // Final check before updating
+        if (
+          requestId !== currentShiftRequest ||
+          targetDate !== selectedDate.value
+        ) {
+          return;
+        }
+
+        shiftReports.value = emptyResult;
+        shiftReportsCache.set(cacheKey, emptyResult);
       }
     }
   } catch (err) {
-    errorShift.value = String(err);
+    // Only set error if this is still the current request
+    if (
+      requestId === currentShiftRequest &&
+      targetDate === selectedDate.value
+    ) {
+      errorShift.value = String(err);
+    }
   } finally {
-    loadingShift.value = false;
+    // Only clear loading if this is still the current request
+    if (
+      requestId === currentShiftRequest &&
+      targetDate === selectedDate.value
+    ) {
+      loadingShift.value = false;
+    }
   }
 }
 
@@ -147,14 +215,29 @@ async function loadHourlyReports() {
   loadingHourly.value = true;
   errorHourly.value = null;
 
+  // Increment request counter to track this specific request
+  const requestId = ++currentHourlyRequest;
+  const targetDate = selectedDate.value;
+
   try {
-    const cached = localStorage.getItem(cacheKey(selectedDate.value));
+    const cached = localStorage.getItem(cacheKey(targetDate));
     if (cached) {
+      // Still check if this is the latest request
+      if (requestId !== currentHourlyRequest) return;
       hourlyReports.value = JSON.parse(cached);
+      loadingHourly.value = false;
       return;
     }
 
-    const data = await getDailyHourly(panelId, selectedDate.value);
+    const data = await getDailyHourly(panelId, targetDate);
+
+    // Check if this request is still valid (user hasn't changed date)
+    if (
+      requestId !== currentHourlyRequest ||
+      targetDate !== selectedDate.value
+    ) {
+      return; // Discard stale response
+    }
     if (Array.isArray(data)) {
       const normalized = data.map((row: any) => ({
         hour: row.hour,
@@ -165,22 +248,61 @@ async function loadHourlyReports() {
           row.avgCurrent ?? row.avg_avg_current ?? row.avg_current ?? 0,
       }));
 
+      // Final check before updating - prevent race condition
+      if (
+        requestId !== currentHourlyRequest ||
+        targetDate !== selectedDate.value
+      ) {
+        return;
+      }
+
       hourlyReports.value = normalized;
-      localStorage.setItem(
-        cacheKey(selectedDate.value),
-        JSON.stringify(normalized)
-      );
+      localStorage.setItem(cacheKey(targetDate), JSON.stringify(normalized));
     }
   } catch (err) {
-    errorHourly.value = String(err);
+    // Only set error if this is still the current request
+    if (
+      requestId === currentHourlyRequest &&
+      targetDate === selectedDate.value
+    ) {
+      errorHourly.value = String(err);
+    }
   } finally {
-    loadingHourly.value = false;
+    // Only clear loading if this is still the current request
+    if (
+      requestId === currentHourlyRequest &&
+      targetDate === selectedDate.value
+    ) {
+      loadingHourly.value = false;
+    }
   }
 }
 
+// Debounced data loading to prevent rapid API calls
 watch(selectedDate, () => {
-  loadShiftReports();
-  loadHourlyReports();
+  if (dateChangeTimer) {
+    clearTimeout(dateChangeTimer);
+  }
+
+  // Immediately clear old data to prevent showing stale data
+  shiftReports.value = [];
+  hourlyReports.value = [];
+  errorShift.value = null;
+  errorHourly.value = null;
+
+  dateChangeTimer = setTimeout(() => {
+    loadShiftReports();
+    if (activeTab.value === "hourly") {
+      loadHourlyReports();
+    }
+  }, 150); // 150ms debounce
+});
+
+// Load hourly data only when tab is switched
+watch(activeTab, (newTab) => {
+  if (newTab === "hourly" && hourlyReports.value.length === 0) {
+    loadHourlyReports();
+  }
 });
 
 // CSV Export
@@ -289,7 +411,10 @@ function downloadByMonth() {
 
 onMounted(() => {
   loadShiftReports();
-  loadHourlyReports();
+  // Only load hourly if tab is active (lazy loading)
+  if (activeTab.value === "hourly") {
+    loadHourlyReports();
+  }
   window.addEventListener("click", handleWindowClick);
 });
 

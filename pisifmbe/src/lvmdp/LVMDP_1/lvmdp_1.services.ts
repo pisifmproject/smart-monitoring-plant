@@ -11,9 +11,9 @@ const getAllLVMDPs = async () => {
 
 /* ===========================
    SHIFT AVERAGES
-   Shift 1 : 07:00 → 14:30
-   Shift 2 : 14:30 → 22:00
-   Shift 3 : 22:00 → 07:00 (+1 hari)
+   Shift 1 : 07:01 → 14:30
+   Shift 2 : 14:31 → 22:00
+   Shift 3 : 22:01 → 07:00 (+1 hari)
 =========================== */
 
 // pakai batas yang pas & konsisten [start, end)
@@ -84,7 +84,8 @@ const getShiftAveragesLVMDP1 = async (dateStr?: string) => {
   // Gunakan local date untuk query (timezone +07:00 WIB)
   const today = dateStr ?? new Date().toISOString().slice(0, 10);
 
-  const allRows = await findLVMDPs();
+  // Pass date filter to reduce data fetched from DB
+  const allRows = await findLVMDPs(today);
 
   // Data dari DB sudah dalam UTC (converted dari +07:00)
   const inRange = (d: Date, start: Date, end: Date) => d >= start && d < end;
@@ -107,32 +108,36 @@ const getShiftAveragesLVMDP1 = async (dateStr?: string) => {
 
 /**
  * Ambil hourly aggregates untuk satu hari, dihitung dari raw data
- * Konsisten dengan metode shift calculation
+ * Range: 00:00 - 23:59 untuk tanggal yang dipilih (calendar day)
  */
 const getHourlyAveragesLVMDP1 = async (dateStr?: string) => {
   const today = dateStr ?? new Date().toISOString().slice(0, 10);
-  const allRows = await getAllLVMDPs();
 
-  // Kelompokkan per jam
+  // Fetch data untuk tanggal yang dipilih
+  const allRows = await findLVMDPs(today);
+
+  // Kelompokkan per jam untuk calendar day (00:00-23:00)
   const hourlyMap = new Map<string, any[]>();
 
   for (const r of allRows) {
     const t: Date = r.waktu instanceof Date ? r.waktu : new Date(r.waktu);
-    const rowDateStr = new Intl.DateTimeFormat("sv-SE").format(t); // YYYY-MM-DD
 
+    // Convert to WIB timezone
+    const wibTime = new Date(t.getTime() + 7 * 60 * 60 * 1000);
+    const rowDateStr = wibTime.toISOString().slice(0, 10);
+
+    // Only include data from the selected date
     if (rowDateStr !== today) continue;
 
-    // Ambil jam (format: HH:00)
-    const hourStr = `${String(t.getHours()).padStart(2, "0")}:00`;
+    // Get hour in WIB (00-23)
+    const hourStr = `${String(wibTime.getUTCHours()).padStart(2, "0")}:00`;
     const key = `${today}T${hourStr}`;
 
     if (!hourlyMap.has(key)) {
       hourlyMap.set(key, []);
     }
     hourlyMap.get(key)!.push(r);
-  }
-
-  // Compute averages per jam
+  } // Compute averages per jam
   const result = Array.from(hourlyMap.entries())
     .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
     .map(([hour, rows]) => {

@@ -53,68 +53,56 @@ function formatLocalYMD(d: any) {
  */
 router.get("/all", async (req, res) => {
   try {
-    let reports = await fetchAllDailyReports();
+    // Always calculate from raw data to include cosPhi
+    const { getShiftAveragesLVMDP4 } = await import("./lvmdp_4.services");
 
-    // Jika belum ada data sama sekali, generate on-the-fly dari raw data
-    if (reports.length === 0) {
-      try {
-        const { getShiftAveragesLVMDP4 } = await import("./lvmdp_4.services");
-
-        // Generate for last 30 days
-        const dates = [];
-        for (let i = 0; i < 30; i++) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          const dateStr = new Intl.DateTimeFormat("sv-SE").format(d);
-          dates.push(dateStr);
-        }
-
-        const computedReports = [];
-        for (const dateStr of dates) {
-          try {
-            const shifts = await getShiftAveragesLVMDP4(dateStr);
-            computedReports.push({
-              reportDate: dateStr,
-              date: dateStr,
-              shift1TotalKwh: shifts.shift1?.totalKwh || 0,
-              shift1AvgKwh: shifts.shift1?.avgKwh || 0,
-              shift1AvgCurrent: shifts.shift1?.avgCurrent || 0,
-              shift1CosPhi: shifts.shift1?.avgCosPhi || 0,
-              shift2TotalKwh: shifts.shift2?.totalKwh || 0,
-              shift2AvgKwh: shifts.shift2?.avgKwh || 0,
-              shift2AvgCurrent: shifts.shift2?.avgCurrent || 0,
-              shift2CosPhi: shifts.shift2?.avgCosPhi || 0,
-              shift3TotalKwh: shifts.shift3?.totalKwh || 0,
-              shift3AvgKwh: shifts.shift3?.avgKwh || 0,
-              shift3AvgCurrent: shifts.shift3?.avgCurrent || 0,
-              shift3CosPhi: shifts.shift3?.avgCosPhi || 0,
-            });
-          } catch (e) {
-            // skip error dates
-          }
-        }
-
-        return res.json({
-          success: true,
-          data: computedReports,
-        });
-      } catch (genErr) {
-        // lanjut dengan empty array
-      }
+    // Generate for last 30 days
+    const dates = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = new Intl.DateTimeFormat("sv-SE").format(d);
+      dates.push(dateStr);
     }
 
-    const data = reports.map((r) => ({
-      ...r,
-      // Compute totalKwh from avgKwh * count
-      shift1TotalKwh: (r.shift1AvgKwh || 0) * (r.shift1Count || 1),
-      shift1CosPhi: 0,
-      shift2TotalKwh: (r.shift2AvgKwh || 0) * (r.shift2Count || 1),
-      shift2CosPhi: 0,
-      shift3TotalKwh: (r.shift3AvgKwh || 0) * (r.shift3Count || 1),
-      shift3CosPhi: 0,
-      // field tambahan khusus buat frontend
-      date: formatLocalYMD((r.reportDate as any) || r.reportDate),
-    }));
+    // Paralelisasi dengan Promise.all untuk speed up
+    const computedReports = await Promise.all(
+      dates.map(async (dateStr) => {
+        try {
+          const shifts = await getShiftAveragesLVMDP4(dateStr);
+          return {
+            reportDate: dateStr,
+            date: dateStr,
+            shift1TotalKwh: shifts.shift1?.totalKwh || 0,
+            shift1AvgKwh: shifts.shift1?.avgKwh || 0,
+            shift1AvgCurrent: shifts.shift1?.avgCurrent || 0,
+            shift1CosPhi: shifts.shift1?.avgCosPhi || 0,
+            shift2TotalKwh: shifts.shift2?.totalKwh || 0,
+            shift2AvgKwh: shifts.shift2?.avgKwh || 0,
+            shift2AvgCurrent: shifts.shift2?.avgCurrent || 0,
+            shift2CosPhi: shifts.shift2?.avgCosPhi || 0,
+            shift3TotalKwh: shifts.shift3?.totalKwh || 0,
+            shift3AvgKwh: shifts.shift3?.avgKwh || 0,
+            shift3AvgCurrent: shifts.shift3?.avgCurrent || 0,
+            shift3CosPhi: shifts.shift3?.avgCosPhi || 0,
+          };
+        } catch (e) {
+          // Return null for error dates, filter later
+          return null;
+        }
+      })
+    );
+
+    // Filter out null entries
+    const validReports = computedReports.filter((r) => r !== null);
+
+    return res.json({
+      success: true,
+      data: validReports,
+    });
+
+    // Old code kept as reference but not executed
+    const data = [];
 
     // kirim data yang sudah dinormalisasi
     res.json({
@@ -182,7 +170,7 @@ router.get("/hourly/:date", async (req, res) => {
 
     // Format untuk frontend dengan field names yang konsisten
     const formatted = rows.map((h: any) => ({
-      hour: h.hour,
+      hour: h.hour instanceof Date ? h.hour.toISOString() : h.hour,
       totalKwh: h.totalKwh || h.total_kwh || 0,
       avgKwh: h.avgKwh || h.avg_kwh || 0,
       cosPhi: h.cosPhi || h.cos_phi || 0,

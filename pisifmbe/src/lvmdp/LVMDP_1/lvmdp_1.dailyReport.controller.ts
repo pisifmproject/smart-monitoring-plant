@@ -69,34 +69,38 @@ router.get("/all", async (req, res) => {
           dates.push(dateStr);
         }
 
-        const computedReports = [];
-        for (const dateStr of dates) {
-          try {
-            const shifts = await getShiftAveragesLVMDP1(dateStr);
-            computedReports.push({
-              reportDate: dateStr,
-              date: dateStr,
-              shift1TotalKwh: shifts.shift1?.totalKwh || 0,
-              shift1AvgKwh: shifts.shift1?.avgKwh || 0,
-              shift1AvgCurrent: shifts.shift1?.avgCurrent || 0,
-              shift1CosPhi: shifts.shift1?.avgCosPhi || 0,
-              shift2TotalKwh: shifts.shift2?.totalKwh || 0,
-              shift2AvgKwh: shifts.shift2?.avgKwh || 0,
-              shift2AvgCurrent: shifts.shift2?.avgCurrent || 0,
-              shift2CosPhi: shifts.shift2?.avgCosPhi || 0,
-              shift3TotalKwh: shifts.shift3?.totalKwh || 0,
-              shift3AvgKwh: shifts.shift3?.avgKwh || 0,
-              shift3AvgCurrent: shifts.shift3?.avgCurrent || 0,
-              shift3CosPhi: shifts.shift3?.avgCosPhi || 0,
-            });
-          } catch (e) {
-            // skip error dates
-          }
-        }
+        // Paralelisasi dengan Promise.all untuk speed up
+        const computedReports = await Promise.all(
+          dates.map(async (dateStr) => {
+            try {
+              const shifts = await getShiftAveragesLVMDP1(dateStr);
+              return {
+                reportDate: dateStr,
+                date: dateStr,
+                shift1TotalKwh: shifts.shift1?.totalKwh || 0,
+                shift1AvgKwh: shifts.shift1?.avgKwh || 0,
+                shift1AvgCurrent: shifts.shift1?.avgCurrent || 0,
+                shift1CosPhi: shifts.shift1?.avgCosPhi || 0,
+                shift2TotalKwh: shifts.shift2?.totalKwh || 0,
+                shift2AvgKwh: shifts.shift2?.avgKwh || 0,
+                shift2AvgCurrent: shifts.shift2?.avgCurrent || 0,
+                shift2CosPhi: shifts.shift2?.avgCosPhi || 0,
+                shift3TotalKwh: shifts.shift3?.totalKwh || 0,
+                shift3AvgKwh: shifts.shift3?.avgKwh || 0,
+                shift3AvgCurrent: shifts.shift3?.avgCurrent || 0,
+                shift3CosPhi: shifts.shift3?.avgCosPhi || 0,
+              };
+            } catch (e) {
+              return null;
+            }
+          })
+        );
+
+        const validReports = computedReports.filter((r) => r !== null);
 
         return res.json({
           success: true,
-          data: computedReports,
+          data: validReports,
         });
       } catch (genErr) {
         // lanjut dengan empty array

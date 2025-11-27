@@ -54,21 +54,21 @@ export class DailyReportRepository {
           shifts: [
             {
               shift: 1,
-              startTime: "07:00",
-              endTime: "15:00",
+              startTime: "07:01",
+              endTime: "14:30",
               target: 1200,
               actual: 1150,
               defect: 12,
               oee: 94.2,
               availability: 96.0,
               performance: 98.0,
-              quality: 99.0,
+              quality: 98.8,
             },
             {
               shift: 2,
-              startTime: "15:00",
-              endTime: "23:00",
-              target: 1200,
+              startTime: "14:31",
+              endTime: "22:00",
+              target: 1000,
               actual: 1180,
               defect: 8,
               oee: 97.5,
@@ -78,7 +78,7 @@ export class DailyReportRepository {
             },
             {
               shift: 3,
-              startTime: "23:00",
+              startTime: "22:01",
               endTime: "07:00",
               target: 1200,
               actual: 1100,
@@ -95,8 +95,8 @@ export class DailyReportRepository {
           shifts: [
             {
               shift: 1,
-              startTime: "07:00",
-              endTime: "15:00",
+              startTime: "07:01",
+              endTime: "14:30",
               target: 1000,
               actual: 950,
               defect: 10,
@@ -107,8 +107,8 @@ export class DailyReportRepository {
             },
             {
               shift: 2,
-              startTime: "15:00",
-              endTime: "23:00",
+              startTime: "14:31",
+              endTime: "22:00",
               target: 1000,
               actual: 980,
               defect: 5,
@@ -119,7 +119,7 @@ export class DailyReportRepository {
             },
             {
               shift: 3,
-              startTime: "23:00",
+              startTime: "22:01",
               endTime: "07:00",
               target: 1000,
               actual: 920,
@@ -191,8 +191,8 @@ export class DailyReportRepository {
       const shifts = [
         {
           shift: 1,
-          startTime: "07:00",
-          endTime: "15:00",
+          startTime: "07:01",
+          endTime: "14:30",
           targetPacks: Math.floor(5000 * variation),
           actualPacks: Math.floor(4800 * variation),
           rejectCount: Math.floor(50 * variation),
@@ -203,8 +203,8 @@ export class DailyReportRepository {
         },
         {
           shift: 2,
-          startTime: "15:00",
-          endTime: "23:00",
+          startTime: "14:31",
+          endTime: "22:00",
           targetPacks: Math.floor(5000 * variation),
           actualPacks: Math.floor(4900 * variation),
           rejectCount: Math.floor(40 * variation),
@@ -215,7 +215,7 @@ export class DailyReportRepository {
         },
         {
           shift: 3,
-          startTime: "23:00",
+          startTime: "22:01",
           endTime: "07:00",
           targetPacks: Math.floor(5000 * variation),
           actualPacks: Math.floor(4700 * variation),
@@ -270,8 +270,8 @@ export class DailyReportRepository {
       const shifts = [
         {
           shift: 1,
-          startTime: "07:00",
-          endTime: "15:00",
+          startTime: "07:01",
+          endTime: "14:30",
           targetBags: Math.floor(6000 * variation),
           actualBags: Math.floor(5800 * variation),
           rejectCount: Math.floor(45 * variation),
@@ -281,8 +281,8 @@ export class DailyReportRepository {
         },
         {
           shift: 2,
-          startTime: "15:00",
-          endTime: "23:00",
+          startTime: "14:31",
+          endTime: "22:00",
           targetBags: Math.floor(6000 * variation),
           actualBags: Math.floor(5900 * variation),
           rejectCount: Math.floor(35 * variation),
@@ -292,7 +292,7 @@ export class DailyReportRepository {
         },
         {
           shift: 3,
-          startTime: "23:00",
+          startTime: "22:01",
           endTime: "07:00",
           targetBags: Math.floor(6000 * variation),
           actualBags: Math.floor(5700 * variation),

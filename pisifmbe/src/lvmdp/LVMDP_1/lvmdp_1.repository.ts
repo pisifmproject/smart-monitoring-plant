@@ -32,11 +32,32 @@ const mapRow = (r: any): Lvmdp1Row => ({
 });
 
 // ambil semua data (urut terbaru dulu)
-export async function findLVMDPs() {
+export async function findLVMDPs(dateFrom?: string, dateTo?: string) {
   try {
-    const result = await db.execute(
-      sql`SELECT * FROM public.v_lvmdp_1 ORDER BY waktu DESC`
-    );
+    let query;
+    if (dateFrom && dateTo) {
+      // Date range query
+      query = sql`SELECT * FROM public.v_lvmdp_1 
+                  WHERE waktu >= ${dateFrom}::date 
+                  AND waktu < (${dateTo}::date + interval '1 day')
+                  ORDER BY waktu ASC`;
+    } else if (dateFrom) {
+      // Single date filter - only get data for this specific date
+      query = sql`SELECT * FROM public.v_lvmdp_1 
+                  WHERE waktu >= ${dateFrom}::date 
+                  AND waktu < (${dateFrom}::date + interval '1 day')
+                  ORDER BY waktu ASC`;
+    } else {
+      // No filter, get only last 7 days (reduced from 31)
+      query = sql`SELECT * FROM public.v_lvmdp_1 
+                  WHERE waktu >= CURRENT_DATE - interval '7 days'
+                  ORDER BY waktu DESC
+                  LIMIT 10000`;
+    }
+
+    const t0 = Date.now();
+    const result = await db.execute(query);
+    const t1 = Date.now();
 
     // Handle different response formats from pg driver
     let rows: any[] = [];
@@ -48,20 +69,21 @@ export async function findLVMDPs() {
       }
     }
 
-    const mapped = rows.map(mapRow);
+    console.log(`[REPO LVMDP1] Query: ${t1 - t0}ms, Rows: ${rows.length}`);
+    return rows.map(mapRow);
 
-    // Debug: log first 5 rows dengan waktu
-    if (mapped.length > 0) {
-      console.log(`[REPO LVMDP1] Total rows: ${mapped.length}, Sample times:`);
-      mapped.slice(0, 5).forEach((r, i) => {
-        const rawStr = rows[i].waktu;
-        const parsed = r.waktu;
-        console.log(
-          `  ${i + 1}. Raw: "${rawStr}" → Parsed: ${parsed.toISOString()}`
-        );
-      });
-    }
-    return mapped;
+    // // Debug: log first 5 rows dengan waktu
+    // if (mapped.length > 0) {
+    //   console.log(`[REPO LVMDP1] Total rows: ${mapped.length}, Sample times:`);
+    //   mapped.slice(0, 5).forEach((r, i) => {
+    //     const rawStr = rows[i].waktu;
+    //     const parsed = r.waktu;
+    //     console.log(
+    //       `  ${i + 1}. Raw: "${rawStr}" → Parsed: ${parsed.toISOString()}`
+    //     );
+    //   });
+    // }
+    // return mapped;
   } catch (error) {
     console.error("Error in findLVMDPs:", error);
     return [];
