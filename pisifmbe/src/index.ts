@@ -49,6 +49,10 @@ app.use("/api/packing", packingController);
 // Daily Report routes
 app.use("/api/daily-report", dailyReportRouter);
 
+// Hourly Report routes
+import hourlyReportRouter from "./routes/hourlyReport.router";
+app.use("/api/hourly-report", hourlyReportRouter);
+
 // app.listen(PORT, () => {
 //   console.log(`Server is running on port ${PORT}`);
 // });

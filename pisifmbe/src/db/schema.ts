@@ -41,14 +41,17 @@ export const dailyReportLVMDP1 = pgTable("daily_report_lvmdp_1", {
   shift1Count: integer("shift1_count").default(0),
   shift1AvgKwh: doublePrecision("shift1_avg_kwh").default(0),
   shift1AvgCurrent: doublePrecision("shift1_avg_current").default(0),
+  shift1AvgCosPhi: doublePrecision("shift1_avg_cos_phi").default(0),
 
   shift2Count: integer("shift2_count").default(0),
   shift2AvgKwh: doublePrecision("shift2_avg_kwh").default(0),
   shift2AvgCurrent: doublePrecision("shift2_avg_current").default(0),
+  shift2AvgCosPhi: doublePrecision("shift2_avg_cos_phi").default(0),
 
   shift3Count: integer("shift3_count").default(0),
   shift3AvgKwh: doublePrecision("shift3_avg_kwh").default(0),
   shift3AvgCurrent: doublePrecision("shift3_avg_current").default(0),
+  shift3AvgCosPhi: doublePrecision("shift3_avg_cos_phi").default(0),
 
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
@@ -63,14 +66,17 @@ export const dailyReportLVMDP2 = pgTable("daily_report_lvmdp_2", {
   shift1Count: integer("shift1_count").default(0),
   shift1AvgKwh: doublePrecision("shift1_avg_kwh").default(0),
   shift1AvgCurrent: doublePrecision("shift1_avg_current").default(0),
+  shift1AvgCosPhi: doublePrecision("shift1_avg_cos_phi").default(0),
 
   shift2Count: integer("shift2_count").default(0),
   shift2AvgKwh: doublePrecision("shift2_avg_kwh").default(0),
   shift2AvgCurrent: doublePrecision("shift2_avg_current").default(0),
+  shift2AvgCosPhi: doublePrecision("shift2_avg_cos_phi").default(0),
 
   shift3Count: integer("shift3_count").default(0),
   shift3AvgKwh: doublePrecision("shift3_avg_kwh").default(0),
   shift3AvgCurrent: doublePrecision("shift3_avg_current").default(0),
+  shift3AvgCosPhi: doublePrecision("shift3_avg_cos_phi").default(0),
 
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
@@ -85,14 +91,17 @@ export const dailyReportLVMDP3 = pgTable("daily_report_lvmdp_3", {
   shift1Count: integer("shift1_count").default(0),
   shift1AvgKwh: doublePrecision("shift1_avg_kwh").default(0),
   shift1AvgCurrent: doublePrecision("shift1_avg_current").default(0),
+  shift1AvgCosPhi: doublePrecision("shift1_avg_cos_phi").default(0),
 
   shift2Count: integer("shift2_count").default(0),
   shift2AvgKwh: doublePrecision("shift2_avg_kwh").default(0),
   shift2AvgCurrent: doublePrecision("shift2_avg_current").default(0),
+  shift2AvgCosPhi: doublePrecision("shift2_avg_cos_phi").default(0),
 
   shift3Count: integer("shift3_count").default(0),
   shift3AvgKwh: doublePrecision("shift3_avg_kwh").default(0),
   shift3AvgCurrent: doublePrecision("shift3_avg_current").default(0),
+  shift3AvgCosPhi: doublePrecision("shift3_avg_cos_phi").default(0),
 
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
@@ -107,14 +116,91 @@ export const dailyReportLVMDP4 = pgTable("daily_report_lvmdp_4", {
   shift1Count: integer("shift1_count").default(0),
   shift1AvgKwh: doublePrecision("shift1_avg_kwh").default(0),
   shift1AvgCurrent: doublePrecision("shift1_avg_current").default(0),
+  shift1AvgCosPhi: doublePrecision("shift1_avg_cos_phi").default(0),
 
   shift2Count: integer("shift2_count").default(0),
   shift2AvgKwh: doublePrecision("shift2_avg_kwh").default(0),
   shift2AvgCurrent: doublePrecision("shift2_avg_current").default(0),
+  shift2AvgCosPhi: doublePrecision("shift2_avg_cos_phi").default(0),
 
   shift3Count: integer("shift3_count").default(0),
   shift3AvgKwh: doublePrecision("shift3_avg_kwh").default(0),
   shift3AvgCurrent: doublePrecision("shift3_avg_current").default(0),
+  shift3AvgCosPhi: doublePrecision("shift3_avg_cos_phi").default(0),
+
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+});
+
+/* ===========================
+   HOURLY REPORT TABLES
+   (Menyimpan agregasi per jam - optimasi untuk performa)
+   Index pada (report_date, hour) untuk query cepat
+=========================== */
+
+/** Hourly Report LVMDP 1 */
+export const hourlyReportLVMDP1 = pgTable("hourly_report_lvmdp_1", {
+  id: text("id").primaryKey(),
+
+  reportDate: date("report_date").notNull(),
+  hour: integer("hour").notNull(), // 0-23
+
+  count: integer("count").default(0),
+  totalKwh: doublePrecision("total_kwh").default(0),
+  avgKwh: doublePrecision("avg_kwh").default(0),
+  avgCurrent: doublePrecision("avg_current").default(0),
+  avgCosPhi: doublePrecision("avg_cos_phi").default(0),
+
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+});
+
+/** Hourly Report LVMDP 2 */
+export const hourlyReportLVMDP2 = pgTable("hourly_report_lvmdp_2", {
+  id: text("id").primaryKey(),
+
+  reportDate: date("report_date").notNull(),
+  hour: integer("hour").notNull(), // 0-23
+
+  count: integer("count").default(0),
+  totalKwh: doublePrecision("total_kwh").default(0),
+  avgKwh: doublePrecision("avg_kwh").default(0),
+  avgCurrent: doublePrecision("avg_current").default(0),
+  avgCosPhi: doublePrecision("avg_cos_phi").default(0),
+
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+});
+
+/** Hourly Report LVMDP 3 */
+export const hourlyReportLVMDP3 = pgTable("hourly_report_lvmdp_3", {
+  id: text("id").primaryKey(),
+
+  reportDate: date("report_date").notNull(),
+  hour: integer("hour").notNull(), // 0-23
+
+  count: integer("count").default(0),
+  totalKwh: doublePrecision("total_kwh").default(0),
+  avgKwh: doublePrecision("avg_kwh").default(0),
+  avgCurrent: doublePrecision("avg_current").default(0),
+  avgCosPhi: doublePrecision("avg_cos_phi").default(0),
+
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+});
+
+/** Hourly Report LVMDP 4 */
+export const hourlyReportLVMDP4 = pgTable("hourly_report_lvmdp_4", {
+  id: text("id").primaryKey(),
+
+  reportDate: date("report_date").notNull(),
+  hour: integer("hour").notNull(), // 0-23
+
+  count: integer("count").default(0),
+  totalKwh: doublePrecision("total_kwh").default(0),
+  avgKwh: doublePrecision("avg_kwh").default(0),
+  avgCurrent: doublePrecision("avg_current").default(0),
+  avgCosPhi: doublePrecision("avg_cos_phi").default(0),
 
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),

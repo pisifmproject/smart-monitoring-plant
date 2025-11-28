@@ -111,11 +111,11 @@ router.get("/all", async (req, res) => {
       ...r,
       // Compute totalKwh from avgKwh * count
       shift1TotalKwh: (r.shift1AvgKwh || 0) * (r.shift1Count || 1),
-      shift1CosPhi: 0, // Will be calculated fresh from raw data on-the-fly if needed
+      shift1CosPhi: r.shift1AvgCosPhi || 0,
       shift2TotalKwh: (r.shift2AvgKwh || 0) * (r.shift2Count || 1),
-      shift2CosPhi: 0,
+      shift2CosPhi: r.shift2AvgCosPhi || 0,
       shift3TotalKwh: (r.shift3AvgKwh || 0) * (r.shift3Count || 1),
-      shift3CosPhi: 0,
+      shift3CosPhi: r.shift3AvgCosPhi || 0,
       // field tambahan khusus buat frontend
       date: formatLocalYMD((r.reportDate as any) || r.reportDate),
     }));
@@ -292,6 +292,47 @@ router.post("/generate", async (req, res) => {
     res.status(500).json({
       success: false,
       message: err?.message || "Failed to generate daily report",
+    });
+  }
+});
+
+/**
+ * GET /api/lvmdp1/daily-report/hourly/:date
+ * Fetch hourly data untuk frontend (compatibility endpoint)
+ */
+router.get("/hourly/:date", async (req, res) => {
+  try {
+    const { date } = req.params;
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format. Expected YYYY-MM-DD",
+      });
+    }
+
+    // Import hourly report service
+    const { fetchHourlyReportByDate } = await import(
+      "./lvmdp_1.hourlyReport.services"
+    );
+    const data = await fetchHourlyReportByDate(date);
+
+    // Transform to match frontend expectations
+    const transformed = data.map((h) => ({
+      hour: h.hour,
+      totalKwh: h.totalKwh || 0,
+      avgKwh: h.avgKwh || 0,
+      avgCurrent: h.avgCurrent || 0,
+      cosPhi: h.avgCosPhi || 0,
+    }));
+
+    return res.json(transformed);
+  } catch (err: any) {
+    console.error("[LVMDP1 Daily Controller] Error fetching hourly:", err);
+    return res.status(500).json({
+      success: false,
+      message: err?.message || "Failed to fetch hourly data",
     });
   }
 });

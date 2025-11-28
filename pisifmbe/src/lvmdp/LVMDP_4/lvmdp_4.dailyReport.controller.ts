@@ -100,15 +100,6 @@ router.get("/all", async (req, res) => {
       success: true,
       data: validReports,
     });
-
-    // Old code kept as reference but not executed
-    const data = [];
-
-    // kirim data yang sudah dinormalisasi
-    res.json({
-      success: true,
-      data,
-    });
   } catch (err: any) {
     // console.error("fetchAllDailyReports error:", err);
     res.status(500).json({
@@ -256,6 +247,45 @@ router.post("/generate", async (req, res) => {
     res.status(500).json({
       success: false,
       message: err?.message || "Failed to generate daily report",
+    });
+  }
+});
+
+/**
+ * GET /api/lvmdp4/daily-report/hourly/:date
+ * Fetch hourly data untuk frontend (compatibility endpoint)
+ */
+router.get("/hourly/:date", async (req, res) => {
+  try {
+    const { date } = req.params;
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format. Expected YYYY-MM-DD",
+      });
+    }
+
+    const { fetchHourlyReportByDate } = await import(
+      "./lvmdp_4.hourlyReport.services"
+    );
+    const data = await fetchHourlyReportByDate(date);
+
+    const transformed = data.map((h: any) => ({
+      hour: h.hour,
+      totalKwh: h.totalKwh || 0,
+      avgKwh: h.avgKwh || 0,
+      avgCurrent: h.avgCurrent || 0,
+      cosPhi: h.avgCosPhi || 0,
+    }));
+
+    return res.json(transformed);
+  } catch (err: any) {
+    console.error("[LVMDP4 Daily Controller] Error fetching hourly:", err);
+    return res.status(500).json({
+      success: false,
+      message: err?.message || "Failed to fetch hourly data",
     });
   }
 });

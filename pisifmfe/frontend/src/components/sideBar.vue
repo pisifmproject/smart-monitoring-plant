@@ -26,11 +26,37 @@ const showText = ref(true);
 // Auto-buka dropdown ketika berada di route terkait
 watchEffect(() => {
   const routeName = String(route.name || "");
+  const routePath = String(route.path || "");
 
-  // Buka Utility jika di lvmdp*
-  if (routeName.startsWith("lvmdp")) {
-    // openMenus.value.utility = true;
-    // openMenus.value.lvmdp = true;
+  // Buka Utility > Electrical jika di lvmdp* atau daily-report
+  if (routeName.startsWith("lvmdp") || routePath.includes("daily-report")) {
+    openMenus.value.utility = true;
+    openMenus.value.lvmdp = true;
+  }
+
+  // Buka Production jika di route production
+  if (
+    routeName === "pc39" ||
+    routeName === "pc14" ||
+    routeName === "ts1000" ||
+    routeName === "fcp" ||
+    routeName === "tws56" ||
+    routeName === "tws72" ||
+    routeName === "copack" ||
+    routeName === "ihp" ||
+    routePath.includes("daily-report/production")
+  ) {
+    openMenus.value.production = true;
+  }
+
+  // Buka Packing jika di route packing
+  if (
+    routePath.includes("weigher") ||
+    routePath.includes("bagmaker") ||
+    routePath.includes("daily-report/weigher") ||
+    routePath.includes("daily-report/bagmaker")
+  ) {
+    openMenus.value.packing = true;
   }
 });
 
@@ -256,6 +282,71 @@ function toggleMenu(menuId: string) {
 function isMenuOpen(menuId: string): boolean {
   return openMenus.value[menuId] ?? false;
 }
+
+// Check if a menu item should be marked as active
+function isItemActive(routeName: string): boolean {
+  const currentRouteName = String(route.name || "");
+  const currentRoutePath = String(route.path || "");
+
+  // Direct match
+  if (currentRouteName === routeName) {
+    return true;
+  }
+
+  // Special case: LVMDP items should be active when in daily-report
+  if (
+    currentRoutePath.includes("daily-report") &&
+    (routeName === "lvmdp1" ||
+      routeName === "lvmdp2" ||
+      routeName === "lvmdp3" ||
+      routeName === "lvmdp4")
+  ) {
+    // Check panel parameter from query
+    const panelId = route.query.panel;
+    if (panelId) {
+      return routeName === `lvmdp${panelId}`;
+    }
+  }
+
+  // Special case: Production items should be active when in production daily-report
+  if (
+    currentRoutePath.includes("daily-report/production") &&
+    (routeName === "pc39" ||
+      routeName === "pc14" ||
+      routeName === "ts1000" ||
+      routeName === "fcp" ||
+      routeName === "tws56" ||
+      routeName === "tws72" ||
+      routeName === "copack" ||
+      routeName === "ihp")
+  ) {
+    // Extract production type from path
+    const pathMatch = currentRoutePath.match(/production\/([^/?]+)/);
+    if (pathMatch) {
+      const prodType = pathMatch[1];
+      return routeName === prodType;
+    }
+  }
+
+  // Special case: Packing items (weigher/bagmaker) should be active in daily-report
+  if (currentRoutePath.includes("daily-report/weigher")) {
+    const lineMatch = currentRoutePath.match(/line-([a-i])/i);
+    if (lineMatch) {
+      const line = lineMatch[1].toUpperCase();
+      return routeName === `weigher${line}`;
+    }
+  }
+
+  if (currentRoutePath.includes("daily-report/bagmaker")) {
+    const lineMatch = currentRoutePath.match(/line-([a-i])/i);
+    if (lineMatch) {
+      const line = lineMatch[1].toUpperCase();
+      return routeName === `bagmaker${line}`;
+    }
+  }
+
+  return false;
+}
 </script>
 
 <template>
@@ -333,7 +424,7 @@ function isMenuOpen(menuId: string): boolean {
                     :key="childMenu.id"
                     :to="{ name: childMenu.routeName }"
                     class="submenu-item level-3"
-                    active-class="active"
+                    :class="{ active: isItemActive(childMenu.routeName) }"
                   >
                     <div class="h-2.5 w-2.5 rounded-full bg-slate-600" />
                     <span>{{ childMenu.name }}</span>

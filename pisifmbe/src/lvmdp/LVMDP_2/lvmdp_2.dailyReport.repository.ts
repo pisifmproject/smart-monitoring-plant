@@ -45,12 +45,15 @@ export const saveDailyReport = async (
         shift1Count: data.shift1Count,
         shift1AvgKwh: data.shift1AvgKwh,
         shift1AvgCurrent: data.shift1AvgCurrent,
+        shift1AvgCosPhi: data.shift1AvgCosPhi,
         shift2Count: data.shift2Count,
         shift2AvgKwh: data.shift2AvgKwh,
         shift2AvgCurrent: data.shift2AvgCurrent,
+        shift2AvgCosPhi: data.shift2AvgCosPhi,
         shift3Count: data.shift3Count,
         shift3AvgKwh: data.shift3AvgKwh,
         shift3AvgCurrent: data.shift3AvgCurrent,
+        shift3AvgCosPhi: data.shift3AvgCosPhi,
         updatedAt: new Date(),
       },
     })
@@ -92,7 +95,7 @@ export const getDailyReportByMonth = async (year: number, month: number) => {
       and(
         gte(dailyReportLVMDP2.reportDate, start),
         lt(dailyReportLVMDP2.reportDate, end)
-      )   
+      )
     )
     .orderBy(dailyReportLVMDP2.reportDate);
 };

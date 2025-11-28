@@ -28,6 +28,7 @@ import http from "http";
 import app from "./index";
 import { initSocket, io } from "./socket";
 import { initDailyReportScheduler } from "./cron/dailyReportScheduler";
+import { initHourlyReportScheduler } from "./cron/hourlyReportScheduler";
 
 const server = http.createServer(app);
 initSocket(server);
@@ -59,10 +60,20 @@ const step = (v: number) => {
 const PORT = Number(process.env.PORT) || 2000;
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`API & WS running on http://localhost:${PORT}`);
-  // start daily report scheduler (generate reports for yesterday at 00:05 every day)
+
+  // Start hourly report scheduler (generate reports every hour at :05)
+  try {
+    initHourlyReportScheduler();
+    console.log("✓ Hourly report scheduler initialized");
+  } catch (err) {
+    console.error("✗ Failed to init hourly report scheduler:", err);
+  }
+
+  // Start daily report scheduler (generate reports for yesterday at 00:05 every day)
   try {
     initDailyReportScheduler();
+    console.log("✓ Daily report scheduler initialized");
   } catch (err) {
-    console.error("Failed to init daily report scheduler:", err);
+    console.error("✗ Failed to init daily report scheduler:", err);
   }
 });

@@ -67,14 +67,17 @@ export const generateAndSaveDailyReport = async (dateStr: string) => {
     shift1Count: s1.count,
     shift1AvgKwh: s1.avgKwh,
     shift1AvgCurrent: s1.avgCurrent,
+    shift1AvgCosPhi: s1.avgCosPhi,
 
     shift2Count: s2.count,
     shift2AvgKwh: s2.avgKwh,
     shift2AvgCurrent: s2.avgCurrent,
+    shift2AvgCosPhi: s2.avgCosPhi,
 
     shift3Count: s3.count,
     shift3AvgKwh: s3.avgKwh,
     shift3AvgCurrent: s3.avgCurrent,
+    shift3AvgCosPhi: s3.avgCosPhi,
 
     createdAt: now,
     updatedAt: now,
