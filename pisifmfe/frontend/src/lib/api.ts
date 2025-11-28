@@ -29,7 +29,6 @@ export const getLvmdp2 = () => getLvmdp(2);
 export const getLvmdp3 = () => getLvmdp(3);
 export const getLvmdp4 = () => getLvmdp(4);
 
-// ---------- LATEST ----------
 export async function getLvmdpLatest(panelId: number) {
   // hasilnya request ke /api/lvmdp/:id/latest -> diproxy ke :2000
   const { data } = await api.get(`/lvmdp/${panelId}/latest`);
