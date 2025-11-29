@@ -9,7 +9,6 @@ import {
   getShiftAveragesLVMDP1,
   getHourlyAveragesLVMDP1,
 } from "./lvmdp_1.services";
-import { getHourlyReportByDate } from "./lvmdp_1.hourlyReport.repository";
 import crypto from "crypto";
 
 /* ===========================
@@ -41,193 +40,119 @@ function makeUtcDateFromYmd(dateStr: string): Date {
 }
 
 /* ===========================
-   Generate & SAVE daily report
-   OPTIMIZED: Menggunakan hourly_report jika tersedia (super cepat!)
-   Fallback: Query langsung ke view jika hourly belum ada
+   Generate & SAVE daily report per shift
 =========================== */
 
-// Shift definitions (FIXED: shift 3 jam 0-6 harus ambil dari BESOK)
-const SHIFT_HOURS = {
-  shift1: [7, 8, 9, 10, 11, 12, 13, 14], // 07:01-14:30 (jam 7-14)
-  shift2: [14, 15, 16, 17, 18, 19, 20, 21], // 14:31-22:00 (jam 14-21)
-  shift3_today: [22, 23], // 22:01-23:59 (jam 22-23 hari ini)
-  shift3_tomorrow: [0, 1, 2, 3, 4, 5, 6], // 00:00-07:00 (jam 0-6 besok)
-} as const;
-
 /**
- * OPTIMIZED: Generate daily report dari hourly_report table
- * Jauh lebih cepat karena data sudah pre-aggregated
- *
- * PENTING: Shift 3 = jam 22-23 hari ini + jam 0-6 besok
+ * Save single shift data to daily report
+ * @param dateStr Date for the report (YYYY-MM-DD)
+ * @param shiftNumber Which shift to save (1, 2, or 3)
  */
-async function generateFromHourlyReport(dateStr: string) {
-  console.log(`[LVMDP1 Daily] Trying optimized path (from hourly_report)...`);
-
-  // Get hourly data untuk hari ini
-  const hourlyToday = await getHourlyReportByDate(dateStr);
-
-  // Get hourly data untuk besok (untuk shift 3)
-  const tomorrow = new Date(dateStr);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().slice(0, 10);
-  const hourlyTomorrow = await getHourlyReportByDate(tomorrowStr);
-
-  if (hourlyToday.length === 0) {
-    console.log(
-      `[LVMDP1 Daily] No hourly data found, falling back to view query`
-    );
-    return null;
+export const saveShiftReport = async (
+  dateStr: string,
+  shiftNumber: 1 | 2 | 3
+) => {
+  if (!isValidDateFormat(dateStr)) {
+    throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
   }
 
-  // Map hour -> data
-  const hourMapToday = new Map(hourlyToday.map((h) => [h.hour, h]));
-  const hourMapTomorrow = new Map(hourlyTomorrow.map((h) => [h.hour, h]));
+  console.log(`[LVMDP1] Saving shift ${shiftNumber} for ${dateStr}`);
 
-  // Calculate shift averages
-  const shifts = {
-    shift1: { count: 0, sumKwh: 0, sumCurrent: 0, sumCosPhi: 0 },
-    shift2: { count: 0, sumKwh: 0, sumCurrent: 0, sumCosPhi: 0 },
-    shift3: { count: 0, sumKwh: 0, sumCurrent: 0, sumCosPhi: 0 },
-  };
+  // Get shift data
+  const shifts = await getShiftAveragesLVMDP1(dateStr);
+  const shiftData = shifts[`shift${shiftNumber}` as keyof typeof shifts];
 
-  // Shift 1 & 2: ambil dari hari ini
-  for (const hour of SHIFT_HOURS.shift1) {
-    const data = hourMapToday.get(hour);
-    if (data && data.count && data.count > 0) {
-      shifts.shift1.count += data.count;
-      shifts.shift1.sumKwh += (data.avgKwh ?? 0) * data.count;
-      shifts.shift1.sumCurrent += (data.avgCurrent ?? 0) * data.count;
-      shifts.shift1.sumCosPhi += (data.avgCosPhi ?? 0) * data.count;
-    }
-  }
-
-  for (const hour of SHIFT_HOURS.shift2) {
-    const data = hourMapToday.get(hour);
-    if (data && data.count && data.count > 0) {
-      shifts.shift2.count += data.count;
-      shifts.shift2.sumKwh += (data.avgKwh ?? 0) * data.count;
-      shifts.shift2.sumCurrent += (data.avgCurrent ?? 0) * data.count;
-      shifts.shift2.sumCosPhi += (data.avgCosPhi ?? 0) * data.count;
-    }
-  }
-
-  // Shift 3: jam 22-23 dari hari ini + jam 0-6 dari besok
-  for (const hour of SHIFT_HOURS.shift3_today) {
-    const data = hourMapToday.get(hour);
-    if (data && data.count && data.count > 0) {
-      shifts.shift3.count += data.count;
-      shifts.shift3.sumKwh += (data.avgKwh ?? 0) * data.count;
-      shifts.shift3.sumCurrent += (data.avgCurrent ?? 0) * data.count;
-      shifts.shift3.sumCosPhi += (data.avgCosPhi ?? 0) * data.count;
-    }
-  }
-
-  for (const hour of SHIFT_HOURS.shift3_tomorrow) {
-    const data = hourMapTomorrow.get(hour);
-    if (data && data.count && data.count > 0) {
-      shifts.shift3.count += data.count;
-      shifts.shift3.sumKwh += (data.avgKwh ?? 0) * data.count;
-      shifts.shift3.sumCurrent += (data.avgCurrent ?? 0) * data.count;
-      shifts.shift3.sumCosPhi += (data.avgCosPhi ?? 0) * data.count;
-    }
-  }
+  // Check if report exists
+  const reportDate = makeUtcDateFromYmd(dateStr);
+  const existing = await getDailyReportByDate(reportDate);
 
   const now = new Date();
-  return {
-    id: crypto.randomUUID(),
-    reportDate: dateStr,
 
-    shift1Count: shifts.shift1.count,
-    shift1AvgKwh:
-      shifts.shift1.count > 0 ? shifts.shift1.sumKwh / shifts.shift1.count : 0,
-    shift1AvgCurrent:
-      shifts.shift1.count > 0
-        ? shifts.shift1.sumCurrent / shifts.shift1.count
-        : 0,
-    shift1AvgCosPhi:
-      shifts.shift1.count > 0
-        ? shifts.shift1.sumCosPhi / shifts.shift1.count
-        : 0,
+  if (existing.length > 0) {
+    // Update existing report
+    const updateData: any = {
+      [`shift${shiftNumber}Count`]: shiftData.count,
+      [`shift${shiftNumber}AvgKwh`]: shiftData.avgKwh,
+      [`shift${shiftNumber}AvgCurrent`]: shiftData.avgCurrent,
+      [`shift${shiftNumber}AvgCosPhi`]: shiftData.avgCosPhi,
+      updatedAt: now,
+    };
 
-    shift2Count: shifts.shift2.count,
-    shift2AvgKwh:
-      shifts.shift2.count > 0 ? shifts.shift2.sumKwh / shifts.shift2.count : 0,
-    shift2AvgCurrent:
-      shifts.shift2.count > 0
-        ? shifts.shift2.sumCurrent / shifts.shift2.count
-        : 0,
-    shift2AvgCosPhi:
-      shifts.shift2.count > 0
-        ? shifts.shift2.sumCosPhi / shifts.shift2.count
-        : 0,
+    return await saveDailyReport({
+      ...existing[0],
+      ...updateData,
+    });
+  } else {
+    // Create new report with only this shift filled
+    const reportData: any = {
+      id: crypto.randomUUID(),
+      reportDate: dateStr,
+      createdAt: now,
+      updatedAt: now,
+    };
 
-    shift3Count: shifts.shift3.count,
-    shift3AvgKwh:
-      shifts.shift3.count > 0 ? shifts.shift3.sumKwh / shifts.shift3.count : 0,
-    shift3AvgCurrent:
-      shifts.shift3.count > 0
-        ? shifts.shift3.sumCurrent / shifts.shift3.count
-        : 0,
-    shift3AvgCosPhi:
-      shifts.shift3.count > 0
-        ? shifts.shift3.sumCosPhi / shifts.shift3.count
-        : 0,
+    // Initialize all shifts to 0
+    for (let i = 1; i <= 3; i++) {
+      reportData[`shift${i}Count`] = 0;
+      reportData[`shift${i}AvgKwh`] = 0;
+      reportData[`shift${i}AvgCurrent`] = 0;
+      reportData[`shift${i}AvgCosPhi`] = 0;
+    }
 
-    createdAt: now,
-    updatedAt: now,
-  };
-}
+    // Fill only the requested shift
+    reportData[`shift${shiftNumber}Count`] = shiftData.count;
+    reportData[`shift${shiftNumber}AvgKwh`] = shiftData.avgKwh;
+    reportData[`shift${shiftNumber}AvgCurrent`] = shiftData.avgCurrent;
+    reportData[`shift${shiftNumber}AvgCosPhi`] = shiftData.avgCosPhi;
 
+    return await saveDailyReport(reportData);
+  }
+};
+
+/**
+ * Legacy function: Generate complete daily report (all shifts)
+ * Still used for manual backfill
+ */
 export const generateAndSaveDailyReport = async (dateStr: string) => {
   if (!isValidDateFormat(dateStr)) {
     throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
   }
 
-  const t0 = Date.now();
+  // 💡 gunakan perhitungan yang SAMA EXACT-nya dengan endpoint /shift-avg
+  const shifts = await getShiftAveragesLVMDP1(dateStr);
 
-  // Try optimized path first
-  let reportData = await generateFromHourlyReport(dateStr);
+  const s1 = shifts.shift1;
+  const s2 = shifts.shift2;
+  const s3 = shifts.shift3;
 
-  // Fallback to legacy method
-  if (!reportData) {
-    console.log(`[LVMDP1 Daily] Using legacy method (direct view query)...`);
-    const shifts = await getShiftAveragesLVMDP1(dateStr);
+  // Use string 'YYYY-MM-DD' for reportDate when inserting (Drizzle/date column)
+  const reportDate = dateStr;
+  const now = new Date();
 
-    const s1 = shifts.shift1;
-    const s2 = shifts.shift2;
-    const s3 = shifts.shift3;
+  const reportData = {
+    id: crypto.randomUUID(),
+    reportDate,
 
-    const now = new Date();
-    reportData = {
-      id: crypto.randomUUID(),
-      reportDate: dateStr,
+    shift1Count: s1.count,
+    shift1AvgKwh: s1.avgKwh,
+    shift1AvgCurrent: s1.avgCurrent,
+    shift1AvgCosPhi: s1.avgCosPhi,
 
-      shift1Count: s1.count,
-      shift1AvgKwh: s1.avgKwh,
-      shift1AvgCurrent: s1.avgCurrent,
-      shift1AvgCosPhi: s1.avgCosPhi,
+    shift2Count: s2.count,
+    shift2AvgKwh: s2.avgKwh,
+    shift2AvgCurrent: s2.avgCurrent,
+    shift2AvgCosPhi: s2.avgCosPhi,
 
-      shift2Count: s2.count,
-      shift2AvgKwh: s2.avgKwh,
-      shift2AvgCurrent: s2.avgCurrent,
-      shift2AvgCosPhi: s2.avgCosPhi,
+    shift3Count: s3.count,
+    shift3AvgKwh: s3.avgKwh,
+    shift3AvgCurrent: s3.avgCurrent,
+    shift3AvgCosPhi: s3.avgCosPhi,
 
-      shift3Count: s3.count,
-      shift3AvgKwh: s3.avgKwh,
-      shift3AvgCurrent: s3.avgCurrent,
-      shift3AvgCosPhi: s3.avgCosPhi,
+    createdAt: now,
+    updatedAt: now,
+  };
 
-      createdAt: now,
-      updatedAt: now,
-    };
-  }
-
-  const result = await saveDailyReport(reportData);
-
-  const t1 = Date.now();
-  console.log(`[LVMDP1 Daily] Generated report for ${dateStr} in ${t1 - t0}ms`);
-
-  return result;
+  return await saveDailyReport(reportData);
 };
 
 /* ===========================

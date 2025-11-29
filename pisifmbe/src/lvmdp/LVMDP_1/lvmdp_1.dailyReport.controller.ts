@@ -337,4 +337,70 @@ router.get("/hourly/:date", async (req, res) => {
   }
 });
 
+/**
+ * POST /api/lvmdp1/daily-report/save-shift
+ * Manual trigger untuk save shift specific
+ * Body: { date: "2025-11-29", shift: 1 }
+ */
+router.post("/save-shift", async (req, res) => {
+  try {
+    const { date, shift } = req.body;
+
+    if (!date || !shift) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing date or shift parameter",
+      });
+    }
+
+    if (shift < 1 || shift > 3) {
+      return res.status(400).json({
+        success: false,
+        message: "Shift must be 1, 2, or 3",
+      });
+    }
+
+    const { saveShiftReport } = await import("./lvmdp_1.dailyReport.services");
+    const result = await saveShiftReport(date, shift as 1 | 2 | 3);
+
+    return res.json({
+      success: true,
+      message: `Shift ${shift} for ${date} saved successfully`,
+      data: result,
+    });
+  } catch (err: any) {
+    console.error("[LVMDP1 Daily Controller] Error saving shift:", err);
+    return res.status(500).json({
+      success: false,
+      message: err?.message || "Failed to save shift",
+    });
+  }
+});
+
+/**
+ * GET /api/lvmdp1/daily-report/debug/:date
+ * Debug endpoint untuk cek data shift yang akan disave
+ */
+router.get("/debug/:date", async (req, res) => {
+  try {
+    const dateStr = req.params.date;
+    const { getShiftAveragesLVMDP1 } = await import("./lvmdp_1.services");
+
+    const shifts = await getShiftAveragesLVMDP1(dateStr);
+
+    return res.json({
+      success: true,
+      date: dateStr,
+      shifts: shifts,
+      message: "This is what will be saved to daily report",
+    });
+  } catch (err: any) {
+    console.error("[LVMDP1 Daily Controller] Error in debug:", err);
+    return res.status(500).json({
+      success: false,
+      message: err?.message || "Failed to fetch debug data",
+    });
+  }
+});
+
 export default router;

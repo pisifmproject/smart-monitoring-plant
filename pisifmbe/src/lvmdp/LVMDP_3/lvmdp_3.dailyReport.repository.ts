@@ -109,26 +109,3 @@ export const getAllDailyReports = async () => {
     .from(dailyReportLVMDP3)
     .orderBy(dailyReportLVMDP3.reportDate);
 };
-
-export const getHourlyAggregatesForDate = async (dateStr: string) => {
-  // Pakai cara lama yang sudah pasti cocok dengan konfigurasi db-mu
-  const { db: dbInstance } = require("../../db");
-  const { sql } = require("drizzle-orm");
-
-  const result = await dbInstance.execute(
-    sql`
-      SELECT
-        DATE_TRUNC('hour', waktu AT TIME ZONE 'Asia/Jakarta') AS hour,
-        AVG(total_kwh)::float AS total_kwh,
-        AVG(cos_phi)::float     AS cos_phi,
-        AVG(avg_current)::float AS avg_current
-      FROM public.v_lvmdp_3
-      WHERE DATE(waktu AT TIME ZONE 'Asia/Jakarta') = ${dateStr}
-      GROUP BY DATE_TRUNC('hour', waktu AT TIME ZONE 'Asia/Jakarta')
-      ORDER BY hour ASC
-    `
-  );
-
-  // hasil: [{ hour, total_kwh, cos_phi, avg_current }, ...]
-  return result.rows || [];
-};

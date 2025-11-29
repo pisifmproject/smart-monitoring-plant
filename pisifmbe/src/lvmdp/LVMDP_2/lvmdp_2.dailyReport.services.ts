@@ -40,10 +40,79 @@ function makeUtcDateFromYmd(dateStr: string): Date {
 }
 
 /* ===========================
-   Generate & SAVE daily report
-   (pakai logika yang sama dengan /shift-avg)
+   Generate & SAVE daily report per shift
 =========================== */
 
+/**
+ * Save single shift data to daily report
+ * @param dateStr Date for the report (YYYY-MM-DD)
+ * @param shiftNumber Which shift to save (1, 2, or 3)
+ */
+export const saveShiftReport = async (
+  dateStr: string,
+  shiftNumber: 1 | 2 | 3
+) => {
+  if (!isValidDateFormat(dateStr)) {
+    throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
+  }
+
+  console.log(`[LVMDP2] Saving shift ${shiftNumber} for ${dateStr}`);
+
+  // Get shift data
+  const shifts = await getShiftAveragesLVMDP2(dateStr);
+  const shiftData = shifts[`shift${shiftNumber}` as keyof typeof shifts];
+
+  // Check if report exists
+  const reportDate = makeUtcDateFromYmd(dateStr);
+  const existing = await getDailyReportByDate(reportDate);
+
+  const now = new Date();
+
+  if (existing.length > 0) {
+    // Update existing report
+    const updateData: any = {
+      [`shift${shiftNumber}Count`]: shiftData.count,
+      [`shift${shiftNumber}AvgKwh`]: shiftData.avgKwh,
+      [`shift${shiftNumber}AvgCurrent`]: shiftData.avgCurrent,
+      [`shift${shiftNumber}AvgCosPhi`]: shiftData.avgCosPhi,
+      updatedAt: now,
+    };
+
+    return await saveDailyReport({
+      ...existing[0],
+      ...updateData,
+    });
+  } else {
+    // Create new report with only this shift filled
+    const reportData: any = {
+      id: crypto.randomUUID(),
+      reportDate: dateStr,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // Initialize all shifts to 0
+    for (let i = 1; i <= 3; i++) {
+      reportData[`shift${i}Count`] = 0;
+      reportData[`shift${i}AvgKwh`] = 0;
+      reportData[`shift${i}AvgCurrent`] = 0;
+      reportData[`shift${i}AvgCosPhi`] = 0;
+    }
+
+    // Fill only the requested shift
+    reportData[`shift${shiftNumber}Count`] = shiftData.count;
+    reportData[`shift${shiftNumber}AvgKwh`] = shiftData.avgKwh;
+    reportData[`shift${shiftNumber}AvgCurrent`] = shiftData.avgCurrent;
+    reportData[`shift${shiftNumber}AvgCosPhi`] = shiftData.avgCosPhi;
+
+    return await saveDailyReport(reportData);
+  }
+};
+
+/**
+ * Legacy function: Generate complete daily report (all shifts)
+ * Still used for manual backfill
+ */
 export const generateAndSaveDailyReport = async (dateStr: string) => {
   if (!isValidDateFormat(dateStr)) {
     throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
