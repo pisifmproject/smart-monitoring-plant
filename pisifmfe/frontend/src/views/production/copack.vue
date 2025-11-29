@@ -26,7 +26,6 @@ const shiftSummary = ref({
   shift3: { target: 0, actual: 0, defect: 0, oee: 0 },
 });
 
-// Status computed berdasarkan ada tidaknya data
 const status = computed(() => (hasData.value ? "running" : "offline"));
 
 // Function to fetch production data from backend
