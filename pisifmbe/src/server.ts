@@ -29,6 +29,11 @@ import app from "./index";
 import { initSocket, io } from "./socket";
 import { initDailyReportScheduler } from "./cron/dailyReportScheduler";
 import { initHourlyReportScheduler } from "./cron/hourlyReportScheduler";
+import { startLvmdpPolling } from "./lvmdp/lvmdpPoller";
+import { findLatestLVMDP1 } from "./lvmdp/LVMDP_1/lvmdp_1.repository";
+import { findLatestLVMDP2 } from "./lvmdp/LVMDP_2/lvmdp_2.repository";
+import { findLatestLVMDP3 } from "./lvmdp/LVMDP_3/lvmdp_3.repository";
+import { findLatestLVMDP4 } from "./lvmdp/LVMDP_4/lvmdp_4.repository";
 
 const server = http.createServer(app);
 initSocket(server);
@@ -75,5 +80,16 @@ server.listen(PORT, "0.0.0.0", () => {
     console.log("✓ Daily report scheduler initialized");
   } catch (err) {
     console.error("✗ Failed to init daily report scheduler:", err);
+  }
+
+  // Start LVMDP polling untuk realtime data via Socket.IO
+  try {
+    startLvmdpPolling(1, findLatestLVMDP1, 1000);
+    startLvmdpPolling(2, findLatestLVMDP2, 1000);
+    startLvmdpPolling(3, findLatestLVMDP3, 1000);
+    startLvmdpPolling(4, findLatestLVMDP4, 1000);
+    console.log("✓ LVMDP polling initialized for panels 1-4");
+  } catch (err) {
+    console.error("✗ Failed to init LVMDP polling:", err);
   }
 });

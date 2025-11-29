@@ -1,17 +1,18 @@
 // src/routes/lvmdp.router.ts
 import { Router } from "express";
-import { db } from "../db";
-import { lvmdp1, lvmdp2, lvmdp3, lvmdp4 } from "../db/schema";
-import { desc } from "drizzle-orm";
+import { findLatestLVMDP1 } from "../lvmdp/LVMDP_1/lvmdp_1.repository";
+import { findLatestLVMDP2 } from "../lvmdp/LVMDP_2/lvmdp_2.repository";
+import { findLatestLVMDP3 } from "../lvmdp/LVMDP_3/lvmdp_3.repository";
+import { findLatestLVMDP4 } from "../lvmdp/LVMDP_4/lvmdp_4.repository";
 
 const r = Router();
 
-// Peta table per panel → pakai number biar aman
-const TABLES: Record<number, any> = {
-  1: lvmdp1,
-  2: lvmdp2,
-  3: lvmdp3,
-  4: lvmdp4,
+// Peta fungsi repository per panel
+const REPO_FUNCTIONS: Record<number, () => Promise<any>> = {
+  1: findLatestLVMDP1,
+  2: findLatestLVMDP2,
+  3: findLatestLVMDP3,
+  4: findLatestLVMDP4,
 };
 
 // GET /api/lvmdp/:id/latest
@@ -23,16 +24,12 @@ r.get("/:id/latest", async (req, res) => {
       return res.status(400).json({ message: "Bad id (must be 1..4)" });
     }
 
-    const table = TABLES[id];
-    if (!table) {
-      return res.status(500).json({ message: "Table not found in schema" });
+    const findLatest = REPO_FUNCTIONS[id];
+    if (!findLatest) {
+      return res.status(500).json({ message: "Repository not found" });
     }
 
-    const [row] = await db
-      .select()
-      .from(table)
-      .orderBy(desc(table.waktu))
-      .limit(1);
+    const row = await findLatest();
 
     if (!row) {
       return res.status(404).json({ message: "No data" });
@@ -47,10 +44,11 @@ r.get("/:id/latest", async (req, res) => {
       avgLineNeut: row.avgLineNeut,
       avgCurrent: row.avgCurrent,
     });
-
   } catch (err) {
     console.error("GET /lvmdp/:id/latest error:", err);
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: String(err) });
   }
 });
 

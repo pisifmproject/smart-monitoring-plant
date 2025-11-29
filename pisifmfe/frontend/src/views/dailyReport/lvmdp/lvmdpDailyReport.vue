@@ -41,7 +41,7 @@ const errorShift = ref<string | null>(null);
 const errorHourly = ref<string | null>(null);
 
 // Debounce timer for date changes
-let dateChangeTimer: NodeJS.Timeout | null = null;
+let dateChangeTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Request tracking to prevent race conditions
 let currentShiftRequest = 0;

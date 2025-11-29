@@ -1,0 +1,131 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getHourlyAveragesLVMDP1 = exports.getShiftAveragesLVMDP1 = exports.getAllLVMDPs = void 0;
+// src/lvmdp/LVMDP_1/lvmdp_1.services.ts
+const lvmdp_1_repository_1 = require("./lvmdp_1.repository");
+/* ===========================
+   BASIC READ
+=========================== */
+const getAllLVMDPs = async () => {
+    return await (0, lvmdp_1_repository_1.findLVMDPs)();
+};
+exports.getAllLVMDPs = getAllLVMDPs;
+/* ===========================
+   SHIFT AVERAGES
+   Shift 1 : 07:01 → 14:30
+   Shift 2 : 14:31 → 22:00
+   Shift 3 : 22:01 → 07:00 (+1 hari)
+=========================== */
+// pakai batas yang pas & konsisten [start, end)
+const SHIFT = [
+    { key: "shift1", start: "07:01", end: "14:30" },
+    { key: "shift2", start: "14:31", end: "22:00" },
+    { key: "shift3", start: "22:01", end: "07:00" }, // lintas hari
+];
+/**
+ * Bikin Date dari 'YYYY-MM-DD' + 'HH:mm' dalam timezone +07:00 (WIB)
+ * Hasil dalam UTC (untuk comparison dengan data dari DB yang sudah UTC)
+ */
+function at(dateStr, hhmm) {
+    const [Y, M, D] = dateStr.split("-").map(Number);
+    const [h, m] = hhmm.split(":").map(Number);
+    // Bikin date di local +07:00 timezone, convert ke UTC
+    // UTC = LocalTime - 7 jam
+    const utcTime = Date.UTC(Y, M - 1, D, h, m, 0, 0) - 7 * 60 * 60 * 1000;
+    return new Date(utcTime);
+} /** range waktu satu shift; kalau end <= start → tambahkan 1 hari (shift 3) */
+function makeRange(dateStr, startHHMM, endHHMM) {
+    const start = at(dateStr, startHHMM);
+    let end = at(dateStr, endHHMM);
+    if (end <= start)
+        end.setDate(end.getDate() + 1);
+    return { start, end };
+}
+/** rata-rata total_kwh, avg_current, dan cos_phi dari kumpulan baris */
+function computeAverages(rows) {
+    let sumKwh = 0;
+    let sumI = 0;
+    let sumCosPhi = 0;
+    let n = 0;
+    for (const r of rows) {
+        const kwh = Number(r.totalKwh) || 0;
+        const I = Number(r.avgCurrent) || 0;
+        const cosPhi = Number(r.cosPhi) || 0;
+        sumKwh += kwh;
+        sumI += I;
+        sumCosPhi += cosPhi;
+        n++;
+    }
+    return {
+        count: n,
+        totalKwh: sumKwh, // Sum of all kWh
+        avgKwh: n ? sumKwh / n : 0, // Average of kWh
+        avgCurrent: n ? sumI / n : 0,
+        avgCosPhi: n ? sumCosPhi / n : 0, // Average power factor
+    };
+}
+/**
+ * Ambil rata-rata per shift untuk hari tertentu.
+ * @param dateStr 'YYYY-MM-DD', default: hari ini (local server time +07:00)
+ */
+const getShiftAveragesLVMDP1 = async (dateStr) => {
+    // Gunakan local date untuk query (timezone +07:00 WIB)
+    const today = dateStr ?? new Date().toISOString().slice(0, 10);
+    // Pass date filter to reduce data fetched from DB
+    const allRows = await (0, lvmdp_1_repository_1.findLVMDPs)(today);
+    // Data dari DB sudah dalam UTC (converted dari +07:00)
+    const inRange = (d, start, end) => d >= start && d < end;
+    const out = {};
+    for (const s of SHIFT) {
+        const { start, end } = makeRange(today, s.start, s.end);
+        const rows = allRows.filter((r) => {
+            const t = r.waktu instanceof Date ? r.waktu : new Date(r.waktu);
+            return inRange(t, start, end);
+        });
+        out[s.key] = computeAverages(rows);
+    }
+    return out;
+};
+exports.getShiftAveragesLVMDP1 = getShiftAveragesLVMDP1;
+/**
+ * Ambil hourly aggregates untuk satu hari, dihitung dari raw data
+ * Range: 00:00 - 23:59 untuk tanggal yang dipilih (calendar day)
+ */
+const getHourlyAveragesLVMDP1 = async (dateStr) => {
+    const today = dateStr ?? new Date().toISOString().slice(0, 10);
+    // Fetch data untuk tanggal yang dipilih
+    const allRows = await (0, lvmdp_1_repository_1.findLVMDPs)(today);
+    // Kelompokkan per jam untuk calendar day (00:00-23:00)
+    const hourlyMap = new Map();
+    for (const r of allRows) {
+        const t = r.waktu instanceof Date ? r.waktu : new Date(r.waktu);
+        // Convert to WIB timezone
+        const wibTime = new Date(t.getTime() + 7 * 60 * 60 * 1000);
+        const rowDateStr = wibTime.toISOString().slice(0, 10);
+        // Only include data from the selected date
+        if (rowDateStr !== today)
+            continue;
+        // Get hour in WIB (00-23)
+        const hourStr = `${String(wibTime.getUTCHours()).padStart(2, "0")}:00`;
+        const key = `${today}T${hourStr}`;
+        if (!hourlyMap.has(key)) {
+            hourlyMap.set(key, []);
+        }
+        hourlyMap.get(key).push(r);
+    } // Compute averages per jam
+    const result = Array.from(hourlyMap.entries())
+        .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+        .map(([hour, rows]) => {
+        const avg = computeAverages(rows);
+        return {
+            hour: new Date(hour),
+            totalKwh: avg.totalKwh, // Sum of kWh for this hour
+            avgKwh: avg.avgKwh, // Average kWh
+            avgCurrent: avg.avgCurrent,
+            cosPhi: avg.avgCosPhi, // Average power factor
+            count: avg.count,
+        };
+    });
+    return result;
+};
+exports.getHourlyAveragesLVMDP1 = getHourlyAveragesLVMDP1;

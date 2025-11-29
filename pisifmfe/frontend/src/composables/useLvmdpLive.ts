@@ -33,11 +33,11 @@ export function useLvmdpLive(panelId: number) {
 
       // rumus perhitungan power dari VLL, Current, dan cosPhi
       const Vll = row.avgLineLine ?? 0;
-      const I   = row.avgCurrent  ?? 0;
-      const pf  = row.cosPhi      ?? 0;
+      const I = row.avgCurrent ?? 0;
+      const pf = row.cosPhi ?? 0;
 
       const S = (Math.sqrt(3) * Vll * I) / 1000; // kVA
-      const P = S * pf;                          // kW
+      const P = S * pf; // kW
 
       power.value = P;
       apparentPower.value = S;
@@ -52,14 +52,10 @@ export function useLvmdpLive(panelId: number) {
 
       prevHour.value = null;
       currHour.value = null;
-
     } catch (err) {
       const e = err as any; // FIX TYPE TS
 
-      const status =
-        e?.response?.status ??
-        e?.status ??
-        null;
+      const status = e?.response?.status ?? e?.status ?? null;
 
       // kalau backend kasih 404 → berarti belum ada data
       if (status === 404) {
@@ -67,7 +63,6 @@ export function useLvmdpLive(panelId: number) {
         return;
       }
 
-      console.error("fetchLatest error:", e);
       isConnected.value = false;
     }
   }

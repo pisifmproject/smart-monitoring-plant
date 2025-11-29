@@ -266,7 +266,7 @@ const toggleSidebar = () => {
   height: 64px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 24px;
   border-bottom: 1px solid #e2e8f0;
   background: linear-gradient(to right, #ffffff, #f8fafc);
   position: sticky;
@@ -349,14 +349,12 @@ const toggleSidebar = () => {
   width: 100%;
   display: flex;
   box-sizing: border-box;
-  display: flex;
-  justify-content: center;
   position: relative;
 }
 
 .page > * {
   width: 100%;
-  max-width: 1200px; /* bisa kamu atur, misalnya 1100 / 1300 */
+  max-width: 100%; /* Full width tanpa batasan */
 }
 
 /* Adjust main area when sidebar is hidden */

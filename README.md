@@ -1,7 +1,7 @@
 # 📋 PISIFM - Project Information System
 
 **Developer**: Septian Bagus Jumantoro  
-**Last Updated**: November 28, 2025  
+**Last Updated**: November 29, 2025  
 **License**: Confidential - PT Indofood Fortuna Makmur Internal Use Only
 
 ---
@@ -10,12 +10,53 @@ Project monitoring system untuk Indofood factory dengan real-time data visualiza
 
 ---
 
+## 🚀 Quick Start
+
+### Development Mode
+
+```powershell
+# Backend
+cd pisifmbe
+npm run dev
+
+# Frontend
+cd pisifmfe/frontend
+npm run dev
+```
+
+### Production Deployment (Apache24)
+
+```powershell
+# Build frontend & backend
+cd pisifmfe/frontend
+npm run build
+
+cd ../../pisifmbe
+npm run build
+
+# Start backend
+node dist/server.js
+
+# Configure & start Apache (see QUICKSTART.md)
+```
+
+📖 **Deployment Guides:**
+
+- **QUICKSTART.md** - Step-by-step checklist untuk deploy
+- **DEPLOYMENT_GUIDE.md** - Tutorial lengkap dengan troubleshooting
+- **APACHE_VISUAL_GUIDE.md** - Visual guide konfigurasi Apache
+
+---
+
 ## 📚 Quick Overview
 
 **Project**: PISIFM (Project Information System for Indofood Factory Monitoring)  
 **Tech Stack**: Vue 3 + TypeScript + Vite + Tailwind CSS  
 **Backend**: Express.js + Drizzle ORM + PostgreSQL  
-**Port**: Frontend `localhost:30` | Backend `localhost:2000`
+**Port**:
+
+- Development: Frontend `localhost:30` | Backend `localhost:2000`
+- Production: Apache `localhost:80` (port 80) → Backend `localhost:2000`
 
 ---
 
