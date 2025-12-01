@@ -419,20 +419,115 @@ function downloadByDate() {
   showDownloadMenu.value = false;
 }
 
-function downloadByMonth() {
+async function downloadByMonth() {
   const [year, month] = selectedDate.value.split("-");
   const monthFormatted = `${year}-${month}`;
-  const shiftCSV = generateShiftCSV();
-  const hourlyCSV = generateHourlyCSV();
 
-  downloadCSV(shiftCSV, `LVMDP${panelId}_ShiftReport_${monthFormatted}.csv`);
-  setTimeout(() => {
-    downloadCSV(
-      hourlyCSV,
-      `LVMDP${panelId}_HourlyReport_${monthFormatted}.csv`
-    );
-  }, 100);
-  showDownloadMenu.value = false;
+  try {
+    // Fetch all data for the panel
+    const allData = await getDailyReportAll(panelId);
+
+    if (!Array.isArray(allData)) {
+      console.error("No data available for month export");
+      return;
+    }
+
+    // Filter data for the selected month
+    const monthData = allData.filter((row) => {
+      const rowDate = row.date || row.reportDate;
+      if (!rowDate) return false;
+      return rowDate.startsWith(monthFormatted);
+    });
+
+    if (monthData.length === 0) {
+      console.warn("No data found for selected month");
+      return;
+    }
+
+    // Generate shift CSV for entire month
+    const shiftHeaders = [
+      "LVMDP",
+      "Tanggal",
+      "Shift",
+      "Total kWh",
+      "Avg kWh",
+      "Avg Current (A)",
+      "Power Factor",
+    ];
+
+    const shiftRows: any[] = [];
+    monthData.forEach((dayReport) => {
+      const reportDate = dayReport.date || dayReport.reportDate;
+      for (let shiftNum = 1; shiftNum <= 3; shiftNum++) {
+        shiftRows.push([
+          `LVMDP ${panelId}`,
+          reportDate,
+          `Shift ${shiftNum}`,
+          dayReport[`shift${shiftNum}TotalKwh`] || 0,
+          dayReport[`shift${shiftNum}AvgKwh`] || 0,
+          dayReport[`shift${shiftNum}AvgCurrent`] || 0,
+          dayReport[`shift${shiftNum}CosPhi`] || 0,
+        ]);
+      }
+    });
+
+    const shiftCSV = [
+      shiftHeaders.map(escapeCSV).join(","),
+      ...shiftRows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\n");
+
+    downloadCSV(shiftCSV, `LVMDP${panelId}_ShiftReport_${monthFormatted}.csv`);
+
+    // Fetch hourly data for each day in the month
+    const hourlyHeaders = [
+      "LVMDP",
+      "Tanggal",
+      "Waktu",
+      "Total kWh",
+      "Avg kWh",
+      "Power Factor",
+      "Avg Current (A)",
+    ];
+
+    const hourlyRows: any[] = [];
+    for (const dayReport of monthData) {
+      const reportDate = dayReport.date || dayReport.reportDate;
+      try {
+        const hourlyData = await getDailyHourly(panelId, reportDate);
+        if (Array.isArray(hourlyData)) {
+          hourlyData.forEach((hourRow: any) => {
+            hourlyRows.push([
+              `LVMDP ${panelId}`,
+              reportDate,
+              formatTime(hourRow.hour),
+              hourRow.totalKwh ?? hourRow.avg_total_kwh ?? 0,
+              hourRow.avgKwh ?? hourRow.avg_kwh ?? 0,
+              hourRow.cosPhi ?? hourRow.avg_cos_phi ?? 0,
+              hourRow.avgCurrent ?? hourRow.avg_avg_current ?? 0,
+            ]);
+          });
+        }
+      } catch (err) {
+        console.warn(`Failed to fetch hourly data for ${reportDate}:`, err);
+      }
+    }
+
+    const hourlyCSV = [
+      hourlyHeaders.map(escapeCSV).join(","),
+      ...hourlyRows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\n");
+
+    setTimeout(() => {
+      downloadCSV(
+        hourlyCSV,
+        `LVMDP${panelId}_HourlyReport_${monthFormatted}.csv`
+      );
+    }, 100);
+  } catch (err) {
+    console.error("Error downloading month data:", err);
+  } finally {
+    showDownloadMenu.value = false;
+  }
 }
 
 onMounted(() => {
