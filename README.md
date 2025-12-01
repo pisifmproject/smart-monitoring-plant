@@ -142,24 +142,6 @@ Development URLs: Frontend `localhost:30` | Backend `localhost:2000`
 - Production: `production_line_a_*` (OEE, KWH meter data)
 - Packing: `packing_line_*_weigher`, `packing_line_*_bagmaker`
 
-## 📝 Recent Updates
-
-### December 1, 2025 - Production Deployment
-
-- ✅ Apache 2.4 configured with auto-start
-- ✅ Backend auto-start via Task Scheduler
-- ✅ One-command deployment script (`deploy.ps1`)
-- ✅ Multi-network access (localhost, Ethernet, Wi-Fi)
-- ✅ 24/7 operation with logging
-
-### November 2025 - Performance Optimization
-
-- ✅ LVMDP hourly/daily pre-aggregation system
-- ✅ Fixed Shift 3 cross-midnight logic
-- ✅ Added power factor (cos φ) to reports
-- ✅ Database migrations (0007, 0008)
-- ✅ Frontend cache busting, UI improvements
-
 ## 📌 Quick Commands
 
 ```powershell
