@@ -94,3 +94,4 @@ API & WS running on http://localhost:2000
 [REPO LVMDP1] Query: 23ms, Rows: 3926
 [REPO LVMDP4] Query: 93ms, Rows: 3930
 [REPO LVMDP1] Query: 21ms, Rows: 3935
+[Mon 12/01/2025 12:52:39.77] Starting PISIFM Backend... 

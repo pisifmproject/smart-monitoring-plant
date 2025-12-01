@@ -28,15 +28,22 @@ if ($LASTEXITCODE -eq 0) {
 }
 Write-Host ""
 
-# 3. Restart Apache
-Write-Host "[3/4] Restarting Apache..." -ForegroundColor Yellow
+# 3. Copy Apache Config
+Write-Host "[3/5] Copying Apache Config..." -ForegroundColor Yellow
+Set-Location "C:\Users\netcom\Documents\ifm_septian\project\PISIFM"
+Copy-Item "apache-config\pisifm.conf" "C:\MyServer\Apache24\conf\extra\pisifm.conf" -Force
+Write-Host "OK Apache config copied" -ForegroundColor Green
+Write-Host ""
+
+# 4. Restart Apache
+Write-Host "[4/5] Restarting Apache..." -ForegroundColor Yellow
 & "C:\MyServer\Apache24\bin\httpd.exe" -k restart
 Start-Sleep -Seconds 2
 Write-Host "OK Apache restarted" -ForegroundColor Green
 Write-Host ""
 
-# 4. Get IP Address
-Write-Host "[4/4] Network Information..." -ForegroundColor Yellow
+# 5. Get IP Address
+Write-Host "[5/5] Network Information..." -ForegroundColor Yellow
 $ipAddress = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback" -and $_.IPAddress -notmatch "^169" } | Select-Object -First 1).IPAddress
 Write-Host "OK Local IP Address: $ipAddress" -ForegroundColor Green
 Write-Host ""
@@ -52,7 +59,7 @@ Write-Host "  Apache restarted" -ForegroundColor White
 Write-Host ""
 Write-Host "Access Website:" -ForegroundColor Yellow
 Write-Host "  Local: http://localhost" -ForegroundColor Cyan
-Write-Host "  Network: http://$ipAddress" -ForegroundColor Cyan
+Write-Host "  Network: http://${ipAddress}" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Backend Status:" -ForegroundColor Yellow
 $backendProcess = Get-Process -Name node -ErrorAction SilentlyContinue
