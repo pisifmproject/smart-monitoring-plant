@@ -1,6 +1,6 @@
 <!-- frontend/src/components/dailyReportTable.vue -->
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { getDailyReportAll } from "@/lib/api";
 
 const props = defineProps<{ panelId?: number }>();
@@ -15,7 +15,7 @@ type ShiftSummary = {
 
 type DailyReportRow = {
   reportDate?: string | Date;
-  date: string;    // 'YYYY-MM-DD'
+  date: string; // 'YYYY-MM-DD'
   shift1?: ShiftSummary;
   shift2?: ShiftSummary;
   shift3?: ShiftSummary;
@@ -24,6 +24,12 @@ type DailyReportRow = {
 const rows = ref<DailyReportRow[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
+
+// Cache to prevent redundant API calls
+const dataCache = ref<{ data: DailyReportRow[]; timestamp: number } | null>(
+  null
+);
+const CACHE_TTL = 30000; // 30 seconds
 
 const numberFormatter = new Intl.NumberFormat("id-ID", {
   minimumFractionDigits: 2,
@@ -63,7 +69,6 @@ function formatDateSafe(dateRaw: any) {
   return String(dateRaw);
 }
 
-
 function fmtShift(s?: ShiftSummary) {
   if (!s) return { kwh: "-", iavg: "-" };
 
@@ -76,7 +81,18 @@ function fmtShift(s?: ShiftSummary) {
   };
 }
 
-async function loadAll() {
+async function loadAll(forceRefresh: boolean = false) {
+  // Use cached data if available and not expired
+  const now = Date.now();
+  if (
+    !forceRefresh &&
+    dataCache.value &&
+    now - dataCache.value.timestamp < CACHE_TTL
+  ) {
+    rows.value = dataCache.value.data;
+    return;
+  }
+
   loading.value = true;
   error.value = null;
   try {
@@ -89,13 +105,19 @@ async function loadAll() {
     }));
 
     // sort by date desc
-    rows.value = [...data].sort((a, b) => {
-      const da =
-        Date.parse(String(a.date ?? a.reportDate ?? "")) || 0;
-      const db =
-        Date.parse(String(b.date ?? b.reportDate ?? "")) || 0;
+    const sortedData = [...data].sort((a, b) => {
+      const da = Date.parse(String(a.date ?? a.reportDate ?? "")) || 0;
+      const db = Date.parse(String(b.date ?? b.reportDate ?? "")) || 0;
       return db - da;
     });
+
+    rows.value = sortedData;
+
+    // Update cache
+    dataCache.value = {
+      data: sortedData,
+      timestamp: now,
+    };
   } catch (err: any) {
     console.error("loadAll daily report error:", err);
     error.value =
@@ -106,7 +128,6 @@ async function loadAll() {
   }
 }
 
-
 onMounted(loadAll);
 
 function extractShift(r: any, n: 1 | 2 | 3) {
@@ -116,12 +137,11 @@ function extractShift(r: any, n: 1 | 2 | 3) {
   };
 }
 
-
 const displayRows = computed(() =>
   rows.value.map((r, idx) => {
-    const sh1 = fmtShift(extractShift(r,1));
-    const sh2 = fmtShift(extractShift(r,2));
-    const sh3 = fmtShift(extractShift(r,3));
+    const sh1 = fmtShift(extractShift(r, 1));
+    const sh2 = fmtShift(extractShift(r, 2));
+    const sh3 = fmtShift(extractShift(r, 3));
 
     const dateSource = r.date ?? r.reportDate ?? null;
 
@@ -137,7 +157,7 @@ const displayRows = computed(() =>
 );
 
 function refresh() {
-  loadAll();
+  loadAll(true); // Force refresh when user explicitly clicks refresh
 }
 </script>
 

@@ -74,8 +74,16 @@ async function loadShiftReports() {
   loadingShift.value = true;
   errorShift.value = null;
   try {
+    const timestamp = Date.now();
     const response = await fetch(
-      `http://localhost:2000/api/daily-report/production/${lineId}?date=${selectedDate.value}`
+      `http://localhost:2000/api/daily-report/production/${lineId}?date=${selectedDate.value}&_t=${timestamp}`,
+      {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        },
+      }
     );
 
     if (!response.ok) {
@@ -104,8 +112,16 @@ async function loadHourlyReports() {
   errorHourly.value = null;
 
   try {
+    const timestamp = Date.now();
     const response = await fetch(
-      `http://localhost:2000/api/daily-report/production/${lineId}?date=${selectedDate.value}`
+      `http://localhost:2000/api/daily-report/production/${lineId}?date=${selectedDate.value}&_t=${timestamp}`,
+      {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        },
+      }
     );
 
     if (!response.ok) {

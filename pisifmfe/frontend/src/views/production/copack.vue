@@ -32,8 +32,16 @@ const status = computed(() => (hasData.value ? "running" : "offline"));
 const fetchProductionData = async () => {
   loading.value = true;
   try {
+    const timestamp = Date.now();
     const response = await fetch(
-      `http://localhost:2000/api/production/${lineId}`
+      `http://localhost:2000/api/production/${lineId}?_t=${timestamp}`,
+      {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        },
+      }
     );
 
     if (!response.ok) {
@@ -109,7 +117,10 @@ onMounted(() => {
 
       <!-- Daily Report Button -->
       <div class="report-button-container">
-        <ReportButton routeName="dailyReportCOPACK" label="Daily Report - COPACK" />
+        <ReportButton
+          routeName="dailyReportCOPACK"
+          label="Daily Report - COPACK"
+        />
       </div>
 
       <!-- Main Metrics -->

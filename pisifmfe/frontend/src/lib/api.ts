@@ -15,6 +15,11 @@ export type LvmdpRaw = {
 export const api = axios.create({
   baseURL: "/api", // akan diproxy ke :2000 saat dev
   withCredentials: true,
+  headers: {
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    Pragma: "no-cache",
+    Expires: "0",
+  },
 });
 
 // ---------- LIST ----------

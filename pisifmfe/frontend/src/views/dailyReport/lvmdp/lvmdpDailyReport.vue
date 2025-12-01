@@ -56,9 +56,17 @@ function toggleDownloadMenu() {
   showDownloadMenu.value = !showDownloadMenu.value;
 }
 
-// Local storage cache
-// v10: Enhanced race condition fix - clear old data immediately + strict validation
-const cacheKey = (date: string) => `lvmdp_${panelId}_hourly_v10_${date}`;
+// Local storage cache with TTL
+// v11: Add cache expiration to prevent stale data
+const cacheKey = (date: string) => `lvmdp_${panelId}_hourly_v11_${date}`;
+const CACHE_TTL = 30000; // 30 seconds cache TTL
+
+// Helper to check if cache is still valid
+function isCacheValid(cachedData: any): boolean {
+  if (!cachedData || !cachedData.timestamp) return false;
+  const now = Date.now();
+  return now - cachedData.timestamp < CACHE_TTL;
+}
 
 const numberFormatter = new Intl.NumberFormat("id-ID", {
   minimumFractionDigits: 2,
@@ -220,13 +228,25 @@ async function loadHourlyReports() {
   const targetDate = selectedDate.value;
 
   try {
+    // Check cache with TTL validation
     const cached = localStorage.getItem(cacheKey(targetDate));
     if (cached) {
-      // Still check if this is the latest request
-      if (requestId !== currentHourlyRequest) return;
-      hourlyReports.value = JSON.parse(cached);
-      loadingHourly.value = false;
-      return;
+      try {
+        const parsedCache = JSON.parse(cached);
+        if (isCacheValid(parsedCache)) {
+          // Still check if this is the latest request
+          if (requestId !== currentHourlyRequest) return;
+          hourlyReports.value = parsedCache.data;
+          loadingHourly.value = false;
+          return;
+        } else {
+          // Cache expired, remove it
+          localStorage.removeItem(cacheKey(targetDate));
+        }
+      } catch (e) {
+        // Invalid cache format, remove it
+        localStorage.removeItem(cacheKey(targetDate));
+      }
     }
 
     const data = await getDailyHourly(panelId, targetDate);
@@ -257,7 +277,13 @@ async function loadHourlyReports() {
       }
 
       hourlyReports.value = normalized;
-      localStorage.setItem(cacheKey(targetDate), JSON.stringify(normalized));
+
+      // Store in cache with timestamp
+      const cacheData = {
+        data: normalized,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(cacheKey(targetDate), JSON.stringify(cacheData));
     }
   } catch (err) {
     // Only set error if this is still the current request
