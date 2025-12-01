@@ -1,50 +1,554 @@
 # 📋 PISIFM - Project Information System
 
 **Developer**: Septian Bagus Jumantoro  
-**Last Updated**: November 29, 2025  
+**Last Updated**: December 1, 2025  
 **License**: Confidential - PT Indofood Fortuna Makmur Internal Use Only
 
 ---
 
 Project monitoring system untuk Indofood factory dengan real-time data visualization, daily reporting, dan comprehensive performance analytics.
 
+## ✅ Production Server Status
+
+**🟢 DEPLOYED & RUNNING** - Server production sudah aktif dan siap 24/7
+
+### 🌐 Akses Website:
+
+- **Lokal (dari PC server)**: http://localhost
+- **Dari jaringan Ethernet**: http://10.125.48.102
+- **Dari jaringan Wi-Fi**: http://172.20.10.6
+
+### ⚙️ Server Configuration:
+
+- ✅ **Apache 2.4** - Auto-start saat boot (Port 80)
+- ✅ **Frontend Vue.js** - Deployed dan accessible
+- ✅ **Backend Node.js** - Auto-start configured (Port 2000)
+- ✅ **Database** - PostgreSQL connected
+
 ---
 
-## 🚀 Quick Start
+## 🚀 Setup Server (Sekali Saja)
 
-### Development Mode
+### Backend Auto-Start Setup (WAJIB)
+
+Agar backend otomatis running setelah PC restart:
+
+```
+1. Klik kanan: setup-autostart.bat
+2. Pilih: Run as Administrator
+3. Tunggu pesan "SUCCESS"
+4. Restart PC untuk test
+```
+
+**Setelah restart**, backend akan otomatis start dan website langsung siap digunakan!
+
+---
+
+## 📖 Panduan Lengkap Server & Maintenance
+
+### 🔧 Monitoring & Status Checks
+
+**Cek Backend Running:**
 
 ```powershell
-# Backend
+Get-Process node
+```
+
+Harus ada proses `node.exe` yang running. Jika tidak ada, backend tidak berjalan.
+
+**Cek Apache Running:**
+
+```powershell
+Get-Service Apache2.4
+```
+
+Status yang baik: `Running` dengan StartType: `Automatic`
+
+**Cek Task Scheduler (Auto-Start):**
+
+1. Buka Task Scheduler (tekan Win+R, ketik `taskschd.msc`)
+2. Task Scheduler Library → Cari `PISIFM_Backend_AutoStart`
+3. Status harus: `Ready` atau `Running`
+4. Trigger: `At log on` dengan highest privileges
+
+**View Log Backend:**
+
+```powershell
+Get-Content backend-autostart.log -Tail 20
+```
+
+**View Log Apache Error:**
+
+```powershell
+Get-Content C:\MyServer\Apache24\logs\error.log -Tail 20
+```
+
+**View Log Apache Access:**
+
+```powershell
+Get-Content C:\MyServer\Apache24\logs\access.log -Tail 20
+```
+
+### 🔄 Restart Services
+
+**Restart Backend:**
+
+**Cara 1: Via Task Manager**
+
+1. Buka Task Manager (Ctrl+Shift+Esc)
+2. Tab "Details", cari `node.exe`
+3. Klik kanan → End Task
+4. Tunggu 10 detik, auto-start akan restart otomatis
+
+**Cara 2: Manual Start (jika auto-start belum setup)**
+
+```
+Double-click: start-backend.bat
+```
+
+Jangan tutup window yang muncul - biarkan tetap terbuka!
+
+**Cara 3: Via PowerShell**
+
+```powershell
+.\start-backend.ps1
+```
+
+**Restart Apache (Perlu Administrator):**
+
+```powershell
+Restart-Service Apache2.4
+```
+
+Atau gunakan batch file:
+
+```
+Klik kanan: restart-apache-admin.bat → Run as Administrator
+```
+
+**Via Command Prompt (as Admin):**
+
+```cmd
+net stop Apache2.4
+net start Apache2.4
+```
+
+### 🚀 Deploy/Update Code
+
+Jika ada perubahan code frontend atau backend:
+
+**One-Command Deploy:**
+
+```powershell
+.\deploy.ps1
+```
+
+Script ini akan otomatis:
+
+1. ✅ Build frontend → `/dist`
+2. ✅ Build backend → `/dist`
+3. ✅ Restart Apache
+4. ✅ Tampilkan status deployment
+
+**Setelah deploy:**
+
+- Stop backend lama (Task Manager → End node.exe)
+- Backend baru akan auto-start atau jalankan `start-backend.bat`
+
+**Manual Build (jika perlu):**
+
+```powershell
+# Build frontend
+cd pisifmfe\frontend
+npm run build
+
+# Build backend
+cd ..\..\pisifmbe
+npm run build
+```
+
+### 🛡️ Firewall Configuration
+
+Port 80 sudah dikonfigurasi untuk HTTP access.
+
+**Jika website tidak bisa diakses dari device lain:**
+
+**Via PowerShell (as Administrator):**
+
+```powershell
+New-NetFirewallRule -DisplayName "Apache HTTP - PISIFM" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow
+```
+
+**Via Command Prompt (as Administrator):**
+
+```cmd
+netsh advfirewall firewall add rule name="Apache HTTP - PISIFM" dir=in action=allow protocol=TCP localport=80
+```
+
+**Cek Firewall Rules:**
+
+```powershell
+Get-NetFirewallRule | Where-Object {$_.DisplayName -like "*PISIFM*"}
+```
+
+### 📁 Struktur File Penting
+
+```
+C:\Users\netcom\Documents\ifm_septian\project\PISIFM\
+├── pisifmfe\frontend\dist\          # Frontend (served by Apache)
+├── pisifmbe\dist\                   # Backend compiled JavaScript
+├── start-backend.bat                # Manual start backend
+├── autostart-backend.bat            # Auto-start script (by Task Scheduler)
+├── autostart-backend.ps1            # PowerShell version
+├── setup-autostart.bat              # Setup auto-start (RUN AS ADMIN)
+├── deploy.ps1                       # Deploy/update script
+├── restart-apache-admin.bat         # Restart Apache helper
+├── backend-autostart.log            # Backend runtime log
+└── README.md                        # Dokumentasi lengkap (file ini)
+
+C:\MyServer\Apache24\
+├── conf\httpd.conf                  # Apache main config
+├── conf\extra\pisifm.conf           # PISIFM vhost config
+└── logs\                            # Apache logs (error.log, access.log)
+```
+
+### ⚙️ Task Scheduler Management
+
+**Lokasi Task:**
+
+- Buka: Task Scheduler → Task Scheduler Library
+- Task Name: `PISIFM_Backend_AutoStart`
+
+**Actions:**
+
+- **Run Manual**: Klik kanan task → Run (test auto-start)
+- **Enable**: Klik kanan task → Enable (aktifkan auto-start)
+- **Disable**: Klik kanan task → Disable (matikan auto-start)
+- **Delete**: Klik kanan task → Delete (hapus auto-start sepenuhnya)
+- **View Log**: Klik kanan task → History (lihat run history)
+
+**Task Properties:**
+
+- **Trigger**: At log on (user netcom)
+- **Action**: Start a program → autostart-backend.bat
+- **Settings**: Run with highest privileges, allow on-demand start
+
+**Recreate Task:**
+
+Jika task terhapus atau error, run ulang:
+
+```
+Klik kanan: setup-autostart.bat → Run as Administrator
+```
+
+---
+
+## 🚨 Troubleshooting Guide
+
+### ❌ Website Tidak Bisa Diakses
+
+**Gejala**: Browser menampilkan "Can't reach this site" atau timeout
+
+**Diagnosis:**
+
+```powershell
+# 1. Cek Apache status
+Get-Service Apache2.4
+
+# 2. Cek port 80 listening
+Get-NetTCPConnection -LocalPort 80
+
+# 3. Test syntax Apache config
+C:\MyServer\Apache24\bin\httpd.exe -t
+```
+
+**Solusi:**
+
+1. ✅ Pastikan Apache Running: `Get-Service Apache2.4` (Status: Running)
+2. ✅ Restart Apache jika Stopped: `Restart-Service Apache2.4` (as Admin)
+3. ✅ Test dengan IP langsung: http://127.0.0.1
+4. ✅ Clear browser cache: Ctrl+Shift+Delete
+5. ✅ Cek firewall allow port 80
+6. ✅ Restart PC jika masih gagal
+
+### ❌ Data Website Tampil 0 / Kosong / Loading Terus
+
+**Gejala**: Website terbuka tapi data tidak muncul, gauge 0, atau loading forever
+
+**Diagnosis:**
+
+```powershell
+# 1. Cek backend process
+Get-Process node
+
+# 2. Cek backend log
+Get-Content backend-autostart.log -Tail 20
+
+# 3. Test API endpoint
+Invoke-WebRequest http://localhost:2000/api/lvmdp1/shift-avg?date=2025-12-01
+```
+
+**Solusi:**
+
+1. ✅ Cek backend running: `Get-Process node` (harus ada node.exe)
+2. ✅ Jika tidak ada, start backend: `start-backend.bat`
+3. ✅ Cek log untuk errors: `backend-autostart.log`
+4. ✅ Pastikan database online dan connection string benar
+5. ✅ Test API manual dengan browser: http://localhost:2000/api/lvmdp1/shift-avg?date=2025-12-01
+6. ✅ Restart backend jika perlu (End Task node.exe → auto-restart)
+
+### ❌ Backend Tidak Auto-Start Setelah Reboot
+
+**Gejala**: Setelah restart PC, website terbuka tapi data 0
+
+**Diagnosis:**
+
+```powershell
+# 1. Cek Task Scheduler
+Get-ScheduledTask -TaskName "PISIFM_Backend_AutoStart"
+
+# 2. Cek task history (PowerShell as Admin)
+Get-WinEvent -LogName Microsoft-Windows-TaskScheduler/Operational | Where-Object {$_.Message -like "*PISIFM*"} | Select-Object -First 5
+```
+
+**Solusi:**
+
+1. ✅ Buka Task Scheduler (`Win+R` → `taskschd.msc`)
+2. ✅ Cari task: `PISIFM_Backend_AutoStart`
+3. ✅ Klik kanan → Run (manual test)
+4. ✅ Cek History tab untuk error messages
+5. ✅ Jika task tidak ada, run ulang: `setup-autostart.bat` (as Admin)
+6. ✅ Pastikan "Run with highest privileges" enabled
+7. ✅ Trigger harus: "At log on"
+
+### ❌ Port 80 Already in Use
+
+**Gejala**: Apache tidak bisa start, error "port 80 already in use"
+
+**Diagnosis:**
+
+```powershell
+# Cek process yang menggunakan port 80
+Get-NetTCPConnection -LocalPort 80 | Select-Object OwningProcess | Get-Unique | ForEach-Object { Get-Process -Id $_.OwningProcess }
+```
+
+**Solusi:**
+
+1. ✅ Identifikasi process yang pakai port 80
+2. ✅ Jika IIS (W3SVC), stop service: `Stop-Service W3SVC`
+3. ✅ Jika Skype, disable "Use port 80 and 443" di settings
+4. ✅ Jika tidak dikenal, restart PC
+5. ✅ Set Apache priority (optional): Change port atau stop conflicting service
+
+### ❌ Apache Crash / Tidak Stabil
+
+**Gejala**: Apache service tiba-tiba berhenti atau error saat start
+
+**Diagnosis:**
+
+```powershell
+# Check Apache error log
+Get-Content C:\MyServer\Apache24\logs\error.log -Tail 50
+
+# Test Apache config syntax
+C:\MyServer\Apache24\bin\httpd.exe -t
+
+# Check VirtualHost config
+C:\MyServer\Apache24\bin\httpd.exe -S
+```
+
+**Solusi:**
+
+1. ✅ Cek syntax error: `httpd.exe -t` (harus "Syntax OK")
+2. ✅ Review error.log untuk detail error
+3. ✅ Jika config error, restore backup config
+4. ✅ Restart Apache: `Restart-Service Apache2.4`
+5. ✅ Jika masih error, reinstall Apache (backup config dulu!)
+
+### ❌ Performa Lambat / Website Loading Lama
+
+**Gejala**: Website loading >5 detik, slow response
+
+**Diagnosis:**
+
+```powershell
+# Check CPU & Memory usage
+Get-Process node | Select-Object CPU, WS
+
+# Check disk space
+Get-PSDrive C
+
+# Check database connection
+# (Test via backend API)
+```
+
+**Solusi:**
+
+1. ✅ Monitor resource usage (Task Manager)
+2. ✅ Cek disk space (min 10GB free)
+3. ✅ Restart backend jika memory leak
+4. ✅ Clear old logs (archive lalu delete)
+5. ✅ Optimize database (vacuum, reindex)
+6. ✅ Check network connection quality
+
+### ❌ Shift 3 Data Tidak Muncul
+
+**Gejala**: Shift 3 (22:01-07:00) tidak menampilkan data
+
+**Diagnosis:**
+
+```powershell
+# Test API untuk specific date
+Invoke-WebRequest http://localhost:2000/api/lvmdp1/daily-report/2025-12-01
+```
+
+**Solusi:**
+
+1. ✅ Shift 3 memerlukan data dari 2 tanggal (today 22-23, tomorrow 0-6)
+2. ✅ Pastikan hourly report ada untuk kedua tanggal
+3. ✅ Jalankan backfill jika data kurang:
+   ```powershell
+   cd pisifmbe
+   npx ts-node src/scripts/backfillHourlyReports.ts 2025-12-01 2025-12-02
+   npx ts-node src/scripts/backfillDailyReports.ts 2025-12-01 2025-12-02
+   ```
+
+### ❌ Power Factor (cos φ) Menampilkan 0
+
+**Gejala**: Gauge cos φ selalu 0 padahal data lain muncul
+
+**Diagnosis:**
+
+```sql
+-- Check if cos_phi columns exist
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'daily_report_lvmdp_1' AND column_name LIKE '%cos_phi%';
+```
+
+**Solusi:**
+
+1. ✅ Pastikan migration 0008 sudah dijalankan
+2. ✅ Cek schema.ts memiliki `avgCosPhi` field
+3. ✅ Verify controller mapping: `shift1AvgCosPhi` → `shift1CosPhi`
+4. ✅ Regenerate daily report jika data lama
+5. ✅ Check repository includes cosPhi in `onConflictDoUpdate`
+
+### ❌ Socket.IO Disconnected
+
+**Gejala**: Real-time data LVMDP tidak update, console error "socket disconnected"
+
+**Diagnosis:**
+
+```javascript
+// Check browser console for errors
+// Should see: "Socket.IO connected" on page load
+```
+
+**Solusi:**
+
+1. ✅ Pastikan backend running
+2. ✅ Cek proxy config Apache (`mod_proxy_wstunnel` enabled)
+3. ✅ Test WebSocket: http://localhost:2000/socket.io/?EIO=4&transport=polling
+4. ✅ Clear browser cache
+5. ✅ Restart backend dan Apache
+
+### 🆘 Emergency Recovery
+
+**Jika semua gagal:**
+
+1. **Backup Critical Files:**
+
+   ```powershell
+   # Backup config files
+   Copy-Item C:\MyServer\Apache24\conf\httpd.conf C:\Backup\
+   Copy-Item C:\MyServer\Apache24\conf\extra\pisifm.conf C:\Backup\
+   ```
+
+2. **Restart All Services:**
+
+   ```powershell
+   # Stop services
+   Stop-Service Apache2.4
+   Get-Process node | Stop-Process -Force
+
+   # Wait 10 seconds
+   Start-Sleep -Seconds 10
+
+   # Start services
+   Start-Service Apache2.4
+   .\start-backend.bat
+   ```
+
+3. **Full System Restart:**
+
+   ```
+   1. Save all work
+   2. Close applications
+   3. Restart → tunggu 2-3 menit
+   4. Verify Apache & backend auto-start
+   5. Test website: http://localhost
+   ```
+
+4. **Contact Support:**
+   - Developer: Septian Bagus Jumantoro
+   - Check documentation: README.md
+   - Review logs: backend-autostart.log, error.log
+
+---
+
+## 🔄 Development Mode
+
+### Run Development Server
+
+**Backend:**
+
+```powershell
 cd pisifmbe
 npm run dev
+```
 
-# Frontend
+**Frontend:**
+
+```powershell
 cd pisifmfe/frontend
 npm run dev
 ```
 
-### Production Deployment (Apache24)
+Development URLs:
 
-```powershell
-# Build frontend & backend
-cd pisifmfe/frontend
-npm run build
+- Frontend: http://localhost:30
+- Backend API: http://localhost:2000
 
-cd ../../pisifmbe
-npm run build
+---
 
-# Start backend
-node dist/server.js
+## 📊 System Maintenance Schedule
 
-# Configure & start Apache (see QUICKSTART.md)
-```
+### Harian:
 
-📖 **Deployment Guides:**
+- ✅ Cek website accessible (morning check)
+- ✅ Monitor backend log untuk errors
+- ✅ Pastikan data real-time update
 
-- **QUICKSTART.md** - Step-by-step checklist untuk deploy
-- **DEPLOYMENT_GUIDE.md** - Tutorial lengkap dengan troubleshooting
-- **APACHE_VISUAL_GUIDE.md** - Visual guide konfigurasi Apache
+### Mingguan:
+
+- ✅ Review log files (backend-autostart.log)
+- ✅ Cek disk space tersedia
+- ✅ Backup log files lama
+
+### Bulanan:
+
+- ✅ Backup database
+- ✅ Update dependencies jika ada
+- ✅ Review performance metrics
+- ✅ Clean up old log files
+
+### Saat PC Restart:
+
+- ✅ Tunggu 2-3 menit setelah login
+- ✅ Verifikasi Apache auto-start
+- ✅ Verifikasi backend auto-start
+- ✅ Test website: http://localhost
+- ✅ Cek data muncul dengan benar
 
 ---
 
@@ -457,9 +961,69 @@ VITE_SOCKET_URL=http://localhost:2000
 
 ---
 
-## 🔧 Recent Updates (Nov 2025)
+## 🔄 Recent Updates
 
-### LVMDP Performance Optimization (Nov 26-28)
+### December 1, 2025 - Production Deployment 🚀
+
+**Major Achievement: Website Successfully Deployed to Production Server**
+
+#### Infrastructure Setup
+
+- ✅ **Apache 2.4 Web Server** - Installed dan dikonfigurasi di `C:\MyServer\Apache24`
+- ✅ **DocumentRoot** - Configured to serve Vue.js dist folder
+- ✅ **Proxy Configuration** - API dan WebSocket proxied ke backend (port 2000)
+- ✅ **Apache Modules Enabled**: mod_proxy, mod_proxy_http, mod_proxy_wstunnel, mod_rewrite
+- ✅ **Auto-Start** - Apache service set to automatic startup on boot
+
+#### Backend Auto-Start System
+
+- ✅ **Task Scheduler Integration** - Created Windows scheduled task
+- ✅ **Auto-start Scripts** - `setup-autostart.bat`, `autostart-backend.bat`, `autostart-backend.ps1`
+- ✅ **Logging System** - Auto-generated log file: `backend-autostart.log`
+- ✅ **Run at Startup** - Backend automatically starts when user logs in
+- ✅ **High Privilege** - Runs with highest privileges for reliability
+
+#### Deployment Scripts & Tools
+
+- ✅ **deploy.ps1** - One-command deployment (build frontend, build backend, restart Apache)
+- ✅ **start-backend.bat** - Manual backend startup script
+- ✅ **restart-apache-admin.bat** - Apache restart helper (requires admin)
+- ✅ **setup-autostart.bat** - One-click auto-start configuration
+
+#### Documentation & Support
+
+- ✅ **SERVER-GUIDE.md** - Comprehensive server maintenance guide
+- ✅ **CATATAN-SERVER.md** - Quick reference notes in Bahasa Indonesia
+- ✅ **SERVER-DASHBOARD.html** - Interactive dashboard with quick links
+- ✅ **QUICK-FIX.md** - Fast troubleshooting reference
+- ✅ **Updated README.md** - Production-ready documentation
+
+#### Network & Access
+
+- ✅ **Multi-Network Access** - Accessible via localhost, Ethernet (10.125.48.102), Wi-Fi (172.20.10.6)
+- ✅ **Firewall Configuration** - Port 80 properly configured
+- ✅ **Production URLs** - All endpoints tested and working
+
+#### File Cleanup
+
+- ✅ Removed backup config files (httpd.conf.backup)
+- ✅ Removed development-only .js files from frontend/src
+- ✅ Removed .bckp TypeScript config files
+- ✅ Cleaned up temporary files
+
+#### Key Achievements
+
+- 🎯 **Zero-downtime Deployment** - Backend auto-restarts, Apache handles requests
+- 🎯 **Production Ready** - Full monitoring, logging, and error handling
+- 🎯 **User Friendly** - Visual dashboard, clear documentation, simple maintenance
+- 🎯 **24/7 Operation** - Auto-start ensures service continuity after reboots
+- 🎯 **Scalable Architecture** - Easy to update, maintain, and troubleshoot
+
+---
+
+### November 26-28, 2025 - Performance Optimization
+
+#### LVMDP Performance Optimization
 
 **Problem**: Query view dengan jutaan records sangat lambat (200-500ms)
 
@@ -498,24 +1062,24 @@ VITE_SOCKET_URL=http://localhost:2000
    - ✅ Fixed power factor showing 0 (was hardcoded in controller)
    - ✅ Fixed date boundary issues in shift calculations
 
-### Frontend Updates (Nov 26-28)
+#### Frontend Updates
 
-✅ Sidebar auto-expand: Menu Utility/Electrical otomatis terbuka di daily report  
-✅ Sidebar active state: Menu LVMDP yang sesuai akan highlight berdasarkan `?panel=X`  
-✅ Daily report integration: Unified view untuk semua LVMDP panels  
-✅ Redesigned LVMDP with elegant layout (cyan theme, icon circles)  
-✅ Reduced bagmaker card sizes (proporsional design)  
-✅ Fixed responsive mobile layout (overflow-x hidden)  
-✅ Fixed efficiency bar bug on mobile/half screen
+- ✅ Sidebar auto-expand: Menu Utility/Electrical otomatis terbuka di daily report
+- ✅ Sidebar active state: Menu LVMDP yang sesuai akan highlight berdasarkan `?panel=X`
+- ✅ Daily report integration: Unified view untuk semua LVMDP panels
+- ✅ Redesigned LVMDP with elegant layout (cyan theme, icon circles)
+- ✅ Reduced bagmaker card sizes (proporsional design)
+- ✅ Fixed responsive mobile layout (overflow-x hidden)
+- ✅ Fixed efficiency bar bug on mobile/half screen
 
-### Backend Updates (Earlier Nov 2025)
+#### Backend Updates (Earlier November)
 
-✅ Added KWH meter fields to all production tables  
-✅ Extended bagmaker tables with 11 new fields  
-✅ Added endpoint `/api/production/:lineId`  
-✅ Added endpoint `/api/packing/bagmaker/:lineId`  
-✅ Added endpoint `/api/packing/weigher/:lineId`  
-✅ Database migration completed successfully
+- ✅ Added KWH meter fields to all production tables
+- ✅ Extended bagmaker tables with 11 new fields
+- ✅ Added endpoint `/api/production/:lineId`
+- ✅ Added endpoint `/api/packing/bagmaker/:lineId`
+- ✅ Added endpoint `/api/packing/weigher/:lineId`
+- ✅ Database migration completed successfully
 
 ---
 
@@ -659,30 +1223,140 @@ npx ts-node src/scripts/backfillDailyReports.ts 2025-11-14 2025-11-27
 
 ---
 
-## 🐛 Troubleshooting
+## 📌 Quick Commands Reference
 
-### Power Factor Shows 0
+**Status Checks:**
 
-- Check if `shift1_avg_cos_phi` columns exist in database
-- Verify controller maps `shift1AvgCosPhi` → `shift1CosPhi`
-- Ensure repository includes cosPhi in `onConflictDoUpdate`
+```powershell
+# Cek backend running
+Get-Process node
 
-### Slow Query Performance
+# Cek Apache status
+Get-Service Apache2.4
 
-- Check if hourly_report tables are populated
-- Verify indexes exist: `(report_date, hour)` and `(report_date)`
-- Run backfill scripts if data is missing
+# Cek Task Scheduler
+Get-ScheduledTask -TaskName "PISIFM_Backend_AutoStart"
 
-### Shift 3 Data Incorrect
+# Test website
+Invoke-WebRequest http://localhost
+```
 
-- Verify `generateFromHourlyReport()` fetches tomorrow's data
-- Check SHIFT_HOURS split: `shift3_today` and `shift3_tomorrow`
-- Ensure hourly data exists for both dates
+**View Logs:**
 
-### Sidebar Menu Not Active
+```powershell
+# Backend log (last 20 lines)
+Get-Content backend-autostart.log -Tail 20
 
-- Check route path matches pattern in `isItemActive()`
-- Verify query parameter exists: `?panel=1`
-- Check `watchEffect` auto-expands parent menus
+# Apache error log
+Get-Content C:\MyServer\Apache24\logs\error.log -Tail 20
+
+# Apache access log
+Get-Content C:\MyServer\Apache24\logs\access.log -Tail 20
+```
+
+**Service Management:**
+
+```powershell
+# Restart Apache (as Admin)
+Restart-Service Apache2.4
+
+# Start backend manual
+.\start-backend.bat
+
+# Deploy code updates
+.\deploy.ps1
+
+# Setup auto-start (as Admin)
+.\setup-autostart.bat
+```
+
+**Troubleshooting:**
+
+```powershell
+# Check Apache config syntax
+C:\MyServer\Apache24\bin\httpd.exe -t
+
+# Check VirtualHost configuration
+C:\MyServer\Apache24\bin\httpd.exe -S
+
+# Check port 80 usage
+Get-NetTCPConnection -LocalPort 80 | Select-Object OwningProcess | ForEach-Object { Get-Process -Id $_.OwningProcess }
+
+# Check disk space
+Get-PSDrive C
+```
+
+**Database Scripts:**
+
+```powershell
+# Backfill hourly reports
+cd pisifmbe
+npx ts-node src/scripts/backfillHourlyReports.ts 2025-12-01 2025-12-31
+
+# Backfill daily reports
+npx ts-node src/scripts/backfillDailyReports.ts 2025-12-01 2025-12-31
+
+# Run migrations
+npx ts-node src/scripts/runMigration.ts
+```
+
+---
+
+## 📞 Support & Contact
+
+### Getting Help
+
+1. **Check This Documentation:**
+
+   - All server maintenance info ada di README.md ini
+   - Comprehensive troubleshooting guide tersedia di atas
+   - Quick reference commands tersedia
+
+2. **Interactive Dashboard:**
+
+   - 🌐 Open `SERVER-DASHBOARD.html` in browser
+   - Quick access to website dan monitoring tools
+
+3. **Check Logs:**
+   - Backend: `backend-autostart.log`
+   - Apache Error: `C:\MyServer\Apache24\logs\error.log`
+   - Apache Access: `C:\MyServer\Apache24\logs\access.log`
+
+### DO's ✅
+
+- ✅ Pastikan auto-start sudah di-setup dengan `setup-autostart.bat`
+- ✅ Biarkan backend running 24/7
+- ✅ Cek log secara berkala (weekly review)
+- ✅ Monitor resource usage (RAM, CPU, Disk)
+- ✅ Backup database secara rutin (monthly)
+- ✅ Test website setelah restart PC
+- ✅ Keep documentation updated
+
+### DON'Ts ❌
+
+- ❌ Jangan close window node.exe jika start manual
+- ❌ Jangan matikan PC tanpa shutdown proper
+- ❌ Jangan edit file config di production tanpa backup
+- ❌ Jangan deploy tanpa test di development dulu
+- ❌ Jangan delete Task Scheduler task tanpa alasan jelas
+- ❌ Jangan modify database schema manual
+- ❌ Jangan ignore error logs
+
+---
+
+## 👤 Project Information
+
+**Project Name:** PISIFM (Project Information System for Indofood Factory Monitoring)  
+**Developer:** Septian Bagus Jumantoro  
+**Organization:** PT Indofood Fortuna Makmur  
+**Environment:** Production Server (Windows + Apache 2.4 + Node.js)  
+**Deployment Date:** December 1, 2025
+
+**Tech Stack:**
+
+- Frontend: Vue 3 + TypeScript + Vite + Tailwind CSS
+- Backend: Node.js + Express + Socket.IO + Drizzle ORM
+- Database: PostgreSQL
+- Web Server: Apache 2.4
 
 ---

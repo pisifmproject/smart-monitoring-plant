@@ -81,6 +81,33 @@ function formatLocalYMD(d) {
 router.get("/all", async (req, res) => {
     try {
         let reports = await (0, lvmdp_1_dailyReport_services_1.fetchAllDailyReports)();
+        // Auto-fill today's current shift if not exist or incomplete
+        const { getCurrentShift } = await Promise.resolve().then(() => __importStar(require("./lvmdp_1.dailyReport.services")));
+        const { shift: currentShift, date: todayStr } = getCurrentShift();
+        // Check if today's report exists
+        const todayReport = reports.find((r) => {
+            const rDate = formatLocalYMD(r.reportDate);
+            return rDate === todayStr;
+        });
+        // If today's report doesn't exist or current shift is empty, generate it
+        const needsCurrentShift = !todayReport ||
+            (currentShift === 1 &&
+                (!todayReport.shift1Count || todayReport.shift1Count === 0)) ||
+            (currentShift === 2 &&
+                (!todayReport.shift2Count || todayReport.shift2Count === 0)) ||
+            (currentShift === 3 &&
+                (!todayReport.shift3Count || todayReport.shift3Count === 0));
+        if (needsCurrentShift) {
+            try {
+                const { saveCurrentShiftReport } = await Promise.resolve().then(() => __importStar(require("./lvmdp_1.dailyReport.services")));
+                await saveCurrentShiftReport();
+                // Refresh reports after save
+                reports = await (0, lvmdp_1_dailyReport_services_1.fetchAllDailyReports)();
+            }
+            catch (err) {
+                console.error("[LVMDP1] Auto-fill current shift failed:", err);
+            }
+        }
         // Jika belum ada data sama sekali, generate on-the-fly dari raw data
         if (reports.length === 0) {
             try {
@@ -330,6 +357,90 @@ router.get("/hourly/:date", async (req, res) => {
         return res.status(500).json({
             success: false,
             message: err?.message || "Failed to fetch hourly data",
+        });
+    }
+});
+/**
+ * POST /api/lvmdp1/daily-report/save-shift
+ * Manual trigger untuk save shift specific
+ * Body: { date: "2025-11-29", shift: 1 }
+ */
+router.post("/save-shift", async (req, res) => {
+    try {
+        const { date, shift } = req.body;
+        if (!date || !shift) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing date or shift parameter",
+            });
+        }
+        if (shift < 1 || shift > 3) {
+            return res.status(400).json({
+                success: false,
+                message: "Shift must be 1, 2, or 3",
+            });
+        }
+        const { saveShiftReport } = await Promise.resolve().then(() => __importStar(require("./lvmdp_1.dailyReport.services")));
+        const result = await saveShiftReport(date, shift);
+        return res.json({
+            success: true,
+            message: `Shift ${shift} for ${date} saved successfully`,
+            data: result,
+        });
+    }
+    catch (err) {
+        console.error("[LVMDP1 Daily Controller] Error saving shift:", err);
+        return res.status(500).json({
+            success: false,
+            message: err?.message || "Failed to save shift",
+        });
+    }
+});
+/**
+ * GET /api/lvmdp1/daily-report/debug/:date
+ * Debug endpoint untuk cek data shift yang akan disave
+ */
+router.get("/debug/:date", async (req, res) => {
+    try {
+        const dateStr = req.params.date;
+        const { getShiftAveragesLVMDP1 } = await Promise.resolve().then(() => __importStar(require("./lvmdp_1.services")));
+        const shifts = await getShiftAveragesLVMDP1(dateStr);
+        return res.json({
+            success: true,
+            date: dateStr,
+            shifts: shifts,
+            message: "This is what will be saved to daily report",
+        });
+    }
+    catch (err) {
+        console.error("[LVMDP1 Daily Controller] Error in debug:", err);
+        return res.status(500).json({
+            success: false,
+            message: err?.message || "Failed to fetch debug data",
+        });
+    }
+});
+/**
+ * POST /api/lvmdp1/daily-report/current-shift
+ * Generate and save current shift report (real-time)
+ * Useful for viewing shift data before shift ends
+ */
+router.post("/current-shift", async (req, res) => {
+    try {
+        const { saveCurrentShiftReport, getCurrentShift } = await Promise.resolve().then(() => __importStar(require("./lvmdp_1.dailyReport.services")));
+        const { shift, date } = getCurrentShift();
+        const result = await saveCurrentShiftReport();
+        return res.json({
+            success: true,
+            message: `Successfully saved current shift ${shift} for ${date}`,
+            data: result,
+        });
+    }
+    catch (err) {
+        console.error("[LVMDP1 Daily Controller] Error saving current shift:", err);
+        return res.status(500).json({
+            success: false,
+            message: err?.message || "Failed to save current shift",
         });
     }
 });

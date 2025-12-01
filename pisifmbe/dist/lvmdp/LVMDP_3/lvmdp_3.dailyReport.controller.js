@@ -289,4 +289,27 @@ router.get("/hourly/:date", async (req, res) => {
         });
     }
 });
+/**
+ * POST /api/lvmdp3/daily-report/current-shift
+ * Generate and save current shift report (real-time)
+ */
+router.post("/current-shift", async (req, res) => {
+    try {
+        const { saveCurrentShiftReport, getCurrentShift } = await Promise.resolve().then(() => __importStar(require("./lvmdp_3.dailyReport.services")));
+        const { shift, date } = getCurrentShift();
+        const result = await saveCurrentShiftReport();
+        return res.json({
+            success: true,
+            message: `Successfully saved current shift ${shift} for ${date}`,
+            data: result,
+        });
+    }
+    catch (err) {
+        console.error("[LVMDP3 Daily Controller] Error saving current shift:", err);
+        return res.status(500).json({
+            success: false,
+            message: err?.message || "Failed to save current shift",
+        });
+    }
+});
 exports.default = router;

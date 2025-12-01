@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHourlyAggregatesForDate = exports.getAllDailyReports = exports.getDailyReportByMonth = exports.getDailyReportByDate = exports.saveDailyReport = void 0;
+exports.getAllDailyReports = exports.getDailyReportByMonth = exports.getDailyReportByDate = exports.saveDailyReport = void 0;
 const db_1 = require("../../db");
 const schema_1 = require("../../db/schema");
 const drizzle_orm_1 = require("drizzle-orm");
@@ -91,68 +91,3 @@ const getAllDailyReports = async () => {
         .orderBy(schema_1.dailyReportLVMDP1.reportDate);
 };
 exports.getAllDailyReports = getAllDailyReports;
-/**
- * Ambil hourly aggregates untuk satu hari
- * Group by jam, hitung rata-rata totalKwh, cosPhi, avgCurrent
- */
-// export const getHourlyAggregatesForDate = async (dateStr: string) => {
-//   const { db: dbInstance } = require("../../db");
-//   const { sql } = require("drizzle-orm");
-//   // Query: GROUP BY hour, hitung aggregate
-//   const result = await dbInstance.execute(
-//     sql`
-//       SELECT
-//         DATE_TRUNC('hour', waktu AT TIME ZONE 'Asia/Jakarta') AS hour,
-//         AVG(total_kwh)::float AS total_kwh,
-//         AVG(cos_phi) AS cos_phi,
-//         AVG(avg_current) AS avg_current
-//       FROM public.v_lvmdp_1
-//       WHERE DATE(waktu AT TIME ZONE 'Asia/Jakarta') = ${dateStr}
-//       GROUP BY DATE_TRUNC('hour', waktu AT TIME ZONE 'Asia/Jakarta')
-//       ORDER BY hour ASC
-//     `
-//   );
-//   return result.rows || [];
-// };
-// export const getHourlyAggregatesForDate = async (dateStr: string) => {
-//   // dateStr format 'YYYY-MM-DD'
-//   const result = await db.execute(
-//     sql`
-//       SELECT
-//         DATE_TRUNC('hour', waktu AT TIME ZONE 'Asia/Jakarta') AS hour,
-//         AVG(total_kwh)::float      AS avg_total_kwh,
-//         AVG(cos_phi)::float        AS avg_cos_phi,
-//         AVG(avg_current)::float    AS avg_avg_current
-//       FROM public.v_lvmdp_1
-//       WHERE DATE(waktu AT TIME ZONE 'Asia/Jakarta') = ${dateStr}
-//       GROUP BY DATE_TRUNC('hour', waktu AT TIME ZONE 'Asia/Jakarta')
-//       ORDER BY hour ASC
-//     `
-//   );
-//   // hasil: array of { hour, avg_total_kwh, avg_cos_phi, avg_avg_current }
-//   return result.rows as Array<{
-//     hour: string;           // timestamp
-//     avg_total_kwh: number;  // ratusan koma sekian
-//     avg_cos_phi: number;
-//     avg_avg_current: number;
-//   }>;
-// };
-const getHourlyAggregatesForDate = async (dateStr) => {
-    // Pakai cara lama yang sudah pasti cocok dengan konfigurasi db-mu
-    const { db: dbInstance } = require("../../db");
-    const { sql } = require("drizzle-orm");
-    const result = await dbInstance.execute(sql `
-      SELECT
-        DATE_TRUNC('hour', waktu AT TIME ZONE 'Asia/Jakarta') AS hour,
-        AVG(total_kwh)::float AS total_kwh,
-        AVG(cos_phi)::float     AS cos_phi,
-        AVG(avg_current)::float AS avg_current
-      FROM public.v_lvmdp_1
-      WHERE DATE(waktu AT TIME ZONE 'Asia/Jakarta') = ${dateStr}
-      GROUP BY DATE_TRUNC('hour', waktu AT TIME ZONE 'Asia/Jakarta')
-      ORDER BY hour ASC
-    `);
-    // hasil: [{ hour, total_kwh, cos_phi, avg_current }, ...]
-    return result.rows || [];
-};
-exports.getHourlyAggregatesForDate = getHourlyAggregatesForDate;

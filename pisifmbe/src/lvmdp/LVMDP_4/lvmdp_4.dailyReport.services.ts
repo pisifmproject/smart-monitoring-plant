@@ -189,3 +189,70 @@ export const fetchHourlyAggregates = async (dateStr: string) => {
 
   return await getHourlyAveragesLVMDP4(dateStr);
 };
+
+/**
+ * Get current shift number based on current time
+ * Shift 1: 07:01-14:30 (7:01 AM - 2:30 PM)
+ * Shift 2: 14:31-22:00 (2:31 PM - 10:00 PM)
+ * Shift 3: 22:01-07:00 (10:01 PM - 7:00 AM next day)
+ */
+export function getCurrentShift(): { shift: 1 | 2 | 3; date: string } {
+  const now = new Date();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  const timeInMinutes = hour * 60 + minute;
+
+  // Shift 1: 07:01-14:30 (421 minutes - 870 minutes)
+  if (timeInMinutes >= 421 && timeInMinutes <= 870) {
+    return {
+      shift: 1,
+      date: toYmd(now),
+    };
+  }
+
+  // Shift 2: 14:31-22:00 (871 minutes - 1320 minutes)
+  if (timeInMinutes >= 871 && timeInMinutes <= 1320) {
+    return {
+      shift: 2,
+      date: toYmd(now),
+    };
+  }
+
+  // Shift 3: 22:01-07:00 (1321+ minutes or 0-420 minutes)
+  // If time is 22:01-23:59, it's shift 3 of today
+  // If time is 00:00-07:00, it's shift 3 of yesterday
+  if (timeInMinutes >= 1321) {
+    return {
+      shift: 3,
+      date: toYmd(now), // Today
+    };
+  }
+
+  // 00:00-07:00 is shift 3 of yesterday
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  return {
+    shift: 3,
+    date: toYmd(yesterday),
+  };
+}
+
+function toYmd(d: Date): string {
+  const Y = d.getFullYear();
+  const M = String(d.getMonth() + 1).padStart(2, "0");
+  const D = String(d.getDate()).padStart(2, "0");
+  return `${Y}-${M}-${D}`;
+}
+
+/**
+ * Save current shift report (real-time)
+ * Useful for:
+ * - Viewing current shift data before shift ends
+ * - Manual generation if scheduler fails
+ * - Testing and debugging
+ */
+export const saveCurrentShiftReport = async () => {
+  const { shift, date } = getCurrentShift();
+  console.log(`[LVMDP4] Saving current shift ${shift} for ${date}`);
+  return await saveShiftReport(date, shift);
+};

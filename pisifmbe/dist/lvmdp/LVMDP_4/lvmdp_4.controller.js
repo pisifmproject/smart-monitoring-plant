@@ -53,6 +53,24 @@ r.get("/latest", async (_req, res) => {
 r.get("/shift-avg", async (req, res) => {
     const date = req.query.date;
     const data = await (0, lvmdp_4_services_1.getShiftAveragesLVMDP4)(date);
-    res.json(data);
+    // Transform avgKwh -> avgPower untuk frontend
+    const transformed = {
+        shift1: {
+            avgPower: data.shift1.avgKwh,
+            avgCurrent: data.shift1.avgCurrent,
+            count: data.shift1.count,
+        },
+        shift2: {
+            avgPower: data.shift2.avgKwh,
+            avgCurrent: data.shift2.avgCurrent,
+            count: data.shift2.count,
+        },
+        shift3: {
+            avgPower: data.shift3.avgKwh,
+            avgCurrent: data.shift3.avgCurrent,
+            count: data.shift3.count,
+        },
+    };
+    res.json(transformed);
 });
 exports.default = r;
