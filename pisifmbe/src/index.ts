@@ -24,6 +24,18 @@ app.use(
   })
 );
 
+// Disable caching for all API responses
+app.use((req, res, next) => {
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  next();
+});
+
 // const PORT = Number(process.env.PORT);
 
 app.get("/api", (_req, res) => {
