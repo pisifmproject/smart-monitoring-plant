@@ -18,6 +18,13 @@ r.get("/latest", async (_req, res) => {
   res.json(row);
 });
 
+// data RST (current & voltage) dari HMI
+r.get("/hmi", async (_req, res) => {
+  const hmiData = await repo.findLatestHMI1();
+  if (!hmiData) return res.status(404).json({ message: "No HMI data" });
+  res.json(hmiData);
+});
+
 // rata-rata per shift (dipakai ShiftCard di frontend)
 r.get("/shift-avg", async (req, res) => {
   const date = req.query.date as string | undefined; // optional ?date=2025-11-12

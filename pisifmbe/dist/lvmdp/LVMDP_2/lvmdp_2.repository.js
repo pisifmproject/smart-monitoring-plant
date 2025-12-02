@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.findLVMDPs = findLVMDPs;
 exports.findLatestLVMDP2 = findLatestLVMDP2;
+exports.findLatestHMI2 = findLatestHMI2;
 const db_1 = require("../../db");
 const drizzle_orm_1 = require("drizzle-orm");
 function toNumber(x) {
@@ -20,6 +21,12 @@ const mapRow = (r) => ({
     avgLineLine: toNumber(r.avg_line_line),
     avgLineNeut: toNumber(r.avg_line_neut),
     avgCurrent: toNumber(r.avg_current),
+    currentR: toNumber(r.current_r),
+    currentS: toNumber(r.current_s),
+    currentT: toNumber(r.current_t),
+    voltageRS: toNumber(r.voltage_rs),
+    voltageST: toNumber(r.voltage_st),
+    voltageTR: toNumber(r.voltage_tr),
 });
 async function findLVMDPs(dateFrom, dateTo) {
     try {
@@ -70,4 +77,30 @@ async function findLatestLVMDP2() {
     const rows = result.rows || result;
     const row = Array.isArray(rows) ? rows[0] : null;
     return row ? mapRow(row) : null;
+}
+// ambil data RST (current & voltage) dari lvmdp_hmi
+async function findLatestHMI2() {
+    try {
+        const result = await db_1.db.execute((0, drizzle_orm_1.sql) `SELECT 
+        lvmdp_r_lvmdp2, lvmdp_s_lvmdp2, lvmdp_t_lvmdp2,
+        lvmdp_r_s_lvmdp2, lvmdp_s_t_lvmdp2, lvmdp_t_r_lvmdp2
+      FROM public.lvmdp_hmi 
+      ORDER BY datetimefield DESC LIMIT 1`);
+        const rows = result.rows || result;
+        const row = Array.isArray(rows) ? rows[0] : null;
+        if (!row)
+            return null;
+        return {
+            currentR: toNumber(row.lvmdp_r_lvmdp2),
+            currentS: toNumber(row.lvmdp_s_lvmdp2),
+            currentT: toNumber(row.lvmdp_t_lvmdp2),
+            voltageRS: toNumber(row.lvmdp_r_s_lvmdp2),
+            voltageST: toNumber(row.lvmdp_s_t_lvmdp2),
+            voltageTR: toNumber(row.lvmdp_t_r_lvmdp2),
+        };
+    }
+    catch (error) {
+        console.error("Error in findLatestHMI2:", error);
+        return null;
+    }
 }

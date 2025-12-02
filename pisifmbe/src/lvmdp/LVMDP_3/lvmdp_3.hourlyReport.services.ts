@@ -29,8 +29,8 @@ export const generateHourlyReportsFromView = async (dateStr: string) => {
       DATE(waktu AT TIME ZONE 'Asia/Jakarta') as report_date,
       EXTRACT(HOUR FROM waktu AT TIME ZONE 'Asia/Jakarta')::integer as hour,
       COUNT(*)::integer as count,
-      SUM(total_kwh)::double precision as total_kwh,
-      AVG(total_kwh)::double precision as avg_kwh,
+      SUM(real_power)::double precision as total_kwh,
+      AVG(real_power)::double precision as avg_kwh,
       AVG(avg_current)::double precision as avg_current,
       AVG(cos_phi)::double precision as avg_cos_phi
     FROM public.v_lvmdp_3
@@ -89,8 +89,8 @@ export const generateSingleHourReport = async (
   const query = sql`
     SELECT 
       COUNT(*)::integer as count,
-      SUM(total_kwh)::double precision as total_kwh,
-      AVG(total_kwh)::double precision as avg_kwh,
+      SUM(real_power)::double precision as total_kwh,
+      AVG(real_power)::double precision as avg_kwh,
       AVG(avg_current)::double precision as avg_current,
       AVG(cos_phi)::double precision as avg_cos_phi
     FROM public.v_lvmdp_3

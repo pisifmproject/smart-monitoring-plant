@@ -73,4 +73,11 @@ r.get("/shift-avg", async (req, res) => {
     };
     res.json(transformed);
 });
+// data RST (current & voltage) dari HMI
+r.get("/hmi", async (_req, res) => {
+    const hmiData = await repo.findLatestHMI4();
+    if (!hmiData)
+        return res.status(404).json({ message: "No HMI data" });
+    res.json(hmiData);
+});
 exports.default = r;

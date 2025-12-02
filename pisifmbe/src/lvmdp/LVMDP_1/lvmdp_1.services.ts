@@ -50,18 +50,18 @@ function makeRange(dateStr: string, startHHMM: string, endHHMM: string) {
   return { start, end };
 }
 
-/** rata-rata total_kwh, avg_current, dan cos_phi dari kumpulan baris */
+/** rata-rata real_power, avg_current, dan cos_phi dari kumpulan baris */
 function computeAverages(rows: Array<any>): ShiftAvg {
-  let sumKwh = 0;
+  let sumRealPower = 0;
   let sumI = 0;
   let sumCosPhi = 0;
   let n = 0;
 
   for (const r of rows) {
-    const kwh = Number(r.totalKwh) || 0;
+    const realPower = Number(r.realPower) || 0;
     const I = Number(r.avgCurrent) || 0;
     const cosPhi = Number(r.cosPhi) || 0;
-    sumKwh += kwh;
+    sumRealPower += realPower;
     sumI += I;
     sumCosPhi += cosPhi;
     n++;
@@ -69,8 +69,8 @@ function computeAverages(rows: Array<any>): ShiftAvg {
 
   return {
     count: n,
-    totalKwh: sumKwh, // Sum of all kWh
-    avgKwh: n ? sumKwh / n : 0, // Average of kWh
+    totalKwh: sumRealPower, // Sum of all real power
+    avgKwh: n ? sumRealPower / n : 0, // Average of real power (kW)
     avgCurrent: n ? sumI / n : 0,
     avgCosPhi: n ? sumCosPhi / n : 0, // Average power factor
   };

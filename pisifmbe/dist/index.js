@@ -22,7 +22,11 @@ require("./utils/pgTimezoneFix");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)({
-    origin: ["http://localhost:5173"],
+    origin: [
+        "http://localhost:5173",
+        "http://localhost:30",
+        "http://localhost:31",
+    ],
     credentials: true,
 }));
 // Disable caching for all API responses

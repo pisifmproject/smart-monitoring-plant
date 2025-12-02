@@ -10,6 +10,12 @@ export type LvmdpRaw = {
   avgLineLine: number;
   avgLineNeut: number;
   avgCurrent: number;
+  currentR: number;
+  currentS: number;
+  currentT: number;
+  voltageRS: number;
+  voltageST: number;
+  voltageTR: number;
 };
 
 export const api = axios.create({
@@ -43,6 +49,22 @@ export const getLvmdp1Latest = () => getLvmdpLatest(1);
 export const getLvmdp2Latest = () => getLvmdpLatest(2);
 export const getLvmdp3Latest = () => getLvmdpLatest(3);
 export const getLvmdp4Latest = () => getLvmdpLatest(4);
+
+// Get HMI data (R, S, T current and voltage)
+export async function getLvmdpHMI(panelId: 1 | 2 | 3 | 4) {
+  const path = { 1: "/lvmdp1", 2: "/lvmdp2", 3: "/lvmdp3", 4: "/lvmdp4" }[
+    panelId
+  ];
+  const { data } = await api.get(`${path}/hmi`);
+  return data as {
+    currentR: number;
+    currentS: number;
+    currentT: number;
+    voltageRS: number;
+    voltageST: number;
+    voltageTR: number;
+  };
+}
 
 export async function getShiftAvg(panelId: 1 | 2 | 3 | 4, date?: string) {
   const path = { 1: "/lvmdp1", 2: "/lvmdp2", 3: "/lvmdp3", 4: "/lvmdp4" }[

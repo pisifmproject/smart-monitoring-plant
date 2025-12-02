@@ -347,7 +347,7 @@ function generateShiftCSV(): string {
     "Tanggal",
     "Shift",
     "Total kWh",
-    "Avg kWh",
+    "Avg Real Power (kW)",
     "Avg Current (A)",
     "Power Factor",
   ];
@@ -374,7 +374,7 @@ function generateHourlyCSV(): string {
     "Tanggal",
     "Waktu",
     "Total kWh",
-    "Avg kWh",
+    "Avg Real Power (kW)",
     "Power Factor",
     "Avg Current (A)",
   ];
@@ -484,7 +484,7 @@ async function downloadByMonth() {
       "Tanggal",
       "Waktu",
       "Total kWh",
-      "Avg kWh",
+      "Avg Real Power (kW)",
       "Power Factor",
       "Avg Current (A)",
     ];
@@ -641,7 +641,7 @@ onUnmounted(() => {
                 <tr>
                   <th>Shift</th>
                   <th>Total kWh</th>
-                  <th>Avg kWh</th>
+                  <th>Avg Real Power (kW)</th>
                   <th>Avg Current (A)</th>
                   <th>Power Factor</th>
                 </tr>
@@ -676,7 +676,7 @@ onUnmounted(() => {
                 <tr>
                   <th>Time</th>
                   <th>Total kWh</th>
-                  <th>Avg kWh</th>
+                  <th>Avg Real Power (kW)</th>
                   <th>Avg Current (A)</th>
                   <th>Power Factor</th>
                 </tr>
