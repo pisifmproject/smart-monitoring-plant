@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import ReportButton from "@/components/reportButton.vue";
+import { useAuth } from "@/stores/auth";
 
+const { canAccessDailyReport } = useAuth();
 const lineId = "LINE_A_COPACK";
 const loading = ref(false);
 const hasData = ref(false);
@@ -116,7 +118,7 @@ onMounted(() => {
       </div>
 
       <!-- Daily Report Button -->
-      <div class="report-button-container">
+      <div v-if="canAccessDailyReport()" class="report-button-container">
         <ReportButton
           routeName="dailyReportCOPACK"
           label="Daily Report - COPACK"

@@ -72,7 +72,112 @@ watchEffect(() => {
 });
 
 // Menu struktur (nested, mudah di-extend)
-const mainMenus = [
+// Filter submenu based on user role
+const getProductionChildren = () => {
+  const isGuest = !canAccessDailyReport();
+
+  const machines = [
+    {
+      id: "pc39",
+      name: "PC39",
+      icon: CircleSmall,
+      dashboardRoute: "pc39",
+      weigherRoute: "weigherA",
+      bagmakerRoute: "bagmakerA",
+    },
+    {
+      id: "pc14",
+      name: "PC14",
+      icon: CircleSmall,
+      dashboardRoute: "pc14",
+      weigherRoute: "weigherB",
+      bagmakerRoute: "bagmakerB",
+    },
+    {
+      id: "ts1000",
+      name: "TS1000",
+      icon: CircleSmall,
+      dashboardRoute: "ts1000",
+      weigherRoute: "weigherC",
+      bagmakerRoute: "bagmakerC",
+    },
+    {
+      id: "fcp",
+      name: "FCP",
+      icon: CircleSmall,
+      dashboardRoute: "fcp",
+      weigherRoute: "weigherD",
+      bagmakerRoute: "bagmakerD",
+    },
+    {
+      id: "tws56",
+      name: "TWS56",
+      icon: CircleSmall,
+      dashboardRoute: "tws56",
+      weigherRoute: "weigherE",
+      bagmakerRoute: "bagmakerE",
+    },
+    {
+      id: "tws72",
+      name: "TWS72",
+      icon: CircleSmall,
+      dashboardRoute: "tws72",
+      weigherRoute: "weigherG",
+      bagmakerRoute: "bagmakerG",
+    },
+    {
+      id: "copack",
+      name: "COPACK",
+      icon: CircleSmall,
+      dashboardRoute: "copack",
+      weigherRoute: "weigherH",
+      bagmakerRoute: "bagmakerH",
+    },
+    {
+      id: "ihp",
+      name: "IHP",
+      icon: CircleSmall,
+      dashboardRoute: "ihp",
+      weigherRoute: "weigherI",
+      bagmakerRoute: "bagmakerI",
+    },
+  ];
+
+  return machines.map((machine) => {
+    const children = [
+      {
+        id: `${machine.id}Dashboard`,
+        name: "Dashboard",
+        routeName: machine.dashboardRoute,
+      },
+    ];
+
+    // Only add Weigher and BagMaker for User role
+    if (!isGuest) {
+      children.push(
+        {
+          id: machine.weigherRoute,
+          name: "Weigher",
+          routeName: machine.weigherRoute,
+        },
+        {
+          id: machine.bagmakerRoute,
+          name: "BagMaker",
+          routeName: machine.bagmakerRoute,
+        }
+      );
+    }
+
+    return {
+      id: machine.id,
+      name: machine.name,
+      icon: machine.icon,
+      children,
+    };
+  });
+};
+
+const mainMenus = computed(() => [
   {
     id: "utility",
     name: "Utility",
@@ -95,90 +200,9 @@ const mainMenus = [
     id: "production",
     name: "Production",
     icon: Factory,
-    children: [
-      {
-        id: "pc39",
-        name: "PC39",
-        icon: CircleSmall,
-        children: [
-          { id: "pc39Dashboard", name: "Dashboard", routeName: "pc39" },
-          { id: "weigherA", name: "Weigher", routeName: "weigherA" },
-          { id: "bagmakerA", name: "BagMaker", routeName: "bagmakerA" },
-        ],
-      },
-      {
-        id: "pc14",
-        name: "PC14",
-        icon: CircleSmall,
-        children: [
-          { id: "pc14Dashboard", name: "Dashboard", routeName: "pc14" },
-          { id: "weigherB", name: "Weigher", routeName: "weigherB" },
-          { id: "bagmakerB", name: "BagMaker", routeName: "bagmakerB" },
-        ],
-      },
-      {
-        id: "ts1000",
-        name: "TS1000",
-        icon: CircleSmall,
-        children: [
-          { id: "ts1000Dashboard", name: "Dashboard", routeName: "ts1000" },
-          { id: "weigherC", name: "Weigher", routeName: "weigherC" },
-          { id: "bagmakerC", name: "BagMaker", routeName: "bagmakerC" },
-        ],
-      },
-      {
-        id: "fcp",
-        name: "FCP",
-        icon: CircleSmall,
-        children: [
-          { id: "fcpDashboard", name: "Dashboard", routeName: "fcp" },
-          { id: "weigherD", name: "Weigher", routeName: "weigherD" },
-          { id: "bagmakerD", name: "BagMaker", routeName: "bagmakerD" },
-        ],
-      },
-      {
-        id: "tws56",
-        name: "TWS56",
-        icon: CircleSmall,
-        children: [
-          { id: "tws56Dashboard", name: "Dashboard", routeName: "tws56" },
-          { id: "weigherE", name: "Weigher", routeName: "weigherE" },
-          { id: "bagmakerE", name: "BagMaker", routeName: "bagmakerE" },
-        ],
-      },
-      {
-        id: "tws72",
-        name: "TWS72",
-        icon: CircleSmall,
-        children: [
-          { id: "tws72Dashboard", name: "Dashboard", routeName: "tws72" },
-          { id: "weigherG", name: "Weigher", routeName: "weigherG" },
-          { id: "bagmakerG", name: "BagMaker", routeName: "bagmakerG" },
-        ],
-      },
-      {
-        id: "copack",
-        name: "COPACK",
-        icon: CircleSmall,
-        children: [
-          { id: "copackDashboard", name: "Dashboard", routeName: "copack" },
-          { id: "weigherH", name: "Weigher", routeName: "weigherH" },
-          { id: "bagmakerH", name: "BagMaker", routeName: "bagmakerH" },
-        ],
-      },
-      {
-        id: "ihp",
-        name: "IHP",
-        icon: CircleSmall,
-        children: [
-          { id: "ihpDashboard", name: "Dashboard", routeName: "ihp" },
-          { id: "weigherI", name: "Weigher", routeName: "weigherI" },
-          { id: "bagmakerI", name: "BagMaker", routeName: "bagmakerI" },
-        ],
-      },
-    ],
+    children: getProductionChildren(),
   },
-];
+]);
 
 function toggleMenu(menuId: string) {
   openMenus.value[menuId] = !openMenus.value[menuId];

@@ -133,98 +133,116 @@ const router = createRouter({
         { path: "production/copack", name: "copack", component: COPACK },
         { path: "production/ihp", name: "ihp", component: IHP },
 
-        // Packing routes - Weigher
+        // Packing routes - Weigher (User only)
         {
           path: "packing/line-a-weigher",
           name: "weigherA",
           component: WeigherA,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-b-weigher",
           name: "weigherB",
           component: WeigherB,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-c-weigher",
           name: "weigherC",
           component: WeigherC,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-d-weigher",
           name: "weigherD",
           component: WeigherD,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-e-weigher",
           name: "weigherE",
           component: WeigherE,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-f-weigher",
           name: "weigherF",
           component: WeigherF,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-g-weigher",
           name: "weigherG",
           component: WeigherG,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-h-weigher",
           name: "weigherH",
           component: WeigherH,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-i-weigher",
           name: "weigherI",
           component: WeigherI,
+          meta: { requiresUser: true },
         },
 
-        // Packing routes - BagMaker
+        // Packing routes - BagMaker (User only)
         {
           path: "packing/line-a-bagmaker",
           name: "bagmakerA",
           component: BagMakerA,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-b-bagmaker",
           name: "bagmakerB",
           component: BagMakerB,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-c-bagmaker",
           name: "bagmakerC",
           component: BagMakerC,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-d-bagmaker",
           name: "bagmakerD",
           component: BagMakerD,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-e-bagmaker",
           name: "bagmakerE",
           component: BagMakerE,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-f-bagmaker",
           name: "bagmakerF",
           component: BagMakerF,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-g-bagmaker",
           name: "bagmakerG",
           component: BagMakerG,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-h-bagmaker",
           name: "bagmakerH",
           component: BagMakerH,
+          meta: { requiresUser: true },
         },
         {
           path: "packing/line-i-bagmaker",
           name: "bagmakerI",
           component: BagMakerI,
+          meta: { requiresUser: true },
         },
 
         // Daily Report routes - Production
@@ -409,7 +427,7 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // Check if route requires user role (for daily reports)
+  // Check if route requires user role (for daily reports, weigher, bagmaker)
   if (to.matched.some((record) => record.meta.requiresUser)) {
     if (!isAuthenticated.value) {
       next({ name: "login", query: { redirect: to.fullPath } });
@@ -417,10 +435,25 @@ router.beforeEach((to, from, next) => {
     }
 
     if (!canAccessDailyReport()) {
-      // Guest cannot access daily reports, redirect to lvmdp1 with alert
-      alert(
-        "⚠️ Akses Ditolak\n\nMaaf, fitur Daily Report hanya dapat diakses oleh User.\nAnda login sebagai Guest yang memiliki akses terbatas."
-      );
+      // Guest cannot access restricted features
+      const routePath = to.path;
+      let message = "⚠️ Akses Ditolak\n\n";
+
+      if (routePath.includes("daily-report")) {
+        message +=
+          "Silakan login sebagai User untuk akses penuh.";
+
+      } else if (
+        routePath.includes("weigher") || routePath.includes("bagmaker")
+      ) {
+        message +=
+          "Silakan login sebagai User untuk akses penuh.";
+      } else {
+        message +=
+          "Silakan login sebagai User untuk akses penuh.";
+      }
+
+      alert(message);
       next({ name: "lvmdp1" });
       return;
     }

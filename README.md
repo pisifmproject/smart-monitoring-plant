@@ -1,7 +1,7 @@
 # PISIFM - Project Information System
 
 **Developer**: Septian Bagus Jumantoro  
-**Last Updated**: December 1, 2025  
+**Last Updated**: December 3, 2025  
 **Organization**: PT Indofood Fortuna Makmur
 
 Real-time factory monitoring system untuk production lines, electrical panels (LVMDP), dan packing lines dengan daily reporting dan performance analytics.
@@ -9,8 +9,12 @@ Real-time factory monitoring system untuk production lines, electrical panels (L
 ## 🌐 Akses Website
 
 - **Lokal**: http://localhost
-- **Ethernet**: http://10.125.48.102
-- **Wi-Fi**: http://172.20.10.6
+- **Network**: http://10.125.48.102
+
+## 👤 User Accounts
+
+- **Guest**: `tamuifm` / `hello01` - Dashboard only (LVMDP, Production)
+- **User**: `userifm` / `pisifm00` - Full access (Dashboard, Weigher, BagMaker, Daily Reports)
 
 ## 🚀 Quick Start
 
@@ -104,42 +108,45 @@ Development URLs: Frontend `localhost:30` | Backend `localhost:2000`
 
 ### LVMDP - 4 Panels (Electrical Monitoring)
 
-- Real-time: kW, Frequency, Power Factor (cos φ)
+- Real-time: kW, Frequency, Power Factor (cos φ), kVA, kVAR
+- Shift Performance: Auto-refresh setiap jam (sync dengan hourly report)
 - Shift tracking: Shift 1 (07:01-14:30), Shift 2 (14:31-22:00), Shift 3 (22:01-07:00)
-- Daily/Hourly reports with pre-aggregated data
-- Performance: DB-side aggregation, indexed tables
+- Daily/Hourly reports dengan comparison TODAY vs YESTERDAY
 
 ### Production Lines - 8 Machines
 
 - PC39, PC14, TS1000, FCP, TWS56, TWS72, COPACK, IHP
 - OEE tracking (Availability, Performance, Quality)
-- KWH meter monitoring
-- Shift summary (Target vs Actual)
+- Real-time monitoring: Kwh meter, production counter
+- Shift summary & trend visualization
+- **Access**: Guest (Dashboard only) | User (Dashboard + Daily Report)
 
 ### Packing Lines - 9 Lines (A-I)
 
-- **Weigher**: Target/Actual packs, weight metrics, efficiency
-- **Bagmaker**: Production metrics, efficiency, quality detection, waste management
+- **Weigher**: Target/Actual, weight metrics, efficiency, reject tracking
+- **Bagmaker**: Production metrics, OEE, quality detection, waste management
+- **Access**: User only (Guest tidak bisa akses)
 
 ## 🚀 Tech Stack
 
-- **Frontend**: Vue 3, TypeScript, Vite, Tailwind CSS, ECharts, Socket.IO
-- **Backend**: Express.js, Drizzle ORM, PostgreSQL
+- **Frontend**: Vue 3, TypeScript, Vite, Tailwind CSS, ECharts, Socket.IO, Vue Router
+- **Backend**: Express.js, Drizzle ORM, PostgreSQL, Node-cron
 - **Server**: Apache 2.4 (port 80) → Backend (port 2000)
+- **Auth**: Role-based access control (Guest/User)
 
 ## 📊 Database Architecture
 
 ### LVMDP Optimization (3-tier)
 
-1. **View Tables**: `v_lvmdp_1-4` - Raw HMI data (millions of records, slow)
+1. **View Tables**: `v_lvmdp_1-4` - Raw HMI data (millions of records)
 2. **Hourly Reports**: `hourly_report_lvmdp_1-4` - Pre-aggregated (24 rows/day, indexed)
-3. **Daily Reports**: `daily_report_lvmdp_1-4` - Shift summaries (1 row/day)
+3. **Daily Reports**: `daily_report_lvmdp_1-4` - Shift summaries (3 shifts/day)
 
-**Performance**: 95% faster queries (3-71ms vs 132-269ms)
+**Cron Jobs**: Hourly report generation setiap jam XX:05, Daily report setiap shift selesai
 
 ### Production & Packing Tables
 
-- Production: `production_line_a_*` (OEE, KWH meter data)
+- Production: `production_line_a_*` (OEE, KWH meter)
 - Packing: `packing_line_*_weigher`, `packing_line_*_bagmaker`
 
 ## 📌 Quick Commands
@@ -166,11 +173,18 @@ npx ts-node src/scripts/backfillHourlyReports.ts 2025-12-01 2025-12-31
 npx ts-node src/scripts/backfillDailyReports.ts 2025-12-01 2025-12-31
 ```
 
+## 🔐 Security & Access Control
+
+- **Guest Role**: Dashboard LVMDP & Production (monitoring only)
+- **User Role**: Full access (Dashboard, Weigher, BagMaker, Daily Reports)
+- **Route Protection**: Navigation guard dengan role-based redirection
+- **Session**: LocalStorage-based authentication
+
 ## Project Info
 
 **Developer**: Septian Bagus Jumantoro  
 **Organization**: PT Indofood Fortuna Makmur  
 **Environment**: Windows + Apache 2.4 + Node.js + PostgreSQL  
-**Deployment**: December 1, 2025
+**Last Deployment**: December 3, 2025
 
 ---
