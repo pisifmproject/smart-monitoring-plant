@@ -16,6 +16,7 @@ function toNumber(x) {
 const mapRow = (r) => ({
     waktu: r.waktu instanceof Date ? r.waktu : new Date(r.waktu),
     totalKwh: toNumber(r.total_kwh),
+    realPower: toNumber(r.real_power),
     cosPhi: toNumber(r.cos_phi),
     freq: toNumber(r.freq),
     avgLineLine: toNumber(r.avg_line_line),

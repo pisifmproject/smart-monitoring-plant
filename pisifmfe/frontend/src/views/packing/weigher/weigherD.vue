@@ -70,7 +70,7 @@ const fetchWeigherData = async () => {
       hasData.value = false;
     }
   } catch (err) {
-    console.error("Error fetching weigher data:", err);
+    // console.error("Error fetching weigher data:", err);
     hasData.value = false;
   } finally {
     loading.value = false;

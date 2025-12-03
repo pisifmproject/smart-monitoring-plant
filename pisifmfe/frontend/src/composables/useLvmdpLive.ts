@@ -63,13 +63,13 @@ export function useLvmdpLive(panelId: number) {
       currHour.value = null;
 
       // DEBUG: Log row BEFORE assignment
-      console.log("🔍 RAW ROW FROM API:", JSON.stringify(row, null, 2));
-      console.log(
-        "🔍 row.currentR:",
-        row.currentR,
-        "Type:",
-        typeof row.currentR
-      );
+      // console.log("🔍 RAW ROW FROM API:", JSON.stringify(row, null, 2));
+      // console.log(
+      //   "🔍 row.currentR:",
+      //   row.currentR,
+      //   "Type:",
+      //   typeof row.currentR
+      // );
 
       // Update RST data directly from row (now includes RST columns from updated view)
       currentR.value = Number(row.currentR) || 0;
@@ -79,18 +79,18 @@ export function useLvmdpLive(panelId: number) {
       voltageST.value = Number(row.voltageST) || 0;
       voltageTR.value = Number(row.voltageTR) || 0;
 
-      console.log(
-        `%c[LVMDP${panelId}] ✅ RST DATA SET!`,
-        "background: lime; color: black; font-size: 20px; padding: 10px;"
-      );
-      console.log("RST Values AFTER SET:", {
-        R: currentR.value,
-        S: currentS.value,
-        T: currentT.value,
-        "R-S": voltageRS.value,
-        "S-T": voltageST.value,
-        "T-R": voltageTR.value,
-      });
+      // console.log(
+      //   `%c[LVMDP${panelId}] ✅ RST DATA SET!`,
+      //   "background: lime; color: black; font-size: 20px; padding: 10px;"
+      // );
+      // console.log("RST Values AFTER SET:", {
+      //   R: currentR.value,
+      //   S: currentS.value,
+      //   T: currentT.value,
+      //   "R-S": voltageRS.value,
+      //   "S-T": voltageST.value,
+      //   "T-R": voltageTR.value,
+      // });
     } catch (err) {
       const e = err as any;
       const status = e?.response?.status ?? e?.status ?? null;
@@ -101,16 +101,16 @@ export function useLvmdpLive(panelId: number) {
         return;
       }
 
-      console.error(`[LVMDP${panelId}] Error fetching data:`, e.message || err);
+      // console.error(`[LVMDP${panelId}] Error fetching data:`, e.message || err);
       isConnected.value = false;
     }
   }
 
   onMounted(() => {
-    console.log(
-      `%c[LVMDP${panelId}] 🚀 Starting data fetch...`,
-      "background: #4CAF50; color: white; padding: 5px; font-weight: bold;"
-    );
+    // console.log(
+    //   `%c[LVMDP${panelId}] 🚀 Starting data fetch...`,
+    //   "background: #4CAF50; color: white; padding: 5px; font-weight: bold;"
+    // );
     fetchLatest();
     timer = setInterval(fetchLatest, 1000);
   });

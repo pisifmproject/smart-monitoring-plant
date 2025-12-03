@@ -90,7 +90,7 @@ async function loadShiftReports() {
       shiftReports.value = [];
     }
   } catch (err) {
-    console.error("Error loading shift reports:", err);
+    // console.error("Error loading shift reports:", err);
     shiftReports.value = [];
     errorShift.value = null; // Don't show error, just show empty state
   } finally {
@@ -139,7 +139,7 @@ async function loadHourlyReports() {
       hourlyReports.value = [];
     }
   } catch (err) {
-    console.error("Error loading hourly reports:", err);
+    // console.error("Error loading hourly reports:", err);
     hourlyReports.value = [];
     errorHourly.value = null; // Don't show error, just show empty state
   } finally {

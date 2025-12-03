@@ -31,23 +31,23 @@ function makeRange(dateStr, startHHMM, endHHMM) {
     return { start, end };
 }
 function computeAverages(rows) {
-    let sumKwh = 0;
+    let sumRealPower = 0;
     let sumI = 0;
     let sumCosPhi = 0;
     let n = 0;
     for (const r of rows) {
-        const kwh = Number(r.totalKwh) || 0;
+        const realPower = Number(r.realPower) || 0;
         const I = Number(r.avgCurrent) || 0;
         const cosPhi = Number(r.cosPhi) || 0;
-        sumKwh += kwh;
+        sumRealPower += realPower;
         sumI += I;
         sumCosPhi += cosPhi;
         n++;
     }
     return {
         count: n,
-        totalKwh: sumKwh, // Sum of all kWh
-        avgKwh: n ? sumKwh / n : 0, // Average of kWh
+        totalKwh: sumRealPower, // Sum of all real power
+        avgKwh: n ? sumRealPower / n : 0, // Average of real power (kW)
         avgCurrent: n ? sumI / n : 0,
         avgCosPhi: n ? sumCosPhi / n : 0, // Average power factor
     };

@@ -83,8 +83,8 @@ const reactiveCalc = computed(() => {
           <div class="section-header">
             <div class="section-icon">📊</div>
             <div>
-              <h2 class="section-title">Shift Performance Comparison</h2>
-              <p class="section-subtitle">Today vs Yesterday</p>
+              <h2 class="section-title">Shift Performance</h2>
+              <p class="section-subtitle">Comparison performance</p>
             </div>
           </div>
 

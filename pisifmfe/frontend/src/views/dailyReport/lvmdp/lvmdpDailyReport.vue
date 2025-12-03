@@ -347,7 +347,7 @@ function generateShiftCSV(): string {
     "Tanggal",
     "Shift",
     "Total kWh",
-    "Avg Real Power (kW)",
+    "Avg Power (kW)",
     "Avg Current (A)",
     "Power Factor",
   ];
@@ -374,7 +374,7 @@ function generateHourlyCSV(): string {
     "Tanggal",
     "Waktu",
     "Total kWh",
-    "Avg Real Power (kW)",
+    "Avg Power (kW)",
     "Power Factor",
     "Avg Current (A)",
   ];
@@ -428,7 +428,7 @@ async function downloadByMonth() {
     const allData = await getDailyReportAll(panelId);
 
     if (!Array.isArray(allData)) {
-      console.error("No data available for month export");
+      // console.error("No data available for month export");
       return;
     }
 
@@ -440,7 +440,7 @@ async function downloadByMonth() {
     });
 
     if (monthData.length === 0) {
-      console.warn("No data found for selected month");
+      // console.warn("No data found for selected month");
       return;
     }
 
@@ -484,7 +484,7 @@ async function downloadByMonth() {
       "Tanggal",
       "Waktu",
       "Total kWh",
-      "Avg Real Power (kW)",
+      "Avg Power (kW)",
       "Power Factor",
       "Avg Current (A)",
     ];
@@ -508,7 +508,7 @@ async function downloadByMonth() {
           });
         }
       } catch (err) {
-        console.warn(`Failed to fetch hourly data for ${reportDate}:`, err);
+        // console.warn(`Failed to fetch hourly data for ${reportDate}:`, err);
       }
     }
 
@@ -524,7 +524,7 @@ async function downloadByMonth() {
       );
     }, 100);
   } catch (err) {
-    console.error("Error downloading month data:", err);
+    // console.error("Error downloading month data:", err);
   } finally {
     showDownloadMenu.value = false;
   }
@@ -641,7 +641,7 @@ onUnmounted(() => {
                 <tr>
                   <th>Shift</th>
                   <th>Total kWh</th>
-                  <th>Avg Real Power (kW)</th>
+                  <th>Avg Power (kW)</th>
                   <th>Avg Current (A)</th>
                   <th>Power Factor</th>
                 </tr>
@@ -676,7 +676,7 @@ onUnmounted(() => {
                 <tr>
                   <th>Time</th>
                   <th>Total kWh</th>
-                  <th>Avg Real Power (kW)</th>
+                  <th>Avg Power (kW)</th>
                   <th>Avg Current (A)</th>
                   <th>Power Factor</th>
                 </tr>

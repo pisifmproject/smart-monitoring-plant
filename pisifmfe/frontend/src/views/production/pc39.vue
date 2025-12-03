@@ -86,7 +86,7 @@ const fetchProductionData = async () => {
       hasData.value = false;
     }
   } catch (err) {
-    console.error("Error fetching production data:", err);
+    // console.error("Error fetching production data:", err);
     hasData.value = false;
   } finally {
     loading.value = false;

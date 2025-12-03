@@ -13,7 +13,7 @@ export function useShiftAverages(panelId: 1 | 2 | 3 | 4, dateStr?: string) {
       s2.value = d.shift2;
       s3.value = d.shift3;
     } catch (error) {
-      console.error("failed to load shift averages:", error);
+      // console.error("failed to load shift averages:", error);
     }
   }
 

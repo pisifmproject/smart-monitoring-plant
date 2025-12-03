@@ -66,10 +66,10 @@ $backendProcess = Get-Process -Name node -ErrorAction SilentlyContinue
 if ($backendProcess) {
     Write-Host "  Backend is running - Restart to apply changes" -ForegroundColor Green
     Write-Host "  Stop: Task Manager, End node.exe" -ForegroundColor White
-    Write-Host "  Start: Run start-backend.bat" -ForegroundColor White
+    Write-Host "  Start: Run start-backend.ps1" -ForegroundColor White
 } else {
     Write-Host "  Backend is NOT running" -ForegroundColor Red
-    Write-Host "  Start: Run start-backend.bat" -ForegroundColor White
+    Write-Host "  Start: Run start-backend.ps1" -ForegroundColor White
 }
 Write-Host ""
 

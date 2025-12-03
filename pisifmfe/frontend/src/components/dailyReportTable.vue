@@ -119,7 +119,7 @@ async function loadAll(forceRefresh: boolean = false) {
       timestamp: now,
     };
   } catch (err: any) {
-    console.error("loadAll daily report error:", err);
+    // console.error("loadAll daily report error:", err);
     error.value =
       err?.response?.data?.message || err.message || "Gagal memuat laporan";
     rows.value = [];

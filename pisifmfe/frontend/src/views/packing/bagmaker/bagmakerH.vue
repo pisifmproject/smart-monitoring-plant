@@ -79,7 +79,7 @@ const fetchBagMakerData = async () => {
       hasData.value = false;
     }
   } catch (err) {
-    console.error("Error fetching bagmaker data:", err);
+    // console.error("Error fetching bagmaker data:", err);
     hasData.value = false;
   } finally {
     loading.value = false;
