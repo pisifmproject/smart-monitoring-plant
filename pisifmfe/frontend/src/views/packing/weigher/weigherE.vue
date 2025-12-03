@@ -92,7 +92,7 @@ onMounted(() => {
         <div class="header-content">
           <div>
             <h1 class="page-title">Weigher</h1>
-            <p class="page-subtitle">Packing Line E</p>
+            <p class="page-subtitle">Weigher</p>
           </div>
           <div class="header-actions">
             <div class="status-badge" :class="status">
@@ -204,15 +204,12 @@ onMounted(() => {
   width: 100%;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
-  padding: 24px 16px;
+  padding: 0;
 }
 
 .weigher-container {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
   overflow: hidden;
 }
 

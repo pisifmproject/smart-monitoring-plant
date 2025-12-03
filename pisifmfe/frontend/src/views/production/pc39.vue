@@ -108,7 +108,7 @@ onMounted(() => {
         <div class="header-content">
           <div>
             <h1 class="page-title">Production Line</h1>
-            <p class="page-subtitle">Line A - PC39</p>
+            <p class="page-subtitle">PC39</p>
           </div>
           <div class="status-badge" :class="status">
             {{ status.toUpperCase() }}
@@ -329,15 +329,12 @@ onMounted(() => {
   width: 100%;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
-  padding: 24px 16px;
+  padding: 0;
 }
 
 .production-container {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
   overflow: hidden;
 }
 
@@ -481,14 +478,13 @@ onMounted(() => {
 /* Power Gauge */
 .power-gauge-container {
   background: white;
-  border-radius: 20px;
+
   padding: 32px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .gauge-wrapper {
   max-width: 400px;
-  margin: 0 auto;
 }
 
 .gauge-title {

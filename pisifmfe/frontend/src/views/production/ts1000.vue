@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import ReportButton from "@/components/reportButton.vue";
 
@@ -108,7 +108,7 @@ onMounted(() => {
         <div class="header-content">
           <div>
             <h1 class="page-title">Production Line</h1>
-            <p class="page-subtitle">Line A - TS1000</p>
+            <p class="page-subtitle">TS1000</p>
           </div>
           <div class="status-badge" :class="status">
             {{ status.toUpperCase() }}
@@ -172,12 +172,12 @@ onMounted(() => {
       <!-- KWH Meter Section -->
       <div class="kwh-section">
         <h2 class="section-title">
-          <span class="title-icon">⚡</span>
+          <span class="title-icon">?</span>
           Power Consumption Monitor
         </h2>
         <div class="kwh-grid">
           <div class="kwh-card highlight">
-            <div class="kwh-icon">🔋</div>
+            <div class="kwh-icon">??</div>
             <div class="kwh-content">
               <div class="kwh-label">Total KWH</div>
               <div class="kwh-value">
@@ -187,7 +187,7 @@ onMounted(() => {
             </div>
           </div>
           <div class="kwh-card">
-            <div class="kwh-icon">⚡</div>
+            <div class="kwh-icon">?</div>
             <div class="kwh-content">
               <div class="kwh-label">Power</div>
               <div class="kwh-value">
@@ -197,7 +197,7 @@ onMounted(() => {
             </div>
           </div>
           <div class="kwh-card">
-            <div class="kwh-icon">🔌</div>
+            <div class="kwh-icon">??</div>
             <div class="kwh-content">
               <div class="kwh-label">Voltage</div>
               <div class="kwh-value">{{ productionData.voltageInput }}</div>
@@ -205,7 +205,7 @@ onMounted(() => {
             </div>
           </div>
           <div class="kwh-card">
-            <div class="kwh-icon">〰️</div>
+            <div class="kwh-icon">??</div>
             <div class="kwh-content">
               <div class="kwh-label">Current</div>
               <div class="kwh-value">{{ productionData.currentAmpere }}</div>
@@ -316,11 +316,11 @@ onMounted(() => {
       <!-- Status Note -->
       <div class="note-section">
         <p class="note-text">
-          <span v-if="loading">⏳ Loading data...</span>
+          <span v-if="loading">? Loading data...</span>
           <span v-else-if="!hasData"
-            >📝 <strong>Note:</strong> Waiting for data from API</span
+            >?? <strong>Note:</strong> Waiting for data from API</span
           >
-          <span v-else>✅ Connected to API</span>
+          <span v-else>? Connected to API</span>
         </p>
       </div>
     </div>
@@ -332,15 +332,12 @@ onMounted(() => {
   width: 100%;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
-  padding: 24px 16px;
+  padding: 0;
 }
 
 .production-container {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
   overflow: hidden;
 }
 
@@ -484,14 +481,13 @@ onMounted(() => {
 /* Power Gauge */
 .power-gauge-container {
   background: white;
-  border-radius: 20px;
+
   padding: 32px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .gauge-wrapper {
   max-width: 400px;
-  margin: 0 auto;
 }
 
 .gauge-title {

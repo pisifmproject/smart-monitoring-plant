@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { ref, watchEffect, computed } from "vue";
 import { useRoute, RouterLink } from "vue-router";
-import {
-  Cog,
-  Zap,
-  Factory,
-  Package,
-  BriefcaseConveyorBelt,
-  CircleSmall,
-} from "lucide-vue-next";
+import { Cog, Zap, Factory, CircleSmall } from "lucide-vue-next";
 import { useAuth } from "@/stores/auth";
 
 const route = useRoute();
@@ -18,9 +11,7 @@ const { canAccessDailyReport } = useAuth();
 const openMenus = ref<Record<string, boolean>>({
   utility: false,
   lvmdp: false,
-  // Siap untuk menu tambahan:
   production: false,
-  packing: false,
 });
 
 const showText = ref(true);
@@ -36,7 +27,7 @@ watchEffect(() => {
     openMenus.value.lvmdp = true;
   }
 
-  // Buka Production jika di route production
+  // Buka Production jika di route production, weigher, atau bagmaker
   if (
     routeName === "pc39" ||
     routeName === "pc14" ||
@@ -46,19 +37,37 @@ watchEffect(() => {
     routeName === "tws72" ||
     routeName === "copack" ||
     routeName === "ihp" ||
+    routePath.includes("weigher") ||
+    routePath.includes("bagmaker") ||
     routePath.includes("daily-report/production")
   ) {
     openMenus.value.production = true;
-  }
 
-  // Buka Packing jika di route packing
-  if (
-    routePath.includes("weigher") ||
-    routePath.includes("bagmaker") ||
-    routePath.includes("daily-report/weigher") ||
-    routePath.includes("daily-report/bagmaker")
-  ) {
-    openMenus.value.packing = true;
+    // Auto expand submenu mesin yang aktif
+    if (routePath.includes("weigherA") || routePath.includes("bagmakerA")) {
+      openMenus.value.pc39 = true;
+    }
+    if (routePath.includes("weigherB") || routePath.includes("bagmakerB")) {
+      openMenus.value.pc14 = true;
+    }
+    if (routePath.includes("weigherC") || routePath.includes("bagmakerC")) {
+      openMenus.value.ts1000 = true;
+    }
+    if (routePath.includes("weigherD") || routePath.includes("bagmakerD")) {
+      openMenus.value.fcp = true;
+    }
+    if (routePath.includes("weigherE") || routePath.includes("bagmakerE")) {
+      openMenus.value.tws56 = true;
+    }
+    if (routePath.includes("weigherG") || routePath.includes("bagmakerG")) {
+      openMenus.value.tws72 = true;
+    }
+    if (routePath.includes("weigherH") || routePath.includes("bagmakerH")) {
+      openMenus.value.copack = true;
+    }
+    if (routePath.includes("weigherI") || routePath.includes("bagmakerI")) {
+      openMenus.value.ihp = true;
+    }
   }
 });
 
@@ -87,190 +96,84 @@ const mainMenus = [
     name: "Production",
     icon: Factory,
     children: [
-      { id: "pc39", name: "PC39", routeName: "pc39", icon: CircleSmall },
-      { id: "pc14", name: "PC14", routeName: "pc14", icon: CircleSmall },
-      { id: "ts1000", name: "TS1000", routeName: "ts1000", icon: CircleSmall },
-      { id: "fcp", name: "FCP", routeName: "fcp", icon: CircleSmall },
-      { id: "tws56", name: "TWS56", routeName: "tws56", icon: CircleSmall },
-      { id: "tws72", name: "TWS72", routeName: "tws72", icon: CircleSmall },
-      { id: "copack", name: "COPACK", routeName: "copack", icon: CircleSmall },
-      { id: "ihp", name: "IHP", routeName: "ihp", icon: CircleSmall },
-    ],
-  },
-  {
-    id: "packing",
-    name: "Packing",
-    icon: Package,
-    children: [
       {
-        id: "packLineA",
-        name: "Line A",
-        icon: BriefcaseConveyorBelt,
+        id: "pc39",
+        name: "PC39",
+        icon: CircleSmall,
         children: [
-          {
-            id: "weigherA",
-            name: "Weigher",
-            routeName: "weigherA",
-            icon: CircleSmall,
-          },
-          {
-            id: "bagmakerA",
-            name: "BagMaker",
-            routeName: "bagmakerA",
-            icon: CircleSmall,
-          },
+          { id: "pc39Dashboard", name: "Dashboard", routeName: "pc39" },
+          { id: "weigherA", name: "Weigher", routeName: "weigherA" },
+          { id: "bagmakerA", name: "BagMaker", routeName: "bagmakerA" },
         ],
       },
       {
-        id: "packLineB",
-        name: "Line B",
-        icon: BriefcaseConveyorBelt,
+        id: "pc14",
+        name: "PC14",
+        icon: CircleSmall,
         children: [
-          {
-            id: "weigherB",
-            name: "Weigher",
-            routeName: "weigherB",
-            icon: CircleSmall,
-          },
-          {
-            id: "bagmakerB",
-            name: "BagMaker",
-            routeName: "bagmakerB",
-            icon: CircleSmall,
-          },
+          { id: "pc14Dashboard", name: "Dashboard", routeName: "pc14" },
+          { id: "weigherB", name: "Weigher", routeName: "weigherB" },
+          { id: "bagmakerB", name: "BagMaker", routeName: "bagmakerB" },
         ],
       },
       {
-        id: "packLineC",
-        name: "Line C",
-        icon: BriefcaseConveyorBelt,
+        id: "ts1000",
+        name: "TS1000",
+        icon: CircleSmall,
         children: [
-          {
-            id: "weigherC",
-            name: "Weigher",
-            routeName: "weigherC",
-            icon: CircleSmall,
-          },
-          {
-            id: "bagmakerC",
-            name: "BagMaker",
-            routeName: "bagmakerC",
-            icon: CircleSmall,
-          },
+          { id: "ts1000Dashboard", name: "Dashboard", routeName: "ts1000" },
+          { id: "weigherC", name: "Weigher", routeName: "weigherC" },
+          { id: "bagmakerC", name: "BagMaker", routeName: "bagmakerC" },
         ],
       },
       {
-        id: "packLineD",
-        name: "Line D",
-        icon: BriefcaseConveyorBelt,
+        id: "fcp",
+        name: "FCP",
+        icon: CircleSmall,
         children: [
-          {
-            id: "weigherD",
-            name: "Weigher",
-            routeName: "weigherD",
-            icon: CircleSmall,
-          },
-          {
-            id: "bagmakerD",
-            name: "BagMaker",
-            routeName: "bagmakerD",
-            icon: CircleSmall,
-          },
+          { id: "fcpDashboard", name: "Dashboard", routeName: "fcp" },
+          { id: "weigherD", name: "Weigher", routeName: "weigherD" },
+          { id: "bagmakerD", name: "BagMaker", routeName: "bagmakerD" },
         ],
       },
       {
-        id: "packLineE",
-        name: "Line E",
-        icon: BriefcaseConveyorBelt,
+        id: "tws56",
+        name: "TWS56",
+        icon: CircleSmall,
         children: [
-          {
-            id: "weigherE",
-            name: "Weigher",
-            routeName: "weigherE",
-            icon: CircleSmall,
-          },
-          {
-            id: "bagmakerE",
-            name: "BagMaker",
-            routeName: "bagmakerE",
-            icon: CircleSmall,
-          },
-        ],
-      },
-      // {
-      //   id: "packLineF",
-      //   name: "Line F",
-      //   icon: BriefcaseConveyorBelt,
-      //   children: [
-      //     {
-      //       id: "weigherF",
-      //       name: "Weigher",
-      //       routeName: "weigherF",
-      //       icon: CircleSmall,
-      //     },
-      //     {
-      //       id: "bagmakerF",
-      //       name: "BagMaker",
-      //       routeName: "bagmakerF",
-      //       icon: CircleSmall,
-      //     },
-      //   ],
-      // },
-      {
-        id: "packLineG",
-        name: "Line G",
-        icon: BriefcaseConveyorBelt,
-        children: [
-          {
-            id: "weigherG",
-            name: "Weigher",
-            routeName: "weigherG",
-            icon: CircleSmall,
-          },
-          {
-            id: "bagmakerG",
-            name: "BagMaker",
-            routeName: "bagmakerG",
-            icon: CircleSmall,
-          },
+          { id: "tws56Dashboard", name: "Dashboard", routeName: "tws56" },
+          { id: "weigherE", name: "Weigher", routeName: "weigherE" },
+          { id: "bagmakerE", name: "BagMaker", routeName: "bagmakerE" },
         ],
       },
       {
-        id: "packLineH",
-        name: "Line H",
-        icon: BriefcaseConveyorBelt,
+        id: "tws72",
+        name: "TWS72",
+        icon: CircleSmall,
         children: [
-          {
-            id: "weigherH",
-            name: "Weigher",
-            routeName: "weigherH",
-            icon: CircleSmall,
-          },
-          {
-            id: "bagmakerH",
-            name: "BagMaker",
-            routeName: "bagmakerH",
-            icon: CircleSmall,
-          },
+          { id: "tws72Dashboard", name: "Dashboard", routeName: "tws72" },
+          { id: "weigherG", name: "Weigher", routeName: "weigherG" },
+          { id: "bagmakerG", name: "BagMaker", routeName: "bagmakerG" },
         ],
       },
       {
-        id: "packLineI",
-        name: "Line I",
-        icon: BriefcaseConveyorBelt,
+        id: "copack",
+        name: "COPACK",
+        icon: CircleSmall,
         children: [
-          {
-            id: "weigherI",
-            name: "Weigher",
-            routeName: "weigherI",
-            icon: CircleSmall,
-          },
-          {
-            id: "bagmakerI",
-            name: "BagMaker",
-            routeName: "bagmakerI",
-            icon: CircleSmall,
-          },
+          { id: "copackDashboard", name: "Dashboard", routeName: "copack" },
+          { id: "weigherH", name: "Weigher", routeName: "weigherH" },
+          { id: "bagmakerH", name: "BagMaker", routeName: "bagmakerH" },
+        ],
+      },
+      {
+        id: "ihp",
+        name: "IHP",
+        icon: CircleSmall,
+        children: [
+          { id: "ihpDashboard", name: "Dashboard", routeName: "ihp" },
+          { id: "weigherI", name: "Weigher", routeName: "weigherI" },
+          { id: "bagmakerI", name: "BagMaker", routeName: "bagmakerI" },
         ],
       },
     ],

@@ -5,4 +5,7 @@ import "./assets/tailwind.css";
 import "./style.css"; // kalau memang ada
 const app = createApp(App);
 app.use(router);
-app.mount("#app");
+// Wait for router to be ready before mounting
+router.isReady().then(() => {
+    app.mount("#app");
+});

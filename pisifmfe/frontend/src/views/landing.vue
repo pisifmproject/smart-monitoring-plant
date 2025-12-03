@@ -173,8 +173,9 @@ function submitLogin() {
 
         <div class="login-hint">
           <p class="text-xs text-slate-400">
-            Gunakan akun <strong>Guest</strong> untuk akses terbatas atau
-            <strong>User</strong> untuk akses penuh
+            <strong>
+              © 2025 • Indofood Fortuna Makmur - Cikupa
+            </strong>
           </p>
         </div>
       </div>
