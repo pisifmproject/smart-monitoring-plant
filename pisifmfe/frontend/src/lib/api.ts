@@ -102,3 +102,38 @@ export async function getDailyHourly(panelId: 1 | 2 | 3 | 4, date: string) {
   if (Array.isArray(data?.data)) return data.data;
   return [];
 }
+
+// ---------- UTILITY CONSUMPTION ----------
+export async function getUtilityConsumption(
+  machineId: string,
+  utilityType: string,
+  period: "daily" | "monthly" = "daily",
+  date?: string
+) {
+  const { data } = await api.get(`/utility/${machineId}/consumption`, {
+    params: { type: utilityType, period, date },
+  });
+  return data as {
+    daily: { current: number; target: number; yesterday: number };
+    monthly: { current: number; target: number; lastMonth: number };
+    unit: string;
+  };
+}
+
+export async function getUtilityTrend(
+  machineId: string,
+  utilityType: string,
+  range: "7days" | "30days" | "12months" = "7days"
+) {
+  const { data } = await api.get(`/utility/${machineId}/trend`, {
+    params: { type: utilityType, range },
+  });
+  return data as Array<{ date: string; value: number; target?: number }>;
+}
+
+export async function getUtilitySummary(machineId: string, date?: string) {
+  const { data } = await api.get(`/utility/${machineId}/summary`, {
+    params: { date },
+  });
+  return data;
+}

@@ -635,6 +635,9 @@ onUnmounted(() => {
         <div v-if="activeTab === 'shift'" class="tab-content">
           <div v-if="loadingShift" class="loading">Loading shift data...</div>
           <div v-else-if="errorShift" class="error">{{ errorShift }}</div>
+          <div v-else-if="shiftReports.length === 0" class="empty-state">
+            <p>No shift data available for this date</p>
+          </div>
           <div v-else class="shift-table-wrapper">
             <table class="shift-table">
               <thead>
@@ -656,7 +659,9 @@ onUnmounted(() => {
                   <td class="numeric">{{ formatNumber(row.totalKwh) }}</td>
                   <td class="numeric">{{ formatNumber(row.avgKwh) }}</td>
                   <td class="numeric">{{ formatNumber(row.iavg) }}</td>
-                  <td class="numeric">{{ formatNumber(row.cosPhi) }}</td>
+                  <td class="numeric power-factor">
+                    {{ formatNumber(row.cosPhi) }}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -667,14 +672,14 @@ onUnmounted(() => {
         <div v-if="activeTab === 'hourly'" class="tab-content">
           <div v-if="loadingHourly" class="loading">Loading hourly data...</div>
           <div v-else-if="errorHourly" class="error">{{ errorHourly }}</div>
+          <div v-else-if="hourlyReports.length === 0" class="empty-state">
+            <p>No hourly data available for this date</p>
+          </div>
           <div v-else class="hourly-table-wrapper">
-            <div v-if="hourlyReports.length === 0" class="empty-state">
-              <p>No hourly data available for this date</p>
-            </div>
-            <table v-else class="hourly-table">
+            <table class="hourly-table">
               <thead>
                 <tr>
-                  <th>Time</th>
+                  <th>Waktu</th>
                   <th>Total kWh</th>
                   <th>Avg Power (kW)</th>
                   <th>Avg Current (A)</th>
@@ -691,7 +696,9 @@ onUnmounted(() => {
                   <td class="numeric">{{ formatNumber(row.totalKwh) }}</td>
                   <td class="numeric">{{ formatNumber(row.avgKwh) }}</td>
                   <td class="numeric">{{ formatNumber(row.avgCurrent) }}</td>
-                  <td class="numeric">{{ formatNumber(row.cosPhi) }}</td>
+                  <td class="numeric power-factor">
+                    {{ formatNumber(row.cosPhi) }}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -991,12 +998,26 @@ onUnmounted(() => {
   padding: 60px 24px;
   color: #94a3b8;
   font-size: 1.05rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  border: 2px dashed #cbd5e1;
 }
 
 /* Tables */
 .shift-table-wrapper,
 .hourly-table-wrapper {
   overflow-x: auto;
+  overflow-y: hidden;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  transition: box-shadow 0.3s ease;
+}
+
+.shift-table-wrapper:hover,
+.hourly-table-wrapper:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
 .shift-table,
@@ -1008,52 +1029,101 @@ onUnmounted(() => {
 
 .shift-table thead,
 .hourly-table thead {
-  background: linear-gradient(to right, #f0f9ff, #ecf0f1);
-  border-bottom: 2px solid #e2e8f0;
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  border-bottom: 3px solid #0891b2;
 }
 
 .shift-table th,
 .hourly-table th {
-  padding: 16px;
+  padding: 18px 20px;
   text-align: center;
   font-weight: 700;
-  color: #1e293b;
+  color: white;
   font-size: 0.95rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.shift-table th::after,
+.hourly-table th::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .shift-row,
 .hourly-row {
   border-bottom: 1px solid #e2e8f0;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-left 0.2s ease, box-shadow 0.2s ease;
+  background: white;
+  border-left: 4px solid transparent;
 }
 
 .shift-row:hover,
 .hourly-row:hover {
-  background: #f8fafc;
-  transform: scale(1.01);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
+  border-left: 4px solid #0ea5e9;
+}
+
+.shift-row:last-child,
+.hourly-row:last-child {
+  border-bottom: none;
 }
 
 .shift-table td,
 .hourly-table td {
-  padding: 14px 16px;
+  padding: 16px 20px;
   color: #1e293b;
-  font-size: 0.95rem;
+  font-size: 1rem;
   text-align: center;
+  transition: all 0.2s ease;
 }
 
 .numeric {
   text-align: center;
-  font-weight: 600;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #0ea5e9;
+  font-size: 1.05rem;
+}
+
+.shift-row:hover .numeric,
+.hourly-row:hover .numeric {
+  color: #0284c7;
+}
+
+.power-factor {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.shift-row:hover .power-factor,
+.hourly-row:hover .power-factor {
+  color: #059669;
 }
 
 .shift-name,
 .time {
-  font-weight: 600;
+  font-weight: 700;
   color: #1e293b;
+  font-size: 1.05rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 12px 16px !important;
+  border-radius: 8px;
+}
+
+.shift-row:hover .shift-name,
+.hourly-row:hover .time {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
 }
 
 /* Cache Info */

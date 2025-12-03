@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, watchEffect, computed } from "vue";
-import { useRoute, RouterLink } from "vue-router";
+import { useRoute, useRouter, RouterLink } from "vue-router";
 import { Cog, Zap, Factory, CircleSmall } from "lucide-vue-next";
 import { useAuth } from "@/stores/auth";
 
 const route = useRoute();
+const router = useRouter();
 const { canAccessDailyReport } = useAuth();
 
 // State untuk setiap menu utama
@@ -15,6 +16,16 @@ const openMenus = ref<Record<string, boolean>>({
 });
 
 const showText = ref(true);
+
+// Helper to check if route exists
+function routeExists(routeName: string | undefined | null): boolean {
+  if (!routeName || typeof routeName !== "string") return false;
+  try {
+    return router.hasRoute(routeName);
+  } catch (error) {
+    return false;
+  }
+}
 
 // Auto-buka dropdown ketika berada di route terkait
 watchEffect(() => {
@@ -27,7 +38,7 @@ watchEffect(() => {
     openMenus.value.lvmdp = true;
   }
 
-  // Buka Production jika di route production, weigher, atau bagmaker
+  // Buka Production jika di route production, weigher, bagmaker, atau utility consumption
   if (
     routeName === "pc39" ||
     routeName === "pc14" ||
@@ -37,36 +48,102 @@ watchEffect(() => {
     routeName === "tws72" ||
     routeName === "copack" ||
     routeName === "ihp" ||
+    routeName === "cassavaInhouse" ||
+    routeName === "tortila" ||
+    routeName === "packingPouch" ||
+    routeName === "vacuumFryer" ||
+    routeName.startsWith("utility") ||
     routePath.includes("weigher") ||
     routePath.includes("bagmaker") ||
-    routePath.includes("daily-report/production")
+    routePath.includes("daily-report/production") ||
+    routePath.includes("/utility/")
   ) {
     openMenus.value.production = true;
 
-    // Auto expand submenu mesin yang aktif
-    if (routePath.includes("weigherA") || routePath.includes("bagmakerA")) {
+    // Auto expand submenu mesin yang aktif berdasarkan route
+    if (
+      routePath.includes("weigherA") ||
+      routePath.includes("bagmakerA") ||
+      routeName === "utilityPC39"
+    ) {
       openMenus.value.pc39 = true;
     }
-    if (routePath.includes("weigherB") || routePath.includes("bagmakerB")) {
+    if (
+      routePath.includes("weigherB") ||
+      routePath.includes("bagmakerB") ||
+      routeName === "utilityPC14"
+    ) {
       openMenus.value.pc14 = true;
     }
-    if (routePath.includes("weigherC") || routePath.includes("bagmakerC")) {
+    if (
+      routePath.includes("weigherC") ||
+      routePath.includes("bagmakerC") ||
+      routeName === "utilityTS1000"
+    ) {
       openMenus.value.ts1000 = true;
     }
-    if (routePath.includes("weigherD") || routePath.includes("bagmakerD")) {
+    if (
+      routePath.includes("weigherD") ||
+      routePath.includes("bagmakerD") ||
+      routeName === "utilityFCP"
+    ) {
       openMenus.value.fcp = true;
     }
-    if (routePath.includes("weigherE") || routePath.includes("bagmakerE")) {
+    if (
+      routePath.includes("weigherE") ||
+      routePath.includes("bagmakerE") ||
+      routeName === "utilityTWS56"
+    ) {
       openMenus.value.tws56 = true;
     }
-    if (routePath.includes("weigherG") || routePath.includes("bagmakerG")) {
+    if (
+      routePath.includes("weigherG") ||
+      routePath.includes("bagmakerG") ||
+      routeName === "utilityTWS72"
+    ) {
       openMenus.value.tws72 = true;
     }
-    if (routePath.includes("weigherH") || routePath.includes("bagmakerH")) {
-      openMenus.value.copack = true;
+    if (
+      routePath.includes("weigherH") ||
+      routePath.includes("bagmakerH") ||
+      routeName === "utilityCassavaCopack"
+    ) {
+      openMenus.value.cassavaCopack = true;
     }
-    if (routePath.includes("weigherI") || routePath.includes("bagmakerI")) {
+    if (
+      routePath.includes("weigherI") ||
+      routePath.includes("bagmakerI") ||
+      routeName === "utilityIHP"
+    ) {
       openMenus.value.ihp = true;
+    }
+    // Add auto-expand for new machines
+    if (
+      routePath.includes("weigherF") ||
+      routePath.includes("bagmakerF") ||
+      routeName === "utilityCassavaInhouse" ||
+      routeName === "cassavaInhouse"
+    ) {
+      openMenus.value.cassavaInhouse = true;
+    }
+    if (
+      routePath.includes("weigherC") ||
+      routePath.includes("bagmakerC") ||
+      routeName === "utilityTortila" ||
+      routeName === "tortila"
+    ) {
+      openMenus.value.tortila = true;
+    }
+    if (
+      routePath.includes("weigherI") ||
+      routePath.includes("bagmakerI") ||
+      routeName === "utilityPackingPouch" ||
+      routeName === "packingPouch"
+    ) {
+      openMenus.value.packingPouch = true;
+    }
+    if (routeName === "utilityVacuumFryer" || routeName === "vacuumFryer") {
+      openMenus.value.vacuumFryer = true;
     }
   }
 });
@@ -78,28 +155,49 @@ const getProductionChildren = () => {
 
   const machines = [
     {
-      id: "pc39",
-      name: "PC39",
-      icon: CircleSmall,
-      dashboardRoute: "pc39",
-      weigherRoute: "weigherA",
-      bagmakerRoute: "bagmakerA",
-    },
-    {
       id: "pc14",
-      name: "PC14",
+      name: "PC 14",
       icon: CircleSmall,
       dashboardRoute: "pc14",
       weigherRoute: "weigherB",
       bagmakerRoute: "bagmakerB",
+      utilityRoute: "utilityPC14",
     },
     {
-      id: "ts1000",
-      name: "TS1000",
+      id: "pc39",
+      name: "PC 39",
       icon: CircleSmall,
-      dashboardRoute: "ts1000",
+      dashboardRoute: "pc39",
+      weigherRoute: "weigherA",
+      bagmakerRoute: "bagmakerA",
+      utilityRoute: "utilityPC39",
+    },
+    {
+      id: "cassavaInhouse",
+      name: "Cassava Inhouse",
+      icon: CircleSmall,
+      dashboardRoute: "cassavaInhouse",
+      weigherRoute: "weigherF",
+      bagmakerRoute: "bagmakerF",
+      utilityRoute: "utilityCassavaInhouse",
+    },
+    {
+      id: "cassavaCopack",
+      name: "Cassava Copack",
+      icon: CircleSmall,
+      dashboardRoute: "copack",
+      weigherRoute: "weigherH",
+      bagmakerRoute: "bagmakerH",
+      utilityRoute: "utilityCassavaCopack",
+    },
+    {
+      id: "tortila",
+      name: "Tortila",
+      icon: CircleSmall,
+      dashboardRoute: "tortila",
       weigherRoute: "weigherC",
       bagmakerRoute: "bagmakerC",
+      utilityRoute: "utilityTortila",
     },
     {
       id: "fcp",
@@ -108,38 +206,43 @@ const getProductionChildren = () => {
       dashboardRoute: "fcp",
       weigherRoute: "weigherD",
       bagmakerRoute: "bagmakerD",
+      utilityRoute: "utilityFCP",
     },
     {
       id: "tws56",
-      name: "TWS56",
+      name: "TWS 5.6",
       icon: CircleSmall,
       dashboardRoute: "tws56",
       weigherRoute: "weigherE",
       bagmakerRoute: "bagmakerE",
+      utilityRoute: "utilityTWS56",
     },
     {
       id: "tws72",
-      name: "TWS72",
+      name: "TWS 7.2",
       icon: CircleSmall,
       dashboardRoute: "tws72",
       weigherRoute: "weigherG",
       bagmakerRoute: "bagmakerG",
+      utilityRoute: "utilityTWS72",
     },
     {
-      id: "copack",
-      name: "COPACK",
+      id: "packingPouch",
+      name: "Packing Pouch (Promina Puff)",
       icon: CircleSmall,
-      dashboardRoute: "copack",
-      weigherRoute: "weigherH",
-      bagmakerRoute: "bagmakerH",
-    },
-    {
-      id: "ihp",
-      name: "IHP",
-      icon: CircleSmall,
-      dashboardRoute: "ihp",
+      dashboardRoute: "packingPouch",
       weigherRoute: "weigherI",
       bagmakerRoute: "bagmakerI",
+      utilityRoute: "utilityPackingPouch",
+    },
+    {
+      id: "vacuumFryer",
+      name: "Vacuum Fryer 1",
+      icon: CircleSmall,
+      dashboardRoute: "vacuumFryer",
+      weigherRoute: null,
+      bagmakerRoute: null,
+      utilityRoute: "utilityVacuumFryer",
     },
   ];
 
@@ -152,20 +255,28 @@ const getProductionChildren = () => {
       },
     ];
 
-    // Only add Weigher and BagMaker for User role
+    // Only add Utility Consumption, Weigher and BagMaker for User role
     if (!isGuest) {
-      children.push(
-        {
+      children.push({
+        id: `${machine.id}Utility`,
+        name: "Utility Consumption",
+        routeName: machine.utilityRoute,
+      });
+
+      if (machine.weigherRoute) {
+        children.push({
           id: machine.weigherRoute,
           name: "Weigher",
           routeName: machine.weigherRoute,
-        },
-        {
+        });
+      }
+      if (machine.bagmakerRoute) {
+        children.push({
           id: machine.bagmakerRoute,
           name: "BagMaker",
           routeName: machine.bagmakerRoute,
-        }
-      );
+        });
+      }
     }
 
     return {
@@ -333,7 +444,7 @@ function isItemActive(routeName: string): boolean {
 
               <!-- Jika submenu adalah route (leaf node) -->
               <RouterLink
-                v-else-if="(subMenu as any).routeName"
+                v-else-if="(subMenu as any).routeName && routeExists((subMenu as any).routeName)"
                 :to="{ name: (subMenu as any).routeName }"
                 class="submenu-item level-2"
                 active-class="active"
@@ -348,16 +459,24 @@ function isItemActive(routeName: string): boolean {
                   v-show="(subMenu as any).children && isMenuOpen(subMenu.id)"
                   class="submenu level-2"
                 >
-                  <RouterLink
-                    v-for="childMenu in (subMenu as any).children"
-                    :key="childMenu.id"
-                    :to="{ name: childMenu.routeName }"
-                    class="submenu-item level-3"
-                    :class="{ active: isItemActive(childMenu.routeName) }"
+                  <template
+                    v-for="childMenu in ((subMenu as any).children || [])"
+                    :key="childMenu?.id || Math.random()"
                   >
-                    <div class="h-2.5 w-2.5 rounded-full bg-slate-600" />
-                    <span>{{ childMenu.name }}</span>
-                  </RouterLink>
+                    <RouterLink
+                      v-if="
+                        childMenu &&
+                        childMenu.routeName &&
+                        routeExists(childMenu.routeName)
+                      "
+                      :to="{ name: childMenu.routeName }"
+                      class="submenu-item level-3"
+                      :class="{ active: isItemActive(childMenu.routeName) }"
+                    >
+                      <div class="h-2.5 w-2.5 rounded-full bg-slate-600" />
+                      <span>{{ childMenu.name }}</span>
+                    </RouterLink>
+                  </template>
                 </div>
               </transition>
             </template>

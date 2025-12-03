@@ -4,6 +4,11 @@ import { useAuth } from "../stores/auth";
 import Landing from "../views/landing.vue";
 import Login from "../views/login.vue";
 import DashboardLayout from "../layouts/dashboardLayout.vue";
+import UtilityConsumption from "../views/utility/utilityConsumption.vue";
+import Lvmdp1 from "../views/lvmdp/lvmdp1.vue";
+import Lvmdp2 from "../views/lvmdp/lvmdp2.vue";
+import Lvmdp3 from "../views/lvmdp/lvmdp3.vue";
+import Lvmdp4 from "../views/lvmdp/lvmdp4.vue";
 const LvmdpDailyReport = () =>
   import("../views/dailyReport/lvmdp/lvmdpDailyReport.vue");
 
@@ -62,12 +67,6 @@ const BagmakerHDailyReport = () =>
 const BagmakerIDailyReport = () =>
   import("../views/dailyReport/bagmaker/bagmakerIDailyReport.vue");
 
-// --- LVMDP pages
-const Lvmdp1 = () => import("../views/lvmdp/lvmdp1.vue");
-const Lvmdp2 = () => import("../views/lvmdp/lvmdp2.vue");
-const Lvmdp3 = () => import("../views/lvmdp/lvmdp3.vue");
-const Lvmdp4 = () => import("../views/lvmdp/lvmdp4.vue");
-
 // --- Production pages
 const PC39 = () => import("../views/production/pc39.vue");
 const PC14 = () => import("../views/production/pc14.vue");
@@ -77,6 +76,10 @@ const TWS56 = () => import("../views/production/tws56.vue");
 const TWS72 = () => import("../views/production/tws72.vue");
 const COPACK = () => import("../views/production/copack.vue");
 const IHP = () => import("../views/production/ihp.vue");
+const CassavaInhouse = () => import("../views/production/cassavaInhouse.vue");
+const Tortila = () => import("../views/production/tortila.vue");
+const PackingPouch = () => import("../views/production/packingPouch.vue");
+const VacuumFryer = () => import("../views/production/vacuumFryer.vue");
 
 // --- Packing pages
 // Weigher views
@@ -124,14 +127,100 @@ const router = createRouter({
         },
 
         // Production routes
-        { path: "production/pc39", name: "pc39", component: PC39 },
         { path: "production/pc14", name: "pc14", component: PC14 },
-        { path: "production/ts1000", name: "ts1000", component: TS1000 },
+        { path: "production/pc39", name: "pc39", component: PC39 },
+        {
+          path: "production/cassava-inhouse",
+          name: "cassavaInhouse",
+          component: CassavaInhouse,
+        },
+        { path: "production/copack", name: "copack", component: COPACK },
+        { path: "production/tortila", name: "tortila", component: Tortila },
         { path: "production/fcp", name: "fcp", component: FCP },
         { path: "production/tws56", name: "tws56", component: TWS56 },
         { path: "production/tws72", name: "tws72", component: TWS72 },
-        { path: "production/copack", name: "copack", component: COPACK },
-        { path: "production/ihp", name: "ihp", component: IHP },
+        {
+          path: "production/packing-pouch",
+          name: "packingPouch",
+          component: PackingPouch,
+        },
+        {
+          path: "production/vacuum-fryer",
+          name: "vacuumFryer",
+          component: VacuumFryer,
+        },
+
+        // Utility Consumption routes (User only)
+        {
+          path: "utility/pc14",
+          name: "utilityPC14",
+          component: UtilityConsumption,
+          props: { machineName: "PC 14" },
+          meta: { requiresUser: true },
+        },
+        {
+          path: "utility/pc39",
+          name: "utilityPC39",
+          component: UtilityConsumption,
+          props: { machineName: "PC 39" },
+          meta: { requiresUser: true },
+        },
+        {
+          path: "utility/cassava-inhouse",
+          name: "utilityCassavaInhouse",
+          component: UtilityConsumption,
+          props: { machineName: "Cassava Inhouse" },
+          meta: { requiresUser: true },
+        },
+        {
+          path: "utility/cassava-copack",
+          name: "utilityCassavaCopack",
+          component: UtilityConsumption,
+          props: { machineName: "Cassava Copack" },
+          meta: { requiresUser: true },
+        },
+        {
+          path: "utility/tortila",
+          name: "utilityTortila",
+          component: UtilityConsumption,
+          props: { machineName: "Tortila" },
+          meta: { requiresUser: true },
+        },
+        {
+          path: "utility/fcp",
+          name: "utilityFCP",
+          component: UtilityConsumption,
+          props: { machineName: "FCP" },
+          meta: { requiresUser: true },
+        },
+        {
+          path: "utility/tws56",
+          name: "utilityTWS56",
+          component: UtilityConsumption,
+          props: { machineName: "TWS 5.6" },
+          meta: { requiresUser: true },
+        },
+        {
+          path: "utility/tws72",
+          name: "utilityTWS72",
+          component: UtilityConsumption,
+          props: { machineName: "TWS 7.2" },
+          meta: { requiresUser: true },
+        },
+        {
+          path: "utility/packing-pouch",
+          name: "utilityPackingPouch",
+          component: UtilityConsumption,
+          props: { machineName: "Packing Pouch (Promina Puff)" },
+          meta: { requiresUser: true },
+        },
+        {
+          path: "utility/vacuum-fryer",
+          name: "utilityVacuumFryer",
+          component: UtilityConsumption,
+          props: { machineName: "Vacuum Fryer 1" },
+          meta: { requiresUser: true },
+        },
 
         // Packing routes - Weigher (User only)
         {
@@ -440,17 +529,14 @@ router.beforeEach((to, from, next) => {
       let message = "⚠️ Akses Ditolak\n\n";
 
       if (routePath.includes("daily-report")) {
-        message +=
-          "Silakan login sebagai User untuk akses penuh.";
-
+        message += "Silakan login sebagai User untuk akses penuh.";
       } else if (
-        routePath.includes("weigher") || routePath.includes("bagmaker")
+        routePath.includes("weigher") ||
+        routePath.includes("bagmaker")
       ) {
-        message +=
-          "Silakan login sebagai User untuk akses penuh.";
+        message += "Silakan login sebagai User untuk akses penuh.";
       } else {
-        message +=
-          "Silakan login sebagai User untuk akses penuh.";
+        message += "Silakan login sebagai User untuk akses penuh.";
       }
 
       alert(message);

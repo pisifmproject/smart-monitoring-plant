@@ -54,6 +54,9 @@ app.use("/api/lvmdp4/daily-report", lvmdp_4_dailyReport_controller_1.default);
 // Production & Packing routes
 app.use("/api/production", production_controller_1.default);
 app.use("/api/packing", packing_controller_1.default);
+// Utility Consumption routes
+const utility_controller_1 = __importDefault(require("./utility/utility.controller"));
+app.use("/api/utility", utility_controller_1.default);
 // Daily Report routes
 app.use("/api/daily-report", dailyReport_router_1.default);
 // Hourly Report routes

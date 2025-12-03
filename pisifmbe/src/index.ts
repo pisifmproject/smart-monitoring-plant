@@ -62,6 +62,10 @@ app.use("/api/lvmdp4/daily-report", lvmdp4DailyReportController);
 app.use("/api/production", productionController);
 app.use("/api/packing", packingController);
 
+// Utility Consumption routes
+import utilityController from "./utility/utility.controller";
+app.use("/api/utility", utilityController);
+
 // Daily Report routes
 app.use("/api/daily-report", dailyReportRouter);
 

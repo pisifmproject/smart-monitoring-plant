@@ -194,11 +194,31 @@ function refresh() {
         <table class="min-w-full divide-y table-auto">
           <thead class="bg-slate-50 sticky top-0">
             <tr>
-              <th class="th-cell">No</th>
-              <th class="th-cell">Tanggal</th>
-              <th class="th-cell">Shift 1</th>
-              <th class="th-cell">Shift 2</th>
-              <th class="th-cell">Shift 3</th>
+              <th
+                class="px-4 py-3 text-left text-xs text-slate-600 uppercase tracking-wider"
+              >
+                No
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs text-slate-600 uppercase tracking-wider"
+              >
+                Tanggal
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs text-slate-600 uppercase tracking-wider"
+              >
+                Shift 1
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs text-slate-600 uppercase tracking-wider"
+              >
+                Shift 2
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs text-slate-600 uppercase tracking-wider"
+              >
+                Shift 3
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white">
@@ -207,36 +227,48 @@ function refresh() {
               :key="r.dateKey + '-' + r.no"
               class="hover:bg-slate-50 odd:bg-slate-50"
             >
-              <td class="td-cell">{{ r.no }}</td>
-              <td class="td-cell">{{ r.dateStr }}</td>
+              <td class="px-4 py-3 text-sm text-slate-700">{{ r.no }}</td>
+              <td class="px-4 py-3 text-sm text-slate-700">{{ r.dateStr }}</td>
 
-              <td class="td-cell">
+              <td class="px-4 py-3 text-sm text-slate-700">
                 <div class="flex gap-2 items-center">
-                  <span class="value">{{ r.sh1.kwh }}</span>
-                  <span class="unit">kWh</span>
-                  <span class="sep">/</span>
-                  <span class="value">{{ r.sh1.iavg }}</span>
-                  <span class="unit">A</span>
+                  <span class="text-sm font-medium text-slate-800">{{
+                    r.sh1.kwh
+                  }}</span>
+                  <span class="text-xs text-slate-500">kWh</span>
+                  <span class="ml-3 text-sm text-slate-700">/</span>
+                  <span class="text-sm font-medium text-slate-800">{{
+                    r.sh1.iavg
+                  }}</span>
+                  <span class="text-xs text-slate-500">A</span>
                 </div>
               </td>
 
-              <td class="td-cell">
+              <td class="px-4 py-3 text-sm text-slate-700">
                 <div class="flex gap-2 items-center">
-                  <span class="value">{{ r.sh2.kwh }}</span>
-                  <span class="unit">kWh</span>
-                  <span class="sep">/</span>
-                  <span class="value">{{ r.sh2.iavg }}</span>
-                  <span class="unit">A</span>
+                  <span class="text-sm font-medium text-slate-800">{{
+                    r.sh2.kwh
+                  }}</span>
+                  <span class="text-xs text-slate-500">kWh</span>
+                  <span class="ml-3 text-sm text-slate-700">/</span>
+                  <span class="text-sm font-medium text-slate-800">{{
+                    r.sh2.iavg
+                  }}</span>
+                  <span class="text-xs text-slate-500">A</span>
                 </div>
               </td>
 
-              <td class="td-cell">
+              <td class="px-4 py-3 text-sm text-slate-700">
                 <div class="flex gap-2 items-center">
-                  <span class="value">{{ r.sh3.kwh }}</span>
-                  <span class="unit">kWh</span>
-                  <span class="sep">/</span>
-                  <span class="value">{{ r.sh3.iavg }}</span>
-                  <span class="unit">A</span>
+                  <span class="text-sm font-medium text-slate-800">{{
+                    r.sh3.kwh
+                  }}</span>
+                  <span class="text-xs text-slate-500">kWh</span>
+                  <span class="ml-3 text-sm text-slate-700">/</span>
+                  <span class="text-sm font-medium text-slate-800">{{
+                    r.sh3.iavg
+                  }}</span>
+                  <span class="text-xs text-slate-500">A</span>
                 </div>
               </td>
             </tr>
@@ -250,20 +282,5 @@ function refresh() {
 <style scoped>
 table {
   border-collapse: collapse;
-}
-.th-cell {
-  @apply px-4 py-3 text-left text-xs text-slate-600 uppercase tracking-wider;
-}
-.td-cell {
-  @apply px-4 py-3 text-sm text-slate-700;
-}
-.value {
-  @apply text-sm font-medium text-slate-800;
-}
-.unit {
-  @apply text-xs text-slate-500;
-}
-.sep {
-  @apply ml-3 text-sm text-slate-700;
 }
 </style>

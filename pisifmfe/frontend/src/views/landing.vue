@@ -30,7 +30,8 @@ function submitLogin() {
   errorMsg.value = "";
 
   if (login(username.value, password.value)) {
-    router.push("/app/lvmdp1");
+    // Force reload to ensure auth state is properly initialized
+    window.location.href = "/app/lvmdp1";
   } else {
     errorMsg.value = "Username atau password salah!";
     password.value = "";
@@ -173,9 +174,7 @@ function submitLogin() {
 
         <div class="login-hint">
           <p class="text-xs text-slate-400">
-            <strong>
-              © 2025 • Indofood Fortuna Makmur - Cikupa
-            </strong>
+            <strong> © 2025 • Indofood Fortuna Makmur - Cikupa </strong>
           </p>
         </div>
       </div>
