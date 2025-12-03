@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watchEffect } from "vue";
+import { ref, watchEffect, computed } from "vue";
 import { useRoute, RouterLink } from "vue-router";
 import {
   Cog,
@@ -9,8 +9,10 @@ import {
   BriefcaseConveyorBelt,
   CircleSmall,
 } from "lucide-vue-next";
+import { useAuth } from "@/stores/auth";
 
 const route = useRoute();
+const { canAccessDailyReport } = useAuth();
 
 // State untuk setiap menu utama
 const openMenus = ref<Record<string, boolean>>({

@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import { ref, watchEffect, computed } from "vue";
-import { RouterLink, RouterView, useRoute } from "vue-router";
+import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import SideBar from "@/components/sideBar.vue";
+import { useAuth } from "@/stores/auth";
 
 const route = useRoute();
+const router = useRouter();
+const { username, userRole, logout } = useAuth();
 
 // kontrol buka/tutup sidebar
 const isSidebarOpen = ref(true);
+
+// Handle logout
+function handleLogout() {
+  logout();
+  // Use replace to prevent back button issues and reload to clear state
+  window.location.href = "/";
+}
 
 // dropdown LVMDP
 const openLvmdp = ref(true);
@@ -94,8 +104,23 @@ const toggleSidebar = () => {
           </span>
         </div>
 
-        <div class="ml-auto">
-          <span class="badge">Logged in</span>
+        <div class="ml-auto flex items-center gap-3">
+          <span
+            class="badge"
+            :class="
+              userRole === 'user'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-blue-100 text-blue-800'
+            "
+          >
+            {{ userRole === "user" ? "User" : "Guest" }}
+          </span>
+          <button
+            @click="handleLogout"
+            class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+          >
+            Logout
+          </button>
         </div>
       </header>
 

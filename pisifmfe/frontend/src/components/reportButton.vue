@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
+import { useAuth } from "@/stores/auth";
 
 const props = defineProps<{
   panelId?: number;
@@ -8,6 +9,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const { canAccessDailyReport } = useAuth();
 
 function openReport() {
   if (props.routeName) {
@@ -22,7 +24,11 @@ function openReport() {
 </script>
 
 <template>
-  <button class="report-button" @click="openReport">
+  <button
+    v-if="canAccessDailyReport()"
+    class="report-button"
+    @click="openReport"
+  >
     <span class="report-icon">📄</span>
     <span class="report-text">{{ label || "Daily Report" }}</span>
   </button>

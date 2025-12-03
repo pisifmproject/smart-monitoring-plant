@@ -2,33 +2,38 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useAuth } from "@/stores/auth";
 
 const router = useRouter();
+const { login } = useAuth();
 
-// Modal states
-const showPasswordModal = ref(false);
+const showLoginModal = ref(false);
+const username = ref("");
 const password = ref("");
 const errorMsg = ref("");
 
-// buka modal ketika tombol MASUK diklik
-function openPasswordModal() {
-  showPasswordModal.value = true;
+function openLoginModal() {
+  showLoginModal.value = true;
+  username.value = "";
   password.value = "";
   errorMsg.value = "";
 }
 
-// tutup modal
-function closePasswordModal() {
-  showPasswordModal.value = false;
+function closeLoginModal() {
+  showLoginModal.value = false;
+  username.value = "";
+  password.value = "";
+  errorMsg.value = "";
 }
 
-// cek password
-function submitPassword() {
-  if (password.value === "pisifm00") {
-    showPasswordModal.value = false;
-    router.push("/app/lvmdp1"); // arahkan seperti sebelumnya
+function submitLogin() {
+  errorMsg.value = "";
+
+  if (login(username.value, password.value)) {
+    router.push("/app/lvmdp1");
   } else {
-    errorMsg.value = "Eitsss...Password salah!!!";
+    errorMsg.value = "Username atau password salah!";
+    password.value = "";
   }
 }
 </script>
@@ -90,7 +95,7 @@ function submitPassword() {
             class="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-in-delayed-3"
           >
             <button
-              @click="openPasswordModal"
+              @click="openLoginModal"
               class="group inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 font-semibold text-slate-950 shadow-lg shadow-cyan-500/40 transition-all hover:shadow-xl hover:shadow-cyan-500/60 hover:scale-105"
             >
               <span>🚀 MASUK</span>
@@ -123,34 +128,54 @@ function submitPassword() {
       </div>
     </div>
 
-    <!-- Password Modal -->
-    <div
-      v-if="showPasswordModal"
-      class="pw-backdrop"
-      @click="closePasswordModal"
-    >
-      <div class="pw-modal" @click.stop>
-        <h3 class="pw-title">Masukkan Password</h3>
+    <!-- Login Modal -->
+    <div v-if="showLoginModal" class="login-backdrop" @click="closeLoginModal">
+      <div class="login-modal" @click.stop>
+        <h3 class="login-title">Login PISIFM</h3>
 
-        <input
-          v-model="password"
-          type="password"
-          class="pw-input"
-          placeholder="Password"
-          @keyup.enter="submitPassword"
-        />
+        <div class="input-group">
+          <label class="input-label">Username</label>
+          <input
+            v-model="username"
+            type="text"
+            class="login-input"
+            placeholder="Masukkan username"
+            @keyup.enter="submitLogin"
+          />
+        </div>
 
-        <p v-if="errorMsg" class="pw-error">
+        <div class="input-group">
+          <label class="input-label">Password</label>
+          <input
+            v-model="password"
+            type="password"
+            class="login-input"
+            placeholder="Masukkan password"
+            @keyup.enter="submitLogin"
+          />
+        </div>
+
+        <p v-if="errorMsg" class="login-error">
           {{ errorMsg }}
         </p>
 
-        <div class="pw-actions">
-          <button class="pw-btn pw-btn-secondary" @click="closePasswordModal">
+        <div class="login-actions">
+          <button
+            class="login-btn login-btn-secondary"
+            @click="closeLoginModal"
+          >
             Batal
           </button>
-          <button class="pw-btn pw-btn-primary" @click="submitPassword">
-            Masuk
+          <button class="login-btn login-btn-primary" @click="submitLogin">
+            Login
           </button>
+        </div>
+
+        <div class="login-hint">
+          <p class="text-xs text-slate-400">
+            Gunakan akun <strong>Guest</strong> untuk akses terbatas atau
+            <strong>User</strong> untuk akses penuh
+          </p>
         </div>
       </div>
     </div>
@@ -218,89 +243,123 @@ function submitPassword() {
   animation: fade-in 0.8s ease-out 0.6s backwards;
 }
 
-/* === Password Modal === */
-.pw-backdrop {
+/* === Login Modal === */
+.login-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
 }
 
-.pw-modal {
+.login-modal {
   background: #0f172a;
   color: #e5e7eb;
-  padding: 24px 20px;
-  border-radius: 16px;
+  padding: 32px 28px;
+  border-radius: 20px;
   width: 100%;
-  max-width: 360px;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.4);
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
-.pw-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+.login-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  text-align: center;
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.input-group {
   margin-bottom: 16px;
 }
 
-.pw-input {
+.input-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+
+.login-input {
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
   border: 1px solid #475569;
   background: #020617;
   color: #e5e7eb;
   font-size: 0.95rem;
   outline: none;
+  transition: all 0.2s ease;
 }
 
-.pw-input:focus {
+.login-input:focus {
   border-color: #0ea5e9;
-  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.5);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
 }
 
-.pw-error {
-  margin-top: 8px;
-  font-size: 0.85rem;
+.login-error {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
   color: #fecaca;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  text-align: center;
 }
 
-.pw-actions {
+.login-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 18px;
+  gap: 12px;
+  margin-top: 24px;
 }
 
-.pw-btn {
-  padding: 8px 14px;
-  font-size: 0.9rem;
-  border-radius: 999px;
+.login-btn {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.15s ease;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
-.pw-btn-primary {
-  background: #0ea5e9;
+.login-btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
   color: white;
 }
 
-.pw-btn-primary:hover {
-  background: #0284c7;
+.login-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
 }
 
-.pw-btn-secondary {
+.login-btn-secondary {
   background: transparent;
   color: #e5e7eb;
   border: 1px solid #64748b;
 }
 
-.pw-btn-secondary:hover {
+.login-btn-secondary:hover {
   background: rgba(148, 163, 184, 0.12);
+  border-color: #94a3b8;
+}
+
+.login-hint {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  text-align: center;
 }
 </style>

@@ -1,8 +1,9 @@
 // frontend\src\router\index.ts
 import { createRouter, createWebHistory } from "vue-router";
-
-const Landing = () => import("../views/landing.vue");
-const DashboardLayout = () => import("../layouts/dashboardLayout.vue");
+import { useAuth } from "../stores/auth";
+import Landing from "../views/landing.vue";
+import Login from "../views/login.vue";
+import DashboardLayout from "../layouts/dashboardLayout.vue";
 const LvmdpDailyReport = () =>
   import("../views/dailyReport/lvmdp/lvmdpDailyReport.vue");
 
@@ -100,13 +101,15 @@ const BagMakerG = () => import("../views/packing/bagmaker/bagmakerG.vue");
 const BagMakerH = () => import("../views/packing/bagmaker/bagmakerH.vue");
 const BagMakerI = () => import("../views/packing/bagmaker/bagmakerI.vue");
 
-export default createRouter({
-  history: createWebHistory(),
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: "/", name: "landing", component: Landing },
+    { path: "/login", name: "login", component: Login },
     {
       path: "/app",
       component: DashboardLayout,
+      meta: { requiresAuth: true },
       children: [
         // LVMDP routes
         { path: "lvmdp1", name: "lvmdp1", component: Lvmdp1 },
@@ -117,6 +120,7 @@ export default createRouter({
           path: "daily-report",
           name: "dailyReport",
           component: LvmdpDailyReport,
+          meta: { requiresUser: true },
         },
 
         // Production routes
@@ -228,41 +232,49 @@ export default createRouter({
           path: "daily-report/production/pc39",
           name: "dailyReportPC39",
           component: ProductionPC39DailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/production/pc14",
           name: "dailyReportPC14",
           component: ProductionPC14DailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/production/ts1000",
           name: "dailyReportTS1000",
           component: ProductionTS1000DailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/production/fcp",
           name: "dailyReportFCP",
           component: ProductionFCPDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/production/tws56",
           name: "dailyReportTWS56",
           component: ProductionTWS56DailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/production/tws72",
           name: "dailyReportTWS72",
           component: ProductionTWS72DailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/production/copack",
           name: "dailyReportCOPACK",
           component: ProductionCOPACKDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/production/ihp",
           name: "dailyReportIHP",
           component: ProductionIHPDailyReport,
+          meta: { requiresUser: true },
         },
 
         // Daily Report routes - Packing Weigher
@@ -270,46 +282,55 @@ export default createRouter({
           path: "daily-report/weigher/line-a",
           name: "dailyReportWeigherA",
           component: WeigherADailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/weigher/line-b",
           name: "dailyReportWeigherB",
           component: WeigherBDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/weigher/line-c",
           name: "dailyReportWeigherC",
           component: WeigherCDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/weigher/line-d",
           name: "dailyReportWeigherD",
           component: WeigherDDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/weigher/line-e",
           name: "dailyReportWeigherE",
           component: WeigherEDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/weigher/line-f",
           name: "dailyReportWeigherF",
           component: WeigherFDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/weigher/line-g",
           name: "dailyReportWeigherG",
           component: WeigherGDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/weigher/line-h",
           name: "dailyReportWeigherH",
           component: WeigherHDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/weigher/line-i",
           name: "dailyReportWeigherI",
           component: WeigherIDailyReport,
+          meta: { requiresUser: true },
         },
 
         // Daily Report routes - Packing BagMaker
@@ -317,48 +338,95 @@ export default createRouter({
           path: "daily-report/bagmaker/line-a",
           name: "dailyReportBagmakerA",
           component: BagmakerADailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/bagmaker/line-b",
           name: "dailyReportBagmakerB",
           component: BagmakerBDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/bagmaker/line-c",
           name: "dailyReportBagmakerC",
           component: BagmakerCDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/bagmaker/line-d",
           name: "dailyReportBagmakerD",
           component: BagmakerDDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/bagmaker/line-e",
           name: "dailyReportBagmakerE",
           component: BagmakerEDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/bagmaker/line-f",
           name: "dailyReportBagmakerF",
           component: BagmakerFDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/bagmaker/line-g",
           name: "dailyReportBagmakerG",
           component: BagmakerGDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/bagmaker/line-h",
           name: "dailyReportBagmakerH",
           component: BagmakerHDailyReport,
+          meta: { requiresUser: true },
         },
         {
           path: "daily-report/bagmaker/line-i",
           name: "dailyReportBagmakerI",
           component: BagmakerIDailyReport,
+          meta: { requiresUser: true },
         },
       ],
     },
   ],
 });
+
+// Navigation guard
+router.beforeEach((to, from, next) => {
+  const { isAuthenticated, canAccessDailyReport, initAuth } = useAuth();
+
+  // Initialize auth from localStorage
+  initAuth();
+
+  // Check if route requires authentication
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (!isAuthenticated.value) {
+      // Redirect to login if not authenticated
+      next({ name: "login", query: { redirect: to.fullPath } });
+      return;
+    }
+  }
+
+  // Check if route requires user role (for daily reports)
+  if (to.matched.some((record) => record.meta.requiresUser)) {
+    if (!isAuthenticated.value) {
+      next({ name: "login", query: { redirect: to.fullPath } });
+      return;
+    }
+
+    if (!canAccessDailyReport()) {
+      // Guest cannot access daily reports, redirect to lvmdp1 with alert
+      alert(
+        "⚠️ Akses Ditolak\n\nMaaf, fitur Daily Report hanya dapat diakses oleh User.\nAnda login sebagai Guest yang memiliki akses terbatas."
+      );
+      next({ name: "lvmdp1" });
+      return;
+    }
+  }
+
+  next();
+});
+
+export default router;
