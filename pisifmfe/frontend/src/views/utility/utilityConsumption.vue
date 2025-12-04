@@ -474,7 +474,7 @@ function updateChart() {
       type: "category",
       boundaryGap: false,
       data: chartData.value.map((d) => d.date),
-      name: "Tanggal",
+      name: "Date",
       nameLocation: "middle",
       nameGap: 35,
       nameTextStyle: {
@@ -497,7 +497,7 @@ function updateChart() {
     },
     yAxis: {
       type: "value",
-      name: `Konsumsi (${utilityData.value.unit})`,
+      name: `Consume (${utilityData.value.unit})`,
       nameLocation: "middle",
       nameGap: 50,
       nameTextStyle: {

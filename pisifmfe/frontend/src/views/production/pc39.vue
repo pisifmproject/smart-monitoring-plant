@@ -481,7 +481,8 @@ onMounted(() => {
           <div class="utility-grid">
             <!-- Potato Prep -->
             <template v-if="activeUtilityTab === 'potato-prep'">
-              <div class="utility-card">
+              Coming soon
+              <!-- <div class="utility-card">
                 <span class="card-label">Feed From Crates</span>
                 <span
                   class="card-value"
@@ -507,12 +508,14 @@ onMounted(() => {
                 <span class="card-value"
                   >{{ potatoPrepData.slicerHopperLevel }}%</span
                 >
-              </div>
+              </div> -->
             </template>
 
             <!-- Peelers -->
             <template v-if="activeUtilityTab === 'peelers'">
-              <div class="utility-card">
+              Coming soon
+
+              <!-- <div class="utility-card">
                 <span class="card-label">Status</span>
                 <span class="card-value success">{{ peelersData.status }}</span>
               </div>
@@ -525,13 +528,108 @@ onMounted(() => {
                 <span class="card-value"
                   >{{ peelersData.waterPressure }} bar</span
                 >
-              </div>
+              </div> -->
             </template>
 
-            <!-- Add other tabs similarly... (Simplified for brevity but keeping structure) -->
+            <template v-if="activeUtilityTab === 'inspection'">
+              Coming soon
+
+              <!-- <div class="utility-card">
+                <span class="card-label">Status</span>
+                <span class="card-value success">{{ inspectionData.status }}</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Speed</span>
+                <span class="card-value">{{ inspectionData.speed }}%</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Water Pressure</span>
+                <span class="card-value"
+                  >{{ inspectionData.waterPressure }} bar</span
+                >
+              </div> -->
+            </template>
+
+            <template v-if="activeUtilityTab === 'slicers'">
+              Coming soon
+
+              <!-- <div class="utility-card">
+                <span class="card-label">Status</span>
+                <span class="card-value success">{{ slicersData.status }}</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Speed</span>
+                <span class="card-value">{{ slicersData.speed }}%</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Water Pressure</span>
+                <span class="card-value"
+                  >{{ slicersData.waterPressure }} bar</span
+                >
+              </div> -->
+            </template>
+
+            <template v-if="activeUtilityTab === 'washers'">
+              Coming soon
+
+              <!-- <div class="utility-card">
+                <span class="card-label">Status</span>
+                <span class="card-value success">{{ washersData.status }}</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Speed</span>
+                <span class="card-value">{{ washersData.speed }}%</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Water Pressure</span>
+                <span class="card-value"
+                  >{{ washersData.waterPressure }} bar</span
+                >
+              </div> -->
+            </template>
+
+            <template v-if="activeUtilityTab === 'oil-system'">
+              Coming soon
+
+              <!-- <div class="utility-card">
+                <span class="card-label">Status</span>
+                <span class="card-value success">{{ oilSystemData.status }}</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Speed</span>
+                <span class="card-value">{{ oilSystemData.speed }}%</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Water Pressure</span>
+                <span class="card-value"
+                  >{{ oilSystemData.waterPressure }} bar</span
+                >
+              </div> -->
+            </template>
+
+            <template v-if="activeUtilityTab === 'moisture-control'">
+              Coming soon
+
+              <!-- <div class="utility-card">
+                <span class="card-label">Status</span>
+                <span class="card-value success">{{ moistureControlData.status }}</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Speed</span>
+                <span class="card-value">{{ moistureControlData.speed }}%</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Water Pressure</span>
+                <span class="card-value"
+                  >{{ moistureControlData.waterPressure }} bar</span
+                >
+              </div> -->
+            </template>
+
             <!-- Fryer -->
             <template v-if="activeUtilityTab === 'fryer'">
-              <div class="utility-card">
+              Coming soon
+              <!-- <div class="utility-card">
                 <span class="card-label">Inlet Temp</span>
                 <span class="card-value">{{ fryerData.fryerInletTemp }}°C</span>
               </div>
@@ -546,7 +644,7 @@ onMounted(() => {
                 <span class="card-value"
                   >{{ fryerData.oilActualMoisture }}%</span
                 >
-              </div>
+              </div> -->
             </template>
           </div>
         </div>
