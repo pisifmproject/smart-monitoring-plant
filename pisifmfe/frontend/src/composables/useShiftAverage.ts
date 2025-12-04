@@ -19,46 +19,27 @@ export function useShiftAverages(panelId: 1 | 2 | 3 | 4, dateStr?: string) {
   }
 
   /**
-   * Setup auto-refresh every hour at :06 minute
-   * Sync with hourly report schedule (runs at :05)
+   * Setup auto-refresh every 5 minutes
+   * More frequent refresh to catch new shift data updates
    */
-  function setupHourlyRefresh() {
+  function setupAutoRefresh() {
     // Only auto-refresh for today's data (no dateStr provided)
     if (dateStr) return;
 
-    const scheduleNextRefresh = () => {
-      const now = new Date();
-      const nextRun = new Date(now);
-
-      // Set to next :06 minute
-      if (now.getMinutes() >= 6) {
-        // Next hour at :06
-        nextRun.setHours(nextRun.getHours() + 1);
-      }
-      nextRun.setMinutes(6);
-      nextRun.setSeconds(0);
-      nextRun.setMilliseconds(0);
-
-      const msUntilNext = nextRun.getTime() - now.getTime();
-
-      // Schedule the refresh
-      intervalId = window.setTimeout(() => {
-        reload();
-        scheduleNextRefresh(); // Schedule next refresh
-      }, msUntilNext);
-    };
-
-    scheduleNextRefresh();
+    // Refresh every 5 minutes
+    intervalId = window.setInterval(() => {
+      reload();
+    }, 5 * 60 * 1000); // 5 minutes
   }
 
   onMounted(() => {
     reload();
-    setupHourlyRefresh();
+    setupAutoRefresh();
   });
 
   onUnmounted(() => {
     if (intervalId !== null) {
-      clearTimeout(intervalId);
+      clearInterval(intervalId);
     }
   });
 

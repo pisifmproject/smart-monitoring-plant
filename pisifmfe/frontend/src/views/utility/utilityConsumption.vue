@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import {
   Zap,
   Droplet,
@@ -613,6 +613,9 @@ watch(selectedRange, () => {
   updateChart();
 });
 
+// Auto-refresh interval
+let refreshInterval: number | null = null;
+
 // Load data on mount
 onMounted(() => {
   loadUtilityData();
@@ -620,6 +623,18 @@ onMounted(() => {
     chartInstance.value?.resize();
     gaugeInstance.value?.resize();
   });
+
+  // Auto-refresh data setiap 30 detik
+  refreshInterval = window.setInterval(() => {
+    loadUtilityData();
+  }, 30000); // 30 seconds
+});
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
 });
 
 function getUnitForTab(tab: UtilityTab): string {
