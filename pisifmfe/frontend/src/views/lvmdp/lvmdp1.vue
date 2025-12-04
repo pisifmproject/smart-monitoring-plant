@@ -475,16 +475,16 @@ const reactiveCalc = computed(() => {
 }
 
 .dashboard-section {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .section-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .section-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.75rem;
+  font-weight: 750;
   color: #0f172a;
   margin: 0;
   letter-spacing: -0.02em;
@@ -580,10 +580,10 @@ const reactiveCalc = computed(() => {
 
 .value-primary {
   display: block;
-  font-size: 1.5rem;
+  font-size: 1.65rem;
   font-weight: 700;
   color: #0f172a;
-  line-height: 1;
+  line-height: 0.5;
 }
 
 .value-primary small {
@@ -657,7 +657,7 @@ const reactiveCalc = computed(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 280px;
+  min-height: 240px;
   transition: transform 0.2s;
 }
 
