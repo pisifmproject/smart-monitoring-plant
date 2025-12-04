@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.packingLineIBagMaker = exports.packingLineHBagMaker = exports.packingLineGBagMaker = exports.packingLineFBagMaker = exports.packingLineEBagMaker = exports.packingLineDBagMaker = exports.packingLineCBagMaker = exports.packingLineBBagMaker = exports.packingLineIWeigher = exports.packingLineHWeigher = exports.packingLineGWeigher = exports.packingLineFWeigher = exports.packingLineEWeigher = exports.packingLineDWeigher = exports.packingLineCWeigher = exports.packingLineBWeigher = exports.productionLineAIHP = exports.productionLineACOPACK = exports.productionLineATWS72 = exports.productionLineATWS56 = exports.productionLineAFCP = exports.productionLineATS1000 = exports.productionLineAPC14 = exports.packingLineABagMaker = exports.packingLineAWeigher = exports.productionLineAPC39 = exports.hourlyReportLVMDP4 = exports.hourlyReportLVMDP3 = exports.hourlyReportLVMDP2 = exports.hourlyReportLVMDP1 = exports.dailyReportLVMDP4 = exports.dailyReportLVMDP3 = exports.dailyReportLVMDP2 = exports.dailyReportLVMDP1 = exports.user = void 0;
+exports.packingLinePackingPouchBagMaker = exports.packingLineTWS72BagMaker = exports.packingLineTWS56BagMaker = exports.packingLineFCPBagMaker = exports.packingLineTortilaBagMaker = exports.packingLineCassavaCopackBagMaker = exports.packingLineCassavaInhouseBagMaker = exports.packingLinePC39BagMaker = exports.packingLinePackingPouchWeigher = exports.packingLineTWS72Weigher = exports.packingLineTWS56Weigher = exports.packingLineFCPWeigher = exports.packingLineTortilaWeigher = exports.packingLineCassavaCopackWeigher = exports.packingLineCassavaInhouseWeigher = exports.packingLinePC39Weigher = exports.productionLineAIHP = exports.productionLineACOPACK = exports.productionLineATWS72 = exports.productionLineATWS56 = exports.productionLineAFCP = exports.productionLineATS1000 = exports.productionLineAPC14 = exports.packingLineABagMaker = exports.packingLineAWeigher = exports.productionLineAPC39 = exports.hourlyReportLVMDP4 = exports.hourlyReportLVMDP3 = exports.hourlyReportLVMDP2 = exports.hourlyReportLVMDP1 = exports.dailyReportLVMDP4 = exports.dailyReportLVMDP3 = exports.dailyReportLVMDP2 = exports.dailyReportLVMDP1 = exports.user = void 0;
 // src/db/schema.ts
 const pg_core_1 = require("drizzle-orm/pg-core");
 /* ===========================
@@ -186,7 +186,7 @@ exports.productionLineAPC39 = (0, pg_core_1.pgTable)("production_line_a_pc39", {
 exports.packingLineAWeigher = (0, pg_core_1.pgTable)("packing_line_a_weigher", {
     id: (0, pg_core_1.text)("id").primaryKey(),
     timestamp: (0, pg_core_1.timestamp)("timestamp").notNull(),
-    lineId: (0, pg_core_1.text)("line_id").notNull().default("LINE_A_WEIGHER"),
+    lineId: (0, pg_core_1.text)("line_id").notNull().default("LINE_PC14_WEIGHER"),
     // Packing Metrics
     targetPacks: (0, pg_core_1.integer)("target_packs").default(0),
     actualPacks: (0, pg_core_1.integer)("actual_packs").default(0),
@@ -205,7 +205,7 @@ exports.packingLineAWeigher = (0, pg_core_1.pgTable)("packing_line_a_weigher", {
 exports.packingLineABagMaker = (0, pg_core_1.pgTable)("packing_line_a_bagmaker", {
     id: (0, pg_core_1.text)("id").primaryKey(),
     timestamp: (0, pg_core_1.timestamp)("timestamp").notNull(),
-    lineId: (0, pg_core_1.text)("line_id").notNull().default("LINE_A_BAGMAKER"),
+    lineId: (0, pg_core_1.text)("line_id").notNull().default("LINE_PC14_BAGMAKER"),
     // Packing Metrics
     targetBags: (0, pg_core_1.integer)("target_bags").default(0),
     actualBags: (0, pg_core_1.integer)("actual_bags").default(0),
@@ -364,21 +364,21 @@ const createPackingBagMakerTable = (line) => (0, pg_core_1.pgTable)(`packing_lin
     createdAt: (0, pg_core_1.timestamp)("created_at").defaultNow(),
     updatedAt: (0, pg_core_1.timestamp)("updated_at").defaultNow(),
 });
-// Packing Lines B-I Weigher
-exports.packingLineBWeigher = createPackingWeigherTable("B");
-exports.packingLineCWeigher = createPackingWeigherTable("C");
-exports.packingLineDWeigher = createPackingWeigherTable("D");
-exports.packingLineEWeigher = createPackingWeigherTable("E");
-exports.packingLineFWeigher = createPackingWeigherTable("F");
-exports.packingLineGWeigher = createPackingWeigherTable("G");
-exports.packingLineHWeigher = createPackingWeigherTable("H");
-exports.packingLineIWeigher = createPackingWeigherTable("I");
-// Packing Lines B-I BagMaker
-exports.packingLineBBagMaker = createPackingBagMakerTable("B");
-exports.packingLineCBagMaker = createPackingBagMakerTable("C");
-exports.packingLineDBagMaker = createPackingBagMakerTable("D");
-exports.packingLineEBagMaker = createPackingBagMakerTable("E");
-exports.packingLineFBagMaker = createPackingBagMakerTable("F");
-exports.packingLineGBagMaker = createPackingBagMakerTable("G");
-exports.packingLineHBagMaker = createPackingBagMakerTable("H");
-exports.packingLineIBagMaker = createPackingBagMakerTable("I");
+// Packing Lines - Weigher (by machine name)
+exports.packingLinePC39Weigher = createPackingWeigherTable("PC39");
+exports.packingLineCassavaInhouseWeigher = createPackingWeigherTable("CASSAVA_INHOUSE");
+exports.packingLineCassavaCopackWeigher = createPackingWeigherTable("CASSAVA_COPACK");
+exports.packingLineTortilaWeigher = createPackingWeigherTable("TORTILA");
+exports.packingLineFCPWeigher = createPackingWeigherTable("FCP");
+exports.packingLineTWS56Weigher = createPackingWeigherTable("TWS56");
+exports.packingLineTWS72Weigher = createPackingWeigherTable("TWS72");
+exports.packingLinePackingPouchWeigher = createPackingWeigherTable("PACKING_POUCH");
+// Packing Lines - BagMaker (by machine name)
+exports.packingLinePC39BagMaker = createPackingBagMakerTable("PC39");
+exports.packingLineCassavaInhouseBagMaker = createPackingBagMakerTable("CASSAVA_INHOUSE");
+exports.packingLineCassavaCopackBagMaker = createPackingBagMakerTable("CASSAVA_COPACK");
+exports.packingLineTortilaBagMaker = createPackingBagMakerTable("TORTILA");
+exports.packingLineFCPBagMaker = createPackingBagMakerTable("FCP");
+exports.packingLineTWS56BagMaker = createPackingBagMakerTable("TWS56");
+exports.packingLineTWS72BagMaker = createPackingBagMakerTable("TWS72");
+exports.packingLinePackingPouchBagMaker = createPackingBagMakerTable("PACKING_POUCH");

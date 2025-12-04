@@ -62,81 +62,103 @@ watchEffect(() => {
 
     // Auto expand submenu mesin yang aktif berdasarkan route
     if (
-      routePath.includes("weigherA") ||
-      routePath.includes("bagmakerA") ||
+      routePath.includes("weigherPC39") ||
+      routePath.includes("weigher-pc39") ||
+      routePath.includes("bagmakerPC39") ||
+      routePath.includes("bagmaker-pc39") ||
       routeName === "utilityPC39"
     ) {
       openMenus.value.pc39 = true;
     }
     if (
-      routePath.includes("weigherB") ||
-      routePath.includes("bagmakerB") ||
+      routePath.includes("weigherPC14") ||
+      routePath.includes("weigher-pc14") ||
+      routePath.includes("bagmakerPC14") ||
+      routePath.includes("bagmaker-pc14") ||
       routeName === "utilityPC14"
     ) {
       openMenus.value.pc14 = true;
     }
     if (
-      routePath.includes("weigherC") ||
-      routePath.includes("bagmakerC") ||
+      routePath.includes("weigherCassavaInhouse") ||
+      routePath.includes("weigher-cassava-inhouse") ||
+      routePath.includes("bagmakerCassavaInhouse") ||
+      routePath.includes("bagmaker-cassava-inhouse") ||
       routeName === "utilityTS1000"
     ) {
       openMenus.value.ts1000 = true;
     }
     if (
-      routePath.includes("weigherD") ||
-      routePath.includes("bagmakerD") ||
+      routePath.includes("weigherFCP") ||
+      routePath.includes("weigher-fcp") ||
+      routePath.includes("bagmakerFCP") ||
+      routePath.includes("bagmaker-fcp") ||
       routeName === "utilityFCP"
     ) {
       openMenus.value.fcp = true;
     }
     if (
-      routePath.includes("weigherE") ||
-      routePath.includes("bagmakerE") ||
+      routePath.includes("weigherTWS56") ||
+      routePath.includes("weigher-tws56") ||
+      routePath.includes("bagmakerTWS56") ||
+      routePath.includes("bagmaker-tws56") ||
       routeName === "utilityTWS56"
     ) {
       openMenus.value.tws56 = true;
     }
     if (
-      routePath.includes("weigherG") ||
-      routePath.includes("bagmakerG") ||
+      routePath.includes("weigherTWS72") ||
+      routePath.includes("weigher-tws72") ||
+      routePath.includes("bagmakerTWS72") ||
+      routePath.includes("bagmaker-tws72") ||
       routeName === "utilityTWS72"
     ) {
       openMenus.value.tws72 = true;
     }
     if (
-      routePath.includes("weigherH") ||
-      routePath.includes("bagmakerH") ||
+      routePath.includes("weigherCassavaCopack") ||
+      routePath.includes("weigher-cassava-copack") ||
+      routePath.includes("bagmakerCassavaCopack") ||
+      routePath.includes("bagmaker-cassava-copack") ||
       routeName === "utilityCassavaCopack"
     ) {
       openMenus.value.cassavaCopack = true;
     }
     if (
-      routePath.includes("weigherI") ||
-      routePath.includes("bagmakerI") ||
+      routePath.includes("weigherPackingPouch") ||
+      routePath.includes("weigher-packing-pouch") ||
+      routePath.includes("bagmakerPackingPouch") ||
+      routePath.includes("bagmaker-packing-pouch") ||
       routeName === "utilityIHP"
     ) {
       openMenus.value.ihp = true;
     }
     // Add auto-expand for new machines
     if (
-      routePath.includes("weigherF") ||
-      routePath.includes("bagmakerF") ||
+      routePath.includes("weigherCassavaInhouse") ||
+      routePath.includes("weigher-cassava-inhouse") ||
+      routePath.includes("bagmakerCassavaInhouse") ||
+      routePath.includes("bagmaker-cassava-inhouse") ||
       routeName === "utilityCassavaInhouse" ||
       routeName === "cassavaInhouse"
     ) {
       openMenus.value.cassavaInhouse = true;
     }
     if (
-      routePath.includes("weigherC") ||
-      routePath.includes("bagmakerC") ||
+      routePath.includes("weigherTortila") ||
+      routePath.includes("weigher-tortila") ||
+      routePath.includes("bagmakerTortila") ||
+      routePath.includes("bagmaker-tortila") ||
       routeName === "utilityTortila" ||
       routeName === "tortila"
     ) {
       openMenus.value.tortila = true;
     }
     if (
-      routePath.includes("weigherI") ||
-      routePath.includes("bagmakerI") ||
+      routePath.includes("weigherPackingPouch") ||
+      routePath.includes("weigher-packing-pouch") ||
+      routePath.includes("bagmakerPackingPouch") ||
+      routePath.includes("bagmaker-packing-pouch") ||
       routeName === "utilityPackingPouch" ||
       routeName === "packingPouch"
     ) {
@@ -159,8 +181,8 @@ const getProductionChildren = () => {
       name: "PC 14",
       icon: CircleSmall,
       dashboardRoute: "pc14",
-      weigherRoute: "weigherB",
-      bagmakerRoute: "bagmakerB",
+      weigherRoute: "weigherPC14",
+      bagmakerRoute: "bagmakerPC14",
       utilityRoute: "utilityPC14",
     },
     {
@@ -168,8 +190,8 @@ const getProductionChildren = () => {
       name: "PC 39",
       icon: CircleSmall,
       dashboardRoute: "pc39",
-      weigherRoute: "weigherA",
-      bagmakerRoute: "bagmakerA",
+      weigherRoute: "weigherPC39",
+      bagmakerRoute: "bagmakerPC39",
       utilityRoute: "utilityPC39",
     },
     {
@@ -177,8 +199,8 @@ const getProductionChildren = () => {
       name: "Cassava Inhouse",
       icon: CircleSmall,
       dashboardRoute: "cassavaInhouse",
-      weigherRoute: "weigherF",
-      bagmakerRoute: "bagmakerF",
+      weigherRoute: "weigherCassavaInhouse",
+      bagmakerRoute: "bagmakerCassavaInhouse",
       utilityRoute: "utilityCassavaInhouse",
     },
     {
@@ -186,8 +208,8 @@ const getProductionChildren = () => {
       name: "Cassava Copack",
       icon: CircleSmall,
       dashboardRoute: "copack",
-      weigherRoute: "weigherH",
-      bagmakerRoute: "bagmakerH",
+      weigherRoute: "weigherCassavaCopack",
+      bagmakerRoute: "bagmakerCassavaCopack",
       utilityRoute: "utilityCassavaCopack",
     },
     {
@@ -195,8 +217,8 @@ const getProductionChildren = () => {
       name: "Tortila",
       icon: CircleSmall,
       dashboardRoute: "tortila",
-      weigherRoute: "weigherC",
-      bagmakerRoute: "bagmakerC",
+      weigherRoute: "weigherTortila",
+      bagmakerRoute: "bagmakerTortila",
       utilityRoute: "utilityTortila",
     },
     {
@@ -204,8 +226,8 @@ const getProductionChildren = () => {
       name: "FCP",
       icon: CircleSmall,
       dashboardRoute: "fcp",
-      weigherRoute: "weigherD",
-      bagmakerRoute: "bagmakerD",
+      weigherRoute: "weigherFCP",
+      bagmakerRoute: "bagmakerFCP",
       utilityRoute: "utilityFCP",
     },
     {
@@ -213,8 +235,8 @@ const getProductionChildren = () => {
       name: "TWS 5.6",
       icon: CircleSmall,
       dashboardRoute: "tws56",
-      weigherRoute: "weigherE",
-      bagmakerRoute: "bagmakerE",
+      weigherRoute: "weigherTWS56",
+      bagmakerRoute: "bagmakerTWS56",
       utilityRoute: "utilityTWS56",
     },
     {
@@ -222,8 +244,8 @@ const getProductionChildren = () => {
       name: "TWS 7.2",
       icon: CircleSmall,
       dashboardRoute: "tws72",
-      weigherRoute: "weigherG",
-      bagmakerRoute: "bagmakerG",
+      weigherRoute: "weigherTWS72",
+      bagmakerRoute: "bagmakerTWS72",
       utilityRoute: "utilityTWS72",
     },
     {
@@ -231,8 +253,8 @@ const getProductionChildren = () => {
       name: "Packing Pouch (Promina Puff)",
       icon: CircleSmall,
       dashboardRoute: "packingPouch",
-      weigherRoute: "weigherI",
-      bagmakerRoute: "bagmakerI",
+      weigherRoute: "weigherPackingPouch",
+      bagmakerRoute: "bagmakerPackingPouch",
       utilityRoute: "utilityPackingPouch",
     },
     {

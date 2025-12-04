@@ -242,7 +242,7 @@ export const productionLineAPC39 = pgTable("production_line_a_pc39", {
 export const packingLineAWeigher = pgTable("packing_line_a_weigher", {
   id: text("id").primaryKey(),
   timestamp: timestamp("timestamp").notNull(),
-  lineId: text("line_id").notNull().default("LINE_A_WEIGHER"),
+  lineId: text("line_id").notNull().default("LINE_PC14_WEIGHER"),
 
   // Packing Metrics
   targetPacks: integer("target_packs").default(0),
@@ -266,7 +266,7 @@ export const packingLineAWeigher = pgTable("packing_line_a_weigher", {
 export const packingLineABagMaker = pgTable("packing_line_a_bagmaker", {
   id: text("id").primaryKey(),
   timestamp: timestamp("timestamp").notNull(),
-  lineId: text("line_id").notNull().default("LINE_A_BAGMAKER"),
+  lineId: text("line_id").notNull().default("LINE_PC14_BAGMAKER"),
 
   // Packing Metrics
   targetBags: integer("target_bags").default(0),
@@ -442,22 +442,28 @@ const createPackingBagMakerTable = (line: string) =>
     updatedAt: timestamp("updated_at").defaultNow(),
   });
 
-// Packing Lines B-I Weigher
-export const packingLineBWeigher = createPackingWeigherTable("B");
-export const packingLineCWeigher = createPackingWeigherTable("C");
-export const packingLineDWeigher = createPackingWeigherTable("D");
-export const packingLineEWeigher = createPackingWeigherTable("E");
-export const packingLineFWeigher = createPackingWeigherTable("F");
-export const packingLineGWeigher = createPackingWeigherTable("G");
-export const packingLineHWeigher = createPackingWeigherTable("H");
-export const packingLineIWeigher = createPackingWeigherTable("I");
+// Packing Lines - Weigher (by machine name)
+export const packingLinePC39Weigher = createPackingWeigherTable("PC39");
+export const packingLineCassavaInhouseWeigher =
+  createPackingWeigherTable("CASSAVA_INHOUSE");
+export const packingLineCassavaCopackWeigher =
+  createPackingWeigherTable("CASSAVA_COPACK");
+export const packingLineTortilaWeigher = createPackingWeigherTable("TORTILA");
+export const packingLineFCPWeigher = createPackingWeigherTable("FCP");
+export const packingLineTWS56Weigher = createPackingWeigherTable("TWS56");
+export const packingLineTWS72Weigher = createPackingWeigherTable("TWS72");
+export const packingLinePackingPouchWeigher =
+  createPackingWeigherTable("PACKING_POUCH");
 
-// Packing Lines B-I BagMaker
-export const packingLineBBagMaker = createPackingBagMakerTable("B");
-export const packingLineCBagMaker = createPackingBagMakerTable("C");
-export const packingLineDBagMaker = createPackingBagMakerTable("D");
-export const packingLineEBagMaker = createPackingBagMakerTable("E");
-export const packingLineFBagMaker = createPackingBagMakerTable("F");
-export const packingLineGBagMaker = createPackingBagMakerTable("G");
-export const packingLineHBagMaker = createPackingBagMakerTable("H");
-export const packingLineIBagMaker = createPackingBagMakerTable("I");
+// Packing Lines - BagMaker (by machine name)
+export const packingLinePC39BagMaker = createPackingBagMakerTable("PC39");
+export const packingLineCassavaInhouseBagMaker =
+  createPackingBagMakerTable("CASSAVA_INHOUSE");
+export const packingLineCassavaCopackBagMaker =
+  createPackingBagMakerTable("CASSAVA_COPACK");
+export const packingLineTortilaBagMaker = createPackingBagMakerTable("TORTILA");
+export const packingLineFCPBagMaker = createPackingBagMakerTable("FCP");
+export const packingLineTWS56BagMaker = createPackingBagMakerTable("TWS56");
+export const packingLineTWS72BagMaker = createPackingBagMakerTable("TWS72");
+export const packingLinePackingPouchBagMaker =
+  createPackingBagMakerTable("PACKING_POUCH");

@@ -29,53 +29,51 @@ const ProductionCOPACKDailyReport = () =>
   import("../views/dailyReport/production/productionCOPACKDailyReport.vue");
 const ProductionIHPDailyReport = () =>
   import("../views/dailyReport/production/productionIHPDailyReport.vue");
-const WeigherADailyReport = () =>
-  import("../views/dailyReport/weigher/weigherADailyReport.vue");
-const WeigherBDailyReport = () =>
-  import("../views/dailyReport/weigher/weigherBDailyReport.vue");
-const WeigherCDailyReport = () =>
-  import("../views/dailyReport/weigher/weigherCDailyReport.vue");
-const WeigherDDailyReport = () =>
-  import("../views/dailyReport/weigher/weigherDDailyReport.vue");
-const WeigherEDailyReport = () =>
-  import("../views/dailyReport/weigher/weigherEDailyReport.vue");
-const WeigherFDailyReport = () =>
-  import("../views/dailyReport/weigher/weigherFDailyReport.vue");
-const WeigherGDailyReport = () =>
-  import("../views/dailyReport/weigher/weigherGDailyReport.vue");
-const WeigherHDailyReport = () =>
-  import("../views/dailyReport/weigher/weigherHDailyReport.vue");
-const WeigherIDailyReport = () =>
-  import("../views/dailyReport/weigher/weigherIDailyReport.vue");
+const WeigherPC14DailyReport = () =>
+  import("../views/dailyReport/weigher/weigherPC14DailyReport.vue");
+const WeigherPC39DailyReport = () =>
+  import("../views/dailyReport/weigher/weigherPC39DailyReport.vue");
+const WeigherCassavaInhouseDailyReport = () =>
+  import("../views/dailyReport/weigher/weigherCassavaInhouseDailyReport.vue");
+const WeigherCassavaCopackDailyReport = () =>
+  import("../views/dailyReport/weigher/weigherCassavaCopackDailyReport.vue");
+const WeigherTortilaDailyReport = () =>
+  import("../views/dailyReport/weigher/weigherTortilaDailyReport.vue");
+const WeigherFCPDailyReport = () =>
+  import("../views/dailyReport/weigher/weigherFCPDailyReport.vue");
+const WeigherTWS56DailyReport = () =>
+  import("../views/dailyReport/weigher/weigherTWS56DailyReport.vue");
+const WeigherTWS72DailyReport = () =>
+  import("../views/dailyReport/weigher/weigherTWS72DailyReport.vue");
+const WeigherPackingPouchDailyReport = () =>
+  import("../views/dailyReport/weigher/weigherPackingPouchDailyReport.vue");
 
-const BagmakerADailyReport = () =>
-  import("../views/dailyReport/bagmaker/bagmakerADailyReport.vue");
-const BagmakerBDailyReport = () =>
-  import("../views/dailyReport/bagmaker/bagmakerBDailyReport.vue");
-const BagmakerCDailyReport = () =>
-  import("../views/dailyReport/bagmaker/bagmakerCDailyReport.vue");
-const BagmakerDDailyReport = () =>
-  import("../views/dailyReport/bagmaker/bagmakerDDailyReport.vue");
-const BagmakerEDailyReport = () =>
-  import("../views/dailyReport/bagmaker/bagmakerEDailyReport.vue");
-const BagmakerFDailyReport = () =>
-  import("../views/dailyReport/bagmaker/bagmakerFDailyReport.vue");
-const BagmakerGDailyReport = () =>
-  import("../views/dailyReport/bagmaker/bagmakerGDailyReport.vue");
-const BagmakerHDailyReport = () =>
-  import("../views/dailyReport/bagmaker/bagmakerHDailyReport.vue");
-const BagmakerIDailyReport = () =>
-  import("../views/dailyReport/bagmaker/bagmakerIDailyReport.vue");
+const BagmakerPC14DailyReport = () =>
+  import("../views/dailyReport/bagmaker/bagmakerPC14DailyReport.vue");
+const BagmakerPC39DailyReport = () =>
+  import("../views/dailyReport/bagmaker/bagmakerPC39DailyReport.vue");
+const BagmakerCassavaInhouseDailyReport = () =>
+  import("../views/dailyReport/bagmaker/bagmakerCassavaInhouseDailyReport.vue");
+const BagmakerCassavaCopackDailyReport = () =>
+  import("../views/dailyReport/bagmaker/bagmakerCassavaCopackDailyReport.vue");
+const BagmakerTortilaDailyReport = () =>
+  import("../views/dailyReport/bagmaker/bagmakerTortilaDailyReport.vue");
+const BagmakerFCPDailyReport = () =>
+  import("../views/dailyReport/bagmaker/bagmakerFCPDailyReport.vue");
+const BagmakerTWS56DailyReport = () =>
+  import("../views/dailyReport/bagmaker/bagmakerTWS56DailyReport.vue");
+const BagmakerTWS72DailyReport = () =>
+  import("../views/dailyReport/bagmaker/bagmakerTWS72DailyReport.vue");
+const BagmakerPackingPouchDailyReport = () =>
+  import("../views/dailyReport/bagmaker/bagmakerPackingPouchDailyReport.vue");
 
 // --- Production pages
 const PC39 = () => import("../views/production/pc39.vue");
 const PC14 = () => import("../views/production/pc14.vue");
-const TS1000 = () => import("../views/production/ts1000.vue");
 const FCP = () => import("../views/production/fcp.vue");
 const TWS56 = () => import("../views/production/tws56.vue");
 const TWS72 = () => import("../views/production/tws72.vue");
 const COPACK = () => import("../views/production/copack.vue");
-const IHP = () => import("../views/production/ihp.vue");
 const CassavaInhouse = () => import("../views/production/cassavaInhouse.vue");
 const Tortila = () => import("../views/production/tortila.vue");
 const PackingPouch = () => import("../views/production/packingPouch.vue");
@@ -83,26 +81,36 @@ const VacuumFryer = () => import("../views/production/vacuumFryer.vue");
 
 // --- Packing pages
 // Weigher views
-const WeigherA = () => import("../views/packing/weigher/weigherA.vue");
-const WeigherB = () => import("../views/packing/weigher/weigherB.vue");
-const WeigherC = () => import("../views/packing/weigher/weigherC.vue");
-const WeigherD = () => import("../views/packing/weigher/weigherD.vue");
-const WeigherE = () => import("../views/packing/weigher/weigherE.vue");
-const WeigherF = () => import("../views/packing/weigher/weigherF.vue");
-const WeigherG = () => import("../views/packing/weigher/weigherG.vue");
-const WeigherH = () => import("../views/packing/weigher/weigherH.vue");
-const WeigherI = () => import("../views/packing/weigher/weigherI.vue");
+const WeigherPC14 = () => import("../views/packing/weigher/weigherPC14.vue");
+const WeigherPC39 = () => import("../views/packing/weigher/weigherPC39.vue");
+const WeigherCassavaInhouse = () =>
+  import("../views/packing/weigher/weigherCassavaInhouse.vue");
+const WeigherCassavaCopack = () =>
+  import("../views/packing/weigher/weigherCassavaCopack.vue");
+const WeigherTortila = () =>
+  import("../views/packing/weigher/weigherTortila.vue");
+const WeigherFCP = () => import("../views/packing/weigher/weigherFCP.vue");
+const WeigherTWS56 = () => import("../views/packing/weigher/weigherTWS56.vue");
+const WeigherTWS72 = () => import("../views/packing/weigher/weigherTWS72.vue");
+const WeigherPackingPouch = () =>
+  import("../views/packing/weigher/weigherPackingPouch.vue");
 
 // BagMaker views
-const BagMakerA = () => import("../views/packing/bagmaker/bagmakerA.vue");
-const BagMakerB = () => import("../views/packing/bagmaker/bagmakerB.vue");
-const BagMakerC = () => import("../views/packing/bagmaker/bagmakerC.vue");
-const BagMakerD = () => import("../views/packing/bagmaker/bagmakerD.vue");
-const BagMakerE = () => import("../views/packing/bagmaker/bagmakerE.vue");
-const BagMakerF = () => import("../views/packing/bagmaker/bagmakerF.vue");
-const BagMakerG = () => import("../views/packing/bagmaker/bagmakerG.vue");
-const BagMakerH = () => import("../views/packing/bagmaker/bagmakerH.vue");
-const BagMakerI = () => import("../views/packing/bagmaker/bagmakerI.vue");
+const BagMakerPC14 = () => import("../views/packing/bagmaker/bagmakerPC14.vue");
+const BagMakerPC39 = () => import("../views/packing/bagmaker/bagmakerPC39.vue");
+const BagMakerCassavaInhouse = () =>
+  import("../views/packing/bagmaker/bagmakerCassavaInhouse.vue");
+const BagMakerCassavaCopack = () =>
+  import("../views/packing/bagmaker/bagmakerCassavaCopack.vue");
+const BagMakerTortila = () =>
+  import("../views/packing/bagmaker/bagmakerTortila.vue");
+const BagMakerFCP = () => import("../views/packing/bagmaker/bagmakerFCP.vue");
+const BagMakerTWS56 = () =>
+  import("../views/packing/bagmaker/bagmakerTWS56.vue");
+const BagMakerTWS72 = () =>
+  import("../views/packing/bagmaker/bagmakerTWS72.vue");
+const BagMakerPackingPouch = () =>
+  import("../views/packing/bagmaker/bagmakerPackingPouch.vue");
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -224,113 +232,113 @@ const router = createRouter({
 
         // Packing routes - Weigher (User only)
         {
-          path: "packing/line-a-weigher",
-          name: "weigherA",
-          component: WeigherA,
+          path: "packing/weigher-pc14",
+          name: "weigherPC14",
+          component: WeigherPC14,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-b-weigher",
-          name: "weigherB",
-          component: WeigherB,
+          path: "packing/weigher-pc39",
+          name: "weigherPC39",
+          component: WeigherPC39,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-c-weigher",
-          name: "weigherC",
-          component: WeigherC,
+          path: "packing/weigher-cassava-inhouse",
+          name: "weigherCassavaInhouse",
+          component: WeigherCassavaInhouse,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-d-weigher",
-          name: "weigherD",
-          component: WeigherD,
+          path: "packing/weigher-cassava-copack",
+          name: "weigherCassavaCopack",
+          component: WeigherCassavaCopack,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-e-weigher",
-          name: "weigherE",
-          component: WeigherE,
+          path: "packing/weigher-tortila",
+          name: "weigherTortila",
+          component: WeigherTortila,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-f-weigher",
-          name: "weigherF",
-          component: WeigherF,
+          path: "packing/weigher-fcp",
+          name: "weigherFCP",
+          component: WeigherFCP,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-g-weigher",
-          name: "weigherG",
-          component: WeigherG,
+          path: "packing/weigher-tws56",
+          name: "weigherTWS56",
+          component: WeigherTWS56,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-h-weigher",
-          name: "weigherH",
-          component: WeigherH,
+          path: "packing/weigher-tws72",
+          name: "weigherTWS72",
+          component: WeigherTWS72,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-i-weigher",
-          name: "weigherI",
-          component: WeigherI,
+          path: "packing/weigher-packing-pouch",
+          name: "weigherPackingPouch",
+          component: WeigherPackingPouch,
           meta: { requiresUser: true },
         },
 
         // Packing routes - BagMaker (User only)
         {
-          path: "packing/line-a-bagmaker",
-          name: "bagmakerA",
-          component: BagMakerA,
+          path: "packing/bagmaker-pc14",
+          name: "bagmakerPC14",
+          component: BagMakerPC14,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-b-bagmaker",
-          name: "bagmakerB",
-          component: BagMakerB,
+          path: "packing/bagmaker-pc39",
+          name: "bagmakerPC39",
+          component: BagMakerPC39,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-c-bagmaker",
-          name: "bagmakerC",
-          component: BagMakerC,
+          path: "packing/bagmaker-cassava-inhouse",
+          name: "bagmakerCassavaInhouse",
+          component: BagMakerCassavaInhouse,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-d-bagmaker",
-          name: "bagmakerD",
-          component: BagMakerD,
+          path: "packing/bagmaker-cassava-copack",
+          name: "bagmakerCassavaCopack",
+          component: BagMakerCassavaCopack,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-e-bagmaker",
-          name: "bagmakerE",
-          component: BagMakerE,
+          path: "packing/bagmaker-tortila",
+          name: "bagmakerTortila",
+          component: BagMakerTortila,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-f-bagmaker",
-          name: "bagmakerF",
-          component: BagMakerF,
+          path: "packing/bagmaker-fcp",
+          name: "bagmakerFCP",
+          component: BagMakerFCP,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-g-bagmaker",
-          name: "bagmakerG",
-          component: BagMakerG,
+          path: "packing/bagmaker-tws56",
+          name: "bagmakerTWS56",
+          component: BagMakerTWS56,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-h-bagmaker",
-          name: "bagmakerH",
-          component: BagMakerH,
+          path: "packing/bagmaker-tws72",
+          name: "bagmakerTWS72",
+          component: BagMakerTWS72,
           meta: { requiresUser: true },
         },
         {
-          path: "packing/line-i-bagmaker",
-          name: "bagmakerI",
-          component: BagMakerI,
+          path: "packing/bagmaker-packing-pouch",
+          name: "bagmakerPackingPouch",
+          component: BagMakerPackingPouch,
           meta: { requiresUser: true },
         },
 
@@ -386,113 +394,113 @@ const router = createRouter({
 
         // Daily Report routes - Packing Weigher
         {
-          path: "daily-report/weigher/line-a",
-          name: "dailyReportWeigherA",
-          component: WeigherADailyReport,
+          path: "daily-report/weigher/weigher-pc14",
+          name: "dailyReportWeigherPC14",
+          component: WeigherPC14DailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/weigher/line-b",
-          name: "dailyReportWeigherB",
-          component: WeigherBDailyReport,
+          path: "daily-report/weigher/weigher-pc39",
+          name: "dailyReportWeigherPC39",
+          component: WeigherPC39DailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/weigher/line-c",
-          name: "dailyReportWeigherC",
-          component: WeigherCDailyReport,
+          path: "daily-report/weigher/weigher-cassava-inhouse",
+          name: "dailyReportWeigherCassavaInhouse",
+          component: WeigherCassavaInhouseDailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/weigher/line-d",
-          name: "dailyReportWeigherD",
-          component: WeigherDDailyReport,
+          path: "daily-report/weigher/weigher-cassava-copack",
+          name: "dailyReportWeigherCassavaCopack",
+          component: WeigherCassavaCopackDailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/weigher/line-e",
-          name: "dailyReportWeigherE",
-          component: WeigherEDailyReport,
+          path: "daily-report/weigher/weigher-tortila",
+          name: "dailyReportWeigherTortila",
+          component: WeigherTortilaDailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/weigher/line-f",
-          name: "dailyReportWeigherF",
-          component: WeigherFDailyReport,
+          path: "daily-report/weigher/weigher-fcp",
+          name: "dailyReportWeigherFCP",
+          component: WeigherFCPDailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/weigher/line-g",
-          name: "dailyReportWeigherG",
-          component: WeigherGDailyReport,
+          path: "daily-report/weigher/weigher-tws56",
+          name: "dailyReportWeigherTWS56",
+          component: WeigherTWS56DailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/weigher/line-h",
-          name: "dailyReportWeigherH",
-          component: WeigherHDailyReport,
+          path: "daily-report/weigher/weigher-tws72",
+          name: "dailyReportWeigherTWS72",
+          component: WeigherTWS72DailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/weigher/line-i",
-          name: "dailyReportWeigherI",
-          component: WeigherIDailyReport,
+          path: "daily-report/weigher/weigher-packing-pouch",
+          name: "dailyReportWeigherPackingPouch",
+          component: WeigherPackingPouchDailyReport,
           meta: { requiresUser: true },
         },
 
         // Daily Report routes - Packing BagMaker
         {
-          path: "daily-report/bagmaker/line-a",
-          name: "dailyReportBagmakerA",
-          component: BagmakerADailyReport,
+          path: "daily-report/bagmaker/bagmaker-pc14",
+          name: "dailyReportBagmakerPC14",
+          component: BagmakerPC14DailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/bagmaker/line-b",
-          name: "dailyReportBagmakerB",
-          component: BagmakerBDailyReport,
+          path: "daily-report/bagmaker/bagmaker-pc39",
+          name: "dailyReportBagmakerPC39",
+          component: BagmakerPC39DailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/bagmaker/line-c",
-          name: "dailyReportBagmakerC",
-          component: BagmakerCDailyReport,
+          path: "daily-report/bagmaker/bagmaker-cassava-inhouse",
+          name: "dailyReportBagmakerCassavaInhouse",
+          component: BagmakerCassavaInhouseDailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/bagmaker/line-d",
-          name: "dailyReportBagmakerD",
-          component: BagmakerDDailyReport,
+          path: "daily-report/bagmaker/bagmaker-cassava-copack",
+          name: "dailyReportBagmakerCassavaCopack",
+          component: BagmakerCassavaCopackDailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/bagmaker/line-e",
-          name: "dailyReportBagmakerE",
-          component: BagmakerEDailyReport,
+          path: "daily-report/bagmaker/bagmaker-tortila",
+          name: "dailyReportBagmakerTortila",
+          component: BagmakerTortilaDailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/bagmaker/line-f",
-          name: "dailyReportBagmakerF",
-          component: BagmakerFDailyReport,
+          path: "daily-report/bagmaker/bagmaker-fcp",
+          name: "dailyReportBagmakerFCP",
+          component: BagmakerFCPDailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/bagmaker/line-g",
-          name: "dailyReportBagmakerG",
-          component: BagmakerGDailyReport,
+          path: "daily-report/bagmaker/bagmaker-tws56",
+          name: "dailyReportBagmakerTWS56",
+          component: BagmakerTWS56DailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/bagmaker/line-h",
-          name: "dailyReportBagmakerH",
-          component: BagmakerHDailyReport,
+          path: "daily-report/bagmaker/bagmaker-tws72",
+          name: "dailyReportBagmakerTWS72",
+          component: BagmakerTWS72DailyReport,
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/bagmaker/line-i",
-          name: "dailyReportBagmakerI",
-          component: BagmakerIDailyReport,
+          path: "daily-report/bagmaker/bagmaker-packing-pouch",
+          name: "dailyReportBagmakerPackingPouch",
+          component: BagmakerPackingPouchDailyReport,
           meta: { requiresUser: true },
         },
       ],
