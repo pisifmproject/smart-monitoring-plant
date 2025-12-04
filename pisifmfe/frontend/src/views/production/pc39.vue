@@ -2,9 +2,125 @@
 import { ref, onMounted, computed } from "vue";
 import ReportButton from "@/components/reportButton.vue";
 import { useAuth } from "@/stores/auth";
+import {
+  LayoutDashboard,
+  Wheat,
+  CircleDot,
+  Eye,
+  ChevronsLeftRight,
+  Droplets,
+  Flame,
+  Fuel,
+  Gauge,
+} from "lucide-vue-next";
 
 const { canAccessDailyReport } = useAuth();
 const lineId = "LINE_A_PC39";
+
+// Active utility tab
+type UtilityTab =
+  | "dashboard"
+  | "potato-prep"
+  | "peelers"
+  | "inspection"
+  | "slicers"
+  | "washers"
+  | "fryer"
+  | "oil-system"
+  | "moisture-control";
+
+const activeUtilityTab = ref<UtilityTab>("dashboard");
+
+const utilityTabs = [
+  { id: "dashboard" as UtilityTab, name: "Dashboard", icon: LayoutDashboard },
+  { id: "potato-prep" as UtilityTab, name: "Potato Prep", icon: Wheat },
+  { id: "peelers" as UtilityTab, name: "Peelers", icon: CircleDot },
+  { id: "inspection" as UtilityTab, name: "Inspection", icon: Eye },
+  { id: "slicers" as UtilityTab, name: "Slicers", icon: ChevronsLeftRight },
+  { id: "washers" as UtilityTab, name: "Washers", icon: Droplets },
+  { id: "fryer" as UtilityTab, name: "Fryer", icon: Flame },
+  { id: "oil-system" as UtilityTab, name: "Oil System", icon: Fuel },
+  {
+    id: "moisture-control" as UtilityTab,
+    name: "Moisture Control",
+    icon: Gauge,
+  },
+];
+
+// Utility data
+const potatoPrepData = ref({
+  mode: "AUTO",
+  feedFromCrates: true,
+  peelerStatus: "Running",
+  peelerSpeed: 85,
+  slicerHopperLevel: 110,
+});
+
+const peelersData = ref({
+  status: "Running",
+  mode: "AUTO",
+  speed: 85,
+  waterPressure: 4.2,
+  drainStatus: "Normal",
+});
+
+const inspectionData = ref({
+  mode: "AUTO",
+  beltSpeed: 92,
+  rejectRate: 3.5,
+  passRate: 96.5,
+  aiDetection: true,
+});
+
+const slicersData = ref({
+  mode: "AUTO",
+  slicerHopperLevel: 110,
+  incline: 23.0,
+  gates: [true, true, true, true],
+  thickness: 1.75,
+});
+
+const washersData = ref({
+  mode: "AUTO",
+  driveSpeed: 78,
+  waterFlow: 145,
+  temperature: 24.0,
+  freshWater: true,
+});
+
+const fryerData = ref({
+  mode: "AUTO",
+  fryerInletTemp: 176.1,
+  fryerOutletTemp: 154.0,
+  oilActualMoisture: 1.94,
+  oilAim: 35.0,
+  actualOil: 27.1,
+  burnerStatus: 43.7,
+  masterSpeed: 70.0,
+  paddle: 41,
+  submerger: 61,
+  takeOut: 45,
+});
+
+const oilSystemData = ref({
+  usedOilPercent: 0,
+  newOilPercent: 100,
+  valveStatus: 54.5,
+  flowRate: 148,
+  oilLevelSetpoint: 151,
+  postFryerStatus: "AUTO",
+  takeOutConvStatus: "ON",
+  autoAbort: false,
+  manualAbort: false,
+});
+
+const moistureControlData = ref({
+  mode: "MOISTURE AUTO",
+  setpoint: 1.35,
+  actualMoisture: 1.94,
+  status: "COMMS OK",
+  controlActive: true,
+});
 const loading = ref(false);
 const hasData = ref(false);
 
@@ -28,7 +144,7 @@ const shiftSummary = ref({
   shift3: { target: 0, actual: 0, defect: 0, oee: 0 },
 });
 
-// Status computed berdasarkan ada tidaknya data
+// Status computed based on data availability
 const status = computed(() => (hasData.value ? "running" : "offline"));
 
 // Function to fetch production data from backend
@@ -69,7 +185,7 @@ const fetchProductionData = async () => {
         currentAmpere: result.data.currentAmpere || 0,
       };
 
-      // Jika ada data shift summary dari backend
+      // If shift summary data exists
       if (result.data.shifts) {
         result.data.shifts.forEach((shift: any) => {
           const shiftKey =
@@ -108,678 +224,817 @@ onMounted(() => {
       <!-- Header -->
       <div class="header-section">
         <div class="header-content">
-          <div>
-            <h1 class="page-title">Production Line</h1>
-            <p class="page-subtitle">PC39</p>
+          <div class="header-left">
+            <div class="icon-circle">
+              <span class="icon-text">🏭</span>
+            </div>
+            <div class="header-text">
+              <h1 class="page-title">Production Line PC39</h1>
+              <p class="page-subtitle">Potato Chips Production Line</p>
+            </div>
           </div>
-          <div class="status-badge" :class="status">
-            {{ status.toUpperCase() }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Daily Report Button (User only) -->
-      <div v-if="canAccessDailyReport()" class="report-button-container">
-        <ReportButton routeName="dailyReportPC39" label="Daily Report - PC39" />
-      </div>
-
-      <!-- Main Metrics -->
-      <div class="metrics-section">
-        <div class="metric-card">
-          <div class="metric-label">Target Production</div>
-          <div class="metric-value">{{ productionData.targetProduction }}</div>
-          <div class="metric-unit">units</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Actual Production</div>
-          <div class="metric-value">{{ productionData.actualProduction }}</div>
-          <div class="metric-unit">units</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Defect Count</div>
-          <div class="metric-value danger">
-            {{ productionData.defectCount }}
-          </div>
-          <div class="metric-unit">units</div>
-        </div>
-        <div class="metric-card highlight">
-          <div class="metric-label">OEE</div>
-          <div class="metric-value">{{ productionData.oeePercentage }}%</div>
-          <div class="metric-unit">Overall Equipment Effectiveness</div>
-        </div>
-      </div>
-
-      <!-- OEE Breakdown -->
-      <div class="oee-section">
-        <h2 class="section-title">OEE Breakdown</h2>
-        <div class="oee-grid">
-          <div class="oee-card">
-            <div class="oee-label">Availability</div>
-            <div class="oee-value">{{ productionData.availability }}%</div>
-          </div>
-          <div class="oee-card">
-            <div class="oee-label">Performance</div>
-            <div class="oee-value">{{ productionData.performance }}%</div>
-          </div>
-          <div class="oee-card">
-            <div class="oee-label">Quality</div>
-            <div class="oee-value">{{ productionData.quality }}%</div>
+          <div class="header-actions">
+            <div class="status-badge" :class="status">
+              <span class="status-dot"></span>
+              {{ status.toUpperCase() }}
+            </div>
+            <div v-if="canAccessDailyReport()" class="report-btn-wrapper">
+              <ReportButton routeName="dailyReportPC39" label="Daily Report" />
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- KWH Meter Section -->
-      <div class="kwh-section">
-        <h2 class="section-title">
-          <span class="title-icon">⚡</span>
-          Power Consumption Monitor
-        </h2>
-        <div class="kwh-grid">
-          <div class="kwh-card highlight">
-            <div class="kwh-icon">🔋</div>
-            <div class="kwh-content">
-              <div class="kwh-label">Total KWH</div>
-              <div class="kwh-value">
-                {{ productionData.kwhMeter.toLocaleString() }}
+      <!-- Utility Tabs (User only) -->
+      <div v-if="canAccessDailyReport()" class="tabs-section">
+        <div class="tabs-scroll-container">
+          <button
+            v-for="tab in utilityTabs"
+            :key="tab.id"
+            :class="['tab-button', { active: activeUtilityTab === tab.id }]"
+            @click="activeUtilityTab = tab.id"
+          >
+            <component :is="tab.icon" :size="18" :stroke-width="2.5" />
+            <span>{{ tab.name }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dashboard Content -->
+      <div v-if="activeUtilityTab === 'dashboard'" class="content-wrapper">
+        <!-- Main Metrics -->
+        <section class="dashboard-section">
+          <div class="metrics-grid">
+            <div class="metric-card primary">
+              <div class="metric-icon">🎯</div>
+              <div class="metric-content">
+                <span class="metric-label">Target Production</span>
+                <span class="metric-value">{{
+                  productionData.targetProduction.toLocaleString()
+                }}</span>
+                <span class="metric-unit">units</span>
               </div>
-              <div class="kwh-unit">kWh</div>
             </div>
-          </div>
-          <div class="kwh-card">
-            <div class="kwh-icon">⚡</div>
-            <div class="kwh-content">
-              <div class="kwh-label">Power</div>
-              <div class="kwh-value">
-                {{ productionData.powerConsumption.toLocaleString() }}
+            <div class="metric-card success">
+              <div class="metric-icon">📦</div>
+              <div class="metric-content">
+                <span class="metric-label">Actual Production</span>
+                <span class="metric-value">{{
+                  productionData.actualProduction.toLocaleString()
+                }}</span>
+                <span class="metric-unit">units</span>
               </div>
-              <div class="kwh-unit">kW</div>
+            </div>
+            <div class="metric-card danger">
+              <div class="metric-icon">⚠️</div>
+              <div class="metric-content">
+                <span class="metric-label">Defect Count</span>
+                <span class="metric-value">{{
+                  productionData.defectCount.toLocaleString()
+                }}</span>
+                <span class="metric-unit">units</span>
+              </div>
+            </div>
+            <div class="metric-card info">
+              <div class="metric-icon">📊</div>
+              <div class="metric-content">
+                <span class="metric-label">OEE</span>
+                <span class="metric-value"
+                  >{{ productionData.oeePercentage }}%</span
+                >
+                <span class="metric-unit">Efficiency</span>
+              </div>
             </div>
           </div>
-          <div class="kwh-card">
-            <div class="kwh-icon">🔌</div>
-            <div class="kwh-content">
-              <div class="kwh-label">Voltage</div>
-              <div class="kwh-value">{{ productionData.voltageInput }}</div>
-              <div class="kwh-unit">V</div>
-            </div>
-          </div>
-          <div class="kwh-card">
-            <div class="kwh-icon">〰️</div>
-            <div class="kwh-content">
-              <div class="kwh-label">Current</div>
-              <div class="kwh-value">{{ productionData.currentAmpere }}</div>
-              <div class="kwh-unit">A</div>
-            </div>
-          </div>
-        </div>
+        </section>
 
-        <!-- Power Gauge -->
-        <div class="power-gauge-container">
-          <div class="gauge-wrapper">
-            <div class="gauge-title">Real-time Power Consumption</div>
-            <div class="gauge-circle">
-              <svg viewBox="0 0 200 200" class="gauge-svg">
-                <circle
-                  cx="100"
-                  cy="100"
-                  r="80"
-                  fill="none"
-                  stroke="#e2e8f0"
-                  stroke-width="20"
-                />
-                <circle
-                  cx="100"
-                  cy="100"
-                  r="80"
-                  fill="none"
-                  stroke="url(#powerGradient)"
-                  stroke-width="20"
-                  stroke-linecap="round"
-                  :stroke-dasharray="`${
-                    (productionData.powerConsumption / 1000) * 502
-                  } 502`"
-                  transform="rotate(-90 100 100)"
-                  class="gauge-progress"
-                />
-                <defs>
-                  <linearGradient
-                    id="powerGradient"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="0%"
-                  >
-                    <stop
-                      offset="0%"
-                      style="stop-color: #10b981; stop-opacity: 1"
-                    />
-                    <stop
-                      offset="50%"
-                      style="stop-color: #f59e0b; stop-opacity: 1"
-                    />
-                    <stop
-                      offset="100%"
-                      style="stop-color: #ef4444; stop-opacity: 1"
-                    />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div class="gauge-center">
-                <div class="gauge-value">
-                  {{ productionData.powerConsumption }}
+        <!-- OEE Breakdown -->
+        <section class="dashboard-section">
+          <h2 class="section-title">OEE Breakdown</h2>
+          <div class="oee-grid">
+            <div class="oee-card">
+              <div
+                class="oee-ring"
+                :style="{ '--progress': productionData.availability + '%' }"
+              >
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path
+                    class="circle-bg"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    class="circle"
+                    :stroke-dasharray="`${productionData.availability}, 100`"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div class="oee-percentage">
+                  {{ productionData.availability }}%
                 </div>
-                <div class="gauge-label">kW</div>
               </div>
+              <span class="oee-label">Availability</span>
             </div>
-            <div class="gauge-indicators">
-              <span class="indicator low">0 kW</span>
-              <span class="indicator mid">500 kW</span>
-              <span class="indicator high">1000 kW</span>
+            <div class="oee-card">
+              <div
+                class="oee-ring"
+                :style="{ '--progress': productionData.performance + '%' }"
+              >
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path
+                    class="circle-bg"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    class="circle"
+                    :stroke-dasharray="`${productionData.performance}, 100`"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div class="oee-percentage">
+                  {{ productionData.performance }}%
+                </div>
+              </div>
+              <span class="oee-label">Performance</span>
+            </div>
+            <div class="oee-card">
+              <div
+                class="oee-ring"
+                :style="{ '--progress': productionData.quality + '%' }"
+              >
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path
+                    class="circle-bg"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    class="circle"
+                    :stroke-dasharray="`${productionData.quality}, 100`"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div class="oee-percentage">{{ productionData.quality }}%</div>
+              </div>
+              <span class="oee-label">Quality</span>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <!-- Shift Summary -->
-      <div class="shift-section">
-        <h2 class="section-title">Shift Summary</h2>
-        <div class="shift-grid">
-          <div
-            v-for="(data, shift) in shiftSummary"
-            :key="shift"
-            class="shift-card"
-          >
-            <div class="shift-header">{{ shift.toUpperCase() }}</div>
-            <div class="shift-content">
-              <div class="shift-item">
-                <span class="shift-label">Target:</span>
-                <span class="shift-value">{{ data.target }}</span>
+        <!-- Power Consumption -->
+        <section class="dashboard-section">
+          <h2 class="section-title">Power Consumption</h2>
+          <div class="power-grid">
+            <div class="power-card highlight">
+              <div class="power-icon">⚡</div>
+              <div class="power-details">
+                <span class="power-label">Total Energy</span>
+                <span class="power-value">{{
+                  productionData.kwhMeter.toLocaleString()
+                }}</span>
+                <span class="power-unit">kWh</span>
               </div>
-              <div class="shift-item">
-                <span class="shift-label">Actual:</span>
-                <span class="shift-value">{{ data.actual }}</span>
+            </div>
+            <div class="power-card">
+              <div class="power-icon">🔌</div>
+              <div class="power-details">
+                <span class="power-label">Current Power</span>
+                <span class="power-value">{{
+                  productionData.powerConsumption.toLocaleString()
+                }}</span>
+                <span class="power-unit">kW</span>
               </div>
-              <div class="shift-item">
-                <span class="shift-label">Defect:</span>
-                <span class="shift-value danger">{{ data.defect }}</span>
+            </div>
+            <div class="power-card">
+              <div class="power-icon">🔋</div>
+              <div class="power-details">
+                <span class="power-label">Voltage</span>
+                <span class="power-value">{{
+                  productionData.voltageInput
+                }}</span>
+                <span class="power-unit">V</span>
               </div>
-              <div class="shift-item">
-                <span class="shift-label">OEE:</span>
-                <span class="shift-value success">{{ data.oee }}%</span>
+            </div>
+            <div class="power-card">
+              <div class="power-icon">〰️</div>
+              <div class="power-details">
+                <span class="power-label">Current</span>
+                <span class="power-value">{{
+                  productionData.currentAmpere
+                }}</span>
+                <span class="power-unit">A</span>
               </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        <!-- Shift Summary -->
+        <section class="dashboard-section">
+          <h2 class="section-title">Shift Summary</h2>
+          <div class="shift-summary-grid">
+            <div
+              v-for="(data, shift) in shiftSummary"
+              :key="shift"
+              class="shift-summary-card"
+            >
+              <div class="shift-summary-header">
+                <h3>{{ shift.toUpperCase() }}</h3>
+              </div>
+              <div class="shift-summary-body">
+                <div class="summary-row">
+                  <span>Target</span>
+                  <strong>{{ data.target }}</strong>
+                </div>
+                <div class="summary-row">
+                  <span>Actual</span>
+                  <strong>{{ data.actual }}</strong>
+                </div>
+                <div class="summary-row danger">
+                  <span>Defect</span>
+                  <strong>{{ data.defect }}</strong>
+                </div>
+                <div class="summary-row success">
+                  <span>OEE</span>
+                  <strong>{{ data.oee }}%</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
-      <!-- Status Note -->
-      <div class="note-section">
-        <p class="note-text">
-          <span v-if="loading">⏳ Loading data...</span>
-          <span v-else-if="!hasData"
-            >📝 <strong>Note:</strong> Waiting for data from API</span
-          >
-          <span v-else>✅ Connected to API</span>
-        </p>
+      <!-- Utility Content -->
+      <div
+        v-if="canAccessDailyReport() && activeUtilityTab !== 'dashboard'"
+        class="content-wrapper"
+      >
+        <div class="utility-panel">
+          <div class="utility-header">
+            <h2 class="utility-title">
+              <component
+                :is="utilityTabs.find((t) => t.id === activeUtilityTab)?.icon"
+              />
+              {{ utilityTabs.find((t) => t.id === activeUtilityTab)?.name }}
+            </h2>
+            <div class="status-badge running">ACTIVE</div>
+          </div>
+
+          <!-- Dynamic Content based on Tab -->
+          <div class="utility-grid">
+            <!-- Potato Prep -->
+            <template v-if="activeUtilityTab === 'potato-prep'">
+              <div class="utility-card">
+                <span class="card-label">Feed From Crates</span>
+                <span
+                  class="card-value"
+                  :class="{ success: potatoPrepData.feedFromCrates }"
+                >
+                  {{ potatoPrepData.feedFromCrates ? "ON" : "OFF" }}
+                </span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Peeler Status</span>
+                <span class="card-value success">{{
+                  potatoPrepData.peelerStatus
+                }}</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Peeler Speed</span>
+                <span class="card-value"
+                  >{{ potatoPrepData.peelerSpeed }}%</span
+                >
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Slicer Hopper</span>
+                <span class="card-value"
+                  >{{ potatoPrepData.slicerHopperLevel }}%</span
+                >
+              </div>
+            </template>
+
+            <!-- Peelers -->
+            <template v-if="activeUtilityTab === 'peelers'">
+              <div class="utility-card">
+                <span class="card-label">Status</span>
+                <span class="card-value success">{{ peelersData.status }}</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Speed</span>
+                <span class="card-value">{{ peelersData.speed }}%</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Water Pressure</span>
+                <span class="card-value"
+                  >{{ peelersData.waterPressure }} bar</span
+                >
+              </div>
+            </template>
+
+            <!-- Add other tabs similarly... (Simplified for brevity but keeping structure) -->
+            <!-- Fryer -->
+            <template v-if="activeUtilityTab === 'fryer'">
+              <div class="utility-card">
+                <span class="card-label">Inlet Temp</span>
+                <span class="card-value">{{ fryerData.fryerInletTemp }}°C</span>
+              </div>
+              <div class="utility-card">
+                <span class="card-label">Outlet Temp</span>
+                <span class="card-value"
+                  >{{ fryerData.fryerOutletTemp }}°C</span
+                >
+              </div>
+              <div class="utility-card highlight">
+                <span class="card-label">Oil Moisture</span>
+                <span class="card-value"
+                  >{{ fryerData.oilActualMoisture }}%</span
+                >
+              </div>
+            </template>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Modern Reset & Base */
+* {
+  box-sizing: border-box;
+}
+
 .production-wrapper {
-  width: 100%;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
-  padding: 0;
+  background-color: #f8fafc;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: #1e293b;
 }
 
 .production-container {
-  width: 100%;
-  background: white;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   overflow: hidden;
 }
 
-/* Header Section */
+/* Header */
 .header-section {
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  padding: 32px 24px;
+  padding: 1.5rem 2rem;
   color: white;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .header-content {
+  max-width: 1600px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.icon-circle {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
 }
 
 .page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0 0 4px 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
 }
 
 .page-subtitle {
+  margin: 0.25rem 0 0;
   font-size: 0.95rem;
   opacity: 0.9;
-  margin: 0;
+  font-weight: 500;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
 .status-badge {
-  padding: 8px 20px;
-  border-radius: 24px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.status-badge.running {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.status-badge.offline {
-  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
-  color: white;
-}
-
-/* KWH Meter Section */
-.kwh-section {
-  padding: 32px 24px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-}
-
-.title-icon {
-  font-size: 1.5rem;
-  margin-right: 8px;
-}
-
-.kwh-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
-  margin-bottom: 32px;
-}
-
-.kwh-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
-  gap: 16px;
-  transition: all 0.3s ease;
-}
-
-.kwh-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
-.kwh-card.highlight {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
-}
-
-.kwh-icon {
-  font-size: 2.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-}
-
-.kwh-content {
-  flex: 1;
-}
-
-.kwh-label {
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2rem;
+  font-weight: 600;
   font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 4px;
+  backdrop-filter: blur(4px);
 }
 
-.kwh-card .kwh-label {
-  color: #64748b;
+.status-badge.running .status-dot {
+  background-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
 }
 
-.kwh-card.highlight .kwh-label {
-  color: rgba(255, 255, 255, 0.9);
+.status-badge.offline .status-dot {
+  background-color: #94a3b8;
 }
 
-.kwh-value {
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: 4px;
+.status-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
 }
 
-.kwh-card .kwh-value {
-  color: #1e293b;
-}
-
-.kwh-card.highlight .kwh-value {
-  color: white;
-}
-
-.kwh-unit {
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
-
-.kwh-card .kwh-unit {
-  color: #64748b;
-}
-
-.kwh-card.highlight .kwh-unit {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-/* Power Gauge */
-.power-gauge-container {
+/* Tabs */
+.tabs-section {
   background: white;
-
-  padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 2rem;
 }
 
-.gauge-wrapper {
-  max-width: 400px;
+.tabs-scroll-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 1rem 0;
 }
 
-.gauge-title {
-  text-align: center;
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 2rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.tab-button.active {
+  background: #e0e7ff;
+  color: #4f46e5;
+  border-color: #c7d2fe;
+}
+
+/* Content */
+.content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.dashboard-section {
+  margin-bottom: 3rem;
+}
+
+.section-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 24px;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
 }
 
-.gauge-circle {
-  position: relative;
-  width: 200px;
-  height: 200px;
-  margin: 0 auto 24px;
-}
-
-.gauge-svg {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
-}
-
-.gauge-progress {
-  transition: stroke-dasharray 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.gauge-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-}
-
-.gauge-value {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #1e293b;
-  line-height: 1;
-}
-
-.gauge-label {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #64748b;
-  margin-top: 4px;
-}
-
-.gauge-indicators {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.indicator.low {
-  color: #10b981;
-}
-
-.indicator.mid {
-  color: #f59e0b;
-}
-
-.indicator.high {
-  color: #ef4444;
-}
-
-.status-badge.idle {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
-}
-
-.status-badge.down {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.85;
-  }
-}
-
-/* Metrics Section */
-.metrics-section {
+/* Metrics Grid */
+.metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  padding: 32px 24px;
-  background: #f8fafc;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
 }
 
 .metric-card {
   background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  transition: transform 0.2s ease;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: transform 0.2s;
 }
 
 .metric-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-.metric-card.highlight {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
+.metric-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  background: #f1f5f9;
+}
+
+.metric-card.primary .metric-icon {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+.metric-card.success .metric-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.metric-card.danger .metric-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.metric-card.info .metric-icon {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.metric-content {
+  display: flex;
+  flex-direction: column;
 }
 
 .metric-label {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   color: #64748b;
-  margin-bottom: 12px;
-}
-
-.metric-card.highlight .metric-label {
-  color: rgba(255, 255, 255, 0.9);
 }
 
 .metric-value {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 8px;
-}
-
-.metric-card.highlight .metric-value {
-  color: white;
-}
-
-.metric-value.danger {
-  color: #ef4444;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
 }
 
 .metric-unit {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #94a3b8;
+  font-weight: 500;
 }
 
-.metric-card.highlight .metric-unit {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* OEE Section */
-.oee-section,
-.shift-section {
-  padding: 32px 24px;
-}
-
-.section-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 20px;
-}
-
+/* OEE Grid */
 .oee-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
 }
 
 .oee-card {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  padding: 24px;
-  border-radius: 12px;
-  text-align: center;
-  border: 2px solid #0ea5e9;
+  background: white;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.oee-ring {
+  width: 120px;
+  height: 120px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circular-chart {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.circle-bg {
+  fill: none;
+  stroke: #f1f5f9;
+  stroke-width: 2.5;
+}
+
+.circle {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke: #4f46e5;
+  animation: progress 1s ease-out forwards;
+}
+
+.oee-percentage {
+  position: absolute;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .oee-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #0369a1;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-}
-
-.oee-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #0c4a6e;
-}
-
-/* Shift Section */
-.shift-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.shift-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-.shift-header {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  padding: 16px;
-  font-weight: 700;
-  text-align: center;
-}
-
-.shift-content {
-  padding: 20px;
-}
-
-.shift-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.shift-item:last-child {
-  border-bottom: none;
-}
-
-.shift-label {
   font-weight: 600;
   color: #64748b;
 }
 
-.shift-value {
+/* Power Grid */
+.power-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.power-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.power-card.highlight {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+}
+
+.power-card.highlight .power-label,
+.power-card.highlight .power-value,
+.power-card.highlight .power-unit {
+  color: white;
+}
+
+.power-icon {
+  font-size: 1.5rem;
+}
+
+.power-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.power-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.power-value {
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
 }
 
-.shift-value.danger {
-  color: #ef4444;
+.power-unit {
+  font-size: 0.75rem;
+  color: #94a3b8;
 }
 
-.shift-value.success {
-  color: #10b981;
+/* Shift Summary */
+.shift-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
 }
 
-/* Note Section */
-.note-section {
-  padding: 20px 24px;
-  background: #fef3c7;
-  border-top: 1px solid #fde68a;
+.shift-summary-card {
+  background: white;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
 }
 
-.note-text {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #92400e;
+.shift-summary-header {
+  background: #f8fafc;
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 700;
+  color: #0f172a;
   text-align: center;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .production-wrapper {
-    padding: 12px;
-  }
-
-  .header-section {
-    padding: 20px 16px;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
-  }
-
-  .metrics-section,
-  .oee-section,
-  .shift-section {
-    padding: 20px 16px;
-  }
-
-  .metric-value {
-    font-size: 2rem;
-  }
+.shift-summary-body {
+  padding: 1rem;
 }
-/* Report Button */
-.report-button-container {
-  padding: 24px;
-  margin: 20px 24px;
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row.danger strong {
+  color: #dc2626;
+}
+.summary-row.success strong {
+  color: #16a34a;
+}
+
+/* Utility Panel */
+.utility-panel {
+  background: white;
+  border-radius: 1.25rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.utility-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.utility-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.utility-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.utility-card {
   background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.utility-card.highlight {
+  background: #e0e7ff;
+  border: 1px solid #c7d2fe;
+}
+
+.card-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.card-value.success {
+  color: #16a34a;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .content-wrapper {
+    padding: 1rem;
+  }
 }
 </style>

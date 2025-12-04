@@ -1,4 +1,3 @@
-<!-- frontend\src\views\lvmdp1.vue -->
 <script setup lang="ts">
 import ShiftCard from "@/components/shiftCard.vue";
 import Gauge from "@/components/gaugeSimple.vue";
@@ -20,24 +19,10 @@ const {
   s3: s3Yesterday,
 } = useShiftAverages(2, yesterdayStr);
 
-// Live data with kVA and kVAR and RST
-const {
-  isConnected,
-  power,
-  apparentPower,
-  reactivePower,
-  freq,
-  cosPhi,
-  voltage,
-  currentR,
-  currentS,
-  currentT,
-  voltageRS,
-  voltageST,
-  voltageTR,
-} = useLvmdpLive(2);
+// Live data with kVA and kVAR
+const { isConnected, power, apparentPower, cosPhi, voltage } = useLvmdpLive(2);
 
-// Calculate kVAR from kVA and kW: kVAR = sqrt(kVA� - kW�)
+// Calculate kVAR from kVA and kW: kVAR = sqrt(kVA² - kW²)
 const reactiveCalc = computed(() => {
   const kva = apparentPower.value ?? 0;
   const kw = power.value ?? 0;
@@ -54,22 +39,21 @@ const reactiveCalc = computed(() => {
       <div class="header-section">
         <div class="header-content">
           <div class="header-left">
-            <div class="icon-circle">⚡</div>
-            <div>
+            <div class="icon-circle">
+              <span class="icon-text">⚡</span>
+            </div>
+            <div class="header-text">
               <h1 class="page-title">LVMDP 2</h1>
               <p class="page-subtitle">Low Voltage Main Distribution Panel</p>
             </div>
           </div>
           <div class="header-actions">
             <!-- Connection Indicator -->
-            <div class="connection-indicator">
-              <div
-                :class="[
-                  'indicator-light',
-                  isConnected ? 'connected' : 'disconnected',
-                ]"
-                :title="isConnected ? 'Connected' : 'Disconnected'"
-              />
+            <div class="connection-status" :class="{ connected: isConnected }">
+              <div class="status-dot"></div>
+              <span class="status-text">{{
+                isConnected ? "LIVE" : "OFFLINE"
+              }}</span>
             </div>
             <ReportButton :panelId="2" />
           </div>
@@ -79,286 +63,223 @@ const reactiveCalc = computed(() => {
       <!-- Main Content -->
       <div class="content-wrapper">
         <!-- Shift Performance Section -->
-        <div class="performance-section">
+        <section class="dashboard-section">
           <div class="section-header">
-            <div class="section-icon">📊</div>
-            <div>
+            <div class="section-title-wrapper">
               <h2 class="section-title">Shift Performance</h2>
-              <p class="section-subtitle">Comparison performance</p>
+              <p class="section-subtitle">
+                Daily energy consumption comparison
+              </p>
             </div>
           </div>
 
           <div class="shift-grid">
             <!-- Shift 1 -->
-            <div class="shift-card-modern">
-              <div class="shift-card-header">
-                <div class="shift-number">1</div>
-                <div class="shift-info">
-                  <h3 class="shift-name">SHIFT 1</h3>
-                  <span class="shift-hours">07:01 - 14:30</span>
+            <div class="shift-card">
+              <div class="shift-header">
+                <div class="shift-badge">1</div>
+                <div class="shift-details">
+                  <h3>Morning Shift</h3>
+                  <span>07:01 - 14:30</span>
                 </div>
               </div>
 
-              <div class="shift-metrics">
-                <div class="shift-metric-item today">
-                  <span class="metric-period">Today</span>
-                  <div class="metric-value-row">
-                    <span class="metric-number">{{
-                      s1.avgPower.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">kW</span>
-                  </div>
-                  <div class="metric-value-row secondary">
-                    <span class="metric-number">{{
-                      s1.avgCurrent.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">A</span>
+              <div class="shift-body">
+                <div class="metric-group">
+                  <span class="metric-label">Today</span>
+                  <div class="metric-values">
+                    <span class="value-primary"
+                      >{{ s1.avgPower.toFixed(1) }} <small>kW</small></span
+                    >
+                    <span class="value-secondary"
+                      >{{ s1.avgCurrent.toFixed(1) }} A</span
+                    >
                   </div>
                 </div>
-                <div class="shift-metric-item yesterday">
-                  <span class="metric-period">Yesterday</span>
-                  <div class="metric-value-row">
-                    <span class="metric-number">{{
-                      s1Yesterday.avgPower.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">kW</span>
-                  </div>
-                  <div class="metric-value-row secondary">
-                    <span class="metric-number">{{
-                      s1Yesterday.avgCurrent.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">A</span>
+
+                <div class="metric-divider"></div>
+
+                <div class="metric-group">
+                  <span class="metric-label">Yesterday</span>
+                  <div class="metric-values">
+                    <span class="value-primary muted"
+                      >{{ s1Yesterday.avgPower.toFixed(1) }}
+                      <small>kW</small></span
+                    >
+                    <span class="value-secondary muted"
+                      >{{ s1Yesterday.avgCurrent.toFixed(1) }} A</span
+                    >
                   </div>
                 </div>
               </div>
 
-              <div
-                class="shift-trend"
-                :class="
-                  s1.avgPower >= s1Yesterday.avgPower
-                    ? 'trend-up'
-                    : 'trend-down'
-                "
-              >
-                <svg class="trend-icon" viewBox="0 0 24 24" fill="none">
-                  <path
-                    v-if="s1.avgPower >= s1Yesterday.avgPower"
-                    d="M7 17L12 12L17 7M17 7H13M17 7V11"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    v-else
-                    d="M7 7L12 12L17 17M17 17H13M17 17V13"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                <span class="trend-value"
-                  >{{
-                    Math.abs(s1.avgPower - s1Yesterday.avgPower).toFixed(1)
-                  }}
-                  kW</span
+              <div class="shift-footer">
+                <div
+                  class="trend-indicator"
+                  :class="s1.avgPower >= s1Yesterday.avgPower ? 'up' : 'down'"
                 >
-                <span class="trend-percentage"
-                  >({{
-                    (
-                      (Math.abs(s1.avgPower - s1Yesterday.avgPower) /
-                        (s1Yesterday.avgPower || 1)) *
-                      100
-                    ).toFixed(1)
-                  }}%)</span
-                >
+                  <span class="trend-icon">{{
+                    s1.avgPower >= s1Yesterday.avgPower ? "▲" : "▼"
+                  }}</span>
+                  <span class="trend-diff"
+                    >{{
+                      Math.abs(s1.avgPower - s1Yesterday.avgPower).toFixed(1)
+                    }}
+                    kW</span
+                  >
+                  <span class="trend-percent"
+                    >({{
+                      (
+                        (Math.abs(s1.avgPower - s1Yesterday.avgPower) /
+                          (s1Yesterday.avgPower || 1)) *
+                        100
+                      ).toFixed(1)
+                    }}%)</span
+                  >
+                </div>
               </div>
             </div>
 
             <!-- Shift 2 -->
-            <div class="shift-card-modern">
-              <div class="shift-card-header">
-                <div class="shift-number">2</div>
-                <div class="shift-info">
-                  <h3 class="shift-name">SHIFT 2</h3>
-                  <span class="shift-hours">14:31 - 22:00</span>
+            <div class="shift-card">
+              <div class="shift-header">
+                <div class="shift-badge">2</div>
+                <div class="shift-details">
+                  <h3>Afternoon Shift</h3>
+                  <span>14:31 - 22:00</span>
                 </div>
               </div>
 
-              <div class="shift-metrics">
-                <div class="shift-metric-item today">
-                  <span class="metric-period">Today</span>
-                  <div class="metric-value-row">
-                    <span class="metric-number">{{
-                      s2.avgPower.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">kW</span>
-                  </div>
-                  <div class="metric-value-row secondary">
-                    <span class="metric-number">{{
-                      s2.avgCurrent.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">A</span>
+              <div class="shift-body">
+                <div class="metric-group">
+                  <span class="metric-label">Today</span>
+                  <div class="metric-values">
+                    <span class="value-primary"
+                      >{{ s2.avgPower.toFixed(1) }} <small>kW</small></span
+                    >
+                    <span class="value-secondary"
+                      >{{ s2.avgCurrent.toFixed(1) }} A</span
+                    >
                   </div>
                 </div>
-                <div class="shift-metric-item yesterday">
-                  <span class="metric-period">Yesterday</span>
-                  <div class="metric-value-row">
-                    <span class="metric-number">{{
-                      s2Yesterday.avgPower.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">kW</span>
-                  </div>
-                  <div class="metric-value-row secondary">
-                    <span class="metric-number">{{
-                      s2Yesterday.avgCurrent.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">A</span>
+
+                <div class="metric-divider"></div>
+
+                <div class="metric-group">
+                  <span class="metric-label">Yesterday</span>
+                  <div class="metric-values">
+                    <span class="value-primary muted"
+                      >{{ s2Yesterday.avgPower.toFixed(1) }}
+                      <small>kW</small></span
+                    >
+                    <span class="value-secondary muted"
+                      >{{ s2Yesterday.avgCurrent.toFixed(1) }} A</span
+                    >
                   </div>
                 </div>
               </div>
 
-              <div
-                class="shift-trend"
-                :class="
-                  s2.avgPower >= s2Yesterday.avgPower
-                    ? 'trend-up'
-                    : 'trend-down'
-                "
-              >
-                <svg class="trend-icon" viewBox="0 0 24 24" fill="none">
-                  <path
-                    v-if="s2.avgPower >= s2Yesterday.avgPower"
-                    d="M7 17L12 12L17 7M17 7H13M17 7V11"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    v-else
-                    d="M7 7L12 12L17 17M17 17H13M17 17V13"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                <span class="trend-value"
-                  >{{
-                    Math.abs(s2.avgPower - s2Yesterday.avgPower).toFixed(1)
-                  }}
-                  kW</span
+              <div class="shift-footer">
+                <div
+                  class="trend-indicator"
+                  :class="s2.avgPower >= s2Yesterday.avgPower ? 'up' : 'down'"
                 >
-                <span class="trend-percentage"
-                  >({{
-                    (
-                      (Math.abs(s2.avgPower - s2Yesterday.avgPower) /
-                        (s2Yesterday.avgPower || 1)) *
-                      100
-                    ).toFixed(1)
-                  }}%)</span
-                >
+                  <span class="trend-icon">{{
+                    s2.avgPower >= s2Yesterday.avgPower ? "▲" : "▼"
+                  }}</span>
+                  <span class="trend-diff"
+                    >{{
+                      Math.abs(s2.avgPower - s2Yesterday.avgPower).toFixed(1)
+                    }}
+                    kW</span
+                  >
+                  <span class="trend-percent"
+                    >({{
+                      (
+                        (Math.abs(s2.avgPower - s2Yesterday.avgPower) /
+                          (s2Yesterday.avgPower || 1)) *
+                        100
+                      ).toFixed(1)
+                    }}%)</span
+                  >
+                </div>
               </div>
             </div>
 
             <!-- Shift 3 -->
-            <div class="shift-card-modern">
-              <div class="shift-card-header">
-                <div class="shift-number">3</div>
-                <div class="shift-info">
-                  <h3 class="shift-name">SHIFT 3</h3>
-                  <span class="shift-hours">22:01 - 07:00</span>
+            <div class="shift-card">
+              <div class="shift-header">
+                <div class="shift-badge">3</div>
+                <div class="shift-details">
+                  <h3>Night Shift</h3>
+                  <span>22:01 - 07:00</span>
                 </div>
               </div>
 
-              <div class="shift-metrics">
-                <div class="shift-metric-item today">
-                  <span class="metric-period">Today</span>
-                  <div class="metric-value-row">
-                    <span class="metric-number">{{
-                      s3.avgPower.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">kW</span>
-                  </div>
-                  <div class="metric-value-row secondary">
-                    <span class="metric-number">{{
-                      s3.avgCurrent.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">A</span>
+              <div class="shift-body">
+                <div class="metric-group">
+                  <span class="metric-label">Today</span>
+                  <div class="metric-values">
+                    <span class="value-primary"
+                      >{{ s3.avgPower.toFixed(1) }} <small>kW</small></span
+                    >
+                    <span class="value-secondary"
+                      >{{ s3.avgCurrent.toFixed(1) }} A</span
+                    >
                   </div>
                 </div>
-                <div class="shift-metric-item yesterday">
-                  <span class="metric-period">Yesterday</span>
-                  <div class="metric-value-row">
-                    <span class="metric-number">{{
-                      s3Yesterday.avgPower.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">kW</span>
-                  </div>
-                  <div class="metric-value-row secondary">
-                    <span class="metric-number">{{
-                      s3Yesterday.avgCurrent.toFixed(1)
-                    }}</span>
-                    <span class="metric-unit">A</span>
+
+                <div class="metric-divider"></div>
+
+                <div class="metric-group">
+                  <span class="metric-label">Yesterday</span>
+                  <div class="metric-values">
+                    <span class="value-primary muted"
+                      >{{ s3Yesterday.avgPower.toFixed(1) }}
+                      <small>kW</small></span
+                    >
+                    <span class="value-secondary muted"
+                      >{{ s3Yesterday.avgCurrent.toFixed(1) }} A</span
+                    >
                   </div>
                 </div>
               </div>
 
-              <div
-                class="shift-trend"
-                :class="
-                  s3.avgPower >= s3Yesterday.avgPower
-                    ? 'trend-up'
-                    : 'trend-down'
-                "
-              >
-                <svg class="trend-icon" viewBox="0 0 24 24" fill="none">
-                  <path
-                    v-if="s3.avgPower >= s3Yesterday.avgPower"
-                    d="M7 17L12 12L17 7M17 7H13M17 7V11"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    v-else
-                    d="M7 7L12 12L17 17M17 17H13M17 17V13"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                <span class="trend-value"
-                  >{{
-                    Math.abs(s3.avgPower - s3Yesterday.avgPower).toFixed(1)
-                  }}
-                  kW</span
+              <div class="shift-footer">
+                <div
+                  class="trend-indicator"
+                  :class="s3.avgPower >= s3Yesterday.avgPower ? 'up' : 'down'"
                 >
-                <span class="trend-percentage"
-                  >({{
-                    (
-                      (Math.abs(s3.avgPower - s3Yesterday.avgPower) /
-                        (s3Yesterday.avgPower || 1)) *
-                      100
-                    ).toFixed(1)
-                  }}%)</span
-                >
+                  <span class="trend-icon">{{
+                    s3.avgPower >= s3Yesterday.avgPower ? "▲" : "▼"
+                  }}</span>
+                  <span class="trend-diff"
+                    >{{
+                      Math.abs(s3.avgPower - s3Yesterday.avgPower).toFixed(1)
+                    }}
+                    kW</span
+                  >
+                  <span class="trend-percent"
+                    >({{
+                      (
+                        (Math.abs(s3.avgPower - s3Yesterday.avgPower) /
+                          (s3Yesterday.avgPower || 1)) *
+                        100
+                      ).toFixed(1)
+                    }}%)</span
+                  >
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         <!-- Real-Time Metrics Section -->
-        <div class="metrics-section">
+        <section class="dashboard-section">
           <div class="section-header">
-            <div class="section-icon">⚡</div>
-            <div>
-              <h2 class="section-title">Real-Time Metrics</h2>
-              <p class="section-subtitle">Live monitoring data</p>
+            <div class="section-title-wrapper">
+              <h2 class="section-title">Real-Time Monitoring</h2>
+              <p class="section-subtitle">Live electrical parameters</p>
             </div>
           </div>
 
@@ -418,733 +339,360 @@ const reactiveCalc = computed(() => {
               />
             </div>
           </div>
-
-          <!-- Frequency Display (Commented - not needed) -->
-          <!-- <div class="frequency-display">
-            <div class="frequency-card-simple">
-              <div class="frequency-icon">?</div>
-              <div class="frequency-info">
-                <span class="frequency-label">Frequency</span>
-                <span class="frequency-value"
-                  >{{ (freq ?? 0).toFixed(2) }} Hz</span
-                >
-              </div>
-            </div>
-          </div> -->
-        </div>
+        </section>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Modern Reset & Base */
 * {
   box-sizing: border-box;
 }
 
-/* Main Wrapper - Fullscreen */
 .lvmdp-wrapper {
   min-height: 100vh;
-  height: 100vh;
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  padding: 0;
-  width: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  background-color: #f1f5f9;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: #1e293b;
 }
 
 .lvmdp-container {
-  background: #f8fafc;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* Header Section */
+/* Header Styling */
 .header-section {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  padding: clamp(16px, 2vh, 24px) clamp(20px, 2.5vw, 40px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  box-sizing: border-box;
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  padding: 1.5rem 2rem;
+  color: white;
+  box-shadow: 0 4px 20px rgba(2, 132, 199, 0.15);
   flex-shrink: 0;
+  z-index: 10;
 }
 
 .header-content {
+  max-width: 1600px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: clamp(12px, 1.5vw, 24px);
+  gap: 1.25rem;
 }
 
 .icon-circle {
-  width: clamp(50px, 4vw, 70px);
-  height: clamp(50px, 4vw, 70px);
+  width: 3.5rem;
+  height: 3.5rem;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
+  backdrop-filter: blur(8px);
+  border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(24px, 2vw, 36px);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.icon-text {
+  font-size: 1.75rem;
 }
 
 .page-title {
-  font-size: clamp(1.5rem, 2.5vw, 2.5rem);
+  font-size: 1.75rem;
   font-weight: 800;
-  color: white;
   margin: 0;
-  letter-spacing: -0.5px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .page-subtitle {
-  font-size: clamp(0.875rem, 1.2vw, 1.125rem);
-  color: rgba(255, 255, 255, 0.9);
-  margin: 4px 0 0 0;
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  opacity: 0.9;
   font-weight: 500;
 }
 
 .header-actions {
   display: flex;
-  gap: 16px;
   align-items: center;
+  gap: 1.5rem;
 }
 
-/* Connection Indicator Light */
-.connection-indicator {
+.connection-status {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
 }
 
-.indicator-light {
-  width: 20px;
-  height: 20px;
+.status-dot {
+  width: 0.625rem;
+  height: 0.625rem;
   border-radius: 50%;
-  position: relative;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  background-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
 }
 
-.indicator-light.connected {
-  background: #10b981;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2),
-    0 0 20px rgba(16, 185, 129, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.3);
-  animation: pulse-green 2s ease-in-out infinite;
+.connection-status.connected .status-dot {
+  background-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+  animation: pulse 2s infinite;
 }
 
-.indicator-light.disconnected {
-  background: #ef4444;
-  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2), 0 0 20px rgba(239, 68, 68, 0.6),
-    inset 0 0 8px rgba(255, 255, 255, 0.3);
-  animation: pulse-red 2s ease-in-out infinite;
-}
-
-@keyframes pulse-green {
-  0%,
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
   100% {
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2),
-      0 0 20px rgba(16, 185, 129, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.1),
-      0 0 30px rgba(16, 185, 129, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
   }
 }
 
-@keyframes pulse-red {
-  0%,
-  100% {
-    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2),
-      0 0 20px rgba(239, 68, 68, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.1),
-      0 0 30px rgba(239, 68, 68, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.5);
-  }
-}
-
-/* Content Wrapper */
+/* Content Area */
 .content-wrapper {
-  padding: clamp(16px, 2vh, 28px) clamp(20px, 2.5vw, 40px);
-  width: 100%;
-  box-sizing: border-box;
   flex: 1;
   overflow-y: auto;
+  padding: 2rem;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-/* Performance Section */
-.performance-section {
-  margin-bottom: 3vh;
+.dashboard-section {
+  margin-bottom: 3rem;
 }
 
-/* Section Header */
 .section-header {
-  display: flex;
-  align-items: center;
-  gap: clamp(12px, 1.5vw, 20px);
-  margin-bottom: 2vh;
-}
-
-.section-icon {
-  font-size: clamp(1.25rem, 2vw, 2rem);
-  width: clamp(45px, 3.5vw, 55px);
-  height: clamp(45px, 3.5vw, 55px);
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+  margin-bottom: 1.5rem;
 }
 
 .section-title {
-  font-size: clamp(1.25rem, 2vw, 1.875rem);
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
   margin: 0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.02em;
 }
 
 .section-subtitle {
-  font-size: clamp(0.875rem, 1.1vw, 1rem);
   color: #64748b;
-  margin: 2px 0 0 0;
-  font-weight: 500;
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
 }
 
-/* Shift Grid */
+/* Shift Cards */
 .shift-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(16px, 2vw, 28px);
-  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
 }
 
-/* Modern Shift Card */
-.shift-card-modern {
+.shift-card {
   background: white;
-  border-radius: 20px;
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  padding: clamp(24px, 3vw, 36px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  gap: clamp(20px, 2.5vh, 28px);
-  position: relative;
-  overflow: hidden;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.shift-card-modern::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #0ea5e9, #0284c7);
+.shift-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08),
+    0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  border-color: #bae6fd;
 }
 
-.shift-card-modern:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 40px rgba(14, 165, 233, 0.25);
-  border-color: #0ea5e9;
-}
-
-.shift-card-header {
+.shift-header {
   display: flex;
   align-items: center;
-  gap: clamp(16px, 2vw, 24px);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.shift-number {
-  width: clamp(48px, 5vw, 64px);
-  height: clamp(48px, 5vw, 64px);
+.shift-badge {
+  width: 3rem;
+  height: 3rem;
   background: linear-gradient(135deg, #0ea5e9, #0284c7);
-  border-radius: 16px;
+  color: white;
+  border-radius: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-size: 1.5rem;
   font-weight: 800;
-  color: white;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-  flex-shrink: 0;
+  box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
 }
 
-.shift-info {
-  flex: 1;
-}
-
-.shift-name {
-  font-size: clamp(1.25rem, 1.8vw, 1.75rem);
+.shift-details h3 {
+  margin: 0;
+  font-size: 1.125rem;
   font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 4px 0;
-  letter-spacing: 0.3px;
+  color: #0f172a;
 }
 
-.shift-hours {
-  font-size: clamp(0.875rem, 1.1vw, 1rem);
+.shift-details span {
+  font-size: 0.875rem;
   color: #64748b;
-  font-weight: 600;
+  font-weight: 500;
 }
 
-.shift-metrics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(16px, 2vw, 24px);
-}
-
-.shift-metric-item {
-  background: #f8fafc;
-  border-radius: 12px;
-  padding: clamp(16px, 2vh, 20px);
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
-}
-
-.shift-metric-item.today {
-  border-color: #0ea5e9;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-}
-
-.shift-metric-item.yesterday {
-  border-color: #e2e8f0;
-}
-
-.metric-period {
-  font-size: clamp(0.75rem, 0.9vw, 0.875rem);
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  display: block;
-  margin-bottom: 12px;
-}
-
-.metric-value-row {
+.shift-body {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 8px;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.metric-value-row.secondary {
-  margin-bottom: 0;
+.metric-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.metric-number {
-  font-size: clamp(1.75rem, 2.5vw, 2.25rem);
-  font-weight: 800;
-  color: #1e293b;
-  line-height: 1;
-  letter-spacing: -0.5px;
-}
-
-.metric-value-row.secondary .metric-number {
-  font-size: clamp(1.125rem, 1.5vw, 1.375rem);
-  font-weight: 700;
-  color: #64748b;
-}
-
-.metric-unit {
-  font-size: clamp(0.875rem, 1.1vw, 1.125rem);
+.metric-label {
+  font-size: 0.875rem;
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.05em;
 }
 
-.metric-value-row.secondary .metric-unit {
-  font-size: clamp(0.75rem, 0.9vw, 0.875rem);
+.metric-values {
+  text-align: right;
 }
 
-.shift-trend {
+.value-primary {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.value-primary small {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.value-secondary {
+  display: block;
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.value-primary.muted,
+.value-secondary.muted {
+  opacity: 0.7;
+}
+
+.metric-divider {
+  height: 1px;
+  background-color: #f1f5f9;
+}
+
+.shift-footer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.trend-indicator {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: clamp(14px, 2vh, 18px) clamp(18px, 2.5vw, 24px);
-  border-radius: 14px;
-  font-weight: 700;
-  transition: all 0.3s ease;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background-color: #f8fafc;
 }
 
-.shift-trend.trend-up {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #15803d;
-  border: 2px solid #86efac;
+.trend-indicator.up {
+  background-color: #ecfdf5;
+  color: #059669;
 }
 
-.shift-trend.trend-down {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #b91c1c;
-  border: 2px solid #fca5a5;
+.trend-indicator.down {
+  background-color: #fef2f2;
+  color: #dc2626;
 }
 
 .trend-icon {
-  width: clamp(24px, 3vw, 32px);
-  height: clamp(24px, 3vw, 32px);
-  flex-shrink: 0;
+  font-size: 0.75rem;
 }
 
-.trend-value {
-  font-size: clamp(1rem, 1.3vw, 1.25rem);
-  font-weight: 800;
-}
-
-.trend-percentage {
-  font-size: clamp(0.875rem, 1.1vw, 1rem);
-  opacity: 0.8;
-}
-
-/* Metrics Section */
-.metrics-section {
-  margin-bottom: 3vh;
-}
-
-/* Gauges Grid - 5 gauges in a row */
+/* Gauges Grid */
 .gauges-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: clamp(16px, 2vw, 24px);
-  width: 100%;
-  margin-bottom: 2vh;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
 }
 
 .gauge-card {
   background: white;
-  border-radius: 20px;
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  min-height: clamp(280px, 35vh, 400px);
-  padding: clamp(20px, 2.5vw, 40px);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-sizing: border-box;
-  min-width: 0;
+  min-height: 280px;
+  transition: transform 0.2s;
 }
 
 .gauge-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 32px rgba(14, 165, 233, 0.2);
-  border-color: #0ea5e9;
-}
-
-/* Frequency Display - Compact */
-.frequency-display {
-  width: 100%;
-  margin-bottom: 3vh;
-}
-
-.frequency-card-simple {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  border-radius: 16px;
-  border: 2px solid #0284c7;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
-  padding: clamp(16px, 2vh, 24px) clamp(24px, 3vw, 48px);
-  display: flex;
-  align-items: center;
-  gap: clamp(16px, 2vw, 32px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.frequency-card-simple:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4);
-}
-
-.frequency-icon {
-  font-size: clamp(2rem, 3vw, 3rem);
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
-}
-
-.frequency-info {
-  display: flex;
-  align-items: baseline;
-  gap: clamp(12px, 1.5vw, 20px);
-}
-
-.frequency-label {
-  font-size: clamp(1rem, 1.2vw, 1.25rem);
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.frequency-value {
-  font-size: clamp(1.75rem, 2.5vw, 2.5rem);
-  font-weight: 800;
-  color: white;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  letter-spacing: -0.5px;
-}
-
-/* RST Section */
-.rst-section {
-  margin-bottom: 3vh;
-}
-
-.rst-row {
-  margin-bottom: 2.5vh;
-}
-
-.rst-row-title {
-  font-size: clamp(1.125rem, 1.5vw, 1.5rem);
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 1.5vh 0;
-  padding-left: 4px;
-}
-
-.rst-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(16px, 2vw, 28px);
-}
-
-.rst-card {
-  background: white;
-  border-radius: 16px;
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  padding: clamp(20px, 2.5vw, 32px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.rst-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  border-color: #bae6fd;
 }
 
-.rst-card.phase-r {
-  border-left: 4px solid #ef4444;
-}
-
-.rst-card.phase-r:hover {
-  border-color: #dc2626;
-  box-shadow: 0 12px 32px rgba(239, 68, 68, 0.2);
-}
-
-.rst-card.phase-s {
-  border-left: 4px solid #eab308;
-}
-
-.rst-card.phase-s:hover {
-  border-color: #ca8a04;
-  box-shadow: 0 12px 32px rgba(234, 179, 8, 0.2);
-}
-
-.rst-card.phase-t {
-  border-left: 4px solid #3b82f6;
-}
-
-.rst-card.phase-t:hover {
-  border-color: #2563eb;
-  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.2);
-}
-
-.rst-card.voltage-rs {
-  border-left: 4px solid #8b5cf6;
-}
-
-.rst-card.voltage-rs:hover {
-  border-color: #7c3aed;
-  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.2);
-}
-
-.rst-card.voltage-st {
-  border-left: 4px solid #ec4899;
-}
-
-.rst-card.voltage-st:hover {
-  border-color: #db2777;
-  box-shadow: 0 12px 32px rgba(236, 72, 153, 0.2);
-}
-
-.rst-card.voltage-tr {
-  border-left: 4px solid #14b8a6;
-}
-
-.rst-card.voltage-tr:hover {
-  border-color: #0d9488;
-  box-shadow: 0 12px 32px rgba(20, 184, 166, 0.2);
-}
-
-.rst-card-header {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #f1f5f9;
-}
-
-.rst-phase-label {
-  font-size: clamp(0.875rem, 1.1vw, 1.125rem);
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.rst-card-value {
-  font-size: clamp(2rem, 3vw, 3rem);
-  font-weight: 800;
-  color: #1e293b;
-  line-height: 1;
-}
-
-.rst-card-unit {
-  font-size: clamp(1rem, 1.3vw, 1.25rem);
-  font-weight: 600;
-  color: #64748b;
-}
-
-/* Large Desktop */
-@media (min-width: 1920px) {
-  .gauges-grid {
-    gap: 3vw;
-  }
-
-  .gauge-card {
-    min-height: 38vh;
-  }
-}
-
-/* Tablet */
-@media (max-width: 1280px) {
-  .shift-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .gauges-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .rst-cards {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* Tablet Portrait */
-@media (max-width: 1024px) {
-  .shift-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .gauges-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .gauge-card {
-    min-height: clamp(260px, 32vh, 350px);
-  }
-
-  .rst-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Mobile Landscape */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
+  .header-section {
+    padding: 1rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .content-wrapper {
+    padding: 1rem;
+  }
+
   .shift-grid {
     grid-template-columns: 1fr;
-    gap: 2vh;
   }
 
   .gauges-grid {
-    grid-template-columns: 1fr;
-    gap: 2vh;
-  }
-
-  .gauge-card {
-    min-height: clamp(240px, 30vh, 300px);
-  }
-
-  .rst-cards {
-    grid-template-columns: 1fr;
-    gap: 2vh;
-  }
-
-  .header-content {
-    gap: 12px;
-  }
-
-  .comparison-row {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .vs-divider {
-    width: 100%;
-    text-align: center;
-  }
-}
-
-/* Mobile Portrait */
-@media (max-width: 480px) {
-  .lvmdp-wrapper {
-    height: auto;
-    min-height: 100vh;
-  }
-
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .gauge-card {
-    min-height: clamp(220px, 28vh, 280px);
-  }
-
-  .shift-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .frequency-info {
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-}
-
-/* Landscape orientation optimization */
-@media (max-height: 600px) and (orientation: landscape) {
-  .content-wrapper {
-    padding: 1vh 3vw;
-  }
-
-  .performance-section,
-  .metrics-section {
-    margin-bottom: 1.5vh;
-  }
-
-  .gauge-card {
-    min-height: 40vh;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 }
 </style>

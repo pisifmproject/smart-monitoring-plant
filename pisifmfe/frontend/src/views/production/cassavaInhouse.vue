@@ -16,6 +16,8 @@ const productionData = ref({
   performance: 94,
   quality: 98,
 });
+
+const status = "running";
 </script>
 
 <template>
@@ -25,122 +27,185 @@ const productionData = ref({
       <div class="header-section">
         <div class="header-content">
           <div class="header-left">
-            <div class="icon-circle">🏭</div>
-            <div>
+            <div class="icon-circle">
+              <span class="icon-text">🏭</span>
+            </div>
+            <div class="header-text">
               <h1 class="page-title">{{ machineName }}</h1>
               <p class="page-subtitle">Production Dashboard</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <div class="status-badge" :class="status">
+              <span class="status-dot"></span>
+              {{ status.toUpperCase() }}
+            </div>
+            <div v-if="canAccessDailyReport()" class="report-btn-wrapper">
+              <ReportButton
+                routeName="dailyReportCassavaInhouse"
+                :label="`Daily Report`"
+              />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Daily Report Button (User only) -->
-      <div v-if="canAccessDailyReport()" class="report-button-container">
-        <ReportButton
-          routeName="dailyReportCassavaInhouse"
-          :label="`Daily Report - ${machineName}`"
-        />
-      </div>
+      <!-- Dashboard Content -->
+      <div class="content-wrapper">
+        <!-- Main Metrics -->
+        <section class="dashboard-section">
+          <div class="metrics-grid">
+            <div class="metric-card primary">
+              <div class="metric-icon">🎯</div>
+              <div class="metric-content">
+                <span class="metric-label">Target Production</span>
+                <span class="metric-value">{{
+                  productionData.targetProduction.toLocaleString()
+                }}</span>
+                <span class="metric-unit">units</span>
+              </div>
+            </div>
+            <div class="metric-card success">
+              <div class="metric-icon">📦</div>
+              <div class="metric-content">
+                <span class="metric-label">Actual Production</span>
+                <span class="metric-value">{{
+                  productionData.actualProduction.toLocaleString()
+                }}</span>
+                <span class="metric-unit">units</span>
+              </div>
+            </div>
+            <div class="metric-card danger">
+              <div class="metric-icon">⚠️</div>
+              <div class="metric-content">
+                <span class="metric-label">Defect Count</span>
+                <span class="metric-value">{{
+                  productionData.defectCount.toLocaleString()
+                }}</span>
+                <span class="metric-unit">units</span>
+              </div>
+            </div>
+            <div class="metric-card info">
+              <div class="metric-icon">📊</div>
+              <div class="metric-content">
+                <span class="metric-label">OEE</span>
+                <span class="metric-value"
+                  >{{ productionData.oeePercentage }}%</span
+                >
+                <span class="metric-unit">Efficiency</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <!-- Main Metrics -->
-      <div class="metrics-section">
-        <div class="metric-card">
-          <div class="metric-label">Target Production</div>
-          <div class="metric-value">
-            {{ productionData.targetProduction.toLocaleString() }}
+        <!-- OEE Breakdown -->
+        <section class="dashboard-section">
+          <h2 class="section-title">OEE Breakdown</h2>
+          <div class="oee-grid">
+            <div class="oee-card">
+              <div
+                class="oee-ring"
+                :style="{ '--progress': productionData.availability + '%' }"
+              >
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path
+                    class="circle-bg"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    class="circle"
+                    :stroke-dasharray="`${productionData.availability}, 100`"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div class="oee-percentage">
+                  {{ productionData.availability }}%
+                </div>
+              </div>
+              <span class="oee-label">Availability</span>
+            </div>
+            <div class="oee-card">
+              <div
+                class="oee-ring"
+                :style="{ '--progress': productionData.performance + '%' }"
+              >
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path
+                    class="circle-bg"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    class="circle"
+                    :stroke-dasharray="`${productionData.performance}, 100`"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div class="oee-percentage">
+                  {{ productionData.performance }}%
+                </div>
+              </div>
+              <span class="oee-label">Performance</span>
+            </div>
+            <div class="oee-card">
+              <div
+                class="oee-ring"
+                :style="{ '--progress': productionData.quality + '%' }"
+              >
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path
+                    class="circle-bg"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    class="circle"
+                    :stroke-dasharray="`${productionData.quality}, 100`"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div class="oee-percentage">{{ productionData.quality }}%</div>
+              </div>
+              <span class="oee-label">Quality</span>
+            </div>
           </div>
-          <div class="metric-unit">units</div>
-        </div>
-
-        <div class="metric-card highlight">
-          <div class="metric-label">Actual Production</div>
-          <div class="metric-value">
-            {{ productionData.actualProduction.toLocaleString() }}
-          </div>
-          <div class="metric-unit">units</div>
-        </div>
-
-        <div class="metric-card">
-          <div class="metric-label">Defect Count</div>
-          <div class="metric-value">
-            {{ productionData.defectCount.toLocaleString() }}
-          </div>
-          <div class="metric-unit">units</div>
-        </div>
-
-        <div class="metric-card oee">
-          <div class="metric-label">OEE</div>
-          <div class="metric-value">{{ productionData.oeePercentage }}%</div>
-          <div class="metric-unit">overall</div>
-        </div>
-      </div>
-
-      <!-- OEE Components -->
-      <div class="oee-section">
-        <div class="oee-card">
-          <div class="oee-header">
-            <span class="oee-label">Availability</span>
-            <span class="oee-value">{{ productionData.availability }}%</span>
-          </div>
-          <div class="oee-bar">
-            <div
-              class="oee-fill availability"
-              :style="{ width: productionData.availability + '%' }"
-            ></div>
-          </div>
-        </div>
-
-        <div class="oee-card">
-          <div class="oee-header">
-            <span class="oee-label">Performance</span>
-            <span class="oee-value">{{ productionData.performance }}%</span>
-          </div>
-          <div class="oee-bar">
-            <div
-              class="oee-fill performance"
-              :style="{ width: productionData.performance + '%' }"
-            ></div>
-          </div>
-        </div>
-
-        <div class="oee-card">
-          <div class="oee-header">
-            <span class="oee-label">Quality</span>
-            <span class="oee-value">{{ productionData.quality }}%</span>
-          </div>
-          <div class="oee-bar">
-            <div
-              class="oee-fill quality"
-              :style="{ width: productionData.quality + '%' }"
-            ></div>
-          </div>
-        </div>
+        </section>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Modern Reset & Base */
+* {
+  box-sizing: border-box;
+}
+
 .production-wrapper {
-  width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 0;
+  background-color: #f8fafc;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: #1e293b;
 }
 
 .production-container {
-  width: 100%;
-  background: #f8fafc;
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
+/* Header */
 .header-section {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  padding: 32px 48px;
-  border-bottom: 3px solid #0ea5e9;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  padding: 1.5rem 2rem;
+  color: white;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .header-content {
+  max-width: 1600px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -149,161 +214,239 @@ const productionData = ref({
 .header-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 1.25rem;
 }
 
 .icon-circle {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  width: 3.5rem;
+  height: 3.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
-  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.3);
+  font-size: 1.75rem;
 }
 
 .page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #f1f5f9;
+  font-size: 1.75rem;
+  font-weight: 800;
   margin: 0;
+  line-height: 1.2;
 }
 
 .page-subtitle {
-  font-size: 1.1rem;
-  color: #94a3b8;
-  margin: 4px 0 0 0;
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  font-weight: 500;
 }
 
-.report-button-container {
-  padding: 24px 48px;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-.metrics-section {
-  padding: 48px;
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  backdrop-filter: blur(4px);
+}
+
+.status-badge.running .status-dot {
+  background-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+.status-badge.offline .status-dot {
+  background-color: #94a3b8;
+}
+
+.status-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+}
+
+/* Content */
+.content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.dashboard-section {
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
+}
+
+/* Metrics Grid */
+.metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
 }
 
 .metric-card {
   background: white;
-  padding: 28px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  transition: transform 0.3s ease;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: transform 0.2s;
 }
 
 .metric-card:hover {
   transform: translateY(-4px);
 }
 
-.metric-card.highlight {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  color: white;
+.metric-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  background: #f1f5f9;
 }
 
-.metric-card.oee {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
+.metric-card.primary .metric-icon {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+.metric-card.success .metric-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.metric-card.danger .metric-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.metric-card.info .metric-icon {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.metric-content {
+  display: flex;
+  flex-direction: column;
 }
 
 .metric-label {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #64748b;
-  margin-bottom: 12px;
-}
-
-.metric-card.highlight .metric-label,
-.metric-card.oee .metric-label {
-  color: rgba(255, 255, 255, 0.9);
 }
 
 .metric-value {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #0f172a;
-  line-height: 1;
-  margin-bottom: 8px;
-}
-
-.metric-card.highlight .metric-value,
-.metric-card.oee .metric-value {
-  color: white;
+  line-height: 1.2;
 }
 
 .metric-unit {
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   color: #94a3b8;
   font-weight: 500;
 }
 
-.metric-card.highlight .metric-unit,
-.metric-card.oee .metric-unit {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.oee-section {
-  padding: 0 48px 48px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+/* OEE Grid */
+.oee-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
 }
 
 .oee-card {
   background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
-.oee-header {
+.oee-ring {
+  width: 120px;
+  height: 120px;
+  position: relative;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  justify-content: center;
+}
+
+.circular-chart {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.circle-bg {
+  fill: none;
+  stroke: #f1f5f9;
+  stroke-width: 2.5;
+}
+
+.circle {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke: #4f46e5;
+  animation: progress 1s ease-out forwards;
+}
+
+.oee-percentage {
+  position: absolute;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .oee-label {
-  font-size: 1.1rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #64748b;
 }
 
-.oee-value {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #0ea5e9;
-}
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 
-.oee-bar {
-  height: 12px;
-  background: #e2e8f0;
-  border-radius: 20px;
-  overflow: hidden;
-}
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
 
-.oee-fill {
-  height: 100%;
-  border-radius: 20px;
-  transition: width 0.5s ease;
-}
-
-.oee-fill.availability {
-  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
-}
-
-.oee-fill.performance {
-  background: linear-gradient(90deg, #0ea5e9 0%, #0284c7 100%);
-}
-
-.oee-fill.quality {
-  background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+  .content-wrapper {
+    padding: 1rem;
+  }
 }
 </style>

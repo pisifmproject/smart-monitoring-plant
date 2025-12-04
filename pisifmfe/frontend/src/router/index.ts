@@ -17,8 +17,6 @@ const ProductionPC39DailyReport = () =>
   import("../views/dailyReport/production/productionPC39DailyReport.vue");
 const ProductionPC14DailyReport = () =>
   import("../views/dailyReport/production/productionPC14DailyReport.vue");
-const ProductionTS1000DailyReport = () =>
-  import("../views/dailyReport/production/productionTS1000DailyReport.vue");
 const ProductionFCPDailyReport = () =>
   import("../views/dailyReport/production/productionFCPDailyReport.vue");
 const ProductionTWS56DailyReport = () =>
@@ -27,8 +25,20 @@ const ProductionTWS72DailyReport = () =>
   import("../views/dailyReport/production/productionTWS72DailyReport.vue");
 const ProductionCOPACKDailyReport = () =>
   import("../views/dailyReport/production/productionCOPACKDailyReport.vue");
-const ProductionIHPDailyReport = () =>
-  import("../views/dailyReport/production/productionIHPDailyReport.vue");
+const ProductionCassavaInhouseDailyReport = () =>
+  import(
+    "../views/dailyReport/production/productionCassavaInhouseDailyReport.vue"
+  );
+const ProductionTortilaDailyReport = () =>
+  import("../views/dailyReport/production/productionTortilaDailyReport.vue");
+const ProductionPackingPouchDailyReport = () =>
+  import(
+    "../views/dailyReport/production/productionPackingPouchDailyReport.vue"
+  );
+const ProductionVacuumFryerDailyReport = () =>
+  import(
+    "../views/dailyReport/production/productionVacuumFryerDailyReport.vue"
+  );
 const WeigherPC14DailyReport = () =>
   import("../views/dailyReport/weigher/weigherPC14DailyReport.vue");
 const WeigherPC39DailyReport = () =>
@@ -356,12 +366,6 @@ const router = createRouter({
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/production/ts1000",
-          name: "dailyReportTS1000",
-          component: ProductionTS1000DailyReport,
-          meta: { requiresUser: true },
-        },
-        {
           path: "daily-report/production/fcp",
           name: "dailyReportFCP",
           component: ProductionFCPDailyReport,
@@ -386,9 +390,27 @@ const router = createRouter({
           meta: { requiresUser: true },
         },
         {
-          path: "daily-report/production/ihp",
-          name: "dailyReportIHP",
-          component: ProductionIHPDailyReport,
+          path: "daily-report/production/cassava-inhouse",
+          name: "dailyReportCassavaInhouse",
+          component: ProductionCassavaInhouseDailyReport,
+          meta: { requiresUser: true },
+        },
+        {
+          path: "daily-report/production/tortila",
+          name: "dailyReportTortila",
+          component: ProductionTortilaDailyReport,
+          meta: { requiresUser: true },
+        },
+        {
+          path: "daily-report/production/packing-pouch",
+          name: "dailyReportPackingPouch",
+          component: ProductionPackingPouchDailyReport,
+          meta: { requiresUser: true },
+        },
+        {
+          path: "daily-report/production/vacuum-fryer",
+          name: "dailyReportVacuumFryer",
+          component: ProductionVacuumFryerDailyReport,
           meta: { requiresUser: true },
         },
 

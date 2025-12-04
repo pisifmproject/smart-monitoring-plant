@@ -375,18 +375,25 @@ function isItemActive(routeName: string): boolean {
     currentRoutePath.includes("daily-report/production") &&
     (routeName === "pc39" ||
       routeName === "pc14" ||
-      routeName === "ts1000" ||
       routeName === "fcp" ||
       routeName === "tws56" ||
       routeName === "tws72" ||
       routeName === "copack" ||
-      routeName === "ihp")
+      routeName === "cassavaInhouse" ||
+      routeName === "tortila" ||
+      routeName === "packingPouch" ||
+      routeName === "vacuumFryer")
   ) {
     // Extract production type from path
     const pathMatch = currentRoutePath.match(/production\/([^/?]+)/);
     if (pathMatch) {
       const prodType = pathMatch[1];
-      return routeName === prodType;
+      // Convert kebab-case to camelCase for comparison
+      const routeNameKebab = routeName
+        .replace(/([A-Z])/g, "-$1")
+        .toLowerCase()
+        .replace(/^-/, "");
+      return routeNameKebab === prodType;
     }
   }
 

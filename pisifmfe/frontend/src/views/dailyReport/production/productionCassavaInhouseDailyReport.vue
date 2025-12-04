@@ -8,8 +8,8 @@ import {
   FileChartColumn,
 } from "lucide-vue-next";
 
-const lineId = "LINE_A_TS1000";
-const machineName = "TS1000";
+const lineId = "LINE_A_CASSAVAINHOUSE";
+const machineName = "Cassava Inhouse";
 
 // Date picker
 const selectedDate = ref<string>(new Date().toISOString().split("T")[0]);
