@@ -1,0 +1,5 @@
+{
+  "name": "Smart Monitoring Multi-Plant",
+  "description": "Comprehensive Industrial IoT Dashboard for monitoring multi-plant operations, including machine status, OEE, and LVMDP power monitoring.",
+  "requestFramePermissions": []
+}
