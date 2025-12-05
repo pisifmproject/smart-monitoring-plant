@@ -6,17 +6,28 @@
     <title>Smart Monitoring Multi-Plant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      :root {
+        font-size: 15px; /* Base size adjusted for balanced readability */
+      }
+      
+      /* Large Monitor Scaling */
+      @media (min-width: 1440px) {
+        :root {
+          font-size: 16px; /* Scales slightly up for large screens, but not too large */
+        }
+      }
+
       /* Custom scrollbar for industrial feel */
       ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 10px;
+        height: 10px;
       }
       ::-webkit-scrollbar-track {
         background: #0f172a; 
       }
       ::-webkit-scrollbar-thumb {
         background: #334155; 
-        border-radius: 4px;
+        border-radius: 5px;
       }
       ::-webkit-scrollbar-thumb:hover {
         background: #475569; 
@@ -35,7 +46,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-950 text-slate-100 antialiased overflow-hidden">
+  <body class="bg-slate-950 text-slate-100 antialiased overflow-hidden selection:bg-blue-500/30">
     <div id="root"></div>
   </body>
 </html>

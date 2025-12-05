@@ -3,10 +3,10 @@ import { LucideIcon } from 'lucide-react';
 import { MachineStatus } from '../types';
 
 export const Card: React.FC<{ children: React.ReactNode; className?: string; title?: string; action?: React.ReactNode }> = ({ children, className = "", title, action }) => (
-    <div className={`bg-slate-800 border border-slate-700 rounded-lg p-4 shadow-sm ${className}`}>
+    <div className={`bg-slate-800 border border-slate-700 rounded-xl p-4 md:p-5 shadow-sm ${className}`}>
         {(title || action) && (
             <div className="flex justify-between items-center mb-4">
-                {title && <h3 className="text-slate-300 font-semibold text-sm uppercase tracking-wider">{title}</h3>}
+                {title && <h3 className="text-slate-200 font-semibold text-lg tracking-normal">{title}</h3>}
                 {action && <div>{action}</div>}
             </div>
         )}
@@ -17,23 +17,23 @@ export const Card: React.FC<{ children: React.ReactNode; className?: string; tit
 export const MetricCard: React.FC<{ title: string; value: string | number; unit?: string; icon: LucideIcon; trend?: string; trendUp?: boolean; color?: string }> = ({ 
     title, value, unit, icon: Icon, trend, trendUp, color = "text-blue-400" 
 }) => (
-    <Card className="hover:border-slate-600 transition-colors">
+    <Card className="hover:border-slate-500 transition-colors duration-200">
         <div className="flex items-start justify-between">
             <div>
-                <p className="text-slate-400 text-xs font-medium uppercase">{title}</p>
+                <p className="text-slate-400 text-sm font-medium uppercase tracking-wide">{title}</p>
                 <div className="mt-2 flex items-baseline">
-                    <span className="text-2xl font-bold text-white">{value}</span>
-                    {unit && <span className="ml-1 text-sm text-slate-400">{unit}</span>}
+                    <span className="text-2xl lg:text-[1.6rem] font-bold text-white tracking-tight leading-none">{value}</span>
+                    {unit && <span className="ml-1.5 text-sm font-medium text-slate-400">{unit}</span>}
                 </div>
             </div>
-            <div className={`p-2 rounded-md bg-slate-700/50 ${color}`}>
-                <Icon size={20} />
+            <div className={`p-2.5 rounded-lg bg-slate-700/50 ${color}`}>
+                <Icon size={24} strokeWidth={2} />
             </div>
         </div>
         {trend && (
-            <div className={`mt-2 text-xs flex items-center ${trendUp ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <div className={`mt-3 text-sm font-medium flex items-center ${trendUp ? 'text-emerald-400' : 'text-rose-400'}`}>
                 <span>{trendUp ? '↑' : '↓'} {trend}</span>
-                <span className="text-slate-500 ml-1">vs yesterday</span>
+                <span className="text-slate-500 ml-1.5 font-normal">vs yesterday</span>
             </div>
         )}
     </Card>
@@ -61,7 +61,7 @@ export const StatusBadge: React.FC<{ status: MachineStatus | string }> = ({ stat
     }
 
     return (
-        <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${colorClass}`}>
+        <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wide ${colorClass}`}>
             {status}
         </span>
     );

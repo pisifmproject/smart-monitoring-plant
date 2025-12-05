@@ -119,10 +119,26 @@ export interface Plant {
 
 export interface Alarm {
     id: string;
+    machineId?: string; // Optional, to link to specific machine
     timestamp: string;
     source: string;
     message: string;
     severity: AlarmSeverity;
+    code: string;
+    isActive: boolean;
+    handledByMaintenance: boolean;
+    inProgressBy?: string; // Name of technician working on it
+}
+
+export interface MaintenanceRecord {
+    id: string;
+    alarmId: string;
+    machineId: string;
+    timestamp: string;
+    checkedBy: string; // User name
+    solved: boolean;
+    note: string;
+    photoUrl?: string;
 }
 
 // --- VISIBILITY SETTINGS TYPES ---

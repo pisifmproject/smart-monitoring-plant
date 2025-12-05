@@ -9,12 +9,12 @@ interface UserCredentials {
 
 const MOCK_USERS: Record<string, UserCredentials> = {
     'admin': { pass: 'admifm', role: UserRole.ADMINISTRATOR, name: 'System Administrator' },
-    'supervisor': { pass: 'spvifm', role: UserRole.SUPERVISOR, name: 'Production Supervisor' },
-    'operator': { pass: 'oprifm', role: UserRole.OPERATOR, name: 'Line Operator' },
-    'maintenance': { pass: 'mtcifm', role: UserRole.MAINTENANCE, name: 'Maintenance Engineer' },
-    'qc': { pass: 'qcifm', role: UserRole.QC, name: 'QC Inspector' },
-    'management': { pass: 'mngifm', role: UserRole.MANAGEMENT, name: 'Plant Manager' },
-    'guest': { pass: 'gsifm', role: UserRole.VIEWER, name: 'Guest Viewer' }
+    'supervisor': { pass: 'spvifm', role: UserRole.SUPERVISOR, name: 'Eko Supervisor' },
+    'operator': { pass: 'oprifm', role: UserRole.OPERATOR, name: 'Siti Operator' },
+    'maintenance': { pass: 'mtcifm', role: UserRole.MAINTENANCE, name: 'Budi Saputra' },
+    'qc': { pass: 'qcifm', role: UserRole.QC, name: 'Dewi QC' },
+    'management': { pass: 'mngifm', role: UserRole.MANAGEMENT, name: 'Pak Bos' },
+    'guest': { pass: 'gsifm', role: UserRole.VIEWER, name: 'Tamu' }
 };
 
 export const login = (username: string, pass: string): User | null => {

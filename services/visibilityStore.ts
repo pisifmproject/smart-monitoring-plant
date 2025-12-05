@@ -91,14 +91,24 @@ export const DATA_ITEM_REGISTRY: DataItem[] = [
     { id: 'mutil7', key: 'MACHINE_CHART_UTILITY_STEAM', label: 'Chart: Steam Trend', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.CHART, location: 'Machine Detail / Utility', defaultVisible: true },
 
     // Machine Alarms & Downtime
-    { id: 'malm1', key: 'MACHINE_ALARM_TABLE', label: 'Table: Alarms', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TABLE, location: 'Machine Detail / Alarms', defaultVisible: true },
+    { id: 'malm1', key: 'MACHINE_ALARM_LIST', label: 'List: Active Alarms', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.LIST, location: 'Machine Detail / Alarms', defaultVisible: true },
     { id: 'mdt1', key: 'MACHINE_DOWNTIME_TABLE', label: 'Table: Downtime Logs', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TABLE, location: 'Machine Detail / Downtime', defaultVisible: true },
     { id: 'mdt2', key: 'MACHINE_DOWNTIME_FORM', label: 'Form: Add Downtime', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.FORM, location: 'Machine Detail / Downtime', defaultVisible: true },
     { id: 'mdt3', key: 'MACHINE_KPI_DOWNTIME_SUMMARY', label: 'Downtime Summary Stats', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Downtime', defaultVisible: true },
 
+    // Machine Maintenance
+    { id: 'mm1', key: 'MAINTENANCE_FORM', label: 'Form: Maintenance Action', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.FORM, location: 'Machine Detail / Maintenance', defaultVisible: true },
+    { id: 'mm2', key: 'MAINTENANCE_HISTORY', label: 'Table: Maintenance History', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TABLE, location: 'Machine Detail / Maintenance', defaultVisible: true },
+
     // --- LV DETAIL ---
-    { id: 'lv1', key: 'LV_DETAIL_ENERGY_TREND', label: 'Chart: Energy Trend', category: VisibilityCategory.LV_SUMMARY, group: VisibilityGroup.CHART, location: 'LV Detail', defaultVisible: true },
-    { id: 'lv2', key: 'LV_DETAIL_LOAD_TREND', label: 'Chart: Load % Trend', category: VisibilityCategory.LV_SUMMARY, group: VisibilityGroup.CHART, location: 'LV Detail', defaultVisible: true },
+    { id: 'lv1', key: 'LV_KW', label: 'Active Power (kW)', category: VisibilityCategory.LV_SUMMARY, group: VisibilityGroup.KPI, location: 'LV Detail', defaultVisible: true },
+    { id: 'lv2', key: 'LV_KVA', label: 'Apparent Power (kVA)', category: VisibilityCategory.LV_SUMMARY, group: VisibilityGroup.KPI, location: 'LV Detail', defaultVisible: true },
+    { id: 'lv3', key: 'LV_KVAR', label: 'Reactive Power (kVAR)', category: VisibilityCategory.LV_SUMMARY, group: VisibilityGroup.KPI, location: 'LV Detail', defaultVisible: true },
+    { id: 'lv4', key: 'LV_PF', label: 'Power Factor', category: VisibilityCategory.LV_SUMMARY, group: VisibilityGroup.KPI, location: 'LV Detail', defaultVisible: true },
+    { id: 'lv5', key: 'LV_VOLT_GROUP', label: 'Voltage Metrics Group', category: VisibilityCategory.LV_SUMMARY, group: VisibilityGroup.STATUS, location: 'LV Detail', defaultVisible: true },
+    { id: 'lv6', key: 'LV_CURRENT_LOAD_SECTION', label: 'Current Load Bar', category: VisibilityCategory.LV_SUMMARY, group: VisibilityGroup.STATUS, location: 'LV Detail', defaultVisible: true },
+    { id: 'lv7', key: 'LV_POWER_METRICS_LIST', label: 'Power Metrics List', category: VisibilityCategory.LV_SUMMARY, group: VisibilityGroup.LIST, location: 'LV Detail', defaultVisible: true },
+    { id: 'lv8', key: 'LV_ENERGY_TREND', label: 'Chart: Energy Usage', category: VisibilityCategory.LV_SUMMARY, group: VisibilityGroup.CHART, location: 'LV Detail', defaultVisible: true },
 ];
 
 // Type for the visibility store state: { [Role]: { [DataItemKey]: boolean } }

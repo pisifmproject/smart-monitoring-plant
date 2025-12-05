@@ -158,14 +158,14 @@ export const PLANTS: Record<PlantCode, Plant> = {
 };
 
 export const MOCK_ALARMS: Alarm[] = [
-    { id: '1', timestamp: '10:15:00', source: 'PC14_SM', message: 'Oil Temp High', severity: AlarmSeverity.WARNING },
-    { id: '2', timestamp: '10:10:00', source: 'LVMDP-2 Cikokol', message: 'THD-V Warning', severity: AlarmSeverity.WARNING },
-    { id: '3', timestamp: '09:45:00', source: 'Extruder Semarang', message: 'Motor Trip', severity: AlarmSeverity.CRITICAL },
-    { id: '4', timestamp: '08:30:00', source: 'Boiler 1 Cikokol', message: 'Low Pressure', severity: AlarmSeverity.INFO },
-    { id: '5', timestamp: '11:20:00', source: 'PC32_SEMARANG', message: 'Conveyor Jam', severity: AlarmSeverity.CRITICAL },
-    { id: '6', timestamp: '11:15:00', source: 'LVMDP-1 Cikupa', message: 'Overcurrent Phase R', severity: AlarmSeverity.WARNING },
-    { id: '7', timestamp: '11:00:00', source: 'Packing Pouch Cikupa', message: 'Sealer Temp Low', severity: AlarmSeverity.WARNING },
-    { id: '8', timestamp: '10:55:00', source: 'Batch Fryer Cikokol', message: 'Oil Level Low', severity: AlarmSeverity.WARNING },
+    { id: '1', timestamp: '10:15:00', source: 'PC14_SM', message: 'Oil Temp High', severity: AlarmSeverity.WARNING, code: 'W-001', isActive: true, handledByMaintenance: false },
+    { id: '2', timestamp: '10:10:00', source: 'LVMDP-2 Cikokol', message: 'THD-V Warning', severity: AlarmSeverity.WARNING, code: 'W-002', isActive: true, handledByMaintenance: false },
+    { id: '3', timestamp: '09:45:00', source: 'Extruder Semarang', message: 'Motor Trip', severity: AlarmSeverity.CRITICAL, code: 'C-001', isActive: true, handledByMaintenance: false },
+    { id: '4', timestamp: '08:30:00', source: 'Boiler 1 Cikokol', message: 'Low Pressure', severity: AlarmSeverity.INFO, code: 'I-001', isActive: true, handledByMaintenance: false },
+    { id: '5', timestamp: '11:20:00', source: 'PC32_SEMARANG', message: 'Conveyor Jam', severity: AlarmSeverity.CRITICAL, code: 'C-002', isActive: true, handledByMaintenance: false },
+    { id: '6', timestamp: '11:15:00', source: 'LVMDP-1 Cikupa', message: 'Overcurrent Phase R', severity: AlarmSeverity.WARNING, code: 'W-003', isActive: true, handledByMaintenance: false },
+    { id: '7', timestamp: '11:00:00', source: 'Packing Pouch Cikupa', message: 'Sealer Temp Low', severity: AlarmSeverity.WARNING, code: 'W-004', isActive: true, handledByMaintenance: false },
+    { id: '8', timestamp: '10:55:00', source: 'Batch Fryer Cikokol', message: 'Oil Level Low', severity: AlarmSeverity.WARNING, code: 'W-005', isActive: true, handledByMaintenance: false },
 ];
 
 // Helper functions for Routing
