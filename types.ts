@@ -127,29 +127,38 @@ export interface Alarm {
 
 // --- VISIBILITY SETTINGS TYPES ---
 
-export enum WidgetCategory {
-    GLOBAL = 'GLOBAL',
-    PLANT = 'PLANT',
-    MACHINE = 'MACHINE',
-    LVMDP = 'LVMDP',
+export enum VisibilityCategory {
+    GLOBAL_DASHBOARD = 'GLOBAL_DASHBOARD',
+    PLANT_DASHBOARD = 'PLANT_DASHBOARD',
+    MACHINE_DETAIL = 'MACHINE_DETAIL',
     UTILITY = 'UTILITY',
+    LV_SUMMARY = 'LV_SUMMARY',
     OTHER = 'OTHER'
 }
 
-export enum WidgetType {
-    CARD = 'CARD',
+export enum VisibilityGroup {
+    KPI = 'KPI',
     CHART = 'CHART',
     TABLE = 'TABLE',
-    KPI = 'KPI',
+    LIST = 'LIST',
+    STATUS = 'STATUS',
+    OUTPUT = 'OUTPUT',
+    OEE = 'OEE',
+    ENERGY = 'ENERGY',
+    UTILITY_CONSUMPTION = 'UTILITY_CONSUMPTION',
+    ALARM_DATA = 'ALARM_DATA',
+    PROCESS_PARAM = 'PROCESS_PARAM',
+    MACHINE_HEALTH = 'MACHINE_HEALTH',
+    FORM = 'FORM',
     TAB = 'TAB'
 }
 
-export interface VisibilityItem {
+export interface DataItem {
     id: string;
     key: string;
     label: string;
-    category: WidgetCategory;
-    location: string; // e.g., 'Global Dashboard', 'Machine Detail'
-    type: WidgetType;
+    category: VisibilityCategory;
+    group: VisibilityGroup;
+    location: string; // e.g., 'Global Dashboard', 'Machine Detail / Performance Tab'
     defaultVisible: boolean;
 }

@@ -8,13 +8,13 @@ interface UserCredentials {
 }
 
 const MOCK_USERS: Record<string, UserCredentials> = {
-    'admin1': { pass: 'admifm', role: UserRole.ADMINISTRATOR, name: 'System Administrator' },
-    'spv2': { pass: 'spvifm', role: UserRole.SUPERVISOR, name: 'Production Supervisor' },
-    'operator3': { pass: 'oprifm', role: UserRole.OPERATOR, name: 'Line Operator' },
-    'maintenance4': { pass: 'mtcifm', role: UserRole.MAINTENANCE, name: 'Maintenance Engineer' },
-    'qc5': { pass: 'qcifm', role: UserRole.QC, name: 'QC Inspector' },
-    'management6': { pass: 'mngifm', role: UserRole.MANAGEMENT, name: 'Plant Manager' },
-    'guest': { pass: 'guestifm', role: UserRole.VIEWER, name: 'Guest Viewer' }
+    'admin': { pass: 'admifm', role: UserRole.ADMINISTRATOR, name: 'System Administrator' },
+    'supervisor': { pass: 'spvifm', role: UserRole.SUPERVISOR, name: 'Production Supervisor' },
+    'operator': { pass: 'oprifm', role: UserRole.OPERATOR, name: 'Line Operator' },
+    'maintenance': { pass: 'mtcifm', role: UserRole.MAINTENANCE, name: 'Maintenance Engineer' },
+    'qc': { pass: 'qcifm', role: UserRole.QC, name: 'QC Inspector' },
+    'management': { pass: 'mngifm', role: UserRole.MANAGEMENT, name: 'Plant Manager' },
+    'guest': { pass: 'gsifm', role: UserRole.VIEWER, name: 'Guest Viewer' }
 };
 
 export const login = (username: string, pass: string): User | null => {

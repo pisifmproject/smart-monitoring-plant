@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { PlantCode, UserRole } from '../types';
 import { Card, MetricCard } from '../components/SharedComponents';
-import { isWidgetVisible } from '../services/visibilityStore';
+import { isDataItemVisible } from '../services/visibilityStore';
 import { ArrowLeft, Zap, Droplets, Flame, Wind, Cloud, Box } from 'lucide-react'; // Box used as generic container or Nitrogen cylinder
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 
@@ -58,6 +58,12 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plantId, plantName, onB
         { name: 'Warehouse/Office', value: 15 },
     ];
 
+    // Map active tab to visibility key
+    const getChartVisibilityKey = (tab: string) => {
+        // Simplified mapping, ideally each has its own chart key
+        return 'UTILITY_CHART_TREND'; 
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-300">
             {/* Header */}
@@ -80,8 +86,8 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plantId, plantName, onB
             </div>
 
             {/* KPI Cards */}
-            {isWidgetVisible(userRole, 'UTILITY_KPI_ALL') && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {isDataItemVisible(userRole, 'UTILITY_ELECTRICITY_KWH') && (
                     <div 
                         onClick={() => setActiveTab('Electricity')}
                         className={`cursor-pointer transition-all transform hover:scale-105 ${activeTab === 'Electricity' ? 'ring-2 ring-blue-500' : ''}`}
@@ -96,6 +102,8 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plantId, plantName, onB
                             color="text-yellow-400"
                         />
                     </div>
+                )}
+                {isDataItemVisible(userRole, 'UTILITY_WATER_M3') && (
                     <div 
                         onClick={() => setActiveTab('Water')}
                         className={`cursor-pointer transition-all transform hover:scale-105 ${activeTab === 'Water' ? 'ring-2 ring-blue-500' : ''}`}
@@ -110,20 +118,23 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plantId, plantName, onB
                             color="text-blue-400"
                         />
                     </div>
-                    <div 
-                        onClick={() => setActiveTab('Gas')}
-                        className={`cursor-pointer transition-all transform hover:scale-105 ${activeTab === 'Gas' ? 'ring-2 ring-blue-500' : ''}`}
-                    >
-                        <MetricCard 
-                            title="Natural Gas" 
-                            value={summaryData.gas.value.toLocaleString()} 
-                            unit={summaryData.gas.unit} 
-                            icon={Flame} 
-                            trend={summaryData.gas.trend + '%'} 
-                            trendUp={summaryData.gas.trend > 0}
-                            color="text-rose-400"
-                        />
-                    </div>
+                )}
+                {/* Gas is not in the original requested granularity but good to have, reusing keys or adding if strictly needed */}
+                <div 
+                    onClick={() => setActiveTab('Gas')}
+                    className={`cursor-pointer transition-all transform hover:scale-105 ${activeTab === 'Gas' ? 'ring-2 ring-blue-500' : ''}`}
+                >
+                    <MetricCard 
+                        title="Natural Gas" 
+                        value={summaryData.gas.value.toLocaleString()} 
+                        unit={summaryData.gas.unit} 
+                        icon={Flame} 
+                        trend={summaryData.gas.trend + '%'} 
+                        trendUp={summaryData.gas.trend > 0}
+                        color="text-rose-400"
+                    />
+                </div>
+                {isDataItemVisible(userRole, 'UTILITY_STEAM_KG') && (
                     <div 
                         onClick={() => setActiveTab('Steam')}
                         className={`cursor-pointer transition-all transform hover:scale-105 ${activeTab === 'Steam' ? 'ring-2 ring-blue-500' : ''}`}
@@ -138,6 +149,8 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plantId, plantName, onB
                             color="text-slate-200"
                         />
                     </div>
+                )}
+                 {isDataItemVisible(userRole, 'UTILITY_AIR_NM3') && (
                      <div 
                         onClick={() => setActiveTab('Air')}
                         className={`cursor-pointer transition-all transform hover:scale-105 ${activeTab === 'Air' ? 'ring-2 ring-blue-500' : ''}`}
@@ -152,6 +165,8 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plantId, plantName, onB
                             color="text-cyan-400"
                         />
                     </div>
+                 )}
+                 {isDataItemVisible(userRole, 'UTILITY_NITROGEN_NM3') && (
                     <div 
                         onClick={() => setActiveTab('Nitrogen')}
                         className={`cursor-pointer transition-all transform hover:scale-105 ${activeTab === 'Nitrogen' ? 'ring-2 ring-blue-500' : ''}`}
@@ -166,73 +181,69 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plantId, plantName, onB
                             color="text-emerald-400"
                         />
                     </div>
-                </div>
-            )}
+                 )}
+            </div>
 
             {/* Main Content Area */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Trend Chart */}
-                {isWidgetVisible(userRole, 'UTILITY_CHART_TREND') && (
-                    <Card title={`${activeTab} Consumption Trend (24h)`} className="lg:col-span-2">
-                        <ResponsiveContainer width="100%" height={350}>
-                            <LineChart data={currentTrend}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="time" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9' }} />
-                                <Legend />
-                                <Line 
-                                    type="monotone" 
-                                    dataKey="value" 
-                                    name={`${activeTab} (${summaryData[activeTab.toLowerCase() as keyof typeof summaryData].unit})`} 
-                                    stroke="#3b82f6" 
-                                    strokeWidth={2} 
-                                    dot={false} 
-                                    activeDot={{ r: 6 }}
-                                    fill="url(#colorU)"
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </Card>
-                )}
+                <Card title={`${activeTab} Consumption Trend (24h)`} className="lg:col-span-2">
+                    <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={currentTrend}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                            <XAxis dataKey="time" stroke="#94a3b8" />
+                            <YAxis stroke="#94a3b8" />
+                            <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9' }} />
+                            <Legend />
+                            <Line 
+                                type="monotone" 
+                                dataKey="value" 
+                                name={`${activeTab} (${summaryData[activeTab.toLowerCase() as keyof typeof summaryData].unit})`} 
+                                stroke="#3b82f6" 
+                                strokeWidth={2} 
+                                dot={false} 
+                                activeDot={{ r: 6 }}
+                                fill="url(#colorU)"
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </Card>
 
                 {/* Distribution Breakdown */}
-                {isWidgetVisible(userRole, 'UTILITY_CHART_DIST') && (
-                    <div className="space-y-6">
-                        <Card title={`${activeTab} Distribution`}>
-                            <ResponsiveContainer width="100%" height={250}>
-                                <BarChart data={breakdownData} layout="vertical" margin={{ left: 10, right: 10 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
-                                    <XAxis type="number" stroke="#94a3b8" hide />
-                                    <YAxis dataKey="name" type="category" stroke="#94a3b8" width={100} tick={{fontSize: 11}} />
-                                    <Tooltip cursor={{fill: '#334155', opacity: 0.2}} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                                    <Bar dataKey="value" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={20} name="% Usage" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Card>
+                <div className="space-y-6">
+                    <Card title={`${activeTab} Distribution`}>
+                        <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={breakdownData} layout="vertical" margin={{ left: 10, right: 10 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
+                                <XAxis type="number" stroke="#94a3b8" hide />
+                                <YAxis dataKey="name" type="category" stroke="#94a3b8" width={100} tick={{fontSize: 11}} />
+                                <Tooltip cursor={{fill: '#334155', opacity: 0.2}} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
+                                <Bar dataKey="value" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={20} name="% Usage" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </Card>
 
-                        <Card title="Quick Stats">
-                             <div className="space-y-4">
-                                <div className="flex justify-between items-center border-b border-slate-700 pb-3">
-                                    <span className="text-slate-400">Peak Usage</span>
-                                    <span className="font-mono text-white">
-                                        {Math.max(...currentTrend.map(d => d.value)).toFixed(1)} {summaryData[activeTab.toLowerCase() as keyof typeof summaryData].unit}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-slate-700 pb-3">
-                                    <span className="text-slate-400">Avg Usage</span>
-                                    <span className="font-mono text-white">
-                                        {(currentTrend.reduce((a,b) => a + b.value, 0) / currentTrend.length).toFixed(1)} {summaryData[activeTab.toLowerCase() as keyof typeof summaryData].unit}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center pb-1">
-                                    <span className="text-slate-400">Efficiency</span>
-                                    <span className="font-mono text-emerald-400">Good</span>
-                                </div>
+                    <Card title="Quick Stats">
+                            <div className="space-y-4">
+                            <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+                                <span className="text-slate-400">Peak Usage</span>
+                                <span className="font-mono text-white">
+                                    {Math.max(...currentTrend.map(d => d.value)).toFixed(1)} {summaryData[activeTab.toLowerCase() as keyof typeof summaryData].unit}
+                                </span>
                             </div>
-                        </Card>
-                    </div>
-                )}
+                            <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+                                <span className="text-slate-400">Avg Usage</span>
+                                <span className="font-mono text-white">
+                                    {(currentTrend.reduce((a,b) => a + b.value, 0) / currentTrend.length).toFixed(1)} {summaryData[activeTab.toLowerCase() as keyof typeof summaryData].unit}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center pb-1">
+                                <span className="text-slate-400">Efficiency</span>
+                                <span className="font-mono text-emerald-400">Good</span>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
             </div>
         </div>
     );

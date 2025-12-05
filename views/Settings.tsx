@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserRole, WidgetCategory } from '../types';
+import { UserRole, VisibilityCategory, VisibilityGroup } from '../types';
 import { Card } from '../components/SharedComponents';
-import { WIDGET_REGISTRY, getVisibilityRulesForRole, updateVisibilityRule, bulkUpdateVisibilityRules } from '../services/visibilityStore';
-import { Save, User, Shield, Bell, Server, Database, Eye, EyeOff, Filter, CheckSquare, Square, CheckCircle2 } from 'lucide-react';
+import { DATA_ITEM_REGISTRY, getVisibilityRulesForRole, updateVisibilityRule, bulkUpdateVisibilityRules } from '../services/visibilityStore';
+import { Save, User, Shield, Bell, Server, Database, Eye, EyeOff, Filter, CheckSquare, Square, CheckCircle2, Layers } from 'lucide-react';
 
 interface SettingsProps {
     userRole: UserRole;
@@ -15,6 +15,7 @@ const SettingsView: React.FC<SettingsProps> = ({ userRole }) => {
     // Visibility Settings State
     const [targetRole, setTargetRole] = useState<UserRole>(UserRole.SUPERVISOR);
     const [filterCategory, setFilterCategory] = useState<string>('ALL');
+    const [filterGroup, setFilterGroup] = useState<string>('ALL');
     const [visibilityRules, setVisibilityRules] = useState<Record<string, boolean>>({});
 
     // Load rules when target role changes
@@ -51,15 +52,16 @@ const SettingsView: React.FC<SettingsProps> = ({ userRole }) => {
 
     const handleSelectAll = (select: boolean) => {
         const updates: Record<string, boolean> = {};
-        filteredWidgets.forEach(w => {
-            updates[w.key] = select;
+        filteredItems.forEach(item => {
+            updates[item.key] = select;
         });
         setVisibilityRules(prev => ({ ...prev, ...updates }));
         bulkUpdateVisibilityRules(targetRole, updates);
     };
 
-    const filteredWidgets = WIDGET_REGISTRY.filter(w => {
-        if (filterCategory !== 'ALL' && w.category !== filterCategory) return false;
+    const filteredItems = DATA_ITEM_REGISTRY.filter(item => {
+        if (filterCategory !== 'ALL' && item.category !== filterCategory) return false;
+        if (filterGroup !== 'ALL' && item.group !== filterGroup) return false;
         return true;
     });
 
@@ -67,39 +69,55 @@ const SettingsView: React.FC<SettingsProps> = ({ userRole }) => {
         <Card title="Master Data Visibility Control">
             <div className="space-y-6">
                 {/* Controls */}
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center bg-slate-900 p-4 rounded-lg border border-slate-700">
-                    <div className="flex flex-col gap-1 w-full md:w-auto">
-                        <label className="text-xs font-semibold uppercase text-slate-400">Target Role</label>
-                        <select 
-                            value={targetRole} 
-                            onChange={(e) => setTargetRole(e.target.value as UserRole)}
-                            className="bg-slate-800 border border-slate-600 rounded p-2 text-white outline-none focus:border-blue-500"
-                        >
-                            {Object.values(UserRole).filter(r => r !== UserRole.ADMINISTRATOR).map(r => (
-                                <option key={r} value={r}>{r}</option>
-                            ))}
-                        </select>
-                    </div>
-                    
-                    <div className="flex flex-col gap-1 w-full md:w-auto">
-                        <label className="text-xs font-semibold uppercase text-slate-400 flex items-center gap-2"><Filter size={12}/> Filter Category</label>
-                        <select 
-                            value={filterCategory}
-                            onChange={(e) => setFilterCategory(e.target.value)}
-                            className="bg-slate-800 border border-slate-600 rounded p-2 text-white outline-none focus:border-blue-500"
-                        >
-                            <option value="ALL">All Categories</option>
-                            {Object.values(WidgetCategory).map(c => (
-                                <option key={c} value={c}>{c}</option>
-                            ))}
-                        </select>
+                <div className="flex flex-col xl:flex-row gap-4 justify-between items-end xl:items-center bg-slate-900 p-4 rounded-lg border border-slate-700">
+                    <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
+                        <div className="flex flex-col gap-1 w-full sm:w-auto">
+                            <label className="text-xs font-semibold uppercase text-slate-400">Target Role</label>
+                            <select 
+                                value={targetRole} 
+                                onChange={(e) => setTargetRole(e.target.value as UserRole)}
+                                className="bg-slate-800 border border-slate-600 rounded p-2 text-white outline-none focus:border-blue-500 min-w-[150px]"
+                            >
+                                {Object.values(UserRole).filter(r => r !== UserRole.ADMINISTRATOR).map(r => (
+                                    <option key={r} value={r}>{r}</option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        <div className="flex flex-col gap-1 w-full sm:w-auto">
+                            <label className="text-xs font-semibold uppercase text-slate-400 flex items-center gap-2"><Filter size={12}/> Category</label>
+                            <select 
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                className="bg-slate-800 border border-slate-600 rounded p-2 text-white outline-none focus:border-blue-500 min-w-[150px]"
+                            >
+                                <option value="ALL">All Categories</option>
+                                {Object.values(VisibilityCategory).map(c => (
+                                    <option key={c} value={c}>{c.replace('_', ' ')}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                         <div className="flex flex-col gap-1 w-full sm:w-auto">
+                            <label className="text-xs font-semibold uppercase text-slate-400 flex items-center gap-2"><Layers size={12}/> Group</label>
+                            <select 
+                                value={filterGroup}
+                                onChange={(e) => setFilterGroup(e.target.value)}
+                                className="bg-slate-800 border border-slate-600 rounded p-2 text-white outline-none focus:border-blue-500 min-w-[150px]"
+                            >
+                                <option value="ALL">All Groups</option>
+                                {Object.values(VisibilityGroup).map(g => (
+                                    <option key={g} value={g}>{g.replace('_', ' ')}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
-                    <div className="flex gap-2 w-full md:w-auto">
-                        <button onClick={() => handleSelectAll(true)} className="flex-1 bg-emerald-900/30 text-emerald-400 border border-emerald-800 px-3 py-2 rounded text-xs font-medium hover:bg-emerald-900/50 flex items-center justify-center gap-1">
+                    <div className="flex gap-2 w-full xl:w-auto">
+                        <button onClick={() => handleSelectAll(true)} className="flex-1 bg-emerald-900/30 text-emerald-400 border border-emerald-800 px-3 py-2 rounded text-xs font-medium hover:bg-emerald-900/50 flex items-center justify-center gap-1 whitespace-nowrap">
                             <CheckSquare size={14}/> Show All
                         </button>
-                        <button onClick={() => handleSelectAll(false)} className="flex-1 bg-rose-900/30 text-rose-400 border border-rose-800 px-3 py-2 rounded text-xs font-medium hover:bg-rose-900/50 flex items-center justify-center gap-1">
+                        <button onClick={() => handleSelectAll(false)} className="flex-1 bg-rose-900/30 text-rose-400 border border-rose-800 px-3 py-2 rounded text-xs font-medium hover:bg-rose-900/50 flex items-center justify-center gap-1 whitespace-nowrap">
                             <Square size={14}/> Hide All
                         </button>
                     </div>
@@ -107,43 +125,47 @@ const SettingsView: React.FC<SettingsProps> = ({ userRole }) => {
 
                 {/* Table */}
                 <div className="border border-slate-700 rounded-lg overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-400">
-                        <thead className="bg-slate-900 uppercase tracking-wider text-xs font-semibold text-slate-300">
-                            <tr>
-                                <th className="p-3">Widget Label</th>
-                                <th className="p-3">Location</th>
-                                <th className="p-3">Type</th>
-                                <th className="p-3 text-center">Visible</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800 bg-slate-900/30">
-                            {filteredWidgets.length === 0 ? (
-                                <tr><td colSpan={4} className="p-4 text-center text-slate-500">No widgets found matching filters.</td></tr>
-                            ) : filteredWidgets.map(widget => {
-                                const isVisible = visibilityRules[widget.key] !== undefined ? visibilityRules[widget.key] : widget.defaultVisible;
-                                return (
-                                    <tr key={widget.key} className="hover:bg-slate-800/50 transition-colors">
-                                        <td className="p-3">
-                                            <p className="text-white font-medium">{widget.label}</p>
-                                            <p className="text-xs text-slate-500 font-mono">{widget.key}</p>
-                                        </td>
-                                        <td className="p-3">
-                                            <span className="bg-slate-800 px-2 py-1 rounded text-xs border border-slate-700">{widget.location}</span>
-                                        </td>
-                                        <td className="p-3 text-xs uppercase">{widget.type}</td>
-                                        <td className="p-3 text-center">
-                                            <button 
-                                                onClick={() => handleToggleVisibility(widget.key, isVisible)}
-                                                className={`p-2 rounded-md transition-all ${isVisible ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-700 text-slate-500'}`}
-                                            >
-                                                {isVisible ? <Eye size={18} /> : <EyeOff size={18} />}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                    <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+                        <table className="w-full text-left text-sm text-slate-400">
+                            <thead className="bg-slate-900 uppercase tracking-wider text-xs font-semibold text-slate-300 sticky top-0 z-10">
+                                <tr>
+                                    <th className="p-3">Data Label</th>
+                                    <th className="p-3">Category</th>
+                                    <th className="p-3">Group</th>
+                                    <th className="p-3 text-center">Visible</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800 bg-slate-900/30">
+                                {filteredItems.length === 0 ? (
+                                    <tr><td colSpan={4} className="p-8 text-center text-slate-500">No data items found matching filters.</td></tr>
+                                ) : filteredItems.map(item => {
+                                    const isVisible = visibilityRules[item.key] !== undefined ? visibilityRules[item.key] : item.defaultVisible;
+                                    return (
+                                        <tr key={item.key} className="hover:bg-slate-800/50 transition-colors">
+                                            <td className="p-3">
+                                                <p className="text-white font-medium">{item.label}</p>
+                                                <p className="text-[10px] text-slate-500 font-mono mt-0.5">{item.key}</p>
+                                            </td>
+                                            <td className="p-3">
+                                                <span className="bg-slate-800 px-2 py-1 rounded text-[10px] border border-slate-700 font-mono">{item.category}</span>
+                                            </td>
+                                            <td className="p-3">
+                                                 <span className="text-xs text-slate-400">{item.group}</span>
+                                            </td>
+                                            <td className="p-3 text-center">
+                                                <button 
+                                                    onClick={() => handleToggleVisibility(item.key, isVisible)}
+                                                    className={`p-2 rounded-md transition-all ${isVisible ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-700 text-slate-500'}`}
+                                                >
+                                                    {isVisible ? <Eye size={18} /> : <EyeOff size={18} />}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <p className="text-xs text-slate-500 italic">* Changes are saved automatically.</p>
             </div>
@@ -208,20 +230,32 @@ const SettingsView: React.FC<SettingsProps> = ({ userRole }) => {
                             </thead>
                             <tbody className="divide-y divide-slate-700">
                                 <tr>
-                                    <td className="p-3 text-white font-medium">admin1</td>
+                                    <td className="p-3 text-white font-medium">admin</td>
                                     <td className="p-3"><span className="bg-purple-500/10 text-purple-400 px-2 py-1 rounded text-xs border border-purple-500/20">Administrator</span></td>
                                     <td className="p-3"><span className="flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 size={12}/> Active</span></td>
                                     <td className="p-3 text-right"><button className="text-blue-400 hover:text-blue-300">Edit</button></td>
                                 </tr>
                                 <tr>
-                                    <td className="p-3 text-white font-medium">spv2</td>
+                                    <td className="p-3 text-white font-medium">supervisor</td>
                                     <td className="p-3"><span className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs border border-blue-500/20">Supervisor</span></td>
                                     <td className="p-3"><span className="flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 size={12}/> Active</span></td>
                                     <td className="p-3 text-right"><button className="text-blue-400 hover:text-blue-300">Edit</button></td>
                                 </tr>
                                  <tr>
-                                    <td className="p-3 text-white font-medium">operator3</td>
+                                    <td className="p-3 text-white font-medium">operator</td>
                                     <td className="p-3"><span className="bg-slate-500/10 text-slate-400 px-2 py-1 rounded text-xs border border-slate-500/20">Operator</span></td>
+                                    <td className="p-3"><span className="flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 size={12}/> Active</span></td>
+                                    <td className="p-3 text-right"><button className="text-blue-400 hover:text-blue-300">Edit</button></td>
+                                </tr>
+                                <tr>
+                                    <td className="p-3 text-white font-medium">management</td>
+                                    <td className="p-3"><span className="bg-amber-500/10 text-amber-400 px-2 py-1 rounded text-xs border border-amber-500/20">Management</span></td>
+                                    <td className="p-3"><span className="flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 size={12}/> Active</span></td>
+                                    <td className="p-3 text-right"><button className="text-blue-400 hover:text-blue-300">Edit</button></td>
+                                </tr>
+                                <tr>
+                                    <td className="p-3 text-white font-medium">guest</td>
+                                    <td className="p-3"><span className="bg-slate-700/20 text-slate-400 px-2 py-1 rounded text-xs border border-slate-600">Viewer</span></td>
                                     <td className="p-3"><span className="flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 size={12}/> Active</span></td>
                                     <td className="p-3 text-right"><button className="text-blue-400 hover:text-blue-300">Edit</button></td>
                                 </tr>

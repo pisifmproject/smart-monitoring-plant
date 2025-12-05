@@ -9,7 +9,7 @@ import LVMDPDetail from './views/LVMDPDetail';
 import UtilitySummary from './views/UtilitySummary';
 import SettingsView from './views/Settings';
 import Login from './views/Login';
-import { isWidgetVisible } from './services/visibilityStore';
+import { isDataItemVisible } from './services/visibilityStore';
 import { 
     LayoutDashboard, 
     Factory, 
@@ -28,191 +28,225 @@ import {
     AlertTriangle,
     CheckCircle2,
     Droplets,
-    ShieldAlert
+    ShieldAlert,
+    Cloud,
+    Wind
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 
 // --- Dashboard Components (Refactored for Router) ---
 
 const GlobalDashboard: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
-    const [outputPeriod, setOutputPeriod] = useState<'Hour' | 'Day' | 'Month' | 'Year'>('Day');
-    
+    const [chartRange, setChartRange] = useState<'TODAY' | 'WEEK' | 'MONTH' | 'YEAR'>('TODAY');
     const plants = Object.values(PLANTS);
+    
+    // Aggregate Data for KPIs
     const totalOutput = plants.reduce((acc, p) => acc + p.outputToday, 0);
     const avgOEE = (plants.reduce((acc, p) => acc + p.oeeAvg, 0) / plants.filter(p => p.oeeAvg > 0).length) * 100;
-    
-    const getOutputValue = (dailyVal: number) => {
-        switch (outputPeriod) {
-            case 'Hour': return Math.round(dailyVal / 12);
-            case 'Month': return dailyVal * 26;
-            case 'Year': return dailyVal * 312;
-            default: return dailyVal;
-        }
-    };
+    const totalEnergy = plants.reduce((acc, p) => acc + p.energyTotal, 0);
+    const totalAlarms = MOCK_ALARMS.length;
 
-    const chartData = plants.map(p => ({
-        name: p.name.replace('Plant ', ''),
-        output: getOutputValue(p.outputToday),
-        energy: p.energyTotal,
-        downtimeMinutes: Math.floor(Math.random() * 60) + (p.activeAlarms * 30) 
-    }));
+    // Calculate Chart Data based on Time Range
+    const chartData = useMemo(() => {
+        return plants.map(p => {
+            let outputValue = p.outputToday;
+            let oeeValue = parseFloat((p.oeeAvg * 100).toFixed(1));
+            
+            // Simulation multipliers for demo purposes
+            // In a real app, this would query an API with ?range=...
+            const randomVar = 0.9 + (p.name.length % 3) * 0.05; // Deterministic pseudo-random based on name length
 
-    const downtimeRankingData = [...chartData].sort((a, b) => b.downtimeMinutes - a.downtimeMinutes);
+            switch (chartRange) {
+                case 'WEEK':
+                    outputValue = Math.floor(p.outputToday * 6.5 * randomVar);
+                    oeeValue = parseFloat(Math.min(98, oeeValue * (0.98 + (1-randomVar)*0.1)).toFixed(1));
+                    break;
+                case 'MONTH':
+                    outputValue = Math.floor(p.outputToday * 28 * randomVar);
+                    oeeValue = parseFloat(Math.min(99, oeeValue * (0.95 + (1-randomVar)*0.1)).toFixed(1));
+                    break;
+                case 'YEAR':
+                    outputValue = Math.floor(p.outputToday * 340 * randomVar);
+                    oeeValue = parseFloat(Math.min(95, oeeValue * (0.92 + (1-randomVar)*0.1)).toFixed(1));
+                    break;
+                default: // TODAY
+                    // use raw values
+                    break;
+            }
+
+            return {
+                name: p.name.replace('Plant ', ''),
+                output: outputValue,
+                oee: oeeValue
+            };
+        });
+    }, [plants, chartRange]);
+
+    // Access Control Logic
+    const isRestricted = [UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole);
+
+    const FilterButton = ({ label, value }: { label: string, value: typeof chartRange }) => (
+        <button 
+            onClick={() => setChartRange(value)}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                chartRange === value 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+        >
+            {label}
+        </button>
+    );
 
     return (
         <div className="space-y-6 animate-in fade-in">
             <h2 className="text-2xl font-bold mb-4">Corporate Overview</h2>
             
+            {/* 1. Global KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {isWidgetVisible(userRole, 'GLOBAL_KPI_OUTPUT') && (
+                {isDataItemVisible(userRole, 'GLOBAL_OUTPUT_TODAY') && (
                     <MetricCard title="Total Output Today" value={totalOutput.toLocaleString()} unit="kg" icon={Box} trend="12%" trendUp={true} />
                 )}
-                {isWidgetVisible(userRole, 'GLOBAL_KPI_OEE') && (
-                    <MetricCard title="Avg OEE (All Plants)" value={avgOEE.toFixed(1)} unit="%" icon={Activity} trend="2%" trendUp={true} color="text-emerald-400" />
+                {isDataItemVisible(userRole, 'GLOBAL_OEE') && (
+                    <MetricCard title="Global Avg OEE" value={avgOEE.toFixed(1)} unit="%" icon={Activity} trend="2%" trendUp={true} color="text-emerald-400" />
                 )}
-                {isWidgetVisible(userRole, 'GLOBAL_KPI_ENERGY') && (
-                    <MetricCard title="Total Energy" value={plants.reduce((acc, p) => acc + p.energyTotal, 0).toLocaleString()} unit="kWh" icon={Zap} trend="5%" trendUp={false} color="text-yellow-400" />
+                {isDataItemVisible(userRole, 'GLOBAL_TOTAL_ENERGY') && (
+                    <MetricCard title="Total Energy" value={totalEnergy.toLocaleString()} unit="kWh" icon={Zap} trend="5%" trendUp={false} color="text-yellow-400" />
                 )}
-                {isWidgetVisible(userRole, 'GLOBAL_KPI_ALARMS') && (
-                    <MetricCard title="Active Alarms" value={MOCK_ALARMS.length} icon={Bell} color="text-rose-500" />
-                )}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {isWidgetVisible(userRole, 'GLOBAL_CHART_OUTPUT') && (
-                    <Card 
-                        title={`Production Output (${outputPeriod})`} 
-                        action={
-                            <div className="flex bg-slate-700 rounded-md p-0.5">
-                                {(['Hour', 'Day', 'Month', 'Year'] as const).map((period) => (
-                                    <button
-                                        key={period}
-                                        onClick={() => setOutputPeriod(period)}
-                                        className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                                            outputPeriod === period 
-                                            ? 'bg-blue-600 text-white shadow-sm' 
-                                            : 'text-slate-400 hover:text-white hover:bg-slate-600'
-                                        }`}
-                                    >
-                                        {period}
-                                    </button>
-                                ))}
-                            </div>
-                        }
-                    >
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="name" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" />
-                                <Tooltip 
-                                    cursor={{fill: '#334155', opacity: 0.2}} 
-                                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}
-                                    formatter={(value: number) => [value.toLocaleString() + ' kg', 'Output']} 
-                                />
-                                <Bar dataKey="output" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Output" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Card>
-                )}
-
-                {isWidgetVisible(userRole, 'GLOBAL_CHART_DOWNTIME') && (
-                    <Card title="Downtime Ranking (Today - Minutes)">
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={downtimeRankingData} layout="vertical" margin={{ left: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
-                                <XAxis type="number" stroke="#94a3b8" />
-                                <YAxis dataKey="name" type="category" stroke="#94a3b8" width={80} />
-                                <Tooltip 
-                                    cursor={{fill: '#334155', opacity: 0.2}} 
-                                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} 
-                                    formatter={(value: number) => [value + ' min', 'Downtime']}
-                                />
-                                <Bar dataKey="downtimeMinutes" fill="#f43f5e" radius={[0, 4, 4, 0]} barSize={30} name="Downtime" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Card>
-                )}
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {isWidgetVisible(userRole, 'GLOBAL_CHART_ENERGY') && (
-                    <Card title="Energy Consumption by Plant">
-                        <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="name" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" />
-                                <Tooltip cursor={{fill: '#334155', opacity: 0.2}} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                                <Bar dataKey="energy" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Energy (kWh)" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Card>
-                )}
-                
-                {isWidgetVisible(userRole, 'GLOBAL_CHART_OEE_COMP') && (
-                    <Card title="OEE Comparison">
-                        <ResponsiveContainer width="100%" height={250}>
-                             <BarChart data={plants.map(p => ({ name: p.name.replace('Plant ', ''), oee: (p.oeeAvg * 100).toFixed(1) }))}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="name" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" domain={[0, 100]} />
-                                <Tooltip cursor={{fill: '#334155', opacity: 0.2}} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                                <Bar dataKey="oee" fill="#10b981" radius={[4, 4, 0, 0]} name="OEE %" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Card>
+                {isDataItemVisible(userRole, 'GLOBAL_TOTAL_ALARMS') && (
+                    <MetricCard title="Active Alarms" value={totalAlarms} icon={Bell} color="text-rose-500" />
                 )}
             </div>
 
-            {isWidgetVisible(userRole, 'GLOBAL_PLANT_LIST') && (
+            {/* 2. Plant Summary Grid */}
+            {isDataItemVisible(userRole, 'GLOBAL_PLANT_LIST') && (
                 <div>
                     <h3 className="text-lg font-semibold text-slate-300 mb-3 flex items-center gap-2">
                         <Factory size={18} /> Plant Status Overview
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                        {plants.map(plant => (
-                            <Link to={`/plants/${plant.id}`} key={plant.id}>
-                                <Card className="hover:ring-2 hover:ring-blue-500/50 transition-all cursor-pointer group h-full">
+                        {plants.map(plant => {
+                            // Status Logic
+                            let status = 'NORMAL';
+                            let statusColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+                            
+                            if (plant.activeAlarms > 5 || plant.oeeAvg < 0.5) {
+                                status = 'CRITICAL';
+                                statusColor = 'bg-rose-500/20 text-rose-400 border-rose-500/30';
+                            } else if (plant.activeAlarms > 0 || plant.oeeAvg < 0.7) {
+                                status = 'WARNING';
+                                statusColor = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+                            }
+
+                            const CardContent = (
+                                <Card className={`h-full border-slate-700 ${!isRestricted ? 'hover:ring-2 hover:ring-blue-500/50 hover:bg-slate-800/80 cursor-pointer' : 'cursor-default opacity-100'} transition-all group`}>
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <h3 className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">{plant.name}</h3>
+                                            <h3 className={`font-bold text-lg text-white ${!isRestricted ? 'group-hover:text-blue-400' : ''} transition-colors`}>{plant.name}</h3>
                                             <p className="text-slate-500 text-sm">{plant.location}</p>
                                         </div>
-                                        <div className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
-                                            plant.activeAlarms > 5 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 
-                                            plant.activeAlarms > 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 
-                                            'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                        }`}>
-                                            {plant.activeAlarms > 5 ? 'Critical' : plant.activeAlarms > 0 ? 'Warning' : 'Normal'}
+                                        <div className={`px-2 py-0.5 rounded text-xs font-bold uppercase border ${statusColor}`}>
+                                            {status}
                                         </div>
                                     </div>
                                     <div className="space-y-3">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-slate-400">Output (Today)</span>
-                                            <span className="font-mono">{plant.outputToday.toLocaleString()} kg</span>
+                                        <div className="flex justify-between text-sm items-center">
+                                            <span className="text-slate-400 flex items-center gap-2"><Box size={14}/> Output</span>
+                                            <span className="font-mono font-medium text-white">{plant.outputToday.toLocaleString()} kg</span>
                                         </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-slate-400">OEE</span>
-                                            <span className="font-mono">{(plant.oeeAvg * 100).toFixed(0)}%</span>
+                                        <div className="flex justify-between text-sm items-center">
+                                            <span className="text-slate-400 flex items-center gap-2"><Activity size={14}/> OEE</span>
+                                            <span className={`font-mono font-bold ${plant.oeeAvg >= 0.8 ? 'text-emerald-400' : plant.oeeAvg >= 0.6 ? 'text-amber-400' : 'text-rose-400'}`}>{(plant.oeeAvg * 100).toFixed(0)}%</span>
                                         </div>
-                                         <div className="flex justify-between text-sm">
-                                            <span className="text-slate-400">Energy</span>
-                                            <span className="font-mono">{plant.energyTotal} kWh</span>
+                                         <div className="flex justify-between text-sm items-center">
+                                            <span className="text-slate-400 flex items-center gap-2"><Zap size={14}/> Energy</span>
+                                            <span className="font-mono text-yellow-500">{plant.energyTotal.toLocaleString()} kWh</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm items-center pt-2 border-t border-slate-700/50">
+                                            <span className="text-slate-400">Active Alarms</span>
+                                            <span className={`font-mono font-bold px-2 py-0.5 rounded ${plant.activeAlarms > 0 ? 'bg-rose-500/10 text-rose-400' : 'text-slate-500'}`}>{plant.activeAlarms}</span>
                                         </div>
                                     </div>
                                 </Card>
-                            </Link>
-                        ))}
+                            );
+
+                            return isRestricted ? (
+                                <div key={plant.id}>{CardContent}</div>
+                            ) : (
+                                <Link to={`/plants/${plant.id}`} key={plant.id}>{CardContent}</Link>
+                            );
+                        })}
                     </div>
                 </div>
             )}
+
+            {/* 3. Comparison Charts */}
+            <div>
+                 <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center mb-3 gap-2">
+                    <h3 className="text-lg font-semibold text-slate-300 flex items-center gap-2">
+                        <BarChart3 size={18} /> Performance Comparison
+                    </h3>
+                    <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1">
+                        <FilterButton label="Today" value="TODAY" />
+                        <FilterButton label="Week" value="WEEK" />
+                        <FilterButton label="Month" value="MONTH" />
+                        <FilterButton label="Year" value="YEAR" />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {isDataItemVisible(userRole, 'GLOBAL_OUTPUT_COMPARISON_CHART') && (
+                        <Card title={`Production Output (${chartRange.charAt(0) + chartRange.slice(1).toLowerCase()})`}>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                                    <XAxis dataKey="name" stroke="#94a3b8" />
+                                    <YAxis stroke="#94a3b8" />
+                                    <Tooltip 
+                                        cursor={{fill: '#334155', opacity: 0.2}} 
+                                        contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc' }}
+                                        formatter={(value: number) => [value.toLocaleString() + ' kg', 'Output']} 
+                                    />
+                                    <Bar dataKey="output" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={50} animationDuration={800}>
+                                        {chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#3b82f6' : '#60a5fa'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    )}
+
+                    {isDataItemVisible(userRole, 'GLOBAL_OEE_COMPARISON_CHART') && (
+                        <Card title={`OEE Comparison (${chartRange.charAt(0) + chartRange.slice(1).toLowerCase()})`}>
+                            <ResponsiveContainer width="100%" height={300}>
+                                 <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                                    <XAxis dataKey="name" stroke="#94a3b8" />
+                                    <YAxis stroke="#94a3b8" domain={[0, 100]} />
+                                    <Tooltip 
+                                        cursor={{fill: '#334155', opacity: 0.2}} 
+                                        contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc' }}
+                                        formatter={(value: number) => [value + '%', 'OEE']}
+                                    />
+                                    <Bar dataKey="oee" radius={[4, 4, 0, 0]} barSize={50} animationDuration={800}>
+                                        {chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.oee >= 80 ? '#10b981' : entry.oee >= 60 ? '#f59e0b' : '#f43f5e'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
 
 const PlantDashboard: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
     const { plantId } = useParams<{ plantId: string }>();
+    const navigate = useNavigate();
     const plant = PLANTS[plantId as PlantCode];
 
     if (!plant) return <div className="p-8 text-center text-slate-500">Plant not found</div>;
@@ -233,6 +267,27 @@ const PlantDashboard: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
         { id: 2, name: 'Shift 2', time: '14:00 - 22:00', output: 0, target: 12000, oee: 0, status: 'PENDING' },
         { id: 3, name: 'Shift 3', time: '22:00 - 06:00', output: 0, target: 12000, oee: 0, status: 'PENDING' },
     ];
+    
+    // Permission Checks
+    const isMachineRestricted = [UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole);
+    const canClickUtility = [UserRole.SUPERVISOR, UserRole.OPERATOR, UserRole.MAINTENANCE, UserRole.QC, UserRole.ADMINISTRATOR].includes(userRole);
+    const canClickLVMDP = [UserRole.SUPERVISOR, UserRole.MAINTENANCE, UserRole.ADMINISTRATOR].includes(userRole);
+
+    // Mock Utility Data for Dashboard Cards
+    const multiplier = [PlantCode.CIKOKOL, PlantCode.SEMARANG].includes(plant.id) ? 1.5 : 0.8;
+    const utilityMetrics = [
+        { key: 'UTILITY_ELECTRICITY_KWH', label: 'Electricity Usage', value: (3200 * multiplier).toFixed(0), unit: 'kWh', icon: Zap, color: 'text-yellow-400' },
+        { key: 'UTILITY_STEAM_KG', label: 'Steam Usage', value: (15 * multiplier).toFixed(1), unit: 'kg', icon: Cloud, color: 'text-slate-200' },
+        { key: 'UTILITY_WATER_M3', label: 'Water Usage', value: (450 * multiplier).toFixed(0), unit: 'm³', icon: Droplets, color: 'text-blue-400' },
+        { key: 'UTILITY_AIR_NM3', label: 'Compressed Air', value: (18000 * multiplier).toFixed(0), unit: 'Nm³', icon: Wind, color: 'text-cyan-400' },
+        { key: 'UTILITY_NITROGEN_NM3', label: 'Nitrogen', value: (450 * multiplier).toFixed(0), unit: 'Nm³', icon: Box, color: 'text-emerald-400' },
+    ];
+
+    const calculateLVMDP_Load = (panel: LVMDP) => {
+        // Average current across 3 phases divided by 2500A capacity as per requirement
+        const avgCurrent = (panel.currentR + panel.currentS + panel.currentT) / 3;
+        return (avgCurrent / 2500) * 100;
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in">
@@ -244,12 +299,6 @@ const PlantDashboard: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
                     )}
                 </div>
                 <div className="flex items-center gap-4">
-                    <Link 
-                        to={`/utility/${plantId}`}
-                        className="bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 border border-blue-800/50 px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors"
-                    >
-                        <Droplets size={16} /> View Utility Summary
-                    </Link>
                     <div className="flex gap-2 text-sm text-slate-400 hidden md:flex">
                         <span className="bg-slate-800 px-3 py-1 rounded-full flex items-center gap-2"><Calendar size={14}/> {new Date().toLocaleDateString()}</span>
                         <span className="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full flex items-center gap-2"><Clock size={14}/> Shift 1</span>
@@ -257,17 +306,60 @@ const PlantDashboard: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
                 </div>
             </div>
 
-             {isWidgetVisible(userRole, 'PLANT_KPI_SUMMARY') && (
-                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Top Summary Cards */}
+             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {isDataItemVisible(userRole, 'PLANT_OUTPUT_TODAY') && (
                     <MetricCard title="Output Today" value={plant.outputToday.toLocaleString()} unit="kg" icon={Box} />
+                )}
+                {isDataItemVisible(userRole, 'PLANT_OEE') && (
                     <MetricCard title="OEE" value={(plant.oeeAvg * 100).toFixed(1)} unit="%" icon={Activity} color="text-emerald-400" />
+                )}
+                {isDataItemVisible(userRole, 'PLANT_POWER_USAGE') && (
                     <MetricCard title="Power Usage" value={plant.energyTotal} unit="kWh" icon={Zap} color="text-yellow-400" />
+                )}
+                {isDataItemVisible(userRole, 'PLANT_ALARM_COUNT') && (
                     <MetricCard title="Plant Alarms" value={currentAlarms.length} icon={Bell} color="text-rose-500" />
+                )}
+            </div>
+            
+            {/* Utility Section */}
+            <div>
+                <h3 className="text-lg font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                    <Droplets size={18} /> Utility Summary
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    {utilityMetrics.map((metric, idx) => {
+                        if (!isDataItemVisible(userRole, metric.key)) return null;
+
+                         const CardContent = (
+                            <div className={`bg-slate-800 border border-slate-700 rounded-lg p-3 ${canClickUtility ? 'hover:border-blue-500 cursor-pointer group' : 'cursor-default'} transition-all h-full`}>
+                                <div className="flex justify-between items-start">
+                                    <div className={`p-1.5 rounded-md bg-slate-700/50 ${metric.color}`}>
+                                        <metric.icon size={16} />
+                                    </div>
+                                    {canClickUtility && <div className="text-slate-600 group-hover:text-blue-400 transition-colors"><TrendingUp size={14} /></div>}
+                                </div>
+                                <div className="mt-2">
+                                    <p className="text-slate-400 text-xs font-medium uppercase truncate">{metric.label}</p>
+                                    <div className="flex items-baseline gap-1 mt-1">
+                                        <span className="text-lg font-bold text-white">{metric.value}</span>
+                                        <span className="text-[10px] text-slate-500">{metric.unit}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                        
+                        return canClickUtility ? (
+                            <div key={idx} onClick={() => navigate(`/utility/${plantId}`)}>{CardContent}</div>
+                        ) : (
+                            <div key={idx}>{CardContent}</div>
+                        );
+                    })}
                 </div>
-             )}
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {isWidgetVisible(userRole, 'PLANT_WIDGET_SHIFT') && (
+                {isDataItemVisible(userRole, 'SHIFT_PERFORMANCE_TABLE') && (
                     <Card title="Shift Performance" className="lg:col-span-2">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm text-slate-400">
@@ -304,7 +396,7 @@ const PlantDashboard: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
                     </Card>
                 )}
 
-                {isWidgetVisible(userRole, 'PLANT_WIDGET_ALARMS') && (
+                {isDataItemVisible(userRole, 'ACTIVE_ALARMS_LIST') && (
                     <Card title="Active Alarms" className="lg:col-span-1 flex flex-col max-h-[300px]">
                         <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 space-y-3">
                             {currentAlarms.length === 0 ? (
@@ -335,72 +427,88 @@ const PlantDashboard: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
                 )}
             </div>
 
-            {isWidgetVisible(userRole, 'PLANT_GRID_MACHINES') && (
-                <div>
-                    <h3 className="text-lg font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                        <Factory size={18} /> Production Lines
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {displayMachines.map(machine => (
-                            <Link to={`/machines/${machine.id}`} key={machine.id}>
-                                <div 
-                                    className="bg-slate-800 border border-slate-700 hover:border-blue-500 rounded-lg p-4 cursor-pointer transition-all hover:bg-slate-800/80 group h-full"
-                                >
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="font-semibold text-white truncate pr-2 group-hover:text-blue-400 transition-colors">{machine.name}</span>
-                                        <StatusBadge status={machine.status} />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2 mt-4 text-sm">
+            {/* Machines Grid - Always renders container, visibility of cards is implicit but here we render the section */}
+            <div>
+                <h3 className="text-lg font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                    <Factory size={18} /> Production Lines
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {displayMachines.map(machine => {
+                        const CardContent = (
+                            <div 
+                                className={`bg-slate-800 border border-slate-700 ${!isMachineRestricted ? 'hover:border-blue-500 hover:bg-slate-800/80 cursor-pointer group' : 'cursor-default opacity-90'} rounded-lg p-4 transition-all h-full`}
+                            >
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className={`font-semibold text-white truncate pr-2 ${!isMachineRestricted ? 'group-hover:text-blue-400' : ''} transition-colors`}>{machine.name}</span>
+                                    {isDataItemVisible(userRole, 'MACHINE_CARD_STATUS') && <StatusBadge status={machine.status} />}
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 mt-4 text-sm">
+                                    {isDataItemVisible(userRole, 'MACHINE_CARD_OUTPUT') && (
                                         <div>
                                             <p className="text-slate-500 text-xs">Output (kg/h)</p>
                                             <p className="font-mono text-slate-200 text-lg">{machine.outputPerHour}</p>
                                         </div>
+                                    )}
+                                    {isDataItemVisible(userRole, 'MACHINE_CARD_OEE') && (
                                         <div>
                                             <p className="text-slate-500 text-xs">OEE</p>
                                             <p className="font-mono text-slate-200 text-lg">{(machine.oee * 100).toFixed(0)}%</p>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            )}
+                            </div>
+                        );
 
-            {isWidgetVisible(userRole, 'PLANT_GRID_LVMDP') && (
-                <div>
-                    <h3 className="text-lg font-semibold text-slate-300 mb-3 flex items-center gap-2 mt-8">
-                        <Zap size={18} /> Power Distribution (LVMDP)
-                    </h3>
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {plant.lvmdps.map(panel => (
-                            <Link to={`/lvmdp/${panel.id}`} key={panel.id}>
-                                <div 
-                                    className="bg-slate-900 border border-slate-700 hover:border-yellow-500 rounded-lg p-4 cursor-pointer relative overflow-hidden group h-full"
-                                >
-                                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                                        <Zap size={80} />
-                                    </div>
-                                    <h4 className="font-semibold text-slate-200 group-hover:text-yellow-400 transition-colors">{panel.code}</h4>
-                                    <div className="mt-4 space-y-3">
-                                        <div className="flex justify-between text-sm border-b border-slate-800 pb-2">
-                                            <span className="text-slate-500">Power</span>
-                                            <span className="text-yellow-400 font-mono font-bold">{panel.totalPowerKW} kW</span>
-                                        </div>
-                                         <div className="flex justify-between text-sm">
-                                            <span className="text-slate-500">PF / Load</span>
-                                            <span className="text-slate-300 font-mono">{panel.powerFactor} / {panel.currentLoadPercent}%</span>
-                                        </div>
-                                    </div>
-                                    <div className="mt-3">
-                                        <StatusBadge status={panel.status} />
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
+                        return isMachineRestricted ? (
+                            <div key={machine.id}>{CardContent}</div>
+                        ) : (
+                            <Link to={`/machines/${machine.id}`} key={machine.id}>{CardContent}</Link>
+                        );
+                    })}
                 </div>
-            )}
+            </div>
+
+            {/* LVMDP Grid */}
+            <div>
+                <h3 className="text-lg font-semibold text-slate-300 mb-3 flex items-center gap-2 mt-8">
+                    <Zap size={18} /> Power Distribution
+                </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {plant.lvmdps.map((panel, idx) => {
+                        const loadPercent = calculateLVMDP_Load(panel);
+                        const CardContent = (
+                            <div 
+                                className={`bg-slate-900 border border-slate-700 rounded-lg p-4 relative overflow-hidden h-full ${canClickLVMDP ? 'hover:border-yellow-500 cursor-pointer group' : 'cursor-default'}`}
+                            >
+                                <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Zap size={80} />
+                                </div>
+                                <h4 className="font-semibold text-slate-200 group-hover:text-yellow-400 transition-colors">Panel {idx + 1}</h4>
+                                <div className="mt-4 space-y-3">
+                                    {isDataItemVisible(userRole, 'LV_PANEL_ENERGY_TODAY') && (
+                                        <div className="flex justify-between text-sm border-b border-slate-800 pb-2">
+                                            <span className="text-slate-500">Energy Today</span>
+                                            <span className="text-yellow-400 font-mono font-bold">{panel.energyToday.toLocaleString()} kWh</span>
+                                        </div>
+                                    )}
+                                    {isDataItemVisible(userRole, 'LV_PANEL_LOAD_PERCENT') && (
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-slate-500">Current Load</span>
+                                            <span className={`font-mono font-bold ${loadPercent > 80 ? 'text-rose-400' : 'text-slate-300'}`}>{loadPercent.toFixed(1)}%</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+
+                        return canClickLVMDP ? (
+                            <Link to={`/lvmdp/${panel.id}`} key={panel.id}>{CardContent}</Link>
+                        ) : (
+                            <div key={panel.id}>{CardContent}</div>
+                        );
+                    })}
+                </div>
+            </div>
         </div>
     );
 };
@@ -572,15 +680,16 @@ interface ProtectedRouteProps {
     user: User;
     allowedRoles?: UserRole[]; // If undefined, allow all logged in
     restrictedForRoles?: UserRole[]; // Block these specific roles
+    redirectPath?: string;
     children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ user, allowedRoles, restrictedForRoles, children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ user, allowedRoles, restrictedForRoles, redirectPath, children }) => {
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-        return <AccessDenied />;
+        return redirectPath ? <Navigate to={redirectPath} replace /> : <AccessDenied />;
     }
     if (restrictedForRoles && restrictedForRoles.includes(user.role)) {
-        return <AccessDenied />;
+        return redirectPath ? <Navigate to={redirectPath} replace /> : <AccessDenied />;
     }
     return <>{children}</>;
 };
@@ -612,7 +721,11 @@ const App: React.FC = () => {
                     <Route 
                         path="machines/:machineId" 
                         element={
-                            <ProtectedRoute user={user} restrictedForRoles={restrictedForManagement}>
+                            <ProtectedRoute 
+                                user={user} 
+                                restrictedForRoles={restrictedForManagement}
+                                redirectPath="/dashboard/global"
+                            >
                                 <MachineDetailWrapper userRole={user.role} />
                             </ProtectedRoute>
                         } 
