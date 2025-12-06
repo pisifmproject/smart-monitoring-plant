@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { LVMDP, UserRole } from '../types';
@@ -119,18 +118,23 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
         }, 800);
     };
     
-    const FilterButton = ({ label }: { label: Period }) => (
-        <button 
-            onClick={() => setPeriod(label)}
-            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                period === label 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
-        >
-            {label}
-        </button>
-    );
+    const FilterButton = ({ label }: { label: Period }) => {
+        // Restricted: Operators can only see Day
+        if (userRole === UserRole.OPERATOR && label !== 'Day') return null;
+
+        return (
+            <button 
+                onClick={() => setPeriod(label)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                    period === label 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+            >
+                {label}
+            </button>
+        );
+    };
 
     const DeltaIndicator = ({ value }: { value: number }) => (
         <span className={`text-xs font-bold ${value >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>

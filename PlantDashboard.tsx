@@ -37,18 +37,23 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     const canClickDetails = ![UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole);
     const visibilityContext = { plantId: plant.id };
 
-    const FilterButton = ({ label }: { label: Period }) => (
-        <button 
-            onClick={() => setPeriod(label)}
-            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                period === label 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
-        >
-            {label}
-        </button>
-    );
+    const FilterButton = ({ label }: { label: Period }) => {
+        // Restricted: Operators can only see DAY
+        if (userRole === UserRole.OPERATOR && label !== 'DAY') return null;
+
+        return (
+            <button 
+                onClick={() => setPeriod(label)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                    period === label 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+            >
+                {label}
+            </button>
+        );
+    };
 
     // Helper for Alarm Icons
     const getAlarmIcon = (severity: AlarmSeverity) => {
