@@ -1,3 +1,4 @@
+
 export enum PlantCode {
     CIKOKOL = 'CIKOKOL',
     SEMARANG = 'SEMARANG',
@@ -170,7 +171,10 @@ export enum VisibilityCategory {
     PLANT_DASHBOARD = 'PLANT_DASHBOARD',
     MACHINE_DETAIL = 'MACHINE_DETAIL',
     UTILITY = 'UTILITY',
-    LV_SUMMARY = 'LV_SUMMARY',
+    MAIN_PANEL_1 = 'MAIN_PANEL_1',
+    MAIN_PANEL_2 = 'MAIN_PANEL_2',
+    MAIN_PANEL_3 = 'MAIN_PANEL_3',
+    MAIN_PANEL_4 = 'MAIN_PANEL_4',
     OTHER = 'OTHER'
 }
 
@@ -188,7 +192,8 @@ export enum VisibilityGroup {
     PROCESS_PARAM = 'PROCESS_PARAM',
     MACHINE_HEALTH = 'MACHINE_HEALTH',
     FORM = 'FORM',
-    TAB = 'TAB'
+    TAB = 'TAB',
+    MACHINES = 'MACHINES'
 }
 
 export interface DataItem {

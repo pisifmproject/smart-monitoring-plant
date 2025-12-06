@@ -1,5 +1,6 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { LVMDP, UserRole } from '../types';
 import { Card, StatusBadge, MetricCard } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
@@ -21,6 +22,21 @@ type Period = 'Day' | 'Week' | 'Month' | 'Year';
 
 const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) => {
     const [period, setPeriod] = useState<Period>('Day');
+    const location = useLocation();
+    const maintenanceSectionRef = useRef<HTMLDivElement>(null);
+    const historySectionRef = useRef<HTMLDivElement>(null);
+    
+    // Auto-scroll logic
+    useEffect(() => {
+        // If maintenance requested, scroll to form
+        if (location.state?.initialTab === 'Maintenance' && maintenanceSectionRef.current) {
+            maintenanceSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+        // If alarms requested (for non-maintenance users), scroll to history
+        else if (location.state?.initialTab === 'Alarms' && historySectionRef.current) {
+            historySectionRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [location.state]);
     
     // Force re-render helper for mock service updates
     const [tick, setTick] = useState(0);
@@ -28,6 +44,25 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
 
     // Visibility context only needs plantId (and machineId if applicable), not category
     const visibilityContext = { plantId: lvmdp.plantId };
+
+    // Dynamic key generation based on panel ID (e.g. LVMDP-1 vs LVMDP-2)
+    // Assumes code format "LVMDP-X"
+    const visibilityKeys = useMemo(() => {
+        const num = lvmdp.code.split('-')[1]; // "1", "2", "3", "4"
+        const prefix = num === '1' ? 'LV' : `PANEL${num}`; // Backward compatibility for Panel 1 (LV_)
+        
+        return {
+            KW: `${prefix}_KW`,
+            KVA: `${prefix}_KVA`,
+            KVAR: `${prefix}_KVAR`,
+            PF: `${prefix}_PF`,
+            VOLT_GROUP: `${prefix}_VOLT_GROUP`,
+            CURRENT_LOAD_SECTION: `${prefix}_CURRENT_LOAD_SECTION`,
+            POWER_METRICS_LIST: `${prefix}_POWER_METRICS_LIST`,
+            ENERGY_TREND: `${prefix}_ENERGY_TREND`,
+            SHIFT_DATA: `${prefix}_SHIFT_DATA`
+        };
+    }, [lvmdp.code]);
 
     const energyTrend = lvmdpService.getEnergyTrend(lvmdp.id, period);
     const shiftData = lvmdpService.getShiftAnalysis(lvmdp.id, period);
@@ -139,7 +174,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
             </div>
 
             <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-5">
-                {isDataItemVisible(userRole, 'LV_KW', visibilityContext) && (
+                {isDataItemVisible(userRole, visibilityKeys.KW, visibilityContext) && (
                     <MetricCard 
                         title="Active Power" 
                         value={lvmdp.totalPowerKW.toLocaleString()} 
@@ -150,7 +185,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                         color="text-yellow-400" 
                     />
                 )}
-                {isDataItemVisible(userRole, 'LV_KVA', visibilityContext) && (
+                {isDataItemVisible(userRole, visibilityKeys.KVA, visibilityContext) && (
                     <MetricCard 
                         title="Apparent Power" 
                         value={lvmdp.totalPowerKVA.toLocaleString()} 
@@ -161,7 +196,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                         color="text-blue-400" 
                     />
                 )}
-                {isDataItemVisible(userRole, 'LV_KVAR', visibilityContext) && (
+                {isDataItemVisible(userRole, visibilityKeys.KVAR, visibilityContext) && (
                     <MetricCard 
                         title="Reactive Power" 
                         value={lvmdp.totalPowerKVAR.toLocaleString()} 
@@ -172,7 +207,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                         color="text-purple-400" 
                     />
                 )}
-                {isDataItemVisible(userRole, 'LV_PF', visibilityContext) && (
+                {isDataItemVisible(userRole, visibilityKeys.PF, visibilityContext) && (
                     <MetricCard 
                         title="Power Factor" 
                         value={lvmdp.powerFactor} 
@@ -186,7 +221,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <div className="space-y-6 xl:col-span-1">
-                    {isDataItemVisible(userRole, 'LV_VOLT_GROUP', visibilityContext) && (
+                    {isDataItemVisible(userRole, visibilityKeys.VOLT_GROUP, visibilityContext) && (
                         <Card title="Voltage Metrics">
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage R-S</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{lvmdp.voltageRS} V</span> <DeltaIndicator value={deltas.v_rs} /></div></div>
@@ -195,7 +230,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                             </div>
                         </Card>
                     )}
-                    {isDataItemVisible(userRole, 'LV_CURRENT_LOAD_SECTION', visibilityContext) && (
+                    {isDataItemVisible(userRole, visibilityKeys.CURRENT_LOAD_SECTION, visibilityContext) && (
                         <Card title="Current Load Usage">
                             <div className="space-y-3">
                                 <div className="w-full bg-slate-700 rounded-full h-2.5">
@@ -209,7 +244,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                             </div>
                         </Card>
                     )}
-                     {isDataItemVisible(userRole, 'LV_POWER_METRICS_LIST', visibilityContext) && (
+                     {isDataItemVisible(userRole, visibilityKeys.POWER_METRICS_LIST, visibilityContext) && (
                          <Card title="Power Metrics">
                             <div className="space-y-3 text-sm">
                                <div className="flex justify-between items-center"><span className="text-slate-400">THD-V</span><span className="font-mono text-white font-bold">{lvmdp.thdV}%</span></div>
@@ -222,7 +257,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                 </div>
 
                 <div className="xl:col-span-2 space-y-6">
-                    {isDataItemVisible(userRole, 'LV_ENERGY_TREND', visibilityContext) && (
+                    {isDataItemVisible(userRole, visibilityKeys.ENERGY_TREND, visibilityContext) && (
                         <Card title={`Energy Usage Trend (${period})`} className="min-h-[400px]">
                              <ResponsiveContainer width="100%" height={350}>
                                 <AreaChart data={energyTrend}>
@@ -236,6 +271,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                             </ResponsiveContainer>
                         </Card>
                     )}
+                    {isDataItemVisible(userRole, visibilityKeys.SHIFT_DATA, visibilityContext) && (
                      <Card title={`Shift Energy & Electrical Performance (${period})`}>
                          <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
@@ -264,11 +300,12 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                             </table>
                          </div>
                      </Card>
+                    )}
                 </div>
             </div>
 
             {/* MAINTENANCE SECTION */}
-            <div className="space-y-6">
+            <div className="space-y-6" ref={maintenanceSectionRef}>
                 <div className="flex items-center gap-3 border-b border-slate-800 pb-3 mt-8">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2"><Wrench className="text-slate-400" /> Maintenance & Alarms</h2>
                 </div>
@@ -365,36 +402,38 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                     </div>
                 )}
 
-                <Card title="Maintenance History">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-slate-300">
-                            <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
-                                <tr>
-                                    <th className="p-3">Time</th>
-                                    <th className="p-3">Technician</th>
-                                    <th className="p-3">Status</th>
-                                    <th className="p-3">Note</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-700 text-sm">
-                                {alarmHistory.length === 0 ? (
-                                    <tr><td colSpan={4} className="p-6 text-center text-slate-500 italic">No maintenance history recorded for this panel.</td></tr>
-                                ) : alarmHistory.map(record => (
-                                    <tr key={record.id} className="hover:bg-slate-800/50">
-                                        <td className="p-3 font-mono text-slate-400">{record.timestamp}</td>
-                                        <td className="p-3 font-bold text-white">{record.checkedBy}</td>
-                                        <td className="p-3">
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${record.solved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                                                {record.solved ? 'SOLVED' : 'PENDING'}
-                                            </span>
-                                        </td>
-                                        <td className="p-3 text-slate-300">{record.note}</td>
+                <div ref={historySectionRef}>
+                    <Card title="Maintenance History">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-slate-300">
+                                <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
+                                    <tr>
+                                        <th className="p-3">Time</th>
+                                        <th className="p-3">Technician</th>
+                                        <th className="p-3">Status</th>
+                                        <th className="p-3">Note</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </Card>
+                                </thead>
+                                <tbody className="divide-y divide-slate-700 text-sm">
+                                    {alarmHistory.length === 0 ? (
+                                        <tr><td colSpan={4} className="p-6 text-center text-slate-500 italic">No maintenance history recorded for this panel.</td></tr>
+                                    ) : alarmHistory.map(record => (
+                                        <tr key={record.id} className="hover:bg-slate-800/50">
+                                            <td className="p-3 font-mono text-slate-400">{record.timestamp}</td>
+                                            <td className="p-3 font-bold text-white">{record.checkedBy}</td>
+                                            <td className="p-3">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${record.solved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                                    {record.solved ? 'SOLVED' : 'PENDING'}
+                                                </span>
+                                            </td>
+                                            <td className="p-3 text-slate-300">{record.note}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                </div>
             </div>
         </div>
     );

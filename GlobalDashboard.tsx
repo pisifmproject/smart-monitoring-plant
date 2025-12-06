@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from './types';
@@ -101,13 +102,16 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
             </div>
 
             {/* Plant Status Overview */}
-            {isDataItemVisible(userRole, 'GLOBAL_PLANT_LIST') && (
-                <div className="space-y-4">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Factory size={20} className="text-slate-400"/> Plant Status Overview
-                    </h2>
-                    <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
-                        {plants.map(plant => (
+            <div className="space-y-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Factory size={20} className="text-slate-400"/> Plant Status Overview
+                </h2>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
+                    {plants.map(plant => {
+                        const visibilityKey = `GLOBAL_PLANT_${plant.id}`;
+                        if (!isDataItemVisible(userRole, visibilityKey)) return null;
+
+                        return (
                             <div 
                                 key={plant.id}
                                 onClick={() => canDrillDown && navigate(`/app/plants/${plant.id}`)}
@@ -149,10 +153,10 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                                 {/* Decorative Gradient */}
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-transparent rounded-bl-full pointer-events-none"></div>
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
-            )}
+            </div>
         </div>
     );
 };
