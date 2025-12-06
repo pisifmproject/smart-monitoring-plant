@@ -2,6 +2,11 @@ import React from 'react';
 import { LucideIcon } from 'lucide-react';
 import { MachineStatus } from '../types';
 
+export const formatNumber = (value: number | undefined | null, maxDecimals: number = 2): string => {
+    if (value === undefined || value === null) return '0';
+    return value.toLocaleString('id-ID', { maximumFractionDigits: maxDecimals });
+};
+
 export const Card: React.FC<{ children: React.ReactNode; className?: string; title?: string; action?: React.ReactNode }> = ({ children, className = "", title, action }) => (
     <div className={`bg-slate-800 border border-slate-700 rounded-xl p-4 md:p-5 shadow-sm ${className}`}>
         {(title || action) && (

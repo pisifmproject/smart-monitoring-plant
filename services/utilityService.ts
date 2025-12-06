@@ -233,9 +233,9 @@ export const utilityService = {
         const low = average * (0.5 + Math.random() * 0.2);
         const unitSuffix = config.unit.includes('/') ? '' : '/h';
         return {
-            peak: { value: peak.toFixed(1), time: '14:30', unit: config.unit + unitSuffix },
-            average: { value: average.toFixed(1), unit: config.unit + unitSuffix },
-            low: { value: low.toFixed(1), time: '03:00', unit: config.unit + unitSuffix }
+            peak: { value: peak.toLocaleString('id-ID', { maximumFractionDigits: 2 }), time: '14:30', unit: config.unit + unitSuffix },
+            average: { value: average.toLocaleString('id-ID', { maximumFractionDigits: 2 }), unit: config.unit + unitSuffix },
+            low: { value: low.toLocaleString('id-ID', { maximumFractionDigits: 2 }), time: '03:00', unit: config.unit + unitSuffix }
         };
     }
 };

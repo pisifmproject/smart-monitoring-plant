@@ -134,8 +134,8 @@ export const dashboardService = {
                 key: `UTILITY_${type.toUpperCase()}`,
                 type,
                 label: config.label,
-                value: config.value.toLocaleString(undefined, {
-                    maximumFractionDigits: 0
+                value: config.value.toLocaleString('id-ID', {
+                    maximumFractionDigits: 2
                 }),
                 unit: config.unit,
                 icon: config.icon,

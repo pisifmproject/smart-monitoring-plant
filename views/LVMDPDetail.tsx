@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { LVMDP, UserRole } from '../types';
-import { Card, StatusBadge, MetricCard } from '../components/SharedComponents';
+import { Card, StatusBadge, MetricCard, formatNumber } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
 import { lvmdpService } from '../services/lvmdpService';
 import { maintenanceService } from '../services/maintenanceService';
@@ -134,7 +134,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
 
     const DeltaIndicator = ({ value }: { value: number }) => (
         <span className={`text-xs font-bold ${value >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-            {value >= 0 ? '▲' : '▼'} {Math.abs(value)}%
+            {value >= 0 ? '▲' : '▼'} {formatNumber(Math.abs(value))}%
         </span>
     );
 
@@ -177,10 +177,10 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                 {isDataItemVisible(userRole, visibilityKeys.KW, visibilityContext) && (
                     <MetricCard 
                         title="Active Power" 
-                        value={lvmdp.totalPowerKW.toLocaleString()} 
+                        value={formatNumber(lvmdp.totalPowerKW)} 
                         unit="kW" 
                         icon={Zap} 
-                        trend={`${Math.abs(deltas.kw)}%`} 
+                        trend={`${formatNumber(Math.abs(deltas.kw))}%`} 
                         trendUp={deltas.kw > 0} 
                         color="text-yellow-400" 
                     />
@@ -188,10 +188,10 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                 {isDataItemVisible(userRole, visibilityKeys.KVA, visibilityContext) && (
                     <MetricCard 
                         title="Apparent Power" 
-                        value={lvmdp.totalPowerKVA.toLocaleString()} 
+                        value={formatNumber(lvmdp.totalPowerKVA)} 
                         unit="kVA" 
                         icon={Activity} 
-                        trend={`${Math.abs(deltas.kva)}%`} 
+                        trend={`${formatNumber(Math.abs(deltas.kva))}%`} 
                         trendUp={deltas.kva > 0} 
                         color="text-blue-400" 
                     />
@@ -199,10 +199,10 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                 {isDataItemVisible(userRole, visibilityKeys.KVAR, visibilityContext) && (
                     <MetricCard 
                         title="Reactive Power" 
-                        value={lvmdp.totalPowerKVAR.toLocaleString()} 
+                        value={formatNumber(lvmdp.totalPowerKVAR)} 
                         unit="kVAR" 
                         icon={Battery} 
-                        trend={`${Math.abs(deltas.kvar)}%`} 
+                        trend={`${formatNumber(Math.abs(deltas.kvar))}%`} 
                         trendUp={deltas.kvar > 0} 
                         color="text-purple-400" 
                     />
@@ -210,9 +210,9 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                 {isDataItemVisible(userRole, visibilityKeys.PF, visibilityContext) && (
                     <MetricCard 
                         title="Power Factor" 
-                        value={lvmdp.powerFactor} 
+                        value={formatNumber(lvmdp.powerFactor)} 
                         icon={Gauge} 
-                        trend={`${Math.abs(deltas.pf * 100)}%`} 
+                        trend={`${formatNumber(Math.abs(deltas.pf * 100))}%`} 
                         trendUp={deltas.pf > 0} 
                         color="text-emerald-400" 
                     />
@@ -224,9 +224,9 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                     {isDataItemVisible(userRole, visibilityKeys.VOLT_GROUP, visibilityContext) && (
                         <Card title="Voltage Metrics">
                             <div className="space-y-3">
-                                <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage R-S</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{lvmdp.voltageRS} V</span> <DeltaIndicator value={deltas.v_rs} /></div></div>
-                                <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage S-T</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{lvmdp.voltageST} V</span> <DeltaIndicator value={deltas.v_st} /></div></div>
-                                <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage T-R</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{lvmdp.voltageTR} V</span> <DeltaIndicator value={deltas.v_tr} /></div></div>
+                                <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage R-S</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageRS)} V</span> <DeltaIndicator value={deltas.v_rs} /></div></div>
+                                <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage S-T</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageST)} V</span> <DeltaIndicator value={deltas.v_st} /></div></div>
+                                <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage T-R</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageTR)} V</span> <DeltaIndicator value={deltas.v_tr} /></div></div>
                             </div>
                         </Card>
                     )}
@@ -237,20 +237,20 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                     <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: `${loadPercent}%` }}></div>
                                 </div>
                                 <div className="flex justify-between items-baseline">
-                                    <span className="text-2xl font-bold text-white">{loadPercent.toFixed(1)}%</span>
-                                    <span className="text-sm text-slate-400 font-medium">Max: {maxCurrent.toLocaleString()} A</span>
+                                    <span className="text-2xl font-bold text-white">{formatNumber(loadPercent)}%</span>
+                                    <span className="text-sm text-slate-400 font-medium">Max: {formatNumber(maxCurrent)} A</span>
                                 </div>
-                                <p className="text-sm text-slate-400">Current: <span className="font-bold text-white font-mono">{avgCurrent.toFixed(1)} A</span></p>
+                                <p className="text-sm text-slate-400">Current: <span className="font-bold text-white font-mono">{formatNumber(avgCurrent)} A</span></p>
                             </div>
                         </Card>
                     )}
                      {isDataItemVisible(userRole, visibilityKeys.POWER_METRICS_LIST, visibilityContext) && (
                          <Card title="Power Metrics">
                             <div className="space-y-3 text-sm">
-                               <div className="flex justify-between items-center"><span className="text-slate-400">THD-V</span><span className="font-mono text-white font-bold">{lvmdp.thdV}%</span></div>
-                               <div className="flex justify-between items-center"><span className="text-slate-400">THD-I</span><span className="font-mono text-white font-bold">{lvmdp.thdI}%</span></div>
-                               <div className="flex justify-between items-center"><span className="text-slate-400">Frequency</span><span className="font-mono text-white font-bold">{lvmdp.frequency} Hz</span></div>
-                               <div className="flex justify-between items-center"><span className="text-slate-400">Panel Temp</span><span className="font-mono text-white font-bold">{lvmdp.panelTemp}°C</span></div>
+                               <div className="flex justify-between items-center"><span className="text-slate-400">THD-V</span><span className="font-mono text-white font-bold">{formatNumber(lvmdp.thdV)}%</span></div>
+                               <div className="flex justify-between items-center"><span className="text-slate-400">THD-I</span><span className="font-mono text-white font-bold">{formatNumber(lvmdp.thdI)}%</span></div>
+                               <div className="flex justify-between items-center"><span className="text-slate-400">Frequency</span><span className="font-mono text-white font-bold">{formatNumber(lvmdp.frequency)} Hz</span></div>
+                               <div className="flex justify-between items-center"><span className="text-slate-400">Panel Temp</span><span className="font-mono text-white font-bold">{formatNumber(lvmdp.panelTemp)}°C</span></div>
                             </div>
                         </Card>
                     )}
@@ -264,8 +264,8 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                     <defs><linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/><stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/></linearGradient></defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                     <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} />
-                                    <YAxis stroke="#94a3b8" tick={{fontSize: 12}} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
+                                    <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickFormatter={(val) => formatNumber(val, 0)} />
+                                    <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
                                     <Area type="monotone" dataKey="value" stroke="#f59e0b" fill="url(#colorEnergy)" name="Energy (kWh)" />
                                 </AreaChart>
                             </ResponsiveContainer>
@@ -289,11 +289,11 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                     {shiftData.map(s => (
                                         <tr key={s.name}>
                                             <td className="p-3 font-semibold text-white text-center">{s.name.split(' ')[1]}</td>
-                                            <td className="p-3 font-mono text-yellow-400 text-center">{s.kwh.toLocaleString()}</td>
-                                            <td className="p-3 font-mono text-center">{s.avgPower.toFixed(1)}</td>
-                                            <td className="p-3 font-mono text-blue-400 text-center">{s.avgLoad.toFixed(1)}</td>
-                                            <td className="p-3 font-mono text-center">{s.avgCurrent.toFixed(1)}</td>
-                                            <td className="p-3 font-mono text-emerald-400 text-center">{s.avgPF.toFixed(2)}</td>
+                                            <td className="p-3 font-mono text-yellow-400 text-center">{formatNumber(s.kwh)}</td>
+                                            <td className="p-3 font-mono text-center">{formatNumber(s.avgPower)}</td>
+                                            <td className="p-3 font-mono text-blue-400 text-center">{formatNumber(s.avgLoad)}</td>
+                                            <td className="p-3 font-mono text-center">{formatNumber(s.avgCurrent)}</td>
+                                            <td className="p-3 font-mono text-emerald-400 text-center">{formatNumber(s.avgPF)}</td>
                                         </tr>
                                     ))}
                                 </tbody>

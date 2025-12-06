@@ -1,8 +1,7 @@
-
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from './types';
-import { Card, MetricCard, StatusBadge } from './components/SharedComponents';
+import { Card, MetricCard, StatusBadge, formatNumber } from './components/SharedComponents';
 import { isDataItemVisible } from './services/visibilityStore';
 import { dashboardService } from './services/dashboardService';
 import { Globe, Activity, Zap, AlertTriangle, Factory } from 'lucide-react';
@@ -61,7 +60,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                 {isDataItemVisible(userRole, 'GLOBAL_OUTPUT_TODAY') && (
                     <MetricCard 
                         title={`Total Output (${period})`}
-                        value={kpis.totalOutput.toLocaleString()} 
+                        value={formatNumber(kpis.totalOutput)} 
                         unit="kg" 
                         icon={Factory} 
                         trend="2.5%" 
@@ -72,7 +71,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                 {isDataItemVisible(userRole, 'GLOBAL_OEE') && (
                     <MetricCard 
                         title="Global Avg OEE" 
-                        value={kpis.avgOEE.toFixed(1)} 
+                        value={formatNumber(kpis.avgOEE)} 
                         unit="%" 
                         icon={Activity} 
                         trend="1.2%" 
@@ -83,7 +82,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                 {isDataItemVisible(userRole, 'GLOBAL_TOTAL_ENERGY') && (
                     <MetricCard 
                         title={`Total Energy (${period})`} 
-                        value={kpis.totalEnergy.toLocaleString()} 
+                        value={formatNumber(kpis.totalEnergy)} 
                         unit="kWh" 
                         icon={Zap} 
                         trend="0.8%" 
@@ -130,17 +129,17 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                                 <div className="grid grid-cols-2 gap-y-4 gap-x-2 relative z-10">
                                     <div>
                                         <p className="text-slate-500 text-xs font-bold uppercase">Output</p>
-                                        <p className="text-white font-mono font-bold text-lg">{plant.scaledOutput.toLocaleString()}</p>
+                                        <p className="text-white font-mono font-bold text-lg">{formatNumber(plant.scaledOutput)}</p>
                                     </div>
                                     <div>
                                         <p className="text-slate-500 text-xs font-bold uppercase">OEE</p>
                                         <p className={`font-mono font-bold text-lg ${plant.scaledOEE >= 80 ? 'text-emerald-400' : plant.scaledOEE >= 60 ? 'text-amber-400' : 'text-rose-400'}`}>
-                                            {plant.scaledOEE.toFixed(1)}%
+                                            {formatNumber(plant.scaledOEE)}%
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-slate-500 text-xs font-bold uppercase">Energy</p>
-                                        <p className="text-yellow-400 font-mono font-bold">{plant.scaledEnergy.toLocaleString()} <span className="text-xs text-slate-500">kWh</span></p>
+                                        <p className="text-yellow-400 font-mono font-bold">{formatNumber(plant.scaledEnergy)} <span className="text-xs text-slate-500">kWh</span></p>
                                     </div>
                                     <div>
                                         <p className="text-slate-500 text-xs font-bold uppercase">Alarms</p>

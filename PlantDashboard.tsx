@@ -1,8 +1,7 @@
-
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserRole, AlarmSeverity, Alarm } from './types';
-import { Card, MetricCard, StatusBadge } from './components/SharedComponents';
+import { Card, MetricCard, StatusBadge, formatNumber } from './components/SharedComponents';
 import { isDataItemVisible } from './services/visibilityStore';
 import { dashboardService } from './services/dashboardService';
 import { plantService } from './services/plantService';
@@ -112,7 +111,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 {isDataItemVisible(userRole, 'PLANT_OUTPUT_TODAY', visibilityContext) && (
                     <MetricCard 
                         title={`Output (${period})`} 
-                        value={kpis.output.toLocaleString()} 
+                        value={formatNumber(kpis.output)} 
                         unit="kg" 
                         icon={Factory} 
                         trend="3.2%" 
@@ -122,7 +121,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 {isDataItemVisible(userRole, 'PLANT_OEE', visibilityContext) && (
                     <MetricCard 
                         title="OEE" 
-                        value={kpis.oee.toFixed(1)} 
+                        value={formatNumber(kpis.oee)} 
                         unit="%" 
                         icon={Activity} 
                         trend="0.5%" 
@@ -133,7 +132,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 {isDataItemVisible(userRole, 'PLANT_POWER_USAGE', visibilityContext) && (
                     <MetricCard 
                         title={`Energy (${period})`} 
-                        value={kpis.energy.toLocaleString()} 
+                        value={formatNumber(kpis.energy)} 
                         unit="kWh" 
                         icon={Zap} 
                         trend="1.1%" 
@@ -203,10 +202,10 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                         }`}>
                                             <td className="p-3 font-semibold text-white">{shift.name}</td>
                                             <td className="p-3 font-mono text-xs">{shift.time}</td>
-                                            <td className="p-3 font-mono">{shift.output.toLocaleString()}</td>
+                                            <td className="p-3 font-mono">{formatNumber(shift.output)}</td>
                                             <td className="p-3 text-center">
                                                 <span className={`font-bold ${shift.oee > 0.8 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                                    {(shift.oee * 100).toFixed(1)}%
+                                                    {formatNumber(shift.oee * 100)}%
                                                 </span>
                                             </td>
                                             <td className="p-3 text-center">
@@ -290,7 +289,9 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                 <div className="flex justify-between items-start mb-4 relative z-10">
                                     <div>
                                         <h4 className="font-bold text-white text-lg group-hover:text-blue-400 transition-colors">{machine.name}</h4>
-                                        <p className="text-xs text-slate-400 uppercase tracking-wider">{machine.code}</p>
+                                        {userRole === UserRole.ADMINISTRATOR && (
+                                            <p className="text-xs text-slate-400 uppercase tracking-wider">{machine.code}</p>
+                                        )}
                                     </div>
                                     <StatusBadge status={machine.status} />
                                 </div>
@@ -311,7 +312,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                     {isDataItemVisible(userRole, 'MACHINE_CARD_OUTPUT', machineContext) && (
                                         <div>
                                             <p className="text-slate-500 text-xs font-bold uppercase">Output ({period})</p>
-                                            <p className="text-white font-mono font-bold text-lg">{Math.round(machine.scaledOutput || 0).toLocaleString()} <span className="text-xs text-slate-500 font-normal">kg</span></p>
+                                            <p className="text-white font-mono font-bold text-lg">{formatNumber(machine.scaledOutput || 0)} <span className="text-xs text-slate-500 font-normal">kg</span></p>
                                         </div>
                                     )}
                                     {isDataItemVisible(userRole, 'MACHINE_CARD_OEE', machineContext) && (
@@ -320,7 +321,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                             <p className={`font-mono font-bold text-lg ${
                                                 (machine.scaledOEE || 0) >= 0.8 ? 'text-emerald-400' : (machine.scaledOEE || 0) >= 0.6 ? 'text-amber-400' : 'text-rose-400'
                                             }`}>
-                                                {((machine.scaledOEE || 0) * 100).toFixed(1)}%
+                                                {formatNumber((machine.scaledOEE || 0) * 100)}%
                                             </p>
                                         </div>
                                     )}

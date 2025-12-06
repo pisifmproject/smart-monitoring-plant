@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Plant, UserRole } from '../types';
-import { Card, MetricCard } from '../components/SharedComponents';
+import { Card, MetricCard, formatNumber } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
 import { utilityService } from '../services/utilityService';
 import { maintenanceService } from '../services/maintenanceService'; // Import maintenanceService
@@ -80,7 +80,7 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                 {isDataItemVisible(userRole, visibilityKeys.KPI_TOTAL, visibilityContext) && (
                     <MetricCard 
                         title={`Total ${config.label} (${period})`}
-                        value={config.value.toLocaleString(undefined, { maximumFractionDigits: 1 })} 
+                        value={config.value.toLocaleString('id-ID', { maximumFractionDigits: 1 })} 
                         unit={config.unit} 
                         icon={config.icon} 
                         trend={Math.abs(config.trend) + '%'} 
@@ -97,8 +97,8 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                             <LineChart data={trendData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                 <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} />
-                                <YAxis stroke="#94a3b8" tick={{fontSize: 12}} />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
+                                <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickFormatter={(val) => formatNumber(val, 0)} />
+                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
                                 <Line type="monotone" dataKey="value" stroke={config.hexColor} strokeWidth={2} name={`Usage (${config.unit})`} dot={false} />
                             </LineChart>
                         </ResponsiveContainer>
@@ -171,12 +171,12 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                                     <div className="space-y-2 mt-3">
                                         <div className="flex justify-between text-sm">
                                             <span className="text-slate-400 font-medium">Energy ({period})</span>
-                                            <span className="text-white font-mono font-bold">{(panel.energyToday * periodMult).toLocaleString()} kWh</span>
+                                            <span className="text-white font-mono font-bold">{formatNumber(panel.energyToday * periodMult)} kWh</span>
                                         </div>
                                         {isDataItemVisible(userRole, 'LV_PANEL_LOAD_PERCENT', visibilityContext) &&
                                         <div className="flex justify-between text-sm">
                                             <span className="text-slate-400 font-medium">Load</span>
-                                            <span className={`font-mono font-bold ${panel.currentLoadPercent > 80 ? 'text-rose-400' : 'text-emerald-400'}`}>{panel.currentLoadPercent}%</span>
+                                            <span className={`font-mono font-bold ${panel.currentLoadPercent > 80 ? 'text-rose-400' : 'text-emerald-400'}`}>{formatNumber(panel.currentLoadPercent)}%</span>
                                         </div>}
                                     </div>
                                 </Card>
@@ -193,7 +193,7 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                     <XAxis type="number" stroke="#94a3b8" tick={{fontSize: 12}} />
                                     <YAxis type="category" dataKey="name" stroke="#94a3b8" tick={{fontSize: 12}} width={100} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
+                                    <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
                                     <Bar dataKey="value" fill={config.hexColor} name="Consumption (%)" radius={[0, 4, 4, 0]} />
                                 </RechartsBarChart>
                             </ResponsiveContainer>
@@ -204,7 +204,7 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie data={genericBreakdownData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label />
-                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
+                                    <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
                                     <Legend />
                                 </PieChart>
                             </ResponsiveContainer>

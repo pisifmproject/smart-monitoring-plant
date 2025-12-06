@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Machine, UserRole, MachineType } from '../types';
-import { Card, StatusBadge, MetricCard } from '../components/SharedComponents';
+import { Card, StatusBadge, MetricCard, formatNumber } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
 import { maintenanceService } from '../services/maintenanceService';
 import { plantService } from './services/plantService'; // Fixed import path
@@ -181,14 +181,14 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     const renderPerformanceTab = () => (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
             <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
-                 {isDataItemVisible(userRole, 'MACHINE_OEE', visibilityContext) && <MetricCard title="OEE" value={(machine.oee * 100).toFixed(1)} unit="%" icon={Activity} color="text-emerald-400" />}
-                 {isDataItemVisible(userRole, 'MACHINE_AVAILABILITY', visibilityContext) && <MetricCard title="Availability" value={((machine.availability || 0.95) * 100).toFixed(1)} unit="%" icon={Clock} color="text-blue-400" />}
-                 {isDataItemVisible(userRole, 'MACHINE_PERFORMANCE', visibilityContext) && <MetricCard title="Performance" value={((machine.performance || 0.92) * 100).toFixed(1)} unit="%" icon={Zap} color="text-yellow-400" />}
-                 {isDataItemVisible(userRole, 'MACHINE_QUALITY', visibilityContext) && <MetricCard title="Quality" value={((machine.quality || 0.99) * 100).toFixed(1)} unit="%" icon={CheckCircle2} color="text-purple-400" />}
-                 {isDataItemVisible(userRole, 'MACHINE_OUTPUT_KG_H', visibilityContext) && <MetricCard title="Output Rate" value={machine.outputPerHour.toLocaleString()} unit="kg/h" icon={Box} />}
-                 {isDataItemVisible(userRole, 'MACHINE_OUTPUT_SHIFT', visibilityContext) && <MetricCard title="Shift Total" value={machine.totalOutputShift.toLocaleString()} unit="kg" icon={Box} />}
-                 {isDataItemVisible(userRole, 'MACHINE_REJECT_KG', visibilityContext) && <MetricCard title="Reject Mass" value={(machine.totalOutputShift * (machine.rejectRate/100)).toFixed(1)} unit="kg" icon={AlertTriangle} color="text-rose-400" />}
-                 {isDataItemVisible(userRole, 'MACHINE_REJECT_PERCENT', visibilityContext) && <MetricCard title="Reject %" value={machine.rejectRate.toFixed(2)} unit="%" icon={AlertTriangle} color="text-rose-400" />}
+                 {isDataItemVisible(userRole, 'MACHINE_OEE', visibilityContext) && <MetricCard title="OEE" value={formatNumber(machine.oee * 100)} unit="%" icon={Activity} color="text-emerald-400" />}
+                 {isDataItemVisible(userRole, 'MACHINE_AVAILABILITY', visibilityContext) && <MetricCard title="Availability" value={formatNumber((machine.availability || 0.95) * 100)} unit="%" icon={Clock} color="text-blue-400" />}
+                 {isDataItemVisible(userRole, 'MACHINE_PERFORMANCE', visibilityContext) && <MetricCard title="Performance" value={formatNumber((machine.performance || 0.92) * 100)} unit="%" icon={Zap} color="text-yellow-400" />}
+                 {isDataItemVisible(userRole, 'MACHINE_QUALITY', visibilityContext) && <MetricCard title="Quality" value={formatNumber((machine.quality || 0.99) * 100)} unit="%" icon={CheckCircle2} color="text-purple-400" />}
+                 {isDataItemVisible(userRole, 'MACHINE_OUTPUT_KG_H', visibilityContext) && <MetricCard title="Output Rate" value={formatNumber(machine.outputPerHour)} unit="kg/h" icon={Box} />}
+                 {isDataItemVisible(userRole, 'MACHINE_OUTPUT_SHIFT', visibilityContext) && <MetricCard title="Shift Total" value={formatNumber(machine.totalOutputShift)} unit="kg" icon={Box} />}
+                 {isDataItemVisible(userRole, 'MACHINE_REJECT_KG', visibilityContext) && <MetricCard title="Reject Mass" value={formatNumber(machine.totalOutputShift * (machine.rejectRate/100))} unit="kg" icon={AlertTriangle} color="text-rose-400" />}
+                 {isDataItemVisible(userRole, 'MACHINE_REJECT_PERCENT', visibilityContext) && <MetricCard title="Reject %" value={formatNumber(machine.rejectRate)} unit="%" icon={AlertTriangle} color="text-rose-400" />}
             </div>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(550px,1fr))] gap-6">
                 {isDataItemVisible(userRole, 'MACHINE_OUTPUT_TREND_CHART', visibilityContext) && (
@@ -196,7 +196,13 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                          <ResponsiveContainer width="100%" height={300}>
                             <AreaChart data={timeSeriesData.output}>
                                 <defs><linearGradient id="colorOutput" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient></defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" /><XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 13}} /><YAxis stroke="#94a3b8" tick={{fontSize: 13}} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9', fontSize: '14px' }} /><Legend /><Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorOutput)" name="Actual (kg)" /><Line type="step" dataKey="target" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" name="Target" dot={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 13}} />
+                                <YAxis stroke="#94a3b8" tick={{fontSize: 13}} tickFormatter={(val) => formatNumber(val, 0)} />
+                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9', fontSize: '14px' }} />
+                                <Legend />
+                                <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorOutput)" name="Actual (kg)" />
+                                <Line type="step" dataKey="target" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" name="Target" dot={false} />
                             </AreaChart>
                         </ResponsiveContainer>
                     </Card>
@@ -204,7 +210,13 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                 {isDataItemVisible(userRole, 'MACHINE_REJECT_TREND_CHART', visibilityContext) && (
                     <Card title="Reject Rate Trend">
                         <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={timeSeriesData.rejects}><CartesianGrid strokeDasharray="3 3" stroke="#334155" /><XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 13}} /><YAxis stroke="#94a3b8" tick={{fontSize: 13}} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9', fontSize: '14px' }} /><Bar dataKey="value" fill="#f43f5e" name="Reject (kg)" radius={[4,4,0,0]} /></BarChart>
+                            <BarChart data={timeSeriesData.rejects}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 13}} />
+                                <YAxis stroke="#94a3b8" tick={{fontSize: 13}} tickFormatter={(val) => formatNumber(val, 1)} />
+                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9', fontSize: '14px' }} />
+                                <Bar dataKey="value" fill="#f43f5e" name="Reject (kg)" radius={[4,4,0,0]} />
+                            </BarChart>
                         </ResponsiveContainer>
                     </Card>
                 )}
@@ -221,7 +233,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                         isDataItemVisible(userRole, `PARAM_${key.toUpperCase().replace(/\s/g,'_')}`, visibilityContext) && (
                             <Card key={key} className="flex flex-col justify-center items-center text-center p-6 bg-slate-800/50">
                                 <span className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">{key}</span>
-                                <span className="text-2xl font-bold text-white font-mono">{value}</span>
+                                <span className="text-2xl font-bold text-white font-mono">{typeof value === 'number' ? formatNumber(value) : value}</span>
                             </Card>
                         )
                     ))}
@@ -231,8 +243,8 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                         <LineChart data={timeSeriesData.params}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                             <XAxis dataKey="time" stroke="#94a3b8" />
-                            <YAxis stroke="#94a3b8" />
-                            <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
+                            <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
+                            <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
                             <Legend />
                             <Line type="monotone" dataKey="temp" stroke="#f59e0b" name="Temp" dot={false} strokeWidth={2} />
                             <Line type="monotone" dataKey="pressure" stroke="#3b82f6" name="Pressure" dot={false} strokeWidth={2} />
@@ -249,10 +261,10 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_ELECTRICITY', visibilityContext) && <MetricCard title="Electricity" value={util.electricity.toFixed(1)} unit="kWh" icon={Zap} color="text-yellow-400" />}
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_STEAM', visibilityContext) && <MetricCard title="Steam" value={util.steam.toFixed(1)} unit="kg/h" icon={Cloud} color="text-slate-200" />}
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_WATER', visibilityContext) && <MetricCard title="Water" value={util.water.toFixed(2)} unit="m³/h" icon={Droplets} color="text-blue-400" />}
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_AIR', visibilityContext) && <MetricCard title="Compressed Air" value={util.air.toFixed(1)} unit="Nm³/h" icon={Wind} color="text-cyan-400" />}
+                    {isDataItemVisible(userRole, 'MACHINE_UTIL_ELECTRICITY', visibilityContext) && <MetricCard title="Electricity" value={formatNumber(util.electricity)} unit="kWh" icon={Zap} color="text-yellow-400" />}
+                    {isDataItemVisible(userRole, 'MACHINE_UTIL_STEAM', visibilityContext) && <MetricCard title="Steam" value={formatNumber(util.steam)} unit="kg/h" icon={Cloud} color="text-slate-200" />}
+                    {isDataItemVisible(userRole, 'MACHINE_UTIL_WATER', visibilityContext) && <MetricCard title="Water" value={formatNumber(util.water)} unit="m³/h" icon={Droplets} color="text-blue-400" />}
+                    {isDataItemVisible(userRole, 'MACHINE_UTIL_AIR', visibilityContext) && <MetricCard title="Compressed Air" value={formatNumber(util.air)} unit="Nm³/h" icon={Wind} color="text-cyan-400" />}
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card title="Electricity Consumption Trend (24h)">
@@ -261,8 +273,8 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                                 <defs><linearGradient id="colorElec" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/><stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/></linearGradient></defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                 <XAxis dataKey="time" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
+                                <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
+                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
                                 <Area type="monotone" dataKey="value" stroke="#f59e0b" fill="url(#colorElec)" name="kWh" />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -273,8 +285,8 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                                 <defs><linearGradient id="colorSteam" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/><stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/></linearGradient></defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                 <XAxis dataKey="time" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
+                                <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
+                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
                                 <Area type="monotone" dataKey="value" stroke="#94a3b8" fill="url(#colorSteam)" name="kg/h" />
                             </AreaChart>
                         </ResponsiveContainer>
