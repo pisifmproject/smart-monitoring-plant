@@ -1,4 +1,3 @@
-
 export enum PlantCode {
     CIKOKOL = 'CIKOKOL',
     SEMARANG = 'SEMARANG',
@@ -63,6 +62,18 @@ export interface Machine {
     targetShift: number;
     lineSpeed: number; // rpm or ppm
     rejectRate: number; // %
+    
+    // Extended properties for Detail View
+    availability?: number;
+    performance?: number;
+    quality?: number;
+    processParams?: Record<string, number | string>;
+    utilityConsumption?: {
+        electricity: number;
+        steam: number;
+        water: number;
+        air: number;
+    };
 }
 
 export interface LVMDP {
@@ -139,6 +150,17 @@ export interface MaintenanceRecord {
     solved: boolean;
     note: string;
     photoUrl?: string;
+}
+
+export interface DowntimeLog {
+    id: string;
+    machineId: string;
+    start: string;
+    end: string;
+    duration: string;
+    reason: string;
+    description: string;
+    source: 'AUTO' | 'MANUAL';
 }
 
 // --- VISIBILITY SETTINGS TYPES ---

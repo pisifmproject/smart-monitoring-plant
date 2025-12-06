@@ -1,10 +1,12 @@
 
 import React, { useState, useMemo } from 'react';
-import { Plant, PlantCode, UserRole } from '../types';
+import { Plant, UserRole } from '../types';
 import { Card, MetricCard } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
-import { ArrowLeft, Zap, Droplets, Flame, Wind, Cloud, Box, TrendingUp } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { utilityService } from '../services/utilityService';
+import { maintenanceService } from '../services/maintenanceService'; // Import maintenanceService
+import { ArrowLeft, Zap, TrendingUp, Clock, ChevronsUp, ChevronsDown, AlertTriangle } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Bar, Legend, Pie, PieChart, BarChart as RechartsBarChart } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
 interface UtilitySummaryProps {
@@ -16,137 +18,20 @@ interface UtilitySummaryProps {
 
 type Period = 'Day' | 'Week' | 'Month' | 'Year';
 
-const generateTrendData = (base: number, variance: number, period: Period) => {
-    let points = 24;
-    let labelFormat = (i: number) => `${i}:00`;
-
-    if (period === 'Week') {
-        points = 7;
-        labelFormat = (i: number) => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
-    } else if (period === 'Month') {
-        points = 30;
-        labelFormat = (i: number) => `Day ${i + 1}`;
-    } else if (period === 'Year') {
-        points = 12;
-        labelFormat = (i: number) => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i];
-    }
-
-    return Array.from({ length: points }, (_, i) => ({
-        time: labelFormat(i),
-        value: Math.max(0, base + (Math.random() * variance * 2 - variance))
-    }));
-};
-
 const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, userRole }) => {
     const navigate = useNavigate();
     const [period, setPeriod] = useState<Period>('Day');
 
-    // Utility Definitions
-    const isLargePlant = [PlantCode.CIKOKOL, PlantCode.SEMARANG].includes(plant.id);
-    const multiplier = isLargePlant ? 1.5 : 0.8;
-    const periodMultiplier = period === 'Day' ? 1 : period === 'Week' ? 7 : period === 'Month' ? 30 : 365;
+    // Context for visibility check - Only plantId is needed
+    const visibilityContext = { plantId: plant.id };
 
-    // Determine config based on type
-    const config = useMemo(() => {
-        const t = type.toLowerCase();
-        switch (t) {
-            case 'electricity':
-                const totalElec = plant.lvmdps.reduce((acc, p) => acc + p.energyToday, 0) * periodMultiplier;
-                return {
-                    label: 'Electricity',
-                    unit: 'kWh',
-                    icon: Zap,
-                    color: 'text-yellow-400',
-                    value: totalElec,
-                    trend: 12,
-                    trendBase: 150 * multiplier * periodMultiplier,
-                    variance: 20 * multiplier * periodMultiplier,
-                    breakdownTitle: 'Panel Breakdown'
-                };
-            case 'water':
-                return {
-                    label: 'Water',
-                    unit: 'm³',
-                    icon: Droplets,
-                    color: 'text-blue-400',
-                    value: 450 * multiplier * periodMultiplier,
-                    trend: -5,
-                    trendBase: 20 * multiplier * periodMultiplier,
-                    variance: 5 * multiplier * periodMultiplier,
-                    breakdownTitle: 'Area Consumption'
-                };
-            case 'gas':
-                return {
-                    label: 'Natural Gas',
-                    unit: 'Nm³',
-                    icon: Flame,
-                    color: 'text-rose-400',
-                    value: 1200 * multiplier * periodMultiplier,
-                    trend: 2,
-                    trendBase: 50 * multiplier * periodMultiplier,
-                    variance: 10 * multiplier * periodMultiplier,
-                    breakdownTitle: 'Area Consumption'
-                };
-            case 'steam':
-                return {
-                    label: 'Steam',
-                    unit: 'Ton',
-                    icon: Cloud,
-                    color: 'text-slate-200',
-                    value: 15 * multiplier * periodMultiplier,
-                    trend: 8,
-                    trendBase: 0.8 * multiplier * periodMultiplier,
-                    variance: 0.2 * multiplier * periodMultiplier,
-                    breakdownTitle: 'Line Consumption'
-                };
-            case 'air':
-                return {
-                    label: 'Compressed Air',
-                    unit: 'Nm³',
-                    icon: Wind,
-                    color: 'text-cyan-400',
-                    value: 18000 * multiplier * periodMultiplier,
-                    trend: 0,
-                    trendBase: 800 * multiplier * periodMultiplier,
-                    variance: 50 * multiplier * periodMultiplier,
-                    breakdownTitle: 'Line Consumption'
-                };
-            case 'nitrogen':
-                return {
-                    label: 'Nitrogen',
-                    unit: 'Nm³',
-                    icon: Box,
-                    color: 'text-emerald-400',
-                    value: 450 * multiplier * periodMultiplier,
-                    trend: 15,
-                    trendBase: 20 * multiplier * periodMultiplier,
-                    variance: 2 * multiplier * periodMultiplier,
-                    breakdownTitle: 'Line Consumption'
-                };
-            default:
-                return {
-                    label: type,
-                    unit: 'Units',
-                    icon: Box,
-                    color: 'text-slate-400',
-                    value: 0,
-                    trend: 0,
-                    trendBase: 100,
-                    variance: 10,
-                    breakdownTitle: 'Breakdown'
-                };
-        }
-    }, [type, plant, multiplier, periodMultiplier]);
-
-    const trendData = useMemo(() => generateTrendData(config.trendBase, config.variance, period), [config, period]);
-
-    // Mock breakdown data for non-electricity types
-    const genericBreakdownData = [
-        { name: 'Production A', value: 40 },
-        { name: 'Production B', value: 30 },
-        { name: 'Utility', value: 15 },
-        { name: 'General', value: 15 },
-    ];
+    const config = useMemo(() => utilityService.getUtilityConfig(plant, type, period), [type, plant, period]);
+    const trendData = useMemo(() => utilityService.getTrendData(config, period), [config, period]);
+    const genericBreakdownData = useMemo(() => utilityService.getGenericBreakdown(), []);
+    const quickStats = useMemo(() => utilityService.getQuickStats(config), [config]);
+    
+    // Period is already in correct format for utilityService
+    const { periodMult } = utilityService.getMultipliers(plant.id, period);
 
     const FilterButton = ({ label }: { label: Period }) => (
         <button 
@@ -163,17 +48,11 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
 
     return (
         <div className="space-y-6 animate-in fade-in duration-300 w-full">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white">
-                        <ArrowLeft size={24} />
-                    </button>
+                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white"><ArrowLeft size={24} /></button>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                            <config.icon className={config.color} size={28} />
-                            {config.label} Detail
-                        </h1>
+                        <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2"><config.icon className={config.color} size={28} />{config.label} Detail</h1>
                         <p className="text-slate-400 text-sm font-medium">{plant.name}</p>
                     </div>
                 </div>
@@ -185,7 +64,6 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                 </div>
             </div>
 
-            {/* KPI Card */}
             <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
                 <MetricCard 
                     title={`Total ${config.label} (${period})`}
@@ -197,111 +75,114 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                     color={config.color}
                 />
             </div>
-
-            {/* Main Content Area */}
+            
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* Trend Chart */}
-                <Card title={`${config.label} Usage Trend (${period})`} className="xl:col-span-2">
-                    <ResponsiveContainer width="100%" height={320}>
+                <Card title={`${config.label} Usage Trend (${period})`} className="xl:col-span-2 min-h-[350px]">
+                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={trendData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                            <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 13}} />
-                            <YAxis stroke="#94a3b8" tick={{fontSize: 13}} />
-                            <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9', fontSize: '14px' }} />
-                            <Legend />
-                            <Line 
-                                type="monotone" 
-                                dataKey="value" 
-                                name={`${config.label} (${config.unit})`} 
-                                stroke="#3b82f6" 
-                                strokeWidth={3} 
-                                dot={false} 
-                                activeDot={{ r: 8 }}
-                            />
+                            <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} />
+                            <YAxis stroke="#94a3b8" tick={{fontSize: 12}} />
+                            <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
+                            <Line type="monotone" dataKey="value" stroke={config.color.replace('text-', '#').split('-')[0]} strokeWidth={2} name={`Usage (${config.unit})`} dot={false} />
                         </LineChart>
                     </ResponsiveContainer>
                 </Card>
-
-                {/* Right Side Stats */}
                 <Card title="Quick Stats">
                     <div className="space-y-4">
-                        <div className="flex justify-between items-center border-b border-slate-700 pb-3">
-                            <span className="text-slate-400 text-sm font-medium">Peak Usage</span>
-                            <span className="font-mono text-white text-base font-bold">
-                                {Math.max(...trendData.map(d => d.value)).toFixed(1)} {config.unit}
-                            </span>
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-rose-500/10 text-rose-400 rounded-lg"><ChevronsUp size={20}/></div>
+                            <div>
+                                <p className="text-sm text-slate-400">Peak Usage</p>
+                                <p className="text-lg font-bold text-white">{quickStats.peak.value} {quickStats.peak.unit}</p>
+                                <p className="text-xs text-slate-500">at {quickStats.peak.time}</p>
+                            </div>
                         </div>
-                        <div className="flex justify-between items-center border-b border-slate-700 pb-3">
-                            <span className="text-slate-400 text-sm font-medium">Avg Usage</span>
-                            <span className="font-mono text-white text-base font-bold">
-                                {(trendData.reduce((a,b) => a + b.value, 0) / trendData.length).toFixed(1)} {config.unit}
-                            </span>
+                         <div className="flex items-center gap-4">
+                            <div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg"><Clock size={20}/></div>
+                            <div>
+                                <p className="text-sm text-slate-400">Average Usage</p>
+                                <p className="text-lg font-bold text-white">{quickStats.average.value} {quickStats.average.unit}</p>
+                            </div>
                         </div>
-                        <div className="flex justify-between items-center pb-1">
-                            <span className="text-slate-400 text-sm font-medium">Efficiency Status</span>
-                            <span className="font-mono text-emerald-400 font-bold text-base">Optimal</span>
+                         <div className="flex items-center gap-4">
+                            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg"><ChevronsDown size={20}/></div>
+                            <div>
+                                <p className="text-sm text-slate-400">Lowest Usage</p>
+                                <p className="text-lg font-bold text-white">{quickStats.low.value} {quickStats.low.unit}</p>
+                                <p className="text-xs text-slate-500">at {quickStats.low.time}</p>
+                            </div>
                         </div>
                     </div>
                 </Card>
             </div>
 
-            {/* Breakdown Section - Specific to Utility Type */}
             <h3 className="text-xl font-bold text-slate-200 mt-2 mb-4 flex items-center gap-2">
                 <TrendingUp size={22} /> {config.breakdownTitle}
             </h3>
 
             {type.toLowerCase() === 'electricity' ? (
-                /* ELECTRICITY: Show Panels */
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
-                    {plant.lvmdps.map((panel, idx) => {
-                         // Scale panel energy based on period logic mock
-                         const panelEnergy = panel.energyToday * periodMultiplier;
-                         
-                         const CardContent = (
-                            <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 hover:border-blue-500 cursor-pointer transition-all h-full shadow-sm group">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400">
-                                        <Zap size={20} />
-                                    </div>
-                                    <div className="text-slate-600 group-hover:text-blue-400 transition-colors">
-                                        <TrendingUp size={16} />
-                                    </div>
-                                </div>
-                                <h4 className="font-bold text-white text-lg mb-1">{panel.name}</h4>
-                                <div className="space-y-2 mt-3">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-slate-400 font-medium">Energy ({period})</span>
-                                        <span className="text-white font-mono font-bold">{panelEnergy.toLocaleString()} kWh</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-slate-400 font-medium">Load</span>
-                                        <span className={`font-mono font-bold ${panel.currentLoadPercent > 80 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                            {panel.currentLoadPercent}%
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
+                    {plant.lvmdps.map((panel) => {
+                        const hasActiveAlarm = maintenanceService.hasActiveAlarm(panel.id);
+                        const maintenanceUser = maintenanceService.getAlarmInProgress(panel.id);
 
                         return (
-                            <div key={panel.id} onClick={() => navigate(`/lvmdp/${panel.id}`)}>
-                                {CardContent}
-                            </div>
+                            isDataItemVisible(userRole, 'LV_PANEL_ENERGY_TODAY', visibilityContext) && (
+                                <div key={panel.id} onClick={() => navigate(`/app/lvmdp/${panel.id}`)} className="cursor-pointer">
+                                    <Card className={`hover:border-blue-500 transition-all h-full group ${maintenanceUser ? 'border-blue-500/30 bg-blue-900/10' : hasActiveAlarm ? 'border-rose-500/30 bg-rose-900/10' : ''}`}>
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400"><Zap size={20} /></div>
+                                            {maintenanceUser ? (
+                                                <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 px-2 py-1 rounded text-[10px] font-bold uppercase">
+                                                    <Clock size={12} /> Maint: {maintenanceUser}
+                                                </div>
+                                            ) : hasActiveAlarm ? (
+                                                <div className="flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 px-2 py-1 rounded text-[10px] font-bold uppercase animate-pulse">
+                                                    <AlertTriangle size={12} /> Maintenance Req
+                                                </div>
+                                            ) : (
+                                                <div className="text-slate-600 group-hover:text-blue-400 transition-colors"><TrendingUp size={16} /></div>
+                                            )}
+                                        </div>
+                                        <h4 className="font-bold text-white text-lg mb-1">{panel.name}</h4>
+                                        <div className="space-y-2 mt-3">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-slate-400 font-medium">Energy ({period})</span>
+                                                <span className="text-white font-mono font-bold">{(panel.energyToday * periodMult).toLocaleString()} kWh</span>
+                                            </div>
+                                            {isDataItemVisible(userRole, 'LV_PANEL_LOAD_PERCENT', visibilityContext) &&
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-slate-400 font-medium">Load</span>
+                                                <span className={`font-mono font-bold ${panel.currentLoadPercent > 80 ? 'text-rose-400' : 'text-emerald-400'}`}>{panel.currentLoadPercent}%</span>
+                                            </div>}
+                                        </div>
+                                    </Card>
+                                </div>
+                            )
                         );
                     })}
                 </div>
             ) : (
-                /* OTHER UTILITIES: Show Generic Breakdown */
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card title="Consumption by Area">
-                        <ResponsiveContainer width="100%" height={260}>
-                            <BarChart data={genericBreakdownData} layout="vertical" margin={{ left: 10, right: 10 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
-                                <XAxis type="number" stroke="#94a3b8" hide />
-                                <YAxis dataKey="name" type="category" stroke="#94a3b8" width={110} tick={{fontSize: 12, fontWeight: 500}} />
-                                <Tooltip cursor={{fill: '#334155', opacity: 0.2}} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', fontSize: '14px' }} />
-                                <Bar dataKey="value" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={20} name="% Usage" />
-                            </BarChart>
+                    <Card title="Consumption by Area (Bar)" className="min-h-[350px]">
+                        <ResponsiveContainer width="100%" height={300}>
+                            <RechartsBarChart data={genericBreakdownData} layout="vertical">
+                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                <XAxis type="number" stroke="#94a3b8" tick={{fontSize: 12}} />
+                                <YAxis type="category" dataKey="name" stroke="#94a3b8" tick={{fontSize: 12}} width={100} />
+                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
+                                <Bar dataKey="value" fill={config.color.replace('text-', '#').split('-')[0]} name="Consumption (%)" radius={[0, 4, 4, 0]} />
+                            </RechartsBarChart>
+                        </ResponsiveContainer>
+                    </Card>
+                    <Card title="Consumption by Area (Pie)" className="min-h-[350px]">
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie data={genericBreakdownData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label />
+                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
+                                <Legend />
+                            </PieChart>
                         </ResponsiveContainer>
                     </Card>
                  </div>
