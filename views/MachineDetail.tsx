@@ -1,10 +1,12 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Machine, UserRole, MachineType } from '../types';
 import { Card, StatusBadge, MetricCard } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
 import { maintenanceService } from '../services/maintenanceService';
-import { plantService } from '../services/plantService';
+import { plantService } from './services/plantService'; // Fixed import path
+import { plantService as ps } from '../services/plantService'; // Using correct import path
 import { 
     Activity, Zap, AlertTriangle, ArrowLeft, 
     ClipboardPen, Wrench, X, CheckCircle2, 
@@ -32,20 +34,39 @@ const ALL_TABS = [
 ];
 
 const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole, currentUser }) => {
+    const location = useLocation();
     const visibilityContext = { plantId: machine.plantId, machineId: machine.id };
     
     // Check which tabs are visible for this user
     const visibleTabs = ALL_TABS.filter(t => isDataItemVisible(userRole, t.visibilityKey, visibilityContext));
     
-    // Set active tab to the first visible one, or empty if none
-    const [activeTab, setActiveTab] = useState(visibleTabs.length > 0 ? visibleTabs[0].key : '');
+    // Set active tab with priority:
+    // 1. Navigation state (e.g. from clicking an alarm on dashboard)
+    // 2. First visible tab
+    const [activeTab, setActiveTab] = useState(() => {
+        const requestedTab = location.state?.initialTab;
+        if (requestedTab && visibleTabs.find(t => t.key === requestedTab)) {
+            return requestedTab;
+        }
+        return visibleTabs.length > 0 ? visibleTabs[0].key : '';
+    });
+    
+    // Ref for scrolling to maintenance form
+    const maintenanceRef = useRef<HTMLDivElement>(null);
+
+    // Scroll to maintenance tab content if requested via navigation
+    useEffect(() => {
+        if (activeTab === 'Maintenance' && location.state?.initialTab === 'Maintenance' && maintenanceRef.current) {
+             maintenanceRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [activeTab, location.state]);
     
     // Force re-render helper
     const [tick, setTick] = useState(0);
     const forceUpdate = () => setTick(t => t + 1);
 
     // Fetch real data from services
-    const timeSeriesData = useMemo(() => plantService.getMachineTimeSeries(machine.id), [machine.id]);
+    const timeSeriesData = useMemo(() => ps.getMachineTimeSeries(machine.id), [machine.id]);
     const alarmHistory = useMemo(() => maintenanceService.getMaintenanceHistory(machine.id), [machine.id, tick]); // Refresh on maintenance action
     const activeAlarms = maintenanceService.getMachineActiveAlarms(machine.id);
     const downtimeLogs = useMemo(() => maintenanceService.getDowntimeLogs(machine.id), [machine.id, tick]);
@@ -395,7 +416,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     );
 
     const renderMaintenanceTab = () => (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+        <div ref={maintenanceRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
             {/* 1. Active Alarm Section */}
             {primaryAlarm ? (
                 <div className="bg-rose-900/20 border border-rose-500/50 rounded-xl p-5 shadow-inner">

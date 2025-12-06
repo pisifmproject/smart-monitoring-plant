@@ -253,7 +253,7 @@ const UtilitySummaryWrapper = ({ userRole }: { userRole: UserRole }) => {
     <UtilitySummary
       plant={plant}
       type={type || 'electricity'}
-      onBack={() => navigate(-1)}
+      onBack={() => navigate(`/app/plants/${plantId}`)}
       userRole={userRole}
     />
   );

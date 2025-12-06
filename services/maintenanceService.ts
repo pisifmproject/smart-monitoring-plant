@@ -144,21 +144,6 @@ const createDummyAlarmForMachine = (machineId: string): Alarm => {
   return alarm;
 };
 
-// Helper untuk buat history dummy
-const createDummyHistoryForMachine = (machineId: string): MaintenanceRecord => {
-  const record: MaintenanceRecord = {
-    id: `dummy-hist-${machineId}`,
-    alarmId: 'N/A',
-    machineId,
-    timestamp: '07:30:00',
-    checkedBy: 'Demo Technician',
-    solved: true,
-    note: 'Sample maintenance record for demo purposes.',
-  };
-  maintenanceHistory.push(record);
-  return record;
-};
-
 export const maintenanceService = {
   // Active alarms (global atau per plant)
   getActiveAlarms: (plantId?: PlantCode | string) => {

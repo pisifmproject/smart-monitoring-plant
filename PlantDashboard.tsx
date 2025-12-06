@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { UserRole, AlarmSeverity } from './types';
+import { UserRole, AlarmSeverity, Alarm } from './types';
 import { Card, MetricCard, StatusBadge } from './components/SharedComponents';
 import { isDataItemVisible } from './services/visibilityStore';
 import { dashboardService } from './services/dashboardService';
@@ -57,6 +57,28 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
             case AlarmSeverity.WARNING: return <AlertTriangle size={16} className="text-amber-500" />;
             case AlarmSeverity.INFO: return <Info size={16} className="text-blue-500" />;
             default: return <AlertCircle size={16} className="text-slate-500" />;
+        }
+    };
+
+    const handleAlarmClick = (alarm: Alarm) => {
+        if (!canClickDetails) return;
+        
+        // Safety check if machineId exists
+        if (!alarm.machineId) return;
+
+        // Determine target tab based on role
+        // MAINTENANCE role -> 'Maintenance' tab (and scroll to form)
+        // Others -> 'Alarms' tab (history)
+        const targetTab = userRole === UserRole.MAINTENANCE ? 'Maintenance' : 'Alarms';
+
+        // State to force opening the specific tab
+        const state = { initialTab: targetTab };
+
+        // Check if it is an LVMDP or a Machine based on ID convention
+        if (alarm.machineId.includes('LVMDP')) {
+            navigate(`/app/lvmdp/${alarm.machineId}`, { state });
+        } else {
+            navigate(`/app/machines/${alarm.machineId}`, { state });
         }
     };
 
@@ -207,11 +229,17 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                         ) : (
                             <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
                                 {activeAlarms.map((alarm) => (
-                                    <div key={alarm.id} className="flex items-center justify-between bg-slate-900/50 p-3 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-colors">
+                                    <div 
+                                        key={alarm.id} 
+                                        onClick={() => handleAlarmClick(alarm)}
+                                        className={`flex items-center justify-between bg-slate-900/50 p-3 rounded-lg border border-slate-700/50 transition-all duration-200 group ${
+                                            canClickDetails ? 'cursor-pointer hover:border-blue-500 hover:bg-slate-800 hover:shadow-md' : 'hover:border-slate-600'
+                                        }`}
+                                    >
                                         <div className="flex items-center gap-3">
                                             {getAlarmIcon(alarm.severity)}
                                             <div>
-                                                <p className="text-white font-bold text-sm">{alarm.message}</p>
+                                                <p className="text-white font-bold text-sm group-hover:text-blue-400 transition-colors">{alarm.message}</p>
                                                 <p className="text-xs text-slate-400">{alarm.timestamp} • {alarm.source}</p>
                                                 {/* Maintenance Progress Indicator */}
                                                 {maintenanceService.getAlarmInProgress(alarm.machineId || '') && (
@@ -237,8 +265,14 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 </h3>
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
                     {productionMachines.map((machine) => {
+                        // Check if this specific machine should be visible based on its unique key
+                        if (!isDataItemVisible(userRole, `SHOW_MACHINE_${machine.id}`, visibilityContext)) {
+                            return null;
+                        }
+
                         const machineContext = { ...visibilityContext, machineId: machine.id };
                         const maintenanceUser = maintenanceService.getAlarmInProgress(machine.id);
+                        const hasActiveAlarm = maintenanceService.hasActiveAlarm(machine.id);
 
                         return (
                             <div 
@@ -256,12 +290,17 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                     <StatusBadge status={machine.status} />
                                 </div>
 
-                                {maintenanceUser && (
+                                {maintenanceUser ? (
                                     <div className="mb-4 bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-blue-400">
                                         <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                                         Maintenance by {maintenanceUser}
                                     </div>
-                                )}
+                                ) : hasActiveAlarm ? (
+                                    <div className="mb-4 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-rose-400">
+                                        <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></div>
+                                        Maintenance Required
+                                    </div>
+                                ) : null}
 
                                 <div className="grid grid-cols-2 gap-4 relative z-10">
                                     {isDataItemVisible(userRole, 'MACHINE_CARD_OUTPUT', machineContext) && (
