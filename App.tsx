@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   HashRouter,
@@ -10,6 +11,14 @@ import {
   Link,
   Outlet,
 } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Settings, 
+  LogOut, 
+  Building2, 
+  ChevronRight,
+  User as UserIcon
+} from 'lucide-react';
 
 import { User, UserRole } from './types';
 
@@ -30,27 +39,27 @@ import { plantService } from './services/plantService';
 import { lvmdpService } from './services/lvmdpService';
 
 // ---------------------------------------
-// SIDEBAR COMPONENTS (STRICT CORPORATE TEXT ONLY)
+// SIDEBAR COMPONENTS (MODERN PILL DESIGN)
 // ---------------------------------------
 
-const SidebarHeader = ({ label }: { label: string }) => (
-  <div className="px-6 mt-8 mb-2">
-    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">
-      {label}
-    </p>
-  </div>
-);
-
-const SidebarLink = ({ to, label, active }: { to: string; label: string; active: boolean }) => (
+const SidebarLink = ({ to, label, active, icon: Icon }: { to: string; label: string; active: boolean; icon?: any }) => (
   <Link
     to={to}
-    className={`block px-6 py-2.5 text-sm font-medium transition-all duration-200 border-l-[3px] ${
+    className={`group relative flex items-center justify-between px-4 py-3 mx-3 mb-1 rounded-xl text-sm font-medium transition-all duration-200 ${
       active
-        ? 'border-blue-500 text-blue-400 bg-blue-900/10'
-        : 'border-transparent text-slate-400 hover:text-blue-300 hover:bg-slate-900'
+        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+        : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
     }`}
   >
-    {label}
+    <div className="flex items-center gap-3">
+        {Icon ? (
+            <Icon size={18} className={`transition-colors ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
+        ) : (
+            <div className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-white' : 'bg-slate-600 group-hover:bg-slate-400'}`}></div>
+        )}
+        <span>{label}</span>
+    </div>
+    {active && <ChevronRight size={14} className="text-white/70" />}
   </Link>
 );
 
@@ -62,7 +71,7 @@ const UserAvatar = ({ name }: { name: string }) => {
     .substring(0, 2)
     .toUpperCase();
   return (
-    <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300 shadow-sm shrink-0">
+    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 flex items-center justify-center text-xs font-bold text-white shadow-sm shrink-0">
       {initials}
     </div>
   );
@@ -80,97 +89,104 @@ const ProtectedLayout = ({
 }) => {
   const location = useLocation();
 
-  // 1. Strict Auth Check: If no user or role, redirect immediately.
+  // 1. Strict Auth Check
   if (!user || !user.role) {
       return <Navigate to="/login" replace />;
   }
 
-  // 2. Role Permissions (derived from the non-null user object)
+  // 2. Role Permissions
   const role = user.role;
   const isAdmin = role === UserRole.ADMINISTRATOR;
-  
-  // Logic for Global Dashboard visibility in sidebar (Operators cannot see it)
   const canViewGlobal = role !== UserRole.OPERATOR;
 
   return (
     <div className="flex h-screen bg-slate-950 font-sans text-slate-200">
       {/* SIDEBAR */}
-      <div className="w-64 bg-slate-950 border-r border-slate-900 flex flex-col shrink-0 z-20 shadow-xl">
+      <div className="w-72 bg-[#0b1120] border-r border-slate-800 flex flex-col shrink-0 z-20 shadow-2xl">
         
         {/* BRAND HEADER */}
-        <div className="px-6 pt-8 pb-6 border-b border-slate-900">
-          <h1 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-            PT Indofood Fortuna Makmur
-          </h1>
-          <h2 className="text-sm font-bold text-white tracking-tight leading-tight">
-            Smart Monitoring Multi Plant
-          </h2>
-        </div>
-
-        {/* USER INFO SECTION */}
-        <div className="px-6 py-6 flex items-center gap-4 border-b border-slate-900 bg-slate-900/20">
-          <UserAvatar name={user.name} />
-          <div className="overflow-hidden">
-            <p className="text-sm font-bold text-white truncate">{user.name}</p>
-            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-0.5">
-              {user.role}
-            </p>
-          </div>
+        <div className="px-6 py-8 flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10">
+                IFM
+            </div>
+            <div>
+                 <h1 className="text-sm font-bold text-white tracking-tight leading-none">Smart Monitoring</h1>
+                 <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Enterprise Edition</p>
+            </div>
         </div>
 
         {/* NAVIGATION */}
-        <nav className="flex-1 overflow-y-auto py-2 custom-scrollbar">
+        <nav className="flex-1 overflow-y-auto px-2 py-2 custom-scrollbar space-y-6">
           
-          {/* OVERVIEW GROUP */}
+          {/* DASHBOARDS GROUP */}
           {canViewGlobal && (
-            <>
-              <SidebarHeader label="Overview" />
-              <SidebarLink
-                to="/app/dashboard/global"
-                label="Global Overview"
-                active={location.pathname.includes('/app/dashboard/global')}
-              />
-            </>
+            <div>
+                 <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                    Dashboards
+                 </div>
+                 <SidebarLink 
+                    to="/app/dashboard/global" 
+                    label="Global Overview" 
+                    active={location.pathname.includes('/app/dashboard/global')}
+                    icon={LayoutDashboard}
+                 />
+            </div>
           )}
 
           {/* PLANTS GROUP */}
-          <SidebarHeader label="Plants" />
-          <div className="flex flex-col gap-0.5">
-            {plantService.getAllPlants().map((plant) => (
-              <SidebarLink
-                key={plant.id}
-                to={`/app/plants/${plant.id}`}
-                label={plant.name}
-                active={location.pathname.includes(`/app/plants/${plant.id}`)}
-              />
-            ))}
+          <div>
+            <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                Production Plants
+            </div>
+            <div className="space-y-0.5">
+              {plantService.getAllPlants().map((plant) => (
+                <SidebarLink
+                  key={plant.id}
+                  to={`/app/plants/${plant.id}`}
+                  label={plant.name}
+                  active={location.pathname.includes(`/app/plants/${plant.id}`)}
+                  icon={Building2}
+                />
+              ))}
+            </div>
           </div>
 
-          {/* SYSTEM GROUP (ADMIN ONLY) */}
+          {/* SYSTEM GROUP */}
           {isAdmin && (
-            <>
-              <SidebarHeader label="System" />
+            <div>
+              <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                  Administration
+              </div>
               <SidebarLink
                 to="/app/settings"
                 label="System Settings"
                 active={location.pathname.startsWith('/app/settings')}
+                icon={Settings}
               />
-            </>
+            </div>
           )}
         </nav>
 
-        {/* FOOTER / LOGOUT */}
-        <div className="p-6 border-t border-slate-900 bg-slate-950">
-          <button
-            onClick={() => {
-              onLogout();
-              // Redirect to landing page on logout
-              window.location.hash = '/';
-            }}
-            className="w-full text-left text-xs font-bold text-slate-500 hover:text-rose-500 transition-colors uppercase tracking-widest"
-          >
-            Sign Out
-          </button>
+        {/* USER PROFILE CARD */}
+        <div className="p-3">
+            <div className="p-4 bg-slate-900/50 border border-slate-800/80 rounded-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                    <UserAvatar name={user.name} />
+                    <div className="overflow-hidden">
+                        <p className="text-sm font-bold text-white truncate">{user.name}</p>
+                        <p className="text-xs text-blue-400 font-medium truncate">{user.role}</p>
+                    </div>
+                </div>
+                <button
+                    onClick={() => {
+                        onLogout();
+                        window.location.hash = '/';
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-500/10 hover:text-rose-400 text-slate-400 text-xs font-bold uppercase tracking-wider transition-all border border-slate-700 hover:border-rose-500/30 group"
+                >
+                    <LogOut size={14} className="group-hover:scale-110 transition-transform"/> Sign Out
+                </button>
+            </div>
         </div>
       </div>
 
@@ -193,9 +209,6 @@ const ProtectedLayout = ({
 const MachineDetailWrapper = ({ user }: { user: User }) => {
   const { machineId } = useParams();
   const navigate = useNavigate();
-
-  // ACCESS RULE: 
-  // BLOCKED: Management, Viewer
   const restrictedRoles = [UserRole.MANAGEMENT, UserRole.VIEWER];
   
   if (restrictedRoles.includes(user.role)) {
@@ -218,9 +231,6 @@ const MachineDetailWrapper = ({ user }: { user: User }) => {
 const LVMDPDetailWrapper = ({ userRole }: { userRole: UserRole }) => {
   const { panelId } = useParams();
   const navigate = useNavigate();
-
-  // ACCESS RULE:
-  // BLOCKED: Operator, QC, Management, Viewer
   const restrictedRoles = [UserRole.OPERATOR, UserRole.QC, UserRole.MANAGEMENT, UserRole.VIEWER];
 
   if (restrictedRoles.includes(userRole)) {
@@ -236,10 +246,6 @@ const LVMDPDetailWrapper = ({ userRole }: { userRole: UserRole }) => {
 const UtilitySummaryWrapper = ({ userRole }: { userRole: UserRole }) => {
   const { type, plantId } = useParams();
   const navigate = useNavigate();
-
-  // ACCESS RULE:
-  // BLOCKED: Management, Viewer
-  // ALLOWED: Operator (Read-only), QC (Read-only), Admin, Supervisor, Maintenance
   const restrictedRoles = [UserRole.MANAGEMENT, UserRole.VIEWER];
 
   if (restrictedRoles.includes(userRole)) {
@@ -267,11 +273,9 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
 
   const handleLogin = (loggedInUser: User) => {
-    // Strict: Ensure the role is valid before setting the user
     if (loggedInUser && Object.values(UserRole).includes(loggedInUser.role)) {
       setUser(loggedInUser);
     } else {
-      // Handle invalid login data by clearing the user state
       setUser(null);
     }
   };
@@ -279,34 +283,15 @@ const App: React.FC = () => {
   return (
     <HashRouter>
       <Routes>
-        {/* PUBLIC: Landing Page */}
         <Route path="/" element={<Landing />} />
-
-        {/* PUBLIC: Login Page */}
         <Route
           path="/login"
-          element={
-            user ? (
-              // If already logged in, redirect to the app's default page
-              <Navigate to="/app" replace />
-            ) : (
-              <Login onLogin={handleLogin} />
-            )
-          }
+          element={user ? <Navigate to="/app" replace /> : <Login onLogin={handleLogin} />}
         />
-
-        {/* PROTECTED: Main App */}
         <Route
           path="/app"
-          element={
-            user ? (
-              <ProtectedLayout user={user} onLogout={() => setUser(null)} />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
+          element={user ? <ProtectedLayout user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />}
         >
-          {/* Default Route Logic: This runs ONLY if user is authenticated */}
           <Route index element={
             user && (user.role === UserRole.OPERATOR ? (
               <Navigate to="plants/CIKOKOL" replace />
@@ -314,8 +299,6 @@ const App: React.FC = () => {
               <Navigate to="dashboard/global" replace />
             ))
           } />
-
-          {/* Global Dashboard */}
           <Route
             path="dashboard/global"
             element={ user && (
@@ -326,32 +309,22 @@ const App: React.FC = () => {
               )
             )}
           />
-
-          {/* Plant Dashboard (Allowed for All Authenticated Roles) */}
           <Route
             path="plants/:plantId"
             element={user && <PlantDashboard userRole={user.role} />}
           />
-
-          {/* Machine Detail (Wrapper handles role check) */}
           <Route
             path="machines/:machineId"
             element={user && <MachineDetailWrapper user={user} />}
           />
-
-          {/* LVMDP Detail (Wrapper handles role check) */}
           <Route
             path="lvmdp/:panelId"
             element={user && <LVMDPDetailWrapper userRole={user.role} />}
           />
-
-          {/* Utility Detail (Wrapper handles role check) */}
           <Route
             path="utility/:type/:plantId"
             element={user && <UtilitySummaryWrapper userRole={user.role} />}
           />
-
-          {/* System Settings (Admin only) */}
           <Route
             path="settings"
             element={ user && (
@@ -363,8 +336,6 @@ const App: React.FC = () => {
             )}
           />
         </Route>
-
-        {/* Catch-all: Redirect to Landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>
