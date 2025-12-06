@@ -54,7 +54,7 @@ const Landing: React.FC = () => {
                     </h2>
 
                     {/* Subheadline */}
-                    <p className="text-slate-400 text-lg md:text-2xl max-w-3xl mx-auto font-light leading-relaxed">
+                    <p className="text-blue-100 text-lg md:text-2xl max-w-3xl mx-auto font-light leading-relaxed drop-shadow-sm">
                         Real-time multi-plant performance & energy monitoring in a unified platform.
                     </p>
 
@@ -70,14 +70,14 @@ const Landing: React.FC = () => {
                             {/* Shine Effect */}
                             <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-0"></div>
                         </button>
-                        <p className="mt-6 text-xs text-slate-500 font-medium tracking-wide uppercase opacity-70">Authorized Personnel Only</p>
+                        <p className="mt-6 text-xs text-blue-300 font-semibold tracking-wide uppercase">Authorized Personnel Only</p>
                     </div>
                 </div>
 
             </main>
 
             {/* --- Footer --- */}
-            <footer className="w-full py-8 mb-24 flex justify-center items-center text-xs text-slate-600 font-medium relative z-20">
+            <footer className="w-full py-8 mb-24 flex justify-center items-center text-xs text-slate-400 font-medium relative z-20">
                 <p>© 2025 PT Indofood Fortuna Makmur. All rights reserved.</p>
             </footer>
         </div>

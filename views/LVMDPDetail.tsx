@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { LVMDP, UserRole } from '../types';
@@ -249,12 +250,17 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                         </Card>
                     )}
                      {isDataItemVisible(userRole, visibilityKeys.POWER_METRICS_LIST, visibilityContext) && (
-                         <Card title="Power Metrics">
-                            <div className="space-y-3 text-sm">
-                               <div className="flex justify-between items-center"><span className="text-slate-400">THD-V</span><span className="font-mono text-white font-bold">{formatNumber(lvmdp.thdV)}%</span></div>
-                               <div className="flex justify-between items-center"><span className="text-slate-400">THD-I</span><span className="font-mono text-white font-bold">{formatNumber(lvmdp.thdI)}%</span></div>
-                               <div className="flex justify-between items-center"><span className="text-slate-400">Frequency</span><span className="font-mono text-white font-bold">{formatNumber(lvmdp.frequency)} Hz</span></div>
-                               <div className="flex justify-between items-center"><span className="text-slate-400">Panel Temp</span><span className="font-mono text-white font-bold">{formatNumber(lvmdp.panelTemp)}°C</span></div>
+                         <Card title="System Frequency">
+                            <div className="flex flex-col items-center justify-center py-6">
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-5xl font-bold text-white font-mono tracking-tighter">
+                                        {formatNumber(lvmdp.frequency)}
+                                    </span>
+                                    <span className="text-slate-400 font-bold text-lg">Hz</span>
+                                </div>
+                                <div className="mt-2 text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                                    Stable
+                                </div>
                             </div>
                         </Card>
                     )}
@@ -263,7 +269,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                 <div className="xl:col-span-2 space-y-6">
                     {isDataItemVisible(userRole, visibilityKeys.ENERGY_TREND, visibilityContext) && (
                         <Card title={`Energy Usage Trend (${period})`} className="min-h-[400px]">
-                             <ResponsiveContainer width="100%" height={350}>
+                             <ResponsiveContainer width="100%" height={320}>
                                 <AreaChart data={energyTrend}>
                                     <defs><linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/><stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/></linearGradient></defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -275,38 +281,40 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                             </ResponsiveContainer>
                         </Card>
                     )}
-                    {isDataItemVisible(userRole, visibilityKeys.SHIFT_DATA, visibilityContext) && (
-                     <Card title={`Shift Energy & Electrical Performance (${period})`}>
-                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="text-xs text-slate-400 uppercase font-bold bg-slate-900/50">
-                                    <tr>
-                                        <th className="p-3 text-center">Shift</th>
-                                        <th className="p-3 text-center">Total kWh</th>
-                                        <th className="p-3 text-center">Avg Power (kW)</th>
-                                        <th className="p-3 text-center">Avg Load (%)</th>
-                                        <th className="p-3 text-center">Avg Current (A)</th>
-                                        <th className="p-3 text-center">Avg PF</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-700">
-                                    {shiftData.map(s => (
-                                        <tr key={s.name}>
-                                            <td className="p-3 font-semibold text-white text-center">{s.name.split(' ')[1]}</td>
-                                            <td className="p-3 font-mono text-yellow-400 text-center">{formatNumber(s.kwh)}</td>
-                                            <td className="p-3 font-mono text-center">{formatNumber(s.avgPower)}</td>
-                                            <td className="p-3 font-mono text-blue-400 text-center">{formatNumber(s.avgLoad)}</td>
-                                            <td className="p-3 font-mono text-center">{formatNumber(s.avgCurrent)}</td>
-                                            <td className="p-3 font-mono text-emerald-400 text-center">{formatNumber(s.avgPF)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                         </div>
-                     </Card>
-                    )}
                 </div>
             </div>
+
+            {/* Shift Data Table - Moved outside grid to span full width */}
+            {isDataItemVisible(userRole, visibilityKeys.SHIFT_DATA, visibilityContext) && (
+                <Card title={`Shift Energy & Electrical Performance (${period})`}>
+                    <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="text-xs text-slate-400 uppercase font-bold bg-slate-900/50">
+                            <tr>
+                                <th className="p-3 text-center">Shift</th>
+                                <th className="p-3 text-center">Total kWh</th>
+                                <th className="p-3 text-center">Avg Power (kW)</th>
+                                <th className="p-3 text-center">Avg Load (%)</th>
+                                <th className="p-3 text-center">Avg Current (A)</th>
+                                <th className="p-3 text-center">Avg PF</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-700">
+                            {shiftData.map(s => (
+                                <tr key={s.name}>
+                                    <td className="p-3 font-semibold text-white text-center">{s.name.split(' ')[1]}</td>
+                                    <td className="p-3 font-mono text-yellow-400 text-center">{formatNumber(s.kwh)}</td>
+                                    <td className="p-3 font-mono text-center">{formatNumber(s.avgPower)}</td>
+                                    <td className="p-3 font-mono text-blue-400 text-center">{formatNumber(s.avgLoad)}</td>
+                                    <td className="p-3 font-mono text-center">{formatNumber(s.avgCurrent)}</td>
+                                    <td className="p-3 font-mono text-emerald-400 text-center">{formatNumber(s.avgPF)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    </div>
+                </Card>
+            )}
 
             {/* MAINTENANCE SECTION */}
             <div className="space-y-6" ref={maintenanceSectionRef}>
