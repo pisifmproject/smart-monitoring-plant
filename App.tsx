@@ -105,18 +105,18 @@ const ProtectedLayout = ({
       <div className="w-72 bg-[#0b1120] border-r border-slate-800 flex flex-col shrink-0 z-20 shadow-2xl">
         
         {/* BRAND HEADER */}
-        <div className="px-6 py-8 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-bold border border-white/10">
-                IFM
-            </div>
-            <div>
-                 <h1 className="text-sm font-bold text-white tracking-tight leading-none">Smart Monitoring</h1>
-                 <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Enterprise Edition</p>
-            </div>
+        <div className="px-6 py-8 border-b border-slate-800/50 bg-[#0b1120]">
+             <h1 className="text-sm font-extrabold text-white tracking-tighter whitespace-nowrap truncate">
+                PT INDOFOOD FORTUNA MAKMUR
+             </h1>
+             <p className="text-[11px] font-bold text-blue-500 mt-1.5 uppercase tracking-wider flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                Smart Monitoring Multi Plant
+             </p>
         </div>
 
         {/* NAVIGATION */}
-        <nav className="flex-1 overflow-y-auto px-2 py-2 custom-scrollbar space-y-6">
+        <nav className="flex-1 overflow-y-auto px-2 py-6 custom-scrollbar space-y-6">
           
           {/* DASHBOARDS GROUP */}
           {canViewGlobal && (
