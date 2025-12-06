@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserRole, AlarmSeverity, Alarm } from './types';
@@ -8,7 +9,8 @@ import { plantService } from './services/plantService';
 import { maintenanceService } from './services/maintenanceService';
 import { 
     Factory, Activity, Zap, AlertTriangle, 
-    ArrowLeft, TrendingUp, Clock, AlertCircle, AlertOctagon, Info
+    ArrowLeft, TrendingUp, Clock, AlertCircle, AlertOctagon, Info,
+    Download, FileText, Loader2, CheckCircle2
 } from 'lucide-react';
 
 interface PlantDashboardProps {
@@ -21,6 +23,10 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     const { plantId } = useParams();
     const navigate = useNavigate();
     const [period, setPeriod] = useState<Period>('DAY');
+    
+    // Download State
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [showDownloadToast, setShowDownloadToast] = useState(false);
 
     const plant = plantService.getPlantById(plantId || '');
     
@@ -35,6 +41,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
 
     // Role Logic
     const canClickDetails = ![UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole);
+    const canDownloadReport = [UserRole.ADMINISTRATOR, UserRole.SUPERVISOR, UserRole.MANAGEMENT].includes(userRole);
     const visibilityContext = { plantId: plant.id };
 
     const FilterButton = ({ label }: { label: Period }) => {
@@ -87,8 +94,21 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
         }
     };
 
+    const handleDownloadReport = () => {
+        if (isDownloading) return;
+        setIsDownloading(true);
+
+        // Simulate PDF generation delay
+        setTimeout(() => {
+            setIsDownloading(false);
+            setShowDownloadToast(true);
+            // Hide toast after 3 seconds
+            setTimeout(() => setShowDownloadToast(false), 3000);
+        }, 2000);
+    };
+
     return (
-        <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-300 w-full">
+        <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-300 w-full relative">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -103,11 +123,31 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                         <p className="text-slate-400 text-sm font-medium mt-0.5">{plant.location}</p>
                     </div>
                 </div>
-                <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1 self-start md:self-auto">
-                    <FilterButton label="DAY" />
-                    <FilterButton label="WEEK" />
-                    <FilterButton label="MONTH" />
-                    <FilterButton label="YEAR" />
+                
+                <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+                    {/* Period Filter */}
+                    <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1">
+                        <FilterButton label="DAY" />
+                        <FilterButton label="WEEK" />
+                        <FilterButton label="MONTH" />
+                        <FilterButton label="YEAR" />
+                    </div>
+
+                    {/* Report Download Button */}
+                    {canDownloadReport && (
+                        <button 
+                            onClick={handleDownloadReport}
+                            disabled={isDownloading}
+                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-500 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed group shadow-sm"
+                        >
+                            {isDownloading ? (
+                                <Loader2 size={16} className="animate-spin text-blue-400" />
+                            ) : (
+                                <FileText size={16} className="text-blue-400 group-hover:text-blue-300" />
+                            )}
+                            <span className="hidden sm:inline">{isDownloading ? 'Generating...' : 'Export PDF'}</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -342,6 +382,21 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                     })}
                 </div>
             </div>
+
+            {/* Download Success Toast */}
+            {showDownloadToast && (
+                <div className="fixed bottom-8 right-8 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+                    <div className="bg-emerald-600 text-white px-5 py-3 rounded-lg shadow-xl shadow-emerald-900/30 flex items-center gap-3 border border-emerald-500/50">
+                        <div className="bg-white/20 p-1 rounded-full">
+                            <CheckCircle2 size={18} className="text-white" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-sm">Report Downloaded</p>
+                            <p className="text-emerald-100 text-xs mt-0.5">Plant_Performance_{period}.pdf</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
