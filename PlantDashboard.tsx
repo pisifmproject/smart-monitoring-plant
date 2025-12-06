@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserRole, AlarmSeverity, Alarm } from './types';
@@ -195,7 +196,11 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                 </thead>
                                 <tbody className="divide-y divide-slate-700 text-slate-300">
                                     {shifts.map((shift) => (
-                                        <tr key={shift.id} className="hover:bg-slate-800/50">
+                                        <tr key={shift.id} className={`transition-all duration-200 ${
+                                            shift.status === 'ACTIVE' 
+                                            ? 'bg-blue-600/20 border-l-4 border-blue-500 shadow-lg shadow-blue-900/10' 
+                                            : 'hover:bg-slate-800/50 border-l-4 border-transparent'
+                                        }`}>
                                             <td className="p-3 font-semibold text-white">{shift.name}</td>
                                             <td className="p-3 font-mono text-xs">{shift.time}</td>
                                             <td className="p-3 font-mono">{shift.output.toLocaleString()}</td>

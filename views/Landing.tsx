@@ -27,9 +27,6 @@ const Landing: React.FC = () => {
                         <h1 className="text-lg font-bold tracking-tight text-white leading-tight">
                             PT Indofood Fortuna Makmur
                         </h1>
-                        <p className="text-xs text-blue-400 font-medium tracking-wider uppercase">
-                            Enterprise System
-                        </p>
                     </div>
                 </div>
             </header>
@@ -80,12 +77,8 @@ const Landing: React.FC = () => {
             </main>
 
             {/* --- Footer --- */}
-            <footer className="w-full max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-600 font-medium relative z-20">
-                <p>© {new Date().getFullYear()} PT Indofood Fortuna Makmur. All rights reserved.</p>
-                <div className="flex gap-6">
-                    <span>Smart Monitoring V2.5</span>
-                    <span>Enterprise Edition</span>
-                </div>
+            <footer className="w-full py-8 flex justify-center items-center text-xs text-slate-600 font-medium relative z-20">
+                <p>© 2025 PT Indofood Fortuna Makmur. All rights reserved.</p>
             </footer>
         </div>
     );
