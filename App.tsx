@@ -42,7 +42,7 @@ import { lvmdpService } from './services/lvmdpService';
 // SIDEBAR COMPONENTS (MODERN PILL DESIGN)
 // ---------------------------------------
 
-const SidebarLink = ({ to, label, active, icon: Icon }: { to: string; label: string; active: boolean; icon?: any }) => (
+const SidebarLink: React.FC<{ to: string; label: string; active: boolean; icon?: any }> = ({ to, label, active, icon: Icon }) => (
   <Link
     to={to}
     className={`group relative flex items-center justify-between px-4 py-3 mx-3 mb-1 rounded-xl text-sm font-medium transition-all duration-200 ${

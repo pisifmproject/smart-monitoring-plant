@@ -1,10 +1,11 @@
+
 import React, { useState, useMemo } from 'react';
 import { Plant, UserRole } from '../types';
 import { Card, MetricCard, formatNumber } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
 import { utilityService } from '../services/utilityService';
 import { maintenanceService } from '../services/maintenanceService'; // Import maintenanceService
-import { ArrowLeft, Zap, TrendingUp, Clock, ChevronsUp, ChevronsDown, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Zap, TrendingUp, Clock, ChevronsUp, ChevronsDown, AlertTriangle, FileText, Loader2, CheckCircle2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Bar, Legend, Pie, PieChart, BarChart as RechartsBarChart } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,6 +21,10 @@ type Period = 'Day' | 'Week' | 'Month' | 'Year';
 const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, userRole }) => {
     const navigate = useNavigate();
     const [period, setPeriod] = useState<Period>('Day');
+    
+    // Download State
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [showDownloadToast, setShowDownloadToast] = useState(false);
 
     // Context for visibility check - Only plantId is needed
     const visibilityContext = { plantId: plant.id };
@@ -31,6 +36,9 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
     
     // Period is already in correct format for utilityService
     const { periodMult } = utilityService.getMultipliers(plant.id, period);
+    
+    // Permissions
+    const canDownloadReport = [UserRole.ADMINISTRATOR, UserRole.SUPERVISOR, UserRole.MANAGEMENT].includes(userRole);
 
     // Determine visibility keys prefix based on utility type
     const visibilityKeys = useMemo(() => {
@@ -43,6 +51,19 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
             CONSUMPTION_PIE: `${prefix}_DETAIL_CONSUMPTION_PIE`
         };
     }, [type]);
+
+    const handleDownloadReport = () => {
+        if (isDownloading) return;
+        setIsDownloading(true);
+
+        // Simulate PDF generation delay
+        setTimeout(() => {
+            setIsDownloading(false);
+            setShowDownloadToast(true);
+            // Hide toast after 3 seconds
+            setTimeout(() => setShowDownloadToast(false), 3000);
+        }, 2000);
+    };
 
     const FilterButton = ({ label }: { label: Period }) => {
         // Restricted: Operators can only see Day
@@ -63,7 +84,7 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-300 w-full">
+        <div className="space-y-6 animate-in fade-in duration-300 w-full relative">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white"><ArrowLeft size={24} /></button>
@@ -72,11 +93,30 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                         <p className="text-slate-400 text-sm font-medium">{plant.name}</p>
                     </div>
                 </div>
-                <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1 self-end sm:self-auto">
-                    <FilterButton label="Day" />
-                    <FilterButton label="Week" />
-                    <FilterButton label="Month" />
-                    <FilterButton label="Year" />
+                
+                <div className="flex flex-wrap items-center gap-3 self-end sm:self-auto">
+                    <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1">
+                        <FilterButton label="Day" />
+                        <FilterButton label="Week" />
+                        <FilterButton label="Month" />
+                        <FilterButton label="Year" />
+                    </div>
+
+                    {/* Download Button */}
+                    {canDownloadReport && (
+                        <button 
+                            onClick={handleDownloadReport}
+                            disabled={isDownloading}
+                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-500 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed group shadow-sm"
+                        >
+                            {isDownloading ? (
+                                <Loader2 size={16} className="animate-spin text-blue-400" />
+                            ) : (
+                                <FileText size={16} className="text-blue-400 group-hover:text-blue-300" />
+                            )}
+                            <span className="hidden sm:inline">{isDownloading ? 'Export PDF' : 'Export PDF'}</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -215,6 +255,21 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                         </Card>
                     )}
                  </div>
+            )}
+
+            {/* Download Success Toast */}
+            {showDownloadToast && (
+                <div className="fixed bottom-8 right-8 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+                    <div className="bg-emerald-600 text-white px-5 py-3 rounded-lg shadow-xl shadow-emerald-900/30 flex items-center gap-3 border border-emerald-500/50">
+                        <div className="bg-white/20 p-1 rounded-full">
+                            <CheckCircle2 size={18} className="text-white" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-sm">Report Downloaded</p>
+                            <p className="text-emerald-100 text-xs mt-0.5">{config.label}_Detail_{period}.pdf</p>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

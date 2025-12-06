@@ -54,13 +54,8 @@ const CATEGORY_FILTERS = [
         id: 'UTILITY', 
         label: 'Utility & Energy', 
         icon: Zap, 
-        types: [VisibilityCategory.UTILITY] 
-    },
-    { 
-        id: 'MAIN_PANEL', 
-        label: 'Main Panels', 
-        icon: LayoutGrid, 
         types: [
+            VisibilityCategory.UTILITY,
             VisibilityCategory.MAIN_PANEL_1, 
             VisibilityCategory.MAIN_PANEL_2, 
             VisibilityCategory.MAIN_PANEL_3, 
@@ -78,7 +73,7 @@ const SettingsView: React.FC<SettingsProps> = ({ userRole }) => {
 
     // Determine scopes to fetch based on selected plant
     const currentScopeKeys = useMemo(() => {
-        const categories = Object.values(VisibilityCategory);
+        const categories = Object.values(VisibilityCategory) as VisibilityCategory[];
         const keys: Record<string, string> = {};
         categories.forEach(cat => {
             keys[cat] = getScopeKeyForSettings({ category: cat, plantId: selectedPlant });

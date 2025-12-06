@@ -5,12 +5,11 @@ import { Machine, UserRole, MachineType } from '../types';
 import { Card, StatusBadge, MetricCard, formatNumber } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
 import { maintenanceService } from '../services/maintenanceService';
-import { plantService } from './services/plantService'; // Fixed import path
 import { plantService as ps } from '../services/plantService'; // Using correct import path
 import { 
     Activity, Zap, AlertTriangle, ArrowLeft, 
     ClipboardPen, Wrench, X, CheckCircle2, 
-    Wind, Droplets, Cloud, Box, Clock, Camera, Plus, History, Save
+    Wind, Droplets, Cloud, Box, Clock, Camera, Plus, History, Save, FileText, Loader2
 } from 'lucide-react';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -23,6 +22,8 @@ interface MachineDetailProps {
     userRole: UserRole;
     currentUser: string; 
 }
+
+type Period = 'Day' | 'Week' | 'Month' | 'Year';
 
 const ALL_TABS = [
     { key: 'Performance', visibilityKey: 'MACHINE_TAB_PERFORMANCE' },
@@ -50,6 +51,12 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         }
         return visibleTabs.length > 0 ? visibleTabs[0].key : '';
     });
+
+    const [period, setPeriod] = useState<Period>('Day');
+    
+    // Download State
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [showDownloadToast, setShowDownloadToast] = useState(false);
     
     // Ref for scrolling to maintenance form
     const maintenanceRef = useRef<HTMLDivElement>(null);
@@ -65,8 +72,10 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     const [tick, setTick] = useState(0);
     const forceUpdate = () => setTick(t => t + 1);
 
-    // Fetch real data from services
-    const timeSeriesData = useMemo(() => ps.getMachineTimeSeries(machine.id), [machine.id]);
+    // Fetch real data from services with Period context
+    const timeSeriesData = useMemo(() => ps.getMachineTimeSeries(machine.id, period), [machine.id, period]);
+    const accumulatedStats = useMemo(() => ps.getMachineStats(machine.id, period), [machine.id, period]);
+
     const alarmHistory = useMemo(() => maintenanceService.getMaintenanceHistory(machine.id), [machine.id, tick]); // Refresh on maintenance action
     const activeAlarms = maintenanceService.getMachineActiveAlarms(machine.id);
     const downtimeLogs = useMemo(() => maintenanceService.getDowntimeLogs(machine.id), [machine.id, tick]);
@@ -94,6 +103,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     const canAddDowntime = userRole === UserRole.OPERATOR || userRole === UserRole.ADMINISTRATOR || userRole === UserRole.SUPERVISOR;
     const canPerformMaintenance = userRole === UserRole.MAINTENANCE;
     const canViewHistory = true;
+    const canDownloadReport = [UserRole.ADMINISTRATOR, UserRole.SUPERVISOR, UserRole.MANAGEMENT].includes(userRole);
     
     // Handle tab switching safety
     useEffect(() => {
@@ -178,6 +188,37 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         setTimeout(() => setShowSuccess(false), 3000);
     };
     
+    const handleDownloadReport = () => {
+        if (isDownloading) return;
+        setIsDownloading(true);
+
+        // Simulate PDF generation delay
+        setTimeout(() => {
+            setIsDownloading(false);
+            setShowDownloadToast(true);
+            // Hide toast after 3 seconds
+            setTimeout(() => setShowDownloadToast(false), 3000);
+        }, 2000);
+    };
+    
+    const FilterButton = ({ label }: { label: Period }) => {
+        // Restricted: Operators can only see Day
+        if (userRole === UserRole.OPERATOR && label !== 'Day') return null;
+
+        return (
+            <button 
+                onClick={() => setPeriod(label)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                    period === label 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+            >
+                {label}
+            </button>
+        );
+    };
+
     const renderPerformanceTab = () => (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
             <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
@@ -186,13 +227,13 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                  {isDataItemVisible(userRole, 'MACHINE_PERFORMANCE', visibilityContext) && <MetricCard title="Performance" value={formatNumber((machine.performance || 0.92) * 100)} unit="%" icon={Zap} color="text-yellow-400" />}
                  {isDataItemVisible(userRole, 'MACHINE_QUALITY', visibilityContext) && <MetricCard title="Quality" value={formatNumber((machine.quality || 0.99) * 100)} unit="%" icon={CheckCircle2} color="text-purple-400" />}
                  {isDataItemVisible(userRole, 'MACHINE_OUTPUT_KG_H', visibilityContext) && <MetricCard title="Output Rate" value={formatNumber(machine.outputPerHour)} unit="kg/h" icon={Box} />}
-                 {isDataItemVisible(userRole, 'MACHINE_OUTPUT_SHIFT', visibilityContext) && <MetricCard title="Shift Total" value={formatNumber(machine.totalOutputShift)} unit="kg" icon={Box} />}
-                 {isDataItemVisible(userRole, 'MACHINE_REJECT_KG', visibilityContext) && <MetricCard title="Reject Mass" value={formatNumber(machine.totalOutputShift * (machine.rejectRate/100))} unit="kg" icon={AlertTriangle} color="text-rose-400" />}
+                 {isDataItemVisible(userRole, 'MACHINE_OUTPUT_SHIFT', visibilityContext) && <MetricCard title={`Total Output (${period})`} value={formatNumber(accumulatedStats?.totalOutput || 0)} unit="kg" icon={Box} />}
+                 {isDataItemVisible(userRole, 'MACHINE_REJECT_KG', visibilityContext) && <MetricCard title={`Reject Mass (${period})`} value={formatNumber(accumulatedStats?.rejectMass || 0)} unit="kg" icon={AlertTriangle} color="text-rose-400" />}
                  {isDataItemVisible(userRole, 'MACHINE_REJECT_PERCENT', visibilityContext) && <MetricCard title="Reject %" value={formatNumber(machine.rejectRate)} unit="%" icon={AlertTriangle} color="text-rose-400" />}
             </div>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(550px,1fr))] gap-6">
                 {isDataItemVisible(userRole, 'MACHINE_OUTPUT_TREND_CHART', visibilityContext) && (
-                    <Card title="Output vs Target Trend">
+                    <Card title={`Output vs Target Trend (${period})`}>
                          <ResponsiveContainer width="100%" height={300}>
                             <AreaChart data={timeSeriesData.output}>
                                 <defs><linearGradient id="colorOutput" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient></defs>
@@ -204,19 +245,6 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                                 <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorOutput)" name="Actual (kg)" />
                                 <Line type="step" dataKey="target" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" name="Target" dot={false} />
                             </AreaChart>
-                        </ResponsiveContainer>
-                    </Card>
-                )}
-                {isDataItemVisible(userRole, 'MACHINE_REJECT_TREND_CHART', visibilityContext) && (
-                    <Card title="Reject Rate Trend">
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={timeSeriesData.rejects}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 13}} />
-                                <YAxis stroke="#94a3b8" tick={{fontSize: 13}} tickFormatter={(val) => formatNumber(val, 1)} />
-                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9', fontSize: '14px' }} />
-                                <Bar dataKey="value" fill="#f43f5e" name="Reject (kg)" radius={[4,4,0,0]} />
-                            </BarChart>
                         </ResponsiveContainer>
                     </Card>
                 )}
@@ -257,17 +285,17 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     };
 
     const renderUtilityTab = () => {
-        const util = machine.utilityConsumption || { electricity: 0, steam: 0, water: 0, air: 0 };
+        const util = accumulatedStats?.utility || { electricity: 0, steam: 0, water: 0, air: 0 };
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_ELECTRICITY', visibilityContext) && <MetricCard title="Electricity" value={formatNumber(util.electricity)} unit="kWh" icon={Zap} color="text-yellow-400" />}
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_STEAM', visibilityContext) && <MetricCard title="Steam" value={formatNumber(util.steam)} unit="kg/h" icon={Cloud} color="text-slate-200" />}
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_WATER', visibilityContext) && <MetricCard title="Water" value={formatNumber(util.water)} unit="m³/h" icon={Droplets} color="text-blue-400" />}
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_AIR', visibilityContext) && <MetricCard title="Compressed Air" value={formatNumber(util.air)} unit="Nm³/h" icon={Wind} color="text-cyan-400" />}
+                    {isDataItemVisible(userRole, 'MACHINE_UTIL_ELECTRICITY', visibilityContext) && <MetricCard title={`Electricity (${period})`} value={formatNumber(util.electricity)} unit="kWh" icon={Zap} color="text-yellow-400" />}
+                    {isDataItemVisible(userRole, 'MACHINE_UTIL_STEAM', visibilityContext) && <MetricCard title={`Steam (${period})`} value={formatNumber(util.steam)} unit="kg" icon={Cloud} color="text-slate-200" />}
+                    {isDataItemVisible(userRole, 'MACHINE_UTIL_WATER', visibilityContext) && <MetricCard title={`Water (${period})`} value={formatNumber(util.water)} unit="m³" icon={Droplets} color="text-blue-400" />}
+                    {isDataItemVisible(userRole, 'MACHINE_UTIL_AIR', visibilityContext) && <MetricCard title={`Compressed Air (${period})`} value={formatNumber(util.air)} unit="Nm³" icon={Wind} color="text-cyan-400" />}
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card title="Electricity Consumption Trend (24h)">
+                    <Card title={`Electricity Consumption Trend (${period})`}>
                         <ResponsiveContainer width="100%" height={300}>
                             <AreaChart data={timeSeriesData.utility.electricity}>
                                 <defs><linearGradient id="colorElec" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/><stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/></linearGradient></defs>
@@ -279,7 +307,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                             </AreaChart>
                         </ResponsiveContainer>
                     </Card>
-                    <Card title="Steam Consumption Trend (24h)">
+                    <Card title={`Steam Consumption Trend (${period})`}>
                         <ResponsiveContainer width="100%" height={300}>
                             <AreaChart data={timeSeriesData.utility.steam}>
                                 <defs><linearGradient id="colorSteam" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/><stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/></linearGradient></defs>
@@ -287,7 +315,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                                 <XAxis dataKey="time" stroke="#94a3b8" />
                                 <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
                                 <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                                <Area type="monotone" dataKey="value" stroke="#94a3b8" fill="url(#colorSteam)" name="kg/h" />
+                                <Area type="monotone" dataKey="value" stroke="#94a3b8" fill="url(#colorSteam)" name="kg" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </Card>
@@ -560,9 +588,9 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     );
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-300 relative w-full">
+        <div className="space-y-6 animate-in fade-in duration-300 relative w-full pb-10">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white"><ArrowLeft size={24} /></button>
                     <div>
@@ -582,6 +610,32 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                         </div>
                         <p className="text-slate-400 text-sm mt-0.5 font-medium">{machine.code} • {machine.type} • Plant {machine.plantId}</p>
                     </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 self-end sm:self-auto">
+                    {/* Period Selector (Added for Report Context) */}
+                    <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1">
+                        <FilterButton label="Day" />
+                        <FilterButton label="Week" />
+                        <FilterButton label="Month" />
+                        <FilterButton label="Year" />
+                    </div>
+
+                    {/* Download Button */}
+                    {canDownloadReport && (
+                        <button 
+                            onClick={handleDownloadReport}
+                            disabled={isDownloading}
+                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-500 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed group shadow-sm"
+                        >
+                            {isDownloading ? (
+                                <Loader2 size={16} className="animate-spin text-blue-400" />
+                            ) : (
+                                <FileText size={16} className="text-blue-400 group-hover:text-blue-300" />
+                            )}
+                            <span className="hidden sm:inline">{isDownloading ? 'Export PDF' : 'Export PDF'}</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -616,6 +670,21 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
             {showSuccess && (
                 <div className="fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-xl font-bold animate-in slide-in-from-bottom-5 fade-in z-50 flex items-center gap-2">
                     <CheckCircle2 size={20} /> Downtime Event Logged
+                </div>
+            )}
+
+            {/* Download Success Toast */}
+            {showDownloadToast && (
+                <div className="fixed bottom-8 right-8 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+                    <div className="bg-emerald-600 text-white px-5 py-3 rounded-lg shadow-xl shadow-emerald-900/30 flex items-center gap-3 border border-emerald-500/50">
+                        <div className="bg-white/20 p-1 rounded-full">
+                            <CheckCircle2 size={18} className="text-white" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-sm">Report Downloaded</p>
+                            <p className="text-emerald-100 text-xs mt-0.5">{machine.code}_Performance_{period}.pdf</p>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
