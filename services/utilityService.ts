@@ -1,3 +1,4 @@
+
 //utilityService.ts
 
 import { Plant, PlantCode } from '../types';
@@ -49,15 +50,36 @@ export const utilityService = {
                         0
                     ) * periodMult;
 
+                // Dynamic Trend Calculation to match Total
+                let elecTrendBase = totalElec;
+                let elecVariance = 0;
+                
+                if (period === 'Day') {
+                     // Day: trendBase is Total Daily. getTrendData divides by 24 to get hourly avg.
+                     elecTrendBase = totalElec;
+                     // Variance: used as-is by getTrendData for Day.
+                     // We want approx 20% variance on hourly value.
+                     elecVariance = (totalElec / 24) * 0.2;
+                } else {
+                     const points = period === 'Week' ? 7 : period === 'Month' ? 30 : 12;
+                     // Others: trendBase is Average Per Point. getTrendData divides by 1.
+                     elecTrendBase = totalElec / points;
+                     // Variance: getTrendData divides by points.
+                     // We want 20% variance on avg value.
+                     // So input variance = (Avg * 0.2) * points
+                     elecVariance = (elecTrendBase * 0.2) * points;
+                }
+
                 return {
                     label: 'Electricity',
                     unit: 'kWh',
                     icon: Zap,
                     color: 'text-yellow-400',
+                    hexColor: '#facc15',
                     value: totalElec,
                     trend: 12,
-                    trendBase: 150 * baseMult, // Base is daily for correct hourly calculation in QuickStats
-                    variance: 20 * baseMult,
+                    trendBase: elecTrendBase,
+                    variance: elecVariance,
                     breakdownTitle: 'Panel Breakdown'
                 };
 
@@ -67,6 +89,7 @@ export const utilityService = {
                     unit: 'm³',
                     icon: Droplets,
                     color: 'text-blue-400',
+                    hexColor: '#60a5fa',
                     value: 450 * baseMult * periodMult,
                     trend: -5,
                     trendBase: 20 * baseMult,
@@ -80,6 +103,7 @@ export const utilityService = {
                     unit: 'Nm³',
                     icon: Flame,
                     color: 'text-rose-400',
+                    hexColor: '#fb7185',
                     value: 1200 * baseMult * periodMult,
                     trend: 2,
                     trendBase: 50 * baseMult,
@@ -93,6 +117,7 @@ export const utilityService = {
                     unit: 'Ton',
                     icon: Cloud,
                     color: 'text-slate-200',
+                    hexColor: '#e2e8f0',
                     value: 15 * baseMult * periodMult,
                     trend: 8,
                     trendBase: 0.8 * baseMult,
@@ -106,6 +131,7 @@ export const utilityService = {
                     unit: 'Nm³',
                     icon: Wind,
                     color: 'text-cyan-400',
+                    hexColor: '#22d3ee',
                     value: 18000 * baseMult * periodMult,
                     trend: 0,
                     trendBase: 800 * baseMult,
@@ -119,6 +145,7 @@ export const utilityService = {
                     unit: 'Nm³',
                     icon: Box,
                     color: 'text-emerald-400',
+                    hexColor: '#34d399',
                     value: 450 * baseMult * periodMult,
                     trend: 15,
                     trendBase: 20 * baseMult,
@@ -132,6 +159,7 @@ export const utilityService = {
                     unit: 'Units',
                     icon: Box,
                     color: 'text-slate-400',
+                    hexColor: '#94a3b8',
                     value: 0,
                     trend: 0,
                     trendBase: 100,

@@ -77,7 +77,7 @@ const Landing: React.FC = () => {
             </main>
 
             {/* --- Footer --- */}
-            <footer className="w-full py-8 flex justify-center items-center text-xs text-slate-600 font-medium relative z-20">
+            <footer className="w-full py-8 mb-24 flex justify-center items-center text-xs text-slate-600 font-medium relative z-20">
                 <p>© 2025 PT Indofood Fortuna Makmur. All rights reserved.</p>
             </footer>
         </div>

@@ -99,7 +99,7 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                                 <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} />
                                 <YAxis stroke="#94a3b8" tick={{fontSize: 12}} />
                                 <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
-                                <Line type="monotone" dataKey="value" stroke={config.color.replace('text-', '#').split('-')[0]} strokeWidth={2} name={`Usage (${config.unit})`} dot={false} />
+                                <Line type="monotone" dataKey="value" stroke={config.hexColor} strokeWidth={2} name={`Usage (${config.unit})`} dot={false} />
                             </LineChart>
                         </ResponsiveContainer>
                     </Card>
@@ -194,7 +194,7 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                                     <XAxis type="number" stroke="#94a3b8" tick={{fontSize: 12}} />
                                     <YAxis type="category" dataKey="name" stroke="#94a3b8" tick={{fontSize: 12}} width={100} />
                                     <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
-                                    <Bar dataKey="value" fill={config.color.replace('text-', '#').split('-')[0]} name="Consumption (%)" radius={[0, 4, 4, 0]} />
+                                    <Bar dataKey="value" fill={config.hexColor} name="Consumption (%)" radius={[0, 4, 4, 0]} />
                                 </RechartsBarChart>
                             </ResponsiveContainer>
                         </Card>
