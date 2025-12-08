@@ -111,7 +111,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     return (
         <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-300 w-full relative">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate('/app/dashboard/global')} className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white">
                         <ArrowLeft size={24} />
@@ -125,7 +125,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                     </div>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+                <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
                     {/* Period Filter */}
                     <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1">
                         <FilterButton label="DAY" />
@@ -225,7 +225,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
             </div>
 
             {/* Shift Performance & Active Alarms */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {isDataItemVisible(userRole, 'SHIFT_PERFORMANCE_TABLE', visibilityContext) && (
                     <Card title="Shift Performance">
                         <div className="overflow-x-auto">
@@ -240,39 +240,29 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-700 text-slate-300">
-                                    {shifts.map((shift) => {
-                                        // Determine row highlighting based on status
-                                        const rowClass = shift.status === 'ACTIVE' 
+                                    {shifts.map((shift) => (
+                                        <tr key={shift.id} className={`transition-all duration-200 ${
+                                            shift.status === 'ACTIVE' 
                                             ? 'bg-blue-600/20 border-l-4 border-blue-500 shadow-lg shadow-blue-900/10' 
-                                            : shift.status === 'COMPLETED' 
-                                            ? 'bg-slate-800/40 border-l-4 border-slate-700 hover:bg-slate-800/70'
-                                            : 'hover:bg-slate-800/50 border-l-4 border-transparent';
-
-                                        // Determine status badge style based on status
-                                        const badgeClass = shift.status === 'ACTIVE' 
-                                            ? 'bg-emerald-500/20 text-emerald-400' 
-                                            : shift.status === 'COMPLETED'
-                                            ? 'bg-slate-600/50 text-slate-300'
-                                            : 'bg-slate-700 text-slate-400';
-
-                                        return (
-                                            <tr key={shift.id} className={`transition-all duration-200 ${rowClass}`}>
-                                                <td className="p-3 font-semibold text-white">{shift.name}</td>
-                                                <td className="p-3 font-mono text-xs">{shift.time}</td>
-                                                <td className="p-3 font-mono">{formatNumber(shift.output)}</td>
-                                                <td className="p-3 text-center">
-                                                    <span className={`font-bold ${shift.oee > 0.8 ? 'text-emerald-400' : shift.oee > 0 ? 'text-amber-400' : 'text-slate-500'}`}>
-                                                        {formatNumber(shift.oee * 100)}%
-                                                    </span>
-                                                </td>
-                                                <td className="p-3 text-center">
-                                                    <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full font-bold ${badgeClass}`}>
-                                                        {shift.status}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
+                                            : 'hover:bg-slate-800/50 border-l-4 border-transparent'
+                                        }`}>
+                                            <td className="p-3 font-semibold text-white">{shift.name}</td>
+                                            <td className="p-3 font-mono text-xs">{shift.time}</td>
+                                            <td className="p-3 font-mono">{formatNumber(shift.output)}</td>
+                                            <td className="p-3 text-center">
+                                                <span className={`font-bold ${shift.oee > 0.8 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                                    {formatNumber(shift.oee * 100)}%
+                                                </span>
+                                            </td>
+                                            <td className="p-3 text-center">
+                                                <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full font-bold ${
+                                                    shift.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'
+                                                }`}>
+                                                    {shift.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>

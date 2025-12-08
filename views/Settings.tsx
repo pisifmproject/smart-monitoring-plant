@@ -494,7 +494,7 @@ const UsersAndRolesSettings = ({ forceUpdate }: { forceUpdate: () => void }) => 
                     </button>
                 </div>
                 <div className="overflow-x-auto">
-                     <table className="w-full text-left text-slate-300">
+                     <table className="w-full text-left text-slate-300 min-w-[600px]">
                         <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
                             <tr>
                                 <th className="p-3">Full Name</th>
@@ -672,7 +672,7 @@ const MasterDataSettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
 
     return (
         <Card className="bg-slate-900/30">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-1.5 flex gap-2 mb-6 shadow-md">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-1.5 flex flex-col sm:flex-row gap-2 mb-6 shadow-md">
                 <TabButton id="plants" label="Plants" icon={Factory} />
                 <TabButton id="machines" label="Machines" icon={Monitor} />
                 <TabButton id="lvmdps" label="LVMDP Panels" icon={Zap} />
@@ -765,7 +765,7 @@ const PlantManagementTable: React.FC<PlantManagementTableProps> = ({ plants, onA
             <button onClick={onAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md self-start sm:self-center"><Plus size={16} /> Add Plant</button>
         </div>
         <div className="overflow-x-auto">
-             <table className="w-full text-left text-slate-300">
+             <table className="w-full text-left text-slate-300 min-w-[600px]">
                 <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
                     <tr>
                         <th className="p-4">Plant Name</th>
@@ -804,7 +804,7 @@ const MachineManagementTable: React.FC<MachineManagementTableProps> = ({ machine
             <button onClick={onAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md self-start sm:self-center"><Plus size={16} /> Add Machine</button>
         </div>
         <div className="overflow-x-auto">
-             <table className="w-full text-left text-slate-300">
+             <table className="w-full text-left text-slate-300 min-w-[600px]">
                 <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
                     <tr><th className="p-4">Name</th><th className="p-4 text-center">Plant</th><th className="p-4 text-center">Actions</th></tr>
                 </thead>
@@ -837,7 +837,7 @@ const LVMDPManagementTable: React.FC<LVMDPManagementTableProps> = ({ lvmdps, onA
             <button onClick={onAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md self-start sm:self-center"><Plus size={16} /> Add Panel</button>
         </div>
         <div className="overflow-x-auto">
-             <table className="w-full text-left text-slate-300">
+             <table className="w-full text-left text-slate-300 min-w-[600px]">
                 <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
                     <tr><th className="p-4">Name</th><th className="p-4 text-center">Plant</th><th className="p-4 text-center">Code</th><th className="p-4 text-center">Actions</th></tr>
                 </thead>
@@ -871,7 +871,7 @@ const UtilityConfigTable: React.FC<UtilityConfigTableProps> = ({ plants, onAdd, 
              <button onClick={onAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md self-start sm:self-center"><Plus size={16} /> Add Utility</button>
         </div>
         <div className="overflow-x-auto">
-             <table className="w-full text-left text-slate-300">
+             <table className="w-full text-left text-slate-300 min-w-[600px]">
                 <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
                     <tr><th className="p-4">Plant</th><th className="p-4">Utility</th><th className="p-4 text-center">Base Consumption (/day)</th><th className="p-4 text-center">Actions</th></tr>
                 </thead>

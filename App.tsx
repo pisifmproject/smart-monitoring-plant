@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   HashRouter,
   Routes,
@@ -17,7 +17,10 @@ import {
   LogOut, 
   Building2, 
   ChevronRight,
-  User as UserIcon
+  User as UserIcon,
+  ChevronsLeft,
+  Menu,
+  X
 } from 'lucide-react';
 
 import { User, UserRole } from './types';
@@ -42,24 +45,23 @@ import { lvmdpService } from './services/lvmdpService';
 // SIDEBAR COMPONENTS (MODERN PILL DESIGN)
 // ---------------------------------------
 
-const SidebarLink: React.FC<{ to: string; label: string; active: boolean; icon?: any }> = ({ to, label, active, icon: Icon }) => (
+const SidebarLink: React.FC<{ to: string; label: string; active: boolean; icon?: any; isCollapsed: boolean }> = ({ to, label, active, icon: Icon, isCollapsed }) => (
   <Link
     to={to}
-    className={`group relative flex items-center justify-between px-4 py-3 mx-3 mb-1 rounded-xl text-sm font-medium transition-all duration-200 ${
+    title={isCollapsed ? label : undefined}
+    className={`group relative flex items-center justify-between px-4 py-3 mx-2 my-1 rounded-xl text-sm font-medium transition-all duration-200 ${
       active
         ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
         : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
-    }`}
+    } ${isCollapsed ? 'justify-center' : ''}`}
   >
     <div className="flex items-center gap-3">
-        {Icon ? (
-            <Icon size={18} className={`transition-colors ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
-        ) : (
-            <div className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-white' : 'bg-slate-600 group-hover:bg-slate-400'}`}></div>
+        {Icon && (
+            <Icon size={18} className={`transition-colors shrink-0 ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
         )}
-        <span>{label}</span>
+        {!isCollapsed && <span>{label}</span>}
     </div>
-    {active && <ChevronRight size={14} className="text-white/70" />}
+    {active && !isCollapsed && <ChevronRight size={14} className="text-white/70" />}
   </Link>
 );
 
@@ -88,112 +90,119 @@ const ProtectedLayout = ({
   onLogout: () => void;
 }) => {
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => localStorage.getItem('sidebarOpen') !== 'false');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // 1. Strict Auth Check
+  useEffect(() => {
+    localStorage.setItem('sidebarOpen', String(isSidebarOpen));
+  }, [isSidebarOpen]);
+  
+  useEffect(() => {
+    // Close mobile menu on route change
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
   if (!user || !user.role) {
       return <Navigate to="/login" replace />;
   }
 
-  // 2. Role Permissions
   const role = user.role;
   const isAdmin = role === UserRole.ADMINISTRATOR;
   const canViewGlobal = role !== UserRole.OPERATOR;
+  
+  const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => (
+    <>
+      {/* BRAND HEADER */}
+      <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
+        <div className="flex flex-col items-center">
+          <h1 className={`text-sm font-extrabold text-white tracking-tighter whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
+              PT INDOFOOD FORTUNA MAKMUR
+          </h1>
+          <p className={`text-[11px] font-bold text-blue-500 mt-1.5 uppercase tracking-wider flex items-center gap-2 transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+              Smart Monitoring Multi Plant
+          </p>
+        </div>
+      </div>
+  
+      {/* NAVIGATION */}
+      <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-6">
+        {canViewGlobal && (
+          <div>
+            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">Dashboards</div>}
+            <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
+          </div>
+        )}
+        <div>
+          {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">Production Plants</div>}
+          <div className="space-y-0.5">
+            {plantService.getAllPlants().map((plant) => (
+              <SidebarLink key={plant.id} to={`/app/plants/${plant.id}`} label={plant.name} active={location.pathname.includes(`/app/plants/${plant.id}`)} icon={Building2} isCollapsed={isCollapsed} />
+            ))}
+          </div>
+        </div>
+        {isAdmin && (
+          <div>
+            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">Administration</div>}
+            <SidebarLink to="/app/settings" label="System Settings" active={location.pathname.startsWith('/app/settings')} icon={Settings} isCollapsed={isCollapsed} />
+          </div>
+        )}
+      </nav>
+  
+      {/* USER PROFILE CARD & TOGGLE */}
+      <div className="p-3 border-t border-slate-800">
+        <div className={`p-2 transition-all duration-300 bg-slate-900/50 border border-slate-800/80 rounded-2xl ${isCollapsed ? 'w-14 mx-auto' : ''}`}>
+          <div className="flex items-center gap-3 mb-4">
+            <UserAvatar name={user.name} />
+            {!isCollapsed && (
+              <div className="overflow-hidden">
+                <p className="text-sm font-bold text-white truncate">{user.name}</p>
+                <p className="text-xs text-blue-400 font-medium truncate">{user.role}</p>
+              </div>
+            )}
+          </div>
+          {!isCollapsed && (
+            <button
+              onClick={() => { onLogout(); window.location.hash = '/'; }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-500/10 hover:text-rose-400 text-slate-400 text-xs font-bold uppercase tracking-wider transition-all border border-slate-700 hover:border-rose-500/30 group"
+            >
+              <LogOut size={14} className="group-hover:scale-110 transition-transform"/> Sign Out
+            </button>
+          )}
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <div className="flex h-screen bg-slate-950 font-sans text-slate-200">
-      {/* SIDEBAR */}
-      <div className="w-72 bg-[#0b1120] border-r border-slate-800 flex flex-col shrink-0 z-20 shadow-2xl">
-        
-        {/* BRAND HEADER */}
-        <div className="px-6 py-8 border-b border-slate-800/50 bg-[#0b1120]">
-             <h1 className="text-sm font-extrabold text-white tracking-tighter whitespace-nowrap truncate">
-                PT INDOFOOD FORTUNA MAKMUR
-             </h1>
-             <p className="text-[11px] font-bold text-blue-500 mt-1.5 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                Smart Monitoring Multi Plant
-             </p>
-        </div>
-
-        {/* NAVIGATION */}
-        <nav className="flex-1 overflow-y-auto px-2 py-6 custom-scrollbar space-y-6">
-          
-          {/* DASHBOARDS GROUP */}
-          {canViewGlobal && (
-            <div>
-                 <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                    Dashboards
-                 </div>
-                 <SidebarLink 
-                    to="/app/dashboard/global" 
-                    label="Global Overview" 
-                    active={location.pathname.includes('/app/dashboard/global')}
-                    icon={LayoutDashboard}
-                 />
-            </div>
-          )}
-
-          {/* PLANTS GROUP */}
-          <div>
-            <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                Production Plants
-            </div>
-            <div className="space-y-0.5">
-              {plantService.getAllPlants().map((plant) => (
-                <SidebarLink
-                  key={plant.id}
-                  to={`/app/plants/${plant.id}`}
-                  label={plant.name}
-                  active={location.pathname.includes(`/app/plants/${plant.id}`)}
-                  icon={Building2}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* SYSTEM GROUP */}
-          {isAdmin && (
-            <div>
-              <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                  Administration
-              </div>
-              <SidebarLink
-                to="/app/settings"
-                label="System Settings"
-                active={location.pathname.startsWith('/app/settings')}
-                icon={Settings}
-              />
-            </div>
-          )}
-        </nav>
-
-        {/* USER PROFILE CARD */}
-        <div className="p-3">
-            <div className="p-4 bg-slate-900/50 border border-slate-800/80 rounded-2xl">
-                <div className="flex items-center gap-3 mb-4">
-                    <UserAvatar name={user.name} />
-                    <div className="overflow-hidden">
-                        <p className="text-sm font-bold text-white truncate">{user.name}</p>
-                        <p className="text-xs text-blue-400 font-medium truncate">{user.role}</p>
-                    </div>
-                </div>
-                <button
-                    onClick={() => {
-                        onLogout();
-                        window.location.hash = '/';
-                    }}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-500/10 hover:text-rose-400 text-slate-400 text-xs font-bold uppercase tracking-wider transition-all border border-slate-700 hover:border-rose-500/30 group"
-                >
-                    <LogOut size={14} className="group-hover:scale-110 transition-transform"/> Sign Out
-                </button>
-            </div>
+      
+      {/* --- MOBILE SIDEBAR (OVERLAY) --- */}
+      <div className={`fixed inset-0 z-40 transform transition-transform duration-300 lg:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="w-72 bg-[#0b1120] border-r border-slate-800 flex flex-col h-full">
+            <SidebarContent isCollapsed={false} />
         </div>
       </div>
+      {isMobileMenuOpen && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>}
 
-      {/* MAIN CONTENT AREA */}
+      {/* --- DESKTOP SIDEBAR --- */}
+      <div className={`hidden lg:flex flex-col bg-[#0b1120] border-r border-slate-800 shrink-0 z-20 shadow-2xl transition-all duration-300 ${isSidebarOpen ? 'w-72' : 'w-20'}`}>
+          <SidebarContent isCollapsed={!isSidebarOpen} />
+      </div>
+
+      {/* --- MAIN CONTENT AREA --- */}
       <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-950">
+        <header className="flex items-center justify-between h-16 px-6 border-b border-slate-800 shrink-0 lg:justify-end">
+            <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(true)}>
+                <Menu size={24} />
+            </button>
+            <button className="hidden lg:block text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+                <ChevronsLeft size={20} className={`transition-transform duration-300 ${!isSidebarOpen ? 'rotate-180' : ''}`} />
+            </button>
+        </header>
+
         <main className="flex-1 overflow-y-auto bg-slate-950 scroll-smooth">
-          <div className="w-full max-w-[1800px] mx-auto px-6 py-8 md:px-12 md:py-10">
+          <div className="w-full max-w-[1800px] mx-auto">
             <Outlet />
           </div>
         </main>
@@ -205,7 +214,6 @@ const ProtectedLayout = ({
 // ---------------------------------------
 // ACCESS CONTROL WRAPPERS
 // ---------------------------------------
-
 const MachineDetailWrapper = ({ user }: { user: User }) => {
   const { machineId } = useParams();
   const navigate = useNavigate();
@@ -219,12 +227,14 @@ const MachineDetailWrapper = ({ user }: { user: User }) => {
   if (!machine) return <div className="p-8 text-slate-500">Machine Not Found</div>;
 
   return (
-    <MachineDetail
-      machine={machine}
-      onBack={() => navigate(-1)}
-      userRole={user.role}
-      currentUser={user.name}
-    />
+    <div className="px-4 md:px-8 py-6">
+      <MachineDetail
+        machine={machine}
+        onBack={() => navigate(-1)}
+        userRole={user.role}
+        currentUser={user.name}
+      />
+    </div>
   );
 };
 
@@ -240,7 +250,11 @@ const LVMDPDetailWrapper = ({ userRole }: { userRole: UserRole }) => {
   const panel = lvmdpService.getPanelById(panelId || '');
   if (!panel) return <div className="p-8 text-slate-500">Panel Not Found</div>;
 
-  return <LVMDPDetail lvmdp={panel} onBack={() => navigate(-1)} userRole={userRole} />;
+  return (
+     <div className="px-4 md:px-8 py-6">
+      <LVMDPDetail lvmdp={panel} onBack={() => navigate(-1)} userRole={userRole} />
+    </div>
+  );
 };
 
 const UtilitySummaryWrapper = ({ userRole }: { userRole: UserRole }) => {
@@ -256,19 +270,28 @@ const UtilitySummaryWrapper = ({ userRole }: { userRole: UserRole }) => {
   if (!plant) return <div className="p-8 text-slate-500">Plant Not Found</div>;
 
   return (
-    <UtilitySummary
-      plant={plant}
-      type={type || 'electricity'}
-      onBack={() => navigate(`/app/plants/${plantId}`)}
-      userRole={userRole}
-    />
+    <div className="px-4 md:px-8 py-6">
+      <UtilitySummary
+        plant={plant}
+        type={type || 'electricity'}
+        onBack={() => navigate(`/app/plants/${plantId}`)}
+        userRole={userRole}
+      />
+    </div>
   );
 };
 
+
+const SettingsWrapper = ({ userRole }: { userRole: UserRole }) => {
+  return (
+    <div className="px-4 sm:px-6 lg:px-8 py-6">
+       <SettingsView userRole={userRole} />
+    </div>
+  )
+}
 // ---------------------------------------
 // MAIN APP ROUTER
 // ---------------------------------------
-
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
 
@@ -329,7 +352,7 @@ const App: React.FC = () => {
             path="settings"
             element={ user && (
               user.role === UserRole.ADMINISTRATOR ? (
-                <SettingsView userRole={user.role} />
+                <SettingsWrapper userRole={user.role} />
               ) : (
                 <Navigate to="/app/dashboard/global" replace />
               )

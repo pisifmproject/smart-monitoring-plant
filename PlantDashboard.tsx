@@ -110,7 +110,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     return (
         <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-300 w-full relative">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate('/app/dashboard/global')} className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white">
                         <ArrowLeft size={24} />
@@ -124,7 +124,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                     </div>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+                <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
                     {/* Period Filter */}
                     <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1">
                         <FilterButton label="DAY" />
@@ -224,7 +224,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
             </div>
 
             {/* Shift Performance & Active Alarms */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {isDataItemVisible(userRole, 'SHIFT_PERFORMANCE_TABLE', visibilityContext) && (
                     <Card title="Shift Performance">
                         <div className="overflow-x-auto">

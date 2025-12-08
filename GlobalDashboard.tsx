@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from './types';
@@ -39,7 +40,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
     return (
         <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500 w-full">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
                         <Globe className="text-blue-500" size={28} />
@@ -47,7 +48,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                     </h1>
                     <p className="text-slate-400 text-sm font-medium mt-1">Multi-Plant Performance Monitor</p>
                 </div>
-                <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1 self-start md:self-auto">
+                <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1 self-start sm:self-auto">
                     <FilterButton label="DAY" />
                     <FilterButton label="WEEK" />
                     <FilterButton label="MONTH" />
