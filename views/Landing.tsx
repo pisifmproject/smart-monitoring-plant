@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const Landing: React.FC = () => {
     const navigate = useNavigate();
@@ -20,14 +20,9 @@ const Landing: React.FC = () => {
             {/* --- Header --- */}
             <header className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center relative z-20">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/20 border border-blue-500/30">
-                        <Zap className="text-white" size={20} fill="currentColor" />
-                    </div>
-                    <div>
-                        <h1 className="text-lg font-bold tracking-tight text-white leading-tight">
-                            PT Indofood Fortuna Makmur
-                        </h1>
-                    </div>
+                    <h1 className="text-lg font-bold tracking-tight text-white leading-tight">
+                        PT Indofood Fortuna Makmur
+                    </h1>
                 </div>
             </header>
 

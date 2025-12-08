@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '../types';
 import { login as authLogin } from '../services/auth';
-import { Zap, Lock, User as UserIcon, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, User as UserIcon, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface LoginProps {
     onLogin: (user: User) => void;
@@ -52,9 +52,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
                  <div className="relative z-10 animate-in fade-in slide-in-from-left-8 duration-700">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20 border border-blue-500/30">
-                            <Zap className="text-white" size={20} fill="currentColor" />
-                        </div>
                         <span className="text-xl font-bold text-white tracking-tight">PT Indofood Fortuna Makmur</span>
                     </div>
                     
@@ -80,9 +77,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 bg-slate-950 relative">
                 {/* Mobile Header (Visible on Small Screens) */}
                 <div className="absolute top-8 left-8 lg:hidden flex items-center gap-3">
-                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <Zap className="text-white" size={16} fill="currentColor" />
-                    </div>
                     <span className="text-sm font-bold text-white tracking-tight">PT IFM</span>
                 </div>
 
