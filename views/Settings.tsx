@@ -109,7 +109,7 @@ const SettingsView: React.FC<SettingsProps> = ({ userRole }) => {
                     <NavButton id="database" label="Master Data" icon={Database} />
                 </div>
                 <div className="p-4 border-t border-slate-800 mt-auto bg-slate-900/50">
-                    <div className="flex items-center gap-2 text-xs text-slate-500"><Settings size={12} /><span>Build v2.5.0</span></div>
+                    <div className="flex items-center gap-2 text-xs text-slate-500"><Settings size={12} /><span>Build v25.12</span></div>
                 </div>
             </div>
             <div className="flex-1 min-w-0">
