@@ -1,6 +1,7 @@
 
 
 
+
 export enum PlantCode {
     CIKOKOL = 'CIKOKOL',
     SEMARANG = 'SEMARANG',
@@ -140,6 +141,11 @@ export interface LVMDP {
     doorOpen: boolean;
 }
 
+export interface UtilityConfig {
+    baseConsumption: number; // per day
+    costPerUnit: number;
+}
+
 export interface Plant {
     id: PlantCode;
     name: string;
@@ -150,6 +156,7 @@ export interface Plant {
     activeAlarms: number;
     machines: Machine[];
     lvmdps: LVMDP[];
+    utilityBaseValues: Record<string, UtilityConfig>; // e.g., 'water', 'gas', 'steam'
 }
 
 export interface Alarm {

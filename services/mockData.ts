@@ -230,8 +230,9 @@ const agroMachines = generateMachines(PlantCode.AGRO, [
 
 // ------------------------------------------------------
 // PLANT MASTER DATA (FINAL)
+// NOTE: Exporting `let` to make it mutable for CRUD operations
 // ------------------------------------------------------
-export const PLANTS: Record<PlantCode, Plant> = {
+export let PLANTS: Record<PlantCode, Plant> = {
     [PlantCode.CIKOKOL]: {
         id: PlantCode.CIKOKOL,
         name: 'Plant Cikokol',
@@ -241,7 +242,14 @@ export const PLANTS: Record<PlantCode, Plant> = {
         energyTotal: 3200,
         activeAlarms: 3,
         machines: cikokolMachines,
-        lvmdps: generateLVMDPs(PlantCode.CIKOKOL)
+        lvmdps: generateLVMDPs(PlantCode.CIKOKOL),
+        utilityBaseValues: {
+            water: { baseConsumption: 450, costPerUnit: 12000 },
+            gas: { baseConsumption: 1200, costPerUnit: 4500 },
+            steam: { baseConsumption: 15, costPerUnit: 250000 },
+            air: { baseConsumption: 18000, costPerUnit: 150 },
+            nitrogen: { baseConsumption: 450, costPerUnit: 2000 }
+        }
     },
     [PlantCode.SEMARANG]: {
         id: PlantCode.SEMARANG,
@@ -252,7 +260,14 @@ export const PLANTS: Record<PlantCode, Plant> = {
         energyTotal: 4100,
         activeAlarms: 7,
         machines: semarangMachines,
-        lvmdps: generateLVMDPs(PlantCode.SEMARANG)
+        lvmdps: generateLVMDPs(PlantCode.SEMARANG),
+        utilityBaseValues: {
+            water: { baseConsumption: 650, costPerUnit: 11500 },
+            gas: { baseConsumption: 1800, costPerUnit: 4400 },
+            steam: { baseConsumption: 25, costPerUnit: 240000 },
+            air: { baseConsumption: 25000, costPerUnit: 150 },
+            nitrogen: { baseConsumption: 600, costPerUnit: 2000 }
+        }
     },
     [PlantCode.CIKUPA]: {
         id: PlantCode.CIKUPA,
@@ -263,7 +278,14 @@ export const PLANTS: Record<PlantCode, Plant> = {
         energyTotal: 3800,
         activeAlarms: 2,
         machines: cikupaMachines,
-        lvmdps: generateLVMDPs(PlantCode.CIKUPA)
+        lvmdps: generateLVMDPs(PlantCode.CIKUPA),
+        utilityBaseValues: {
+            water: { baseConsumption: 500, costPerUnit: 12000 },
+            gas: { baseConsumption: 1400, costPerUnit: 4500 },
+            steam: { baseConsumption: 20, costPerUnit: 250000 },
+            air: { baseConsumption: 22000, costPerUnit: 150 },
+            nitrogen: { baseConsumption: 550, costPerUnit: 2000 }
+        }
     },
     [PlantCode.AGRO]: {
         id: PlantCode.AGRO,
@@ -274,7 +296,14 @@ export const PLANTS: Record<PlantCode, Plant> = {
         energyTotal: 500,
         activeAlarms: 0,
         machines: agroMachines,
-        lvmdps: generateLVMDPs(PlantCode.AGRO)
+        lvmdps: generateLVMDPs(PlantCode.AGRO),
+        utilityBaseValues: {
+            water: { baseConsumption: 100, costPerUnit: 12000 },
+            gas: { baseConsumption: 200, costPerUnit: 4500 },
+            steam: { baseConsumption: 5, costPerUnit: 250000 },
+            air: { baseConsumption: 3000, costPerUnit: 150 },
+            nitrogen: { baseConsumption: 100, costPerUnit: 2000 }
+        }
     }
 };
 

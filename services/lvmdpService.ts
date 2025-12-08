@@ -1,9 +1,20 @@
 //lvmdpService.ts
 
-import { getLVMDPById } from './mockData';
-import { LVMDP } from '../types';
+import { PLANTS } from './mockData';
+import { LVMDP, PlantCode } from '../types';
 
 type Period = 'Day' | 'Week' | 'Month' | 'Year';
+
+// --- Private helper to find LVMDP and its plant ---
+const findLVMDPAndPlant = (lvmdpId: string): { panel: LVMDP, plant: any } | null => {
+    for (const plant of Object.values(PLANTS)) {
+        const panel = plant.lvmdps.find(p => p.id === lvmdpId);
+        if (panel) {
+            return { panel, plant };
+        }
+    }
+    return null;
+};
 
 // fallback panel to prevent UI blank screens
 const safePanel = (panel: any) => {
@@ -36,12 +47,12 @@ const safePanel = (panel: any) => {
 export const lvmdpService = {
 
     getPanelById: (id: string): LVMDP | undefined => {
-        return safePanel(getLVMDPById(id));
+        return safePanel(findLVMDPAndPlant(id)?.panel);
     },
 
     // Trend Data generation (works for all periods)
     getEnergyTrend: (panelId: string, period: Period) => {
-        const panel = safePanel(getLVMDPById(panelId));
+        const panel = safePanel(lvmdpService.getPanelById(panelId));
 
         const multiplier =
             period === 'Day'
@@ -84,7 +95,7 @@ export const lvmdpService = {
 
     // Shift Summary for LVMDP
     getShiftAnalysis: (panelId: string, period: Period) => {
-        const panel = safePanel(getLVMDPById(panelId));
+        const panel = safePanel(lvmdpService.getPanelById(panelId));
 
         const avgCurrent = (panel.currentR + panel.currentS + panel.currentT) / 3;
         const maxCurrent = 2500;
@@ -128,5 +139,59 @@ export const lvmdpService = {
             v_st: 0.0,
             v_tr: -0.2
         };
+    },
+
+    // --- CRUD Operations for LVMDPs ---
+    getAllLVMDPs: (): LVMDP[] => {
+        return Object.values(PLANTS).flatMap(plant => plant.lvmdps);
+    },
+
+    addLVMDP: (data: { name: string, plantId: PlantCode }): { success: boolean, message?: string } => {
+        const plant = PLANTS[data.plantId];
+        if (!plant) {
+            return { success: false, message: "Plant not found." };
+        }
+        const newIndex = plant.lvmdps.length + 1;
+        const newPanel: LVMDP = {
+            id: `${data.plantId}-LVMDP-${newIndex}-${Date.now()}`,
+            code: `LVMDP-${newIndex}`,
+            name: data.name,
+            plantId: data.plantId,
+            status: 'NORMAL',
+            totalPowerKW: 250,
+            totalPowerKVA: 275,
+            totalPowerKVAR: 115,
+            powerFactor: 0.9,
+            frequency: 50.0,
+            currentLoadPercent: 50,
+            voltageRS: 400, voltageST: 400, voltageTR: 400,
+            currentR: 400, currentS: 400, currentT: 400,
+            unbalanceVoltage: 0.5, unbalanceCurrent: 1.0,
+            energyToday: 0, energyMTD: 0, energyTotal: 0,
+            thdV: 2.0, thdI: 3.0,
+            panelTemp: 40,
+            breakerStatus: 'CLOSED',
+            doorOpen: false,
+        };
+        plant.lvmdps.push(newPanel);
+        return { success: true };
+    },
+
+    updateLVMDP: (panelId: string, data: { name: string }): { success: boolean, message?: string } => {
+        const result = findLVMDPAndPlant(panelId);
+        if (!result) {
+            return { success: false, message: "LVMDP Panel not found." };
+        }
+        result.panel.name = data.name;
+        return { success: true };
+    },
+
+    deleteLVMDP: (panelId: string): { success: boolean, message?: string } => {
+        const result = findLVMDPAndPlant(panelId);
+        if (!result) {
+            return { success: false, message: "LVMDP Panel not found." };
+        }
+        result.plant.lvmdps = result.plant.lvmdps.filter(p => p.id !== panelId);
+        return { success: true };
     }
 };

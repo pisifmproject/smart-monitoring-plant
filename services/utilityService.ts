@@ -1,8 +1,8 @@
-
 //utilityService.ts
 
-import { Plant, PlantCode } from '../types';
+import { Plant, PlantCode, UtilityConfig } from '../types';
 import { Zap, Droplets, Flame, Wind, Cloud, Box } from 'lucide-react';
+import { plantService } from './plantService';
 
 export type Period = 'Day' | 'Week' | 'Month' | 'Year';
 
@@ -35,12 +35,13 @@ export const utilityService = {
     // UTILITY CONFIG FINAL
     // ----------------------------------------------
     getUtilityConfig: (plant: Plant, type: string, period: Period) => {
-        const { baseMult, periodMult } = utilityService.getMultipliers(
+        const { periodMult } = utilityService.getMultipliers(
             plant.id,
             period
         );
 
         const t = type.toLowerCase();
+        const baseConfig = plant.utilityBaseValues[t] || { baseConsumption: 0, costPerUnit: 0 };
 
         switch (t) {
             case 'electricity':
@@ -50,23 +51,15 @@ export const utilityService = {
                         0
                     ) * periodMult;
 
-                // Dynamic Trend Calculation to match Total
                 let elecTrendBase = totalElec;
                 let elecVariance = 0;
                 
                 if (period === 'Day') {
-                     // Day: trendBase is Total Daily. getTrendData divides by 24 to get hourly avg.
                      elecTrendBase = totalElec;
-                     // Variance: used as-is by getTrendData for Day.
-                     // We want approx 20% variance on hourly value.
                      elecVariance = (totalElec / 24) * 0.2;
                 } else {
                      const points = period === 'Week' ? 7 : period === 'Month' ? 30 : 12;
-                     // Others: trendBase is Average Per Point. getTrendData divides by 1.
                      elecTrendBase = totalElec / points;
-                     // Variance: getTrendData divides by points.
-                     // We want 20% variance on avg value.
-                     // So input variance = (Avg * 0.2) * points
                      elecVariance = (elecTrendBase * 0.2) * points;
                 }
 
@@ -90,10 +83,10 @@ export const utilityService = {
                     icon: Droplets,
                     color: 'text-blue-400',
                     hexColor: '#60a5fa',
-                    value: 450 * baseMult * periodMult,
+                    value: baseConfig.baseConsumption * periodMult * (1 + (Math.random() - 0.5) * 0.1),
                     trend: -5,
-                    trendBase: 20 * baseMult,
-                    variance: 5 * baseMult,
+                    trendBase: baseConfig.baseConsumption / 24,
+                    variance: baseConfig.baseConsumption * 0.1,
                     breakdownTitle: 'Area Consumption'
                 };
 
@@ -104,10 +97,10 @@ export const utilityService = {
                     icon: Flame,
                     color: 'text-rose-400',
                     hexColor: '#fb7185',
-                    value: 1200 * baseMult * periodMult,
+                    value: baseConfig.baseConsumption * periodMult * (1 + (Math.random() - 0.5) * 0.1),
                     trend: 2,
-                    trendBase: 50 * baseMult,
-                    variance: 10 * baseMult,
+                    trendBase: baseConfig.baseConsumption / 24,
+                    variance: baseConfig.baseConsumption * 0.1,
                     breakdownTitle: 'Area Consumption'
                 };
 
@@ -118,10 +111,10 @@ export const utilityService = {
                     icon: Cloud,
                     color: 'text-slate-200',
                     hexColor: '#e2e8f0',
-                    value: 15 * baseMult * periodMult,
+                    value: baseConfig.baseConsumption * periodMult * (1 + (Math.random() - 0.5) * 0.1),
                     trend: 8,
-                    trendBase: 0.8 * baseMult,
-                    variance: 0.2 * baseMult,
+                    trendBase: baseConfig.baseConsumption / 24,
+                    variance: baseConfig.baseConsumption * 0.05,
                     breakdownTitle: 'Line Consumption'
                 };
 
@@ -132,10 +125,10 @@ export const utilityService = {
                     icon: Wind,
                     color: 'text-cyan-400',
                     hexColor: '#22d3ee',
-                    value: 18000 * baseMult * periodMult,
+                    value: baseConfig.baseConsumption * periodMult * (1 + (Math.random() - 0.5) * 0.1),
                     trend: 0,
-                    trendBase: 800 * baseMult,
-                    variance: 50 * baseMult,
+                    trendBase: baseConfig.baseConsumption / 24,
+                    variance: baseConfig.baseConsumption * 0.08,
                     breakdownTitle: 'Line Consumption'
                 };
 
@@ -146,10 +139,10 @@ export const utilityService = {
                     icon: Box,
                     color: 'text-emerald-400',
                     hexColor: '#34d399',
-                    value: 450 * baseMult * periodMult,
+                    value: baseConfig.baseConsumption * periodMult * (1 + (Math.random() - 0.5) * 0.1),
                     trend: 15,
-                    trendBase: 20 * baseMult,
-                    variance: 2 * baseMult,
+                    trendBase: baseConfig.baseConsumption / 24,
+                    variance: baseConfig.baseConsumption * 0.05,
                     breakdownTitle: 'Line Consumption'
                 };
 
@@ -228,7 +221,7 @@ export const utilityService = {
     // QUICK STATS - NEW FUNCTION
     // ----------------------------------------------
     getQuickStats: (config: any) => {
-        const average = config.trendBase / 24; // Always calculate hourly average from daily base
+        const average = config.trendBase; // Base is already hourly
         const peak = average * (1.5 + Math.random() * 0.5);
         const low = average * (0.5 + Math.random() * 0.2);
         const unitSuffix = config.unit.includes('/') ? '' : '/h';
@@ -237,5 +230,53 @@ export const utilityService = {
             average: { value: average.toLocaleString('id-ID', { maximumFractionDigits: 2 }), unit: config.unit + unitSuffix },
             low: { value: low.toLocaleString('id-ID', { maximumFractionDigits: 2 }), time: '03:00', unit: config.unit + unitSuffix }
         };
+    },
+
+    // --- CRUD Operations for Utility Configs ---
+    getUtilityConfigsForPlant: (plantId: PlantCode): { type: string, config: UtilityConfig }[] => {
+        const plant = plantService.getPlantById(plantId);
+        if (!plant || !plant.utilityBaseValues) return [];
+        return Object.entries(plant.utilityBaseValues).map(([type, config]) => ({ type, config }));
+    },
+
+    addUtilityConfig: (plantId: PlantCode, data: { type: string; baseConsumption: number }): { success: boolean, message?: string } => {
+        const plant = plantService.getPlantById(plantId);
+        if (!plant) {
+            return { success: false, message: "Plant not found." };
+        }
+        const utilityType = data.type.toLowerCase();
+        if (plant.utilityBaseValues[utilityType]) {
+            return { success: false, message: `Utility type '${data.type}' already exists for this plant.`};
+        }
+        plant.utilityBaseValues[utilityType] = {
+            baseConsumption: data.baseConsumption,
+            costPerUnit: 0 // Default cost, can be edited later if needed
+        };
+        return { success: true };
+    },
+
+    updateUtilityConfig: (plantId: PlantCode, type: string, data: { baseConsumption: number }): { success: boolean, message?: string } => {
+        const plant = plantService.getPlantById(plantId);
+        if (!plant) {
+            return { success: false, message: "Plant not found." };
+        }
+        if (!plant.utilityBaseValues[type]) {
+             return { success: false, message: "Utility type not found for this plant." };
+        }
+        // Only update baseConsumption, preserve costPerUnit
+        plant.utilityBaseValues[type].baseConsumption = data.baseConsumption;
+        return { success: true };
+    },
+
+    deleteUtilityConfig: (plantId: PlantCode, type: string): { success: boolean, message?: string } => {
+        const plant = plantService.getPlantById(plantId);
+        if (!plant) {
+            return { success: false, message: "Plant not found." };
+        }
+        if (!plant.utilityBaseValues[type]) {
+            return { success: false, message: "Utility type not found for this plant." };
+        }
+        delete plant.utilityBaseValues[type];
+        return { success: true };
     }
 };

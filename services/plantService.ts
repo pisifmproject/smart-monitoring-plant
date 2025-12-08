@@ -1,11 +1,22 @@
-
 // services/plantService.ts
 
-import { PLANTS, getMachineById } from './mockData';
-import { Plant, PlantCode, Machine } from '../types';
+import { PLANTS } from './mockData';
+import { Plant, PlantCode, Machine, MachineType, MachineStatus } from '../types';
 
 type DashboardPeriod = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR';
 type DetailPeriod = 'Day' | 'Week' | 'Month' | 'Year';
+
+// --- Private helper to find a machine and its plant ---
+const findMachineAndPlant = (machineId: string): { machine: Machine, plant: Plant } | null => {
+    for (const plant of Object.values(PLANTS)) {
+        const machine = plant.machines.find(m => m.id === machineId);
+        if (machine) {
+            return { machine, plant };
+        }
+    }
+    return null;
+};
+
 
 export const plantService = {
   getAllPlants: (): Plant[] => {
@@ -17,7 +28,7 @@ export const plantService = {
   },
 
   getMachineById: (machineId: string): Machine | undefined => {
-    return getMachineById(machineId);
+    return findMachineAndPlant(machineId)?.machine;
   },
 
   // Production lines for Plant Dashboard
@@ -51,7 +62,7 @@ export const plantService = {
 
   // Calculate accumulated stats for Machine Detail based on period
   getMachineStats: (machineId: string, period: DetailPeriod) => {
-      const machine = getMachineById(machineId);
+      const machine = plantService.getMachineById(machineId);
       if (!machine) return null;
 
       const multiplier = period === 'Day' ? 1 : period === 'Week' ? 7 : period === 'Month' ? 30 : 365;
@@ -61,16 +72,13 @@ export const plantService = {
       
       const util = machine.utilityConsumption || { electricity: 0, steam: 0, water: 0, air: 0 };
       
-      // Calculate utility totals (Base rate * 24 hours * multiplier)
-      // Assuming utilityConsumption values in mockData are "per hour" or similar base rate
-      // Adjusting logic: The mock utility is likely hourly rate.
       const hours = period === 'Day' ? 24 : period === 'Week' ? 168 : period === 'Month' ? 720 : 8760;
 
       return {
           totalOutput,
           rejectMass,
-          rejectRate: machine.rejectRate, // Rate stays roughly same
-          oee: machine.oee, // Average OEE stays roughly same
+          rejectRate: machine.rejectRate,
+          oee: machine.oee,
           utility: {
               electricity: util.electricity * hours,
               steam: util.steam * hours,
@@ -82,7 +90,7 @@ export const plantService = {
 
   // Mock time-series data for Detail View charts
   getMachineTimeSeries: (machineId: string, period: DetailPeriod) => {
-    const machine = getMachineById(machineId);
+    const machine = plantService.getMachineById(machineId);
     if (!machine) return { output: [], rejects: [], params: [], utility: { electricity: [], steam: [] } };
 
     let points = 24;
@@ -104,7 +112,6 @@ export const plantService = {
     }
 
     const generate = (base: number, variance: number, isAccumulated: boolean = false) => {
-        // If accumulated (like total output per day/month), scale base
         const effectiveBase = isAccumulated ? base * (period === 'Day' ? 1 : 24) : base;
         
         return Array.from({ length: points }, (_, i) => ({
@@ -113,15 +120,9 @@ export const plantService = {
         }));
     };
     
-    // Output is per hour in mock. For chart:
-    // Day: Hourly output
-    // Week/Month/Year: Daily/Monthly accumulated output? 
-    // Usually charts show the rate or the total for that bucket.
-    // Let's assume Output Chart shows "Total Output" for that time bucket.
     const outputBase = period === 'Day' ? machine.outputPerHour : machine.outputPerHour * 24; 
     
     const outputData = generate(machine.outputPerHour, 100, true);
-    // Explicitly add target property
     const targetBase = period === 'Day' ? machine.outputPerHour : machine.outputPerHour * 24;
     outputData.forEach((d: any) => d.target = targetBase);
 
@@ -130,7 +131,7 @@ export const plantService = {
 
     return {
         output: outputData,
-        rejects: generate(machine.rejectRate * 10, 15, false), // Reject rate is % or mass, assuming simplified
+        rejects: generate(machine.rejectRate * 10, 15, false),
         params: Array.from({ length: points }, (_, i) => ({
             time: label(i),
             temp: (Number(params['Barrel Temp Zone 1'] || params['Oil Temp']) || 140) + Math.random() * 10,
@@ -138,10 +139,118 @@ export const plantService = {
             speed: (Number(params['Screw Speed'] || params['Conveyor Speed']) || 80) + Math.random() * 2
         })),
         utility: {
-            // Utility per bucket
             electricity: generate(utility.electricity, 20, true),
             steam: generate(utility.steam, 50, true),
         }
     };
+  },
+  
+  // --- CRUD Operations for Plants ---
+  addPlant: (data: { id: PlantCode; name: string; location: string }): { success: boolean; message?: string } => {
+    if (PLANTS[data.id]) {
+        return { success: false, message: 'Plant with this ID already exists.' };
+    }
+    // Basic validation for ID format
+    if (!/^[A-Z_]+$/.test(data.id)) {
+        return { success: false, message: 'Plant ID must be uppercase letters and underscores only.' };
+    }
+    PLANTS[data.id] = {
+        id: data.id,
+        name: data.name,
+        location: data.location,
+        outputToday: 0,
+        oeeAvg: 0.7,
+        energyTotal: 0,
+        activeAlarms: 0,
+        machines: [],
+        lvmdps: [],
+        utilityBaseValues: {
+            water: { baseConsumption: 100, costPerUnit: 12000 },
+            gas: { baseConsumption: 200, costPerUnit: 4500 },
+            steam: { baseConsumption: 5, costPerUnit: 250000 },
+            air: { baseConsumption: 3000, costPerUnit: 150 },
+            nitrogen: { baseConsumption: 100, costPerUnit: 2000 },
+        },
+    };
+    return { success: true };
+  },
+
+  updatePlant: (plantId: PlantCode, data: { name: string, location: string }): { success: boolean, message?: string } => {
+      const plant = PLANTS[plantId];
+      if (!plant) {
+          return { success: false, message: "Plant not found." };
+      }
+      plant.name = data.name;
+      plant.location = data.location;
+      return { success: true };
+  },
+
+  deletePlant: (plantId: PlantCode): { success: boolean; message?: string } => {
+    if (!PLANTS[plantId]) {
+        return { success: false, message: 'Plant not found.' };
+    }
+    if (Object.keys(PLANTS).length <= 1) {
+        return { success: false, message: 'Cannot delete the last remaining plant.' };
+    }
+    delete PLANTS[plantId];
+    return { success: true };
+  },
+
+  // --- CRUD Operations for Machines ---
+  getAllMachines: (): Machine[] => {
+      return Object.values(PLANTS).flatMap(plant => plant.machines);
+  },
+
+  addMachine: (data: { name: string, plantId: PlantCode }): { success: boolean, message?: string } => {
+      const plant = PLANTS[data.plantId];
+      if (!plant) {
+          return { success: false, message: "Plant not found." };
+      }
+      const newIndex = plant.machines.length;
+      const newMachine: Machine = {
+          id: `${data.plantId}-M-${newIndex}-${Date.now()}`,
+          code: data.name.replace(/\s+/g, '_').toUpperCase(),
+          name: data.name,
+          plantId: data.plantId,
+          type: MachineType.GENERIC, // Default type
+          status: MachineStatus.OFFLINE, // Default status
+          outputPerHour: 0,
+          oee: 0.75,
+          temperature: 60,
+          totalOutputShift: 0,
+          targetShift: 8000,
+          lineSpeed: 100,
+          rejectRate: 0.5,
+          availability: 0.9,
+          performance: 0.85,
+          quality: 0.98,
+          processParams: { 'Default Param': 0 },
+          utilityConsumption: { electricity: 100, steam: 0, water: 0, air: 150 },
+      };
+      plant.machines.push(newMachine);
+      return { success: true };
+  },
+
+  updateMachine: (machineId: string, data: Partial<{ name: string }>): { success: boolean, message?: string } => {
+      const result = findMachineAndPlant(machineId);
+      if (!result) {
+          return { success: false, message: "Machine not found." };
+      }
+      const { machine } = result;
+      if (data.name) {
+          machine.name = data.name;
+          machine.code = data.name.replace(/\s+/g, '_').toUpperCase();
+      }
+      return { success: true };
+  },
+
+  deleteMachine: (machineId: string): { success: boolean, message?: string } => {
+      const result = findMachineAndPlant(machineId);
+      if (!result) {
+          return { success: false, message: "Machine not found." };
+      }
+      const { plant } = result;
+      plant.machines = plant.machines.filter(m => m.id !== machineId);
+      return { success: true };
   }
 };
