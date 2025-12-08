@@ -1,13 +1,3 @@
-
-
-
-
-
-
-
-
-
-
 export enum PlantCode {
     CIKOKOL = 'CIKOKOL',
     SEMARANG = 'SEMARANG',
@@ -258,10 +248,10 @@ export enum VisibilityGroup {
     FORM = 'FORM',
     TAB = 'TAB',
     MACHINES = 'MACHINES',
-    WEIGHER = 'WEIGHER',
-    BAGMAKER = 'BAGMAKER',
-    PACKING_STATS = 'PACKING_STATS',
-    // FIX: Added 'OTHER' to the enum to resolve a compile error in Settings.tsx.
+    // New, organized groups for Packing dashboard
+    PACKING_LINE_KPI = 'Line Performance KPIs',
+    PACKING_WEIGHER = 'Weigher Analysis',
+    PACKING_BAGMAKER = 'Bagmaker Analysis',
     OTHER = 'OTHER'
 }
 

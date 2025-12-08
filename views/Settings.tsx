@@ -7,6 +7,8 @@
 
 
 
+
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { UserRole, VisibilityCategory, VisibilityGroup, DataItem, User, PlantCode, MachineType, Machine, LVMDP, Plant, UtilityConfig, MachineStatus, PackingLineConfig } from '../types';
 import { Card } from '../components/SharedComponents';
@@ -190,6 +192,7 @@ const VisibilitySettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
     const [targetRole, setTargetRole] = useState<UserRole>(UserRole.SUPERVISOR);
     const [selectedPlant, setSelectedPlant] = useState("ALL_PLANTS");
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("GLOBAL_DASHBOARD");
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleToggleVisibility = (key: string, category: VisibilityCategory, machineId?: string) => {
         const context = { plantId: selectedPlant, machineId };
@@ -208,15 +211,22 @@ const VisibilitySettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
     
     const machineVisibilityItems = useMemo(() => {
         if (selectedPlant === "ALL_PLANTS") return [];
+        const lowercasedQuery = searchQuery.toLowerCase();
         return DATA_ITEM_REGISTRY.filter(item => 
             item.group === VisibilityGroup.MACHINES &&
-            item.key.includes(selectedPlant)
+            item.key.includes(selectedPlant) &&
+            (
+                searchQuery === '' ||
+                item.label.toLowerCase().includes(lowercasedQuery) ||
+                item.key.toLowerCase().includes(lowercasedQuery)
+            )
         );
-    }, [selectedPlant]);
+    }, [selectedPlant, searchQuery]);
 
     const filteredItems = useMemo(() => {
         const activeFilter = CATEGORY_FILTERS.find(f => f.id === selectedCategoryFilter);
         const allowedCategories = activeFilter?.types || [];
+        const lowercasedQuery = searchQuery.toLowerCase();
 
         return DATA_ITEM_REGISTRY.filter(item => {
             if (!allowedCategories.includes(item.category)) return false;
@@ -226,9 +236,14 @@ const VisibilitySettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
                 }
             }
             if (item.group === VisibilityGroup.MACHINES) return false;
+
+            if (searchQuery && !(item.label.toLowerCase().includes(lowercasedQuery) || item.key.toLowerCase().includes(lowercasedQuery))) {
+                return false;
+            }
+
             return true;
         });
-    }, [selectedPlant, selectedCategoryFilter]);
+    }, [selectedPlant, selectedCategoryFilter, searchQuery]);
 
     const groupedItems = useMemo(() => {
         const groups: Record<string, Record<string, typeof DATA_ITEM_REGISTRY>> = {};
@@ -245,7 +260,15 @@ const VisibilitySettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
             const plant = plantService.getPlantById(selectedPlant);
             if (!plant) return <div className="text-slate-500 p-4">Plant not found.</div>;
             
-            const allMachineDetailItems = DATA_ITEM_REGISTRY.filter(item => item.category === VisibilityCategory.MACHINE_DETAIL);
+            const allMachineDetailItems = DATA_ITEM_REGISTRY.filter(item => {
+                 const lowercasedQuery = searchQuery.toLowerCase();
+                 return item.category === VisibilityCategory.MACHINE_DETAIL &&
+                 (
+                    searchQuery === '' ||
+                    item.label.toLowerCase().includes(lowercasedQuery) ||
+                    item.key.toLowerCase().includes(lowercasedQuery)
+                );
+            });
             const groupedDetailItems = allMachineDetailItems.reduce((acc, item) => {
                 const group = item.group || VisibilityGroup.OTHER;
                 if (!acc[group]) acc[group] = [];
@@ -324,7 +347,7 @@ const VisibilitySettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
                 <div className="flex flex-col items-center justify-center py-20 border border-dashed border-slate-800 rounded-xl bg-slate-900/30">
                     <div className="p-4 bg-slate-800 rounded-full mb-4"><Sliders size={24} className="text-slate-500" /></div>
                     <p className="text-slate-400 font-medium">No configuration items found for this selection.</p>
-                    <p className="text-slate-600 text-sm mt-1">Try changing the plant or category filter.</p>
+                    <p className="text-slate-600 text-sm mt-1">Try changing the plant or category filter, or clear your search.</p>
                 </div>
             );
         }
@@ -375,7 +398,7 @@ const VisibilitySettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
     return (
         <div className="space-y-8">
             <div className="bg-slate-900 border border-slate-800 rounded-lg p-1 shadow-sm sticky top-6 z-20">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1">
                     <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserIcon size={16} className="text-slate-500" /></div>
                         <select value={targetRole} onChange={(e) => setTargetRole(e.target.value as UserRole)} className="block w-full pl-10 pr-10 py-2.5 bg-slate-950 border border-transparent hover:border-slate-700 focus:border-blue-500 rounded-md text-sm text-white font-medium outline-none appearance-none transition-all cursor-pointer">
@@ -396,6 +419,18 @@ const VisibilitySettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
                             {CATEGORY_FILTERS.map(cat => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
                         </select>
                         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"><ChevronDown size={14} className="text-slate-500" /></div>
+                    </div>
+                    <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search size={16} className="text-slate-500" />
+                        </div>
+                        <input
+                            type="search"
+                            placeholder="Search settings..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="block w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-transparent hover:border-slate-700 focus:border-blue-500 rounded-md text-sm text-white font-medium outline-none transition-all"
+                        />
                     </div>
                 </div>
             </div>
