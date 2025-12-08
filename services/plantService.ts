@@ -1,6 +1,11 @@
 // services/plantService.ts
 
-import { PLANTS } from './mockData';
+import { 
+    PLANTS,
+    CIKUPA_PACKING_LINES,
+    CIKOKOL_PACKING_LINES,
+    SEMARANG_PACKING_LINES
+} from './mockData';
 import { Plant, PlantCode, Machine, MachineType, MachineStatus } from '../types';
 
 type DashboardPeriod = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR';
@@ -249,7 +254,33 @@ export const plantService = {
       if (!result) {
           return { success: false, message: "Machine not found." };
       }
-      const { plant } = result;
+      const { machine, plant } = result;
+
+      // --- NEW LOGIC ---
+      // When a machine is deleted, also delete its corresponding packing config if it exists.
+      let packingLinesArray;
+      switch (plant.id) {
+          case PlantCode.CIKUPA:
+              packingLinesArray = CIKUPA_PACKING_LINES;
+              break;
+          case PlantCode.CIKOKOL:
+              packingLinesArray = CIKOKOL_PACKING_LINES;
+              break;
+          case PlantCode.SEMARANG:
+              packingLinesArray = SEMARANG_PACKING_LINES;
+              break;
+          default:
+              packingLinesArray = undefined;
+      }
+
+      if (packingLinesArray) {
+          const packingConfigIndex = packingLinesArray.findIndex(p => p.lineName === machine.name);
+          if (packingConfigIndex > -1) {
+              packingLinesArray.splice(packingConfigIndex, 1);
+          }
+      }
+      // --- END NEW LOGIC ---
+
       plant.machines = plant.machines.filter(m => m.id !== machineId);
       return { success: true };
   }

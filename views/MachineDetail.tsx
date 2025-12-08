@@ -1,6 +1,8 @@
+
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Machine, UserRole, MachineType } from '../types';
+import { Machine, UserRole, MachineType, PlantCode, BagmakerDetails, WeigherDetails } from '../types';
 import { Card, StatusBadge, MetricCard, formatNumber } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
 import { maintenanceService } from '../services/maintenanceService';
@@ -9,7 +11,7 @@ import {
     Activity, Zap, AlertTriangle, ArrowLeft, 
     ClipboardPen, Wrench, X, CheckCircle2, 
     Wind, Droplets, Cloud, Box, Clock, Camera, Plus, History, Save, FileText, Loader2,
-    Scale, Package, Film, Thermometer
+    Scale, Package, Film, Thermometer, Gauge, TrendingUp, Trash2, ScanSearch, Printer, Archive, Scissors, GaugeCircle, Server, Eye
 } from 'lucide-react';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -252,51 +254,221 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
             </div>
         </div>
     );
+    
+    // Sub-component for the multi-unit Cikupa dashboard
+    const MultiUnitPackingDashboard = ({ machine }: { machine: Machine }) => {
+        const [selectedUnit, setSelectedUnit] = useState<{ type: 'bagmaker' | 'weigher', index: number } | null>(null);
+        const { bagmakerUnits = [], weigherUnits = [], code } = machine;
 
-    const renderPackingTab = () => {
-        const { weigher, bagmaker } = machine;
-        if (!weigher || !bagmaker) return <div className="p-4 text-slate-500">Packing data not available.</div>;
-
+        const totalBagmakers = bagmakerUnits.length;
+        const onlineBagmakers = bagmakerUnits.filter(u => u.status === 'RUNNING').length;
+        const totalWeighers = weigherUnits.length;
+        const onlineWeighers = weigherUnits.filter(u => u.status === 'RUNNING').length;
+        const overallEfficiency = totalBagmakers > 0 ? (bagmakerUnits.reduce((acc, u) => acc + u.totalEfficiency, 0) / totalBagmakers) * 100 : 0;
+    
+        const getStatusColor = (status: 'RUNNING' | 'IDLE' | 'FAULT') => {
+            if (status === 'RUNNING') return 'bg-emerald-500 hover:bg-emerald-400';
+            if (status === 'IDLE') return 'bg-amber-500 hover:bg-amber-400';
+            return 'bg-rose-500 hover:bg-rose-400';
+        };
+    
+        const renderDetailPanel = () => {
+            if (!selectedUnit) {
+                 return (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-slate-500 p-8">
+                        <Eye size={40} className="mb-4" />
+                        <h4 className="text-lg font-bold text-slate-300">Select a Unit</h4>
+                        <p className="text-sm">Click on a bagmaker or weigher from the grid to view its detailed performance data.</p>
+                    </div>
+                );
+            }
+    
+            if (selectedUnit.type === 'bagmaker') {
+                const unit = bagmakerUnits[selectedUnit.index];
+                if (!unit) return null;
+                return <SingleBagmakerDetailPanel unit={unit} unitNumber={selectedUnit.index + 1} />;
+            }
+    
+            if (selectedUnit.type === 'weigher') {
+                const unit = weigherUnits[selectedUnit.index];
+                if (!unit) return null;
+                return <SingleWeigherDetailPanel unit={unit} unitNumber={selectedUnit.index + 1} />;
+            }
+            return null;
+        };
+    
         return (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-                {/* Weigher Section */}
-                <Card title="Multihead Weigher Status" className="bg-slate-900/30">
-                    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5">
-                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED', visibilityContext) && (
-                            <MetricCard title="Speed" value={formatNumber(weigher.speed)} unit="ppm" icon={Zap} color="text-blue-400" />
-                        )}
-                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_AVG_WEIGHT', visibilityContext) && (
-                            <MetricCard title="Avg. Weight" value={formatNumber(weigher.averageWeight, 2)} unit="g" icon={Scale} color="text-emerald-400" />
-                        )}
-                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_GIVEAWAY', visibilityContext) && (
-                            <MetricCard title="Giveaway" value={formatNumber(weigher.giveaway, 2)} unit="%" icon={AlertTriangle} color="text-amber-400" />
-                        )}
-                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_STD_DEV', visibilityContext) && (
-                            <MetricCard title="Std. Deviation" value={formatNumber(weigher.standardDeviation, 3)} unit="g" icon={Activity} color="text-purple-400" />
-                        )}
+            <div className="space-y-6">
+                <Card title={`${code} Line Control Center`}>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-400 uppercase font-bold">Total Bagmakers</p><p className="text-2xl font-bold text-white">{onlineBagmakers}/{totalBagmakers}</p></div>
+                        <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-400 uppercase font-bold">Total Weighers</p><p className="text-2xl font-bold text-white">{onlineWeighers}/{totalWeighers}</p></div>
+                        <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-400 uppercase font-bold">Overall Efficiency</p><p className="text-2xl font-bold text-emerald-400">{formatNumber(overallEfficiency, 1)}%</p></div>
+                         <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-400 uppercase font-bold">Line Status</p><p className="text-2xl font-bold text-emerald-400">OPERATIONAL</p></div>
                     </div>
                 </Card>
-
-                {/* Bagmaker Section */}
-                <Card title="Bagmaker Status" className="bg-slate-900/30">
-                     <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5">
-                        {isDataItemVisible(userRole, 'PACKING_BAGMAKER_SPEED', visibilityContext) && (
-                            <MetricCard title="Speed" value={formatNumber(bagmaker.speed)} unit="ppm" icon={Zap} color="text-blue-400" />
-                        )}
-                        {isDataItemVisible(userRole, 'PACKING_BAGMAKER_FILM', visibilityContext) && (
-                            <MetricCard title="Film Remaining" value={formatNumber(bagmaker.filmRemaining, 1)} unit="%" icon={Film} color="text-cyan-400" />
-                        )}
-                        {isDataItemVisible(userRole, 'PACKING_BAGMAKER_SEAL_H', visibilityContext) && (
-                            <MetricCard title="Seal Temp (H)" value={formatNumber(bagmaker.sealTempHorizontal)} unit="°C" icon={Thermometer} color="text-rose-400" />
-                        )}
-                        {isDataItemVisible(userRole, 'PACKING_BAGMAKER_SEAL_V', visibilityContext) && (
-                           <MetricCard title="Seal Temp (V)" value={formatNumber(bagmaker.sealTempVertical)} unit="°C" icon={Thermometer} color="text-rose-400" />
-                        )}
+    
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div className="space-y-6">
+                        <Card title={`Bagmaker Units (${totalBagmakers})`}>
+                            <div className="grid grid-cols-11 gap-2">
+                                {bagmakerUnits.map((unit, index) => (
+                                    <button 
+                                        key={`b-${index}`}
+                                        onClick={() => setSelectedUnit({ type: 'bagmaker', index })}
+                                        className={`w-full aspect-square rounded-md text-white text-xs font-bold transition-all duration-200 ${getStatusColor(unit.status)} ${selectedUnit?.type === 'bagmaker' && selectedUnit.index === index ? 'ring-2 ring-offset-2 ring-offset-slate-800 ring-white' : ''}`}
+                                    >
+                                        B{index + 1}
+                                    </button>
+                                ))}
+                            </div>
+                        </Card>
+                        <Card title={`Weigher Units (${totalWeighers})`}>
+                            <div className="grid grid-cols-11 gap-2">
+                                {weigherUnits.map((unit, index) => (
+                                    <button 
+                                        key={`w-${index}`}
+                                        onClick={() => setSelectedUnit({ type: 'weigher', index })}
+                                        className={`w-full aspect-square rounded-md text-white text-xs font-bold transition-all duration-200 ${getStatusColor(unit.status)} ${selectedUnit?.type === 'weigher' && selectedUnit.index === index ? 'ring-2 ring-offset-2 ring-offset-slate-800 ring-white' : ''}`}
+                                    >
+                                        W{index + 1}
+                                    </button>
+                                ))}
+                            </div>
+                        </Card>
                     </div>
-                </Card>
+                    
+                    <Card title="Selected Unit Details" className="min-h-[400px]">
+                        {renderDetailPanel()}
+                    </Card>
+                </div>
             </div>
         );
     };
+
+    const SingleBagmakerDetailPanel = ({ unit, unitNumber }: { unit: BagmakerDetails, unitNumber: number }) => {
+        const StopEventCounter: React.FC<{ icon: any; label: string; value: number; color: string; }> = ({ icon: Icon, label, value, color }) => (
+            <div className="flex items-center justify-between p-2 bg-slate-950/50 rounded-lg border border-slate-700/50">
+                <div className="flex items-center gap-3"><Icon size={16} className={color} /><span className="text-xs font-medium text-slate-300">{label}</span></div>
+                <span className="font-mono text-base font-bold text-white">{value}</span>
+            </div>
+        );
+        return (
+             <div className="space-y-4 animate-in fade-in duration-300">
+                <h3 className="text-lg font-bold text-white">Bagmaker #{unitNumber} - <span className="text-emerald-400">{unit.status}</span></h3>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                    <MetricCard title="Actual Speed" value={formatNumber(unit.actualSpeed)} unit="bpm" icon={Gauge} color="text-blue-400" />
+                    <MetricCard title="Good Bag %" value={formatNumber(unit.bagPercentage, 2)} unit="%" icon={CheckCircle2} color="text-emerald-400" />
+                    <MetricCard title="Wasted Film" value={formatNumber(unit.wastedFilmPercentage, 2)} unit="%" icon={Trash2} color="text-rose-400" />
+                </div>
+                <div>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Stop Event Counters (Shift)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <StopEventCounter icon={ScanSearch} label="Metal Detect" value={unit.metalDetectCount} color="text-rose-400" />
+                        <StopEventCounter icon={Printer} label="Printer Error" value={unit.printerDateErrorCount} color="text-amber-400" />
+                        <StopEventCounter icon={Archive} label="Product in Seal" value={unit.productInSealCount} color="text-amber-400" />
+                        <StopEventCounter icon={Scissors} label="Splice Detect" value={unit.spliceDetectCount} color="text-blue-400" />
+                    </div>
+                </div>
+            </div>
+        )
+    };
+    
+    const SingleWeigherDetailPanel = ({ unit, unitNumber }: { unit: WeigherDetails, unitNumber: number }) => {
+        const StatItem: React.FC<{ label: string; value: string | number; unit?: string; }> = ({ label, value, unit }) => (
+            <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-400">{label}</span><div><span className="font-mono text-base font-bold text-white">{value}</span>{unit && <span className="ml-1.5 text-xs text-slate-500">{unit}</span>}</div></div>
+        );
+        return (
+            <div className="space-y-4 animate-in fade-in duration-300">
+                 <h3 className="text-lg font-bold text-white">Weigher #{unitNumber} - <span className="text-emerald-400">{unit.status}</span></h3>
+                 <div className="grid grid-cols-2 gap-3">
+                    <MetricCard title="Giveaway" value={formatNumber(unit.giveaway, 2)} unit="%" icon={AlertTriangle} color="text-amber-400" />
+                    <MetricCard title="Std. Deviation" value={formatNumber(unit.standardDeviation, 3)} unit="g" icon={Activity} color="text-purple-400" />
+                </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-2 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50">
+                        <h5 className="font-bold text-white text-sm">Weigher 1</h5>
+                        <StatItem label="Speed" value={formatNumber(unit.speed1, 0)} unit="bpm" />
+                        <StatItem label="Total Weight" value={formatNumber(unit.totalWeight1, 0)} unit="kg" />
+                    </div>
+                    <div className="space-y-2 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50">
+                        <h5 className="font-bold text-white text-sm">Weigher 2</h5>
+                        <StatItem label="Speed" value={formatNumber(unit.speed2, 0)} unit="bpm" />
+                        <StatItem label="Total Weight" value={formatNumber(unit.totalWeight2, 0)} unit="kg" />
+                    </div>
+                </div>
+            </div>
+        )
+    };
+
+
+    const renderSingleUnitPackingTab = () => {
+        const { weigher, bagmaker } = machine;
+        if (!weigher || !bagmaker) return <div className="p-4 text-slate-500">Packing data not available.</div>;
+    
+        const PackingKPI: React.FC<{ icon: any; title: string; value: string; unit: string; color: string; }> = ({ icon: Icon, title, value, unit, color }) => (
+            <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-center gap-4 shadow-sm">
+                <div className={`p-3 rounded-lg bg-slate-800 ${color}`}><Icon size={24} /></div>
+                <div><p className="text-sm text-slate-400 font-medium">{title}</p><p className="text-2xl font-bold text-white tracking-tight">{value} <span className="text-base font-medium text-slate-500">{unit}</span></p></div>
+            </div>
+        );
+    
+        const AnalysisCard: React.FC<{ title: string; children: React.ReactNode; }> = ({ title, children }) => (
+            <div className="bg-slate-800/70 border border-slate-700/50 rounded-xl p-5 shadow-sm flex-1"><h3 className="text-base font-bold text-white mb-4 pb-3 border-b border-slate-700/80">{title}</h3><div className="space-y-4">{children}</div></div>
+        );
+    
+        const StatItem: React.FC<{ label: string; value: string | number; unit?: string; }> = ({ label, value, unit }) => (
+            <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-400">{label}</span><div><span className="font-mono text-base font-bold text-white">{value}</span>{unit && <span className="ml-1.5 text-xs text-slate-500">{unit}</span>}</div></div>
+        );
+    
+        const StopEventCounter: React.FC<{ icon: any; label: string; value: number; color: string; }> = ({ icon: Icon, label, value, color }) => (
+            <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded-lg border border-slate-700/50"><div className="flex items-center gap-3"><Icon size={18} className={color} /><span className="text-sm font-medium text-slate-300">{label}</span></div><span className="font-mono text-lg font-bold text-white">{value}</span></div>
+        );
+    
+        return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                <Card title="Line Performance Summary">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        {isDataItemVisible(userRole, 'PACKING_TOTAL_EFFICIENCY', visibilityContext) && <PackingKPI icon={GaugeCircle} title="Total Efficiency" value={formatNumber(bagmaker.totalEfficiency * 100, 1)} unit="%" color="text-blue-400" />}
+                        {isDataItemVisible(userRole, 'PACKING_EFFICIENCY_WEIGHER', visibilityContext) && <PackingKPI icon={Scale} title="Weigher Efficiency" value={formatNumber(bagmaker.efficiencyWeigher * 100, 1)} unit="%" color="text-emerald-400" />}
+                        {isDataItemVisible(userRole, 'PACKING_EFFICIENCY_BAGMAKER', visibilityContext) && <PackingKPI icon={Package} title="Bagmaker Efficiency" value={formatNumber(bagmaker.efficiencyBagmaker * 100, 1)} unit="%" color="text-purple-400" />}
+                    </div>
+                </Card>
+    
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <AnalysisCard title="Multihead Weigher Analysis">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {isDataItemVisible(userRole, 'PACKING_WEIGHER_GIVEAWAY', visibilityContext) && <MetricCard title="Giveaway" value={formatNumber(weigher.giveaway, 2)} unit="%" icon={AlertTriangle} color="text-amber-400" />}
+                            {isDataItemVisible(userRole, 'PACKING_WEIGHER_STD_DEV', visibilityContext) && <MetricCard title="Std. Deviation" value={formatNumber(weigher.standardDeviation, 3)} unit="g" icon={Activity} color="text-purple-400" />}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-3 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50"><h5 className="font-bold text-white text-sm">Weigher 1</h5>{isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_1', visibilityContext) && <StatItem label="Speed" value={formatNumber(weigher.speed1, 0)} unit="bpm" />}{isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_1', visibilityContext) && <StatItem label="Total Weight" value={formatNumber(weigher.totalWeight1, 0)} unit="kg" />}</div>
+                            <div className="space-y-3 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50"><h5 className="font-bold text-white text-sm">Weigher 2</h5>{isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_2', visibilityContext) && <StatItem label="Speed" value={formatNumber(weigher.speed2, 0)} unit="bpm" />}{isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_2', visibilityContext) && <StatItem label="Total Weight" value={formatNumber(weigher.totalWeight2, 0)} unit="kg" />}</div>
+                        </div>
+                    </AnalysisCard>
+    
+                    <AnalysisCard title="Bagmaker Analysis">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {isDataItemVisible(userRole, 'PACKING_GOOD_BAG_PERCENT', visibilityContext) && <MetricCard title="Good Bag %" value={formatNumber(bagmaker.bagPercentage, 2)} unit="%" icon={CheckCircle2} color="text-emerald-400" />}
+                            {isDataItemVisible(userRole, 'PACKING_WASTED_FILM', visibilityContext) && <MetricCard title="Wasted Film" value={formatNumber(bagmaker.wastedFilmPercentage, 2)} unit="%" icon={Trash2} color="text-rose-400" />}
+                            {isDataItemVisible(userRole, 'PACKING_ACTUAL_SPEED', visibilityContext) && <MetricCard title="Actual Speed" value={formatNumber(bagmaker.actualSpeed)} unit="bpm" icon={Gauge} color="text-blue-400" />}
+                        </div>
+                        
+                        <div><h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Stop Event Counters (Shift)</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">{isDataItemVisible(userRole, 'PACKING_METAL_DETECT', visibilityContext) && <StopEventCounter icon={ScanSearch} label="Metal Detect" value={bagmaker.metalDetectCount} color="text-rose-400" />}{isDataItemVisible(userRole, 'PACKING_PRINTER_ERROR', visibilityContext) && <StopEventCounter icon={Printer} label="Printer Error" value={bagmaker.printerDateErrorCount} color="text-amber-400" />}{isDataItemVisible(userRole, 'PACKING_PRODUCT_IN_SEAL', visibilityContext) && <StopEventCounter icon={Archive} label="Product in Seal" value={bagmaker.productInSealCount} color="text-amber-400" />}{isDataItemVisible(userRole, 'PACKING_SPLICE_DETECT', visibilityContext) && <StopEventCounter icon={Scissors} label="Splice Detect" value={bagmaker.spliceDetectCount} color="text-blue-400" />}</div></div>
+                    </AnalysisCard>
+                </div>
+            </div>
+        );
+    };
+
+    const renderPackingTab = () => {
+        // If the machine has multi-unit data, render the special dashboard
+        if (machine.bagmakerUnits && machine.bagmakerUnits.length > 0) {
+            return <MultiUnitPackingDashboard machine={machine} />;
+        }
+        return renderSingleUnitPackingTab();
+    };
+
 
     const renderProcessTab = () => {
         const params = machine.processParams || {};

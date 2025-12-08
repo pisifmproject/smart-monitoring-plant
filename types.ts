@@ -2,6 +2,12 @@
 
 
 
+
+
+
+
+
+
 export enum PlantCode {
     CIKOKOL = 'CIKOKOL',
     SEMARANG = 'SEMARANG',
@@ -56,16 +62,32 @@ export interface WeigherDetails {
     averageWeight: number; // grams
     standardDeviation: number; // grams
     giveaway: number; // %
-    speed: number; // ppm
+    averageSpeed: number; // bpm, renamed from speed
     status: 'RUNNING' | 'IDLE' | 'FAULT';
+    
+    // New detailed stats assuming dual weigher
+    totalWeight1: number; // kg for the shift
+    totalWeight2: number; // kg for the shift
+    speed1: number; // bpm
+    speed2: number; // bpm
 }
 
 export interface BagmakerDetails {
-    speed: number; // ppm
+    targetSpeed: number; // bpm (renamed from speed)
+    actualSpeed: number; // bpm (new)
     filmRemaining: number; // %
     sealTempHorizontal: number; // Celsius
     sealTempVertical: number; // Celsius
     status: 'RUNNING' | 'IDLE' | 'FAULT';
+    totalEfficiency: number; // % (new)
+    efficiencyWeigher: number; // % (new)
+    efficiencyBagmaker: number; // % (new)
+    bagPercentage: number; // % of good bags (new)
+    wastedFilmPercentage: number; // % (new)
+    metalDetectCount: number; // count (new)
+    printerDateErrorCount: number; // count (new)
+    productInSealCount: number; // count (new)
+    spliceDetectCount: number; // count (new)
 }
 
 
@@ -99,6 +121,10 @@ export interface Machine {
     // Packing specific details
     weigher?: WeigherDetails;
     bagmaker?: BagmakerDetails;
+
+    // Multi-unit packing details for Cikupa PC39
+    bagmakerUnits?: BagmakerDetails[];
+    weigherUnits?: WeigherDetails[];
 }
 
 export interface LVMDP {
@@ -194,6 +220,14 @@ export interface DowntimeLog {
     source: 'AUTO' | 'MANUAL';
 }
 
+// --- NEW ---
+export interface PackingLineConfig {
+    lineName: string;
+    bagmakers: number;
+    weighers: number;
+}
+
+
 // --- VISIBILITY SETTINGS TYPES ---
 
 export enum VisibilityCategory {
@@ -226,6 +260,7 @@ export enum VisibilityGroup {
     MACHINES = 'MACHINES',
     WEIGHER = 'WEIGHER',
     BAGMAKER = 'BAGMAKER',
+    PACKING_STATS = 'PACKING_STATS',
     // FIX: Added 'OTHER' to the enum to resolve a compile error in Settings.tsx.
     OTHER = 'OTHER'
 }

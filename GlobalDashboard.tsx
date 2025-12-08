@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from './types';
@@ -38,7 +39,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
     );
 
     return (
-        <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500 w-full">
+        <div className="space-y-6 animate-in fade-in duration-500 w-full">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { LVMDP, UserRole } from '../types';
@@ -264,47 +265,47 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                <div className="space-y-6 xl:col-span-1">
-                    {isDataItemVisible(userRole, visibilityKeys.VOLT_GROUP, visibilityContext) && (
-                        <Card title="Voltage Metrics">
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage R-S</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageRS)} V</span> <DeltaIndicator value={deltas.v_rs} /></div></div>
-                                <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage S-T</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageST)} V</span> <DeltaIndicator value={deltas.v_st} /></div></div>
-                                <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage T-R</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageTR)} V</span> <DeltaIndicator value={deltas.v_tr} /></div></div>
-                            </div>
-                        </Card>
-                    )}
-                    {isDataItemVisible(userRole, visibilityKeys.CURRENT_LOAD_SECTION, visibilityContext) && (
-                        <Card title="Current Load Usage">
-                            <div className="space-y-3">
-                                <div className="w-full bg-slate-700 rounded-full h-2.5">
-                                    <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: `${loadPercent}%` }}></div>
+                <div className="xl:col-span-1">
+                    <Card title="Live Electrical Status">
+                        <div className="space-y-6">
+                            {isDataItemVisible(userRole, visibilityKeys.VOLT_GROUP, visibilityContext) && (
+                                <div>
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Voltage (L-L)</h4>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage R-S</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageRS)} V</span> <DeltaIndicator value={deltas.v_rs} /></div></div>
+                                        <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage S-T</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageST)} V</span> <DeltaIndicator value={deltas.v_st} /></div></div>
+                                        <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage T-R</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageTR)} V</span> <DeltaIndicator value={deltas.v_tr} /></div></div>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between items-baseline">
-                                    <span className="text-2xl font-bold text-white">{formatNumber(loadPercent)}%</span>
-                                    <span className="text-sm text-slate-400 font-medium">Max: {formatNumber(maxCurrent)} A</span>
+                            )}
+                             {isDataItemVisible(userRole, visibilityKeys.CURRENT_LOAD_SECTION, visibilityContext) && (
+                                <div className="pt-4 border-t border-slate-800">
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Current Load</h4>
+                                    <div className="space-y-3">
+                                        <div className="w-full bg-slate-700 rounded-full h-2.5">
+                                            <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: `${loadPercent}%` }}></div>
+                                        </div>
+                                        <div className="flex justify-between items-baseline">
+                                            <span className="text-2xl font-bold text-white">{formatNumber(loadPercent)}%</span>
+                                            <span className="text-sm text-slate-400 font-medium">Max: {formatNumber(maxCurrent)} A</span>
+                                        </div>
+                                        <p className="text-sm text-slate-400">Average Current: <span className="font-bold text-white font-mono">{formatNumber(avgCurrent)} A</span></p>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-slate-400">Current: <span className="font-bold text-white font-mono">{formatNumber(avgCurrent)} A</span></p>
-                            </div>
-                        </Card>
-                    )}
-                     {isDataItemVisible(userRole, visibilityKeys.POWER_METRICS_LIST, visibilityContext) && (
-                         <Card title="System Frequency">
-                            <div className="flex flex-col items-center justify-center py-6">
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-5xl font-bold text-white font-mono tracking-tighter">
-                                        {formatNumber(lvmdp.frequency)}
-                                    </span>
-                                    <span className="text-slate-400 font-bold text-lg">Hz</span>
+                            )}
+                             {isDataItemVisible(userRole, visibilityKeys.POWER_METRICS_LIST, visibilityContext) && (
+                                <div className="pt-4 border-t border-slate-800">
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Frequency</h4>
+                                    <div className="flex items-baseline gap-2 justify-center py-2">
+                                        <span className="text-3xl font-bold text-white font-mono tracking-tighter">{formatNumber(lvmdp.frequency)}</span>
+                                        <span className="text-slate-400 font-bold text-base">Hz</span>
+                                    </div>
                                 </div>
-                                <div className="mt-2 text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                                    Stable
-                                </div>
-                            </div>
-                        </Card>
-                    )}
+                            )}
+                        </div>
+                    </Card>
                 </div>
-
+                
                 <div className="xl:col-span-2 space-y-6">
                     {isDataItemVisible(userRole, visibilityKeys.ENERGY_TREND, visibilityContext) && (
                         <Card title={`Energy Usage Trend (${period})`} className="min-h-[400px]">

@@ -11,8 +11,38 @@ import {
     MachineType,
     DowntimeLog,
     WeigherDetails,
-    BagmakerDetails
+    BagmakerDetails,
+    PackingLineConfig
 } from '../types';
+
+// ------------------------------------------------------
+// CIKUPA PACKING CONFIGURATION (Mutable for CRUD)
+// ------------------------------------------------------
+export let CIKUPA_PACKING_LINES: PackingLineConfig[] = [
+    { lineName: 'PC39', bagmakers: 22, weighers: 11 },
+    { lineName: 'PC14', bagmakers: 10, weighers: 5 },
+    { lineName: 'Tortilla', bagmakers: 14, weighers: 7 },
+    { lineName: 'TWS 5.6', bagmakers: 10, weighers: 5 },
+    { lineName: 'FCP', bagmakers: 12, weighers: 6 },
+    { lineName: 'TWS 7.2', bagmakers: 20, weighers: 10 },
+    { lineName: 'Cassava Copack', bagmakers: 6, weighers: 3 },
+    { lineName: 'Cassava Inhouse', bagmakers: 10, weighers: 5 },
+];
+
+// ------------------------------------------------------
+// CIKOKOL PACKING CONFIGURATION (Mutable for CRUD)
+// ------------------------------------------------------
+export let CIKOKOL_PACKING_LINES: PackingLineConfig[] = [
+    { lineName: 'Potato Chips PC14', bagmakers: 10, weighers: 5 },
+];
+
+// ------------------------------------------------------
+// SEMARANG PACKING CONFIGURATION (Mutable for CRUD)
+// ------------------------------------------------------
+export let SEMARANG_PACKING_LINES: PackingLineConfig[] = [
+    { lineName: 'Tempe', bagmakers: 10, weighers: 5 },
+];
+
 
 // ------------------------------------------------------
 // MACHINE TYPE DETECTION
@@ -27,7 +57,7 @@ const getMachineType = (name: string): MachineType => {
         n.includes('sheeted')
     )
         return MachineType.EXTRUDER;
-    if (n.includes('packing') || n.includes('pouch'))
+    if (n.includes('packing') || n.includes('pouch') || CIKUPA_PACKING_LINES.some(l => l.lineName === name) || CIKOKOL_PACKING_LINES.some(l => l.lineName === name) || SEMARANG_PACKING_LINES.some(l => l.lineName === name))
         return MachineType.PACKING;
     if (n.includes('season') || n.includes('tws'))
         return MachineType.SEASONING;
@@ -35,7 +65,56 @@ const getMachineType = (name: string): MachineType => {
 };
 
 // ------------------------------------------------------
-// MACHINE GENERATOR (FINAL SAFE VERSION)
+// INDIVIDUAL UNIT GENERATORS FOR MULTI-UNIT DASHBOARD
+// ------------------------------------------------------
+export const generateSingleWeigherDetails = (): WeigherDetails => {
+    const statusR = Math.random();
+    let status: 'RUNNING' | 'IDLE' | 'FAULT' = 'RUNNING';
+    if (statusR > 0.85) status = 'IDLE';
+    if (statusR > 0.97) status = 'FAULT';
+
+    return {
+        averageWeight: parseFloat((25.1 + Math.random() * 0.2).toFixed(2)),
+        standardDeviation: parseFloat((0.05 + Math.random() * 0.05).toFixed(3)),
+        giveaway: parseFloat((0.8 + Math.random() * 0.4).toFixed(2)),
+        averageSpeed: 80 + Math.floor(Math.random() * 5),
+        status: status,
+        totalWeight1: 1800 + Math.floor(Math.random() * 400),
+        totalWeight2: 1850 + Math.floor(Math.random() * 400),
+        speed1: 79 + Math.floor(Math.random() * 4),
+        speed2: 80 + Math.floor(Math.random() * 4),
+    };
+};
+
+export const generateSingleBagmakerDetails = (): BagmakerDetails => {
+    const statusR = Math.random();
+    let status: 'RUNNING' | 'IDLE' | 'FAULT' = 'RUNNING';
+    if (statusR > 0.9) status = 'IDLE';
+    if (statusR > 0.98) status = 'FAULT';
+
+    const targetSpeed = 80 + Math.floor(Math.random() * 5);
+    return {
+        targetSpeed: targetSpeed,
+        actualSpeed: targetSpeed - Math.floor(Math.random() * 3),
+        filmRemaining: parseFloat((65 + Math.random() * 30).toFixed(1)),
+        sealTempHorizontal: 150 + Math.floor(Math.random() * 5),
+        sealTempVertical: 152 + Math.floor(Math.random() * 5),
+        status: status,
+        totalEfficiency: parseFloat((0.85 + Math.random() * 0.13).toFixed(2)),
+        efficiencyWeigher: parseFloat((0.90 + Math.random() * 0.09).toFixed(2)),
+        efficiencyBagmaker: parseFloat((0.90 + Math.random() * 0.08).toFixed(2)),
+        bagPercentage: parseFloat((95 + Math.random() * 4.5).toFixed(2)),
+        wastedFilmPercentage: parseFloat((1 + Math.random() * 4).toFixed(2)),
+        metalDetectCount: Math.floor(Math.random() * 6),
+        printerDateErrorCount: Math.floor(Math.random() * 11),
+        productInSealCount: 5 + Math.floor(Math.random() * 16),
+        spliceDetectCount: 1 + Math.floor(Math.random() * 3),
+    };
+};
+
+
+// ------------------------------------------------------
+// MACHINE GENERATOR (REFACTORED FOR DYNAMIC PACKING CONFIG)
 // ------------------------------------------------------
 const generateMachines = (plantId: PlantCode, names: string[]): Machine[] => {
     return names.map((name, index) => {
@@ -47,47 +126,7 @@ const generateMachines = (plantId: PlantCode, names: string[]): Machine[] => {
         const type = getMachineType(name);
         const outputBase = type === MachineType.PACKING ? 40 : 800;
         
-        // Generate machine-specific process parameters
-        let processParams: Record<string, number | string> = {};
-
-        // Weigher and bagmaker details are now generated for ALL machines
-        const weigherDetails: WeigherDetails = {
-            averageWeight: parseFloat((25.1 + Math.random() * 0.2).toFixed(2)),
-            standardDeviation: parseFloat((0.05 + Math.random() * 0.05).toFixed(3)),
-            giveaway: parseFloat((0.8 + Math.random() * 0.4).toFixed(2)),
-            speed: 80 + Math.floor(Math.random() * 5),
-            status: status === 'RUNNING' ? 'RUNNING' : 'IDLE'
-        };
-        const bagmakerDetails: BagmakerDetails = {
-            speed: 80 + Math.floor(Math.random() * 5),
-            filmRemaining: parseFloat((65 + Math.random() * 30).toFixed(1)),
-            sealTempHorizontal: 150 + Math.floor(Math.random() * 5),
-            sealTempVertical: 152 + Math.floor(Math.random() * 5),
-            status: status === 'RUNNING' ? 'RUNNING' : 'IDLE'
-        };
-
-        switch(type) {
-            case MachineType.EXTRUDER:
-                processParams = { 
-                    'Screw Speed': 120 + Math.round(Math.random() * 20),
-                    'Barrel Temp Zone 1': 145 + Math.round(Math.random() * 5),
-                    'Barrel Temp Zone 2': 150 + Math.round(Math.random() * 5),
-                    'Feeder Speed': 80 + Math.round(Math.random() * 10),
-                    'Die Pressure': 40 + Math.round(Math.random() * 5)
-                };
-                break;
-            case MachineType.FRYER:
-                processParams = {
-                    'Oil Temp': 180 + Math.round(Math.random() * 5),
-                    'Conveyor Speed': 2.5 + Math.random(),
-                    'Oil Level': 85 + Math.round(Math.random() * 10)
-                };
-                break;
-            default:
-                processParams = { 'Cycle Time': 3.5, 'Vibration': 0.8 };
-        }
-
-        return {
+        const machineBase: Omit<Machine, 'weigher' | 'bagmaker' | 'bagmakerUnits' | 'weigherUnits'> = {
             id: `${plantId}-M-${index}`,
             code: name.replace(/\s+/g, '_').toUpperCase(),
             name: name,
@@ -101,24 +140,63 @@ const generateMachines = (plantId: PlantCode, names: string[]): Machine[] => {
             targetShift: 8000,
             lineSpeed: type === MachineType.PACKING ? Math.floor(Math.random() * 60) + 20 : Math.floor(Math.random() * 200) + 100,
             rejectRate: parseFloat((Math.random() * 5).toFixed(2)),
-            
-            // Detailed properties
             availability: parseFloat((0.85 + Math.random() * 0.14).toFixed(2)),
             performance: parseFloat((0.80 + Math.random() * 0.19).toFixed(2)),
             quality: parseFloat((0.95 + Math.random() * 0.04).toFixed(2)),
-            processParams: processParams,
+            processParams: {},
             utilityConsumption: {
                 electricity: 150 + Math.random() * 50,
                 steam: type === MachineType.FRYER ? 400 + Math.random() * 100 : 0,
                 water: 0.5 + Math.random() * 0.2,
                 air: 200 + Math.random() * 50
             },
-            // Packing specific
-            weigher: weigherDetails,
-            bagmaker: bagmakerDetails
+        };
+
+        // DYNAMICALLY GENERATE MULTI-UNIT DATA FOR CIKUPA
+        if (plantId === PlantCode.CIKUPA) {
+            const packingLineConfig = CIKUPA_PACKING_LINES.find(line => line.lineName === name);
+            if (packingLineConfig) {
+                return {
+                    ...machineBase,
+                    bagmakerUnits: Array.from({ length: packingLineConfig.bagmakers }, () => generateSingleBagmakerDetails()),
+                    weigherUnits: Array.from({ length: packingLineConfig.weighers }, () => generateSingleWeigherDetails()),
+                };
+            }
+        }
+
+        // DYNAMICALLY GENERATE MULTI-UNIT DATA FOR CIKOKOL
+        if (plantId === PlantCode.CIKOKOL) {
+            const packingLineConfig = CIKOKOL_PACKING_LINES.find(line => line.lineName === name);
+            if (packingLineConfig) {
+                return {
+                    ...machineBase,
+                    bagmakerUnits: Array.from({ length: packingLineConfig.bagmakers }, () => generateSingleBagmakerDetails()),
+                    weigherUnits: Array.from({ length: packingLineConfig.weighers }, () => generateSingleWeigherDetails()),
+                };
+            }
+        }
+
+        // DYNAMICALLY GENERATE MULTI-UNIT DATA FOR SEMARANG
+        if (plantId === PlantCode.SEMARANG) {
+            const packingLineConfig = SEMARANG_PACKING_LINES.find(line => line.lineName === name);
+            if (packingLineConfig) {
+                return {
+                    ...machineBase,
+                    bagmakerUnits: Array.from({ length: packingLineConfig.bagmakers }, () => generateSingleBagmakerDetails()),
+                    weigherUnits: Array.from({ length: packingLineConfig.weighers }, () => generateSingleWeigherDetails()),
+                };
+            }
+        }
+
+        // DEFAULT CASE: Single unit packing data for all other machines
+        return {
+            ...machineBase,
+            weigher: generateSingleWeigherDetails(),
+            bagmaker: generateSingleBagmakerDetails()
         };
     });
 };
+
 
 // ------------------------------------------------------
 // LVMDP GENERATOR (FINAL SAFE VERSION)
@@ -210,18 +288,14 @@ const semarangMachines = generateMachines(PlantCode.SEMARANG, [
     'Continuous Fryer'
 ]);
 
-const cikupaMachines = generateMachines(PlantCode.CIKUPA, [
-    'PC14',
-    'PC39',
-    'Cassava Inhouse',
-    'Cassava Copack',
-    'Tortilla',
-    'FCP',
-    'TWS 5.6',
-    'TWS 7.2',
+// Cikupa machine names now dynamically match the packing line config
+const cikupaMachineNames = [
+    ...CIKUPA_PACKING_LINES.map(l => l.lineName),
     'Packing Pouch',
     'Vacuum Fryer 1'
-]);
+];
+const cikupaMachines = generateMachines(PlantCode.CIKUPA, cikupaMachineNames);
+
 
 const agroMachines = generateMachines(PlantCode.AGRO, [
     'Future Line 1',

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import {
   HashRouter,
@@ -202,7 +203,7 @@ const ProtectedLayout = ({
         </header>
 
         <main className="flex-1 overflow-y-auto bg-slate-950 scroll-smooth">
-          <div className="w-full max-w-[1800px] mx-auto">
+          <div className="w-full max-w-[1800px] mx-auto p-4 md:p-6 lg:p-8">
             <Outlet />
           </div>
         </main>
@@ -227,14 +228,12 @@ const MachineDetailWrapper = ({ user }: { user: User }) => {
   if (!machine) return <div className="p-8 text-slate-500">Machine Not Found</div>;
 
   return (
-    <div className="px-4 md:px-8 py-6">
-      <MachineDetail
-        machine={machine}
-        onBack={() => navigate(-1)}
-        userRole={user.role}
-        currentUser={user.name}
-      />
-    </div>
+    <MachineDetail
+      machine={machine}
+      onBack={() => navigate(-1)}
+      userRole={user.role}
+      currentUser={user.name}
+    />
   );
 };
 
@@ -251,9 +250,7 @@ const LVMDPDetailWrapper = ({ userRole }: { userRole: UserRole }) => {
   if (!panel) return <div className="p-8 text-slate-500">Panel Not Found</div>;
 
   return (
-     <div className="px-4 md:px-8 py-6">
-      <LVMDPDetail lvmdp={panel} onBack={() => navigate(-1)} userRole={userRole} />
-    </div>
+    <LVMDPDetail lvmdp={panel} onBack={() => navigate(-1)} userRole={userRole} />
   );
 };
 
@@ -270,23 +267,19 @@ const UtilitySummaryWrapper = ({ userRole }: { userRole: UserRole }) => {
   if (!plant) return <div className="p-8 text-slate-500">Plant Not Found</div>;
 
   return (
-    <div className="px-4 md:px-8 py-6">
-      <UtilitySummary
-        plant={plant}
-        type={type || 'electricity'}
-        onBack={() => navigate(`/app/plants/${plantId}`)}
-        userRole={userRole}
-      />
-    </div>
+    <UtilitySummary
+      plant={plant}
+      type={type || 'electricity'}
+      onBack={() => navigate(`/app/plants/${plantId}`)}
+      userRole={userRole}
+    />
   );
 };
 
 
 const SettingsWrapper = ({ userRole }: { userRole: UserRole }) => {
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-6">
-       <SettingsView userRole={userRole} />
-    </div>
+    <SettingsView userRole={userRole} />
   )
 }
 // ---------------------------------------

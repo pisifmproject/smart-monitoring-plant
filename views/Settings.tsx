@@ -1,7 +1,14 @@
 
 
+
+
+
+
+
+
+
 import React, { useState, useEffect, useMemo } from 'react';
-import { UserRole, VisibilityCategory, VisibilityGroup, DataItem, User, PlantCode, MachineType, Machine, LVMDP, Plant, UtilityConfig, MachineStatus } from '../types';
+import { UserRole, VisibilityCategory, VisibilityGroup, DataItem, User, PlantCode, MachineType, Machine, LVMDP, Plant, UtilityConfig, MachineStatus, PackingLineConfig } from '../types';
 import { Card } from '../components/SharedComponents';
 import {
     DATA_ITEM_REGISTRY,
@@ -11,13 +18,14 @@ import {
 import { plantService } from '../services/plantService'; 
 import { lvmdpService } from '../services/lvmdpService';
 import { utilityService } from '../services/utilityService';
+import { packingConfigService } from '../services/packingConfigService';
 import { getUsers, addUser, updateUser, deleteUser } from '../services/auth';
 
 import {
     User as UserIcon, Shield, Bell, Database,
     Eye, ChevronDown, Check,
     LayoutDashboard, Factory, Monitor, Zap, LayoutGrid, Globe, Grid,
-    Settings, Sliders, ListFilter, Plus, Edit, Trash2, X, Save, Wind
+    Settings, Sliders, ListFilter, Plus, Edit, Trash2, X, Save, Wind, Package, Search
 } from 'lucide-react';
 
 interface SettingsProps {
@@ -97,11 +105,11 @@ const SettingsView: React.FC<SettingsProps> = ({ userRole }) => {
     const renderContent = () => {
         switch (activeSection) {
             case 'visibility':
-                return <VisibilitySettings key={`vis-${tick}`} forceUpdate={forceUpdate} />;
+                return <VisibilitySettings forceUpdate={forceUpdate} />;
             case 'users':
-                return <UsersAndRolesSettings key={`users-${tick}`} forceUpdate={forceUpdate} />;
+                return <UsersAndRolesSettings forceUpdate={forceUpdate} />;
             case 'database':
-                return <MasterDataSettings key={`db-${tick}`} forceUpdate={forceUpdate} />;
+                return <MasterDataSettings forceUpdate={forceUpdate} />;
             default:
                 return (
                      <Card title="Module Status">
@@ -592,14 +600,19 @@ const UsersAndRolesSettings = ({ forceUpdate }: { forceUpdate: () => void }) => 
 // ===================================
 
 // --- Prop Interfaces ---
-interface PlantManagementTableProps { plants: Plant[]; onAdd: () => void; onEdit: (p: Plant) => void; onDelete: (p: Plant) => void; }
-interface MachineManagementTableProps { machines: Machine[]; onAdd: () => void; onEdit: (m: Machine) => void; onDelete: (m: Machine) => void; }
-interface LVMDPManagementTableProps { lvmdps: LVMDP[]; onAdd: () => void; onEdit: (l: LVMDP) => void; onDelete: (l: LVMDP) => void; }
-interface UtilityConfigTableProps { plants: Plant[]; onAdd: () => void; onEdit: (p: Plant, u: { type: string, config: UtilityConfig }) => void; onDelete: (plantId: PlantCode, utilityType: string) => void; }
+interface ManagementTableProps<T> {
+    items: T[];
+    onAdd: () => void;
+    onEdit: (item: T) => void;
+    onDelete: (item: T) => void;
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
+}
 interface PlantModalProps { plant: Plant | null; onClose: () => void; onSave: () => void; }
 interface MachineModalProps { machine: Machine | null; onClose: () => void; onSave: () => void; }
 interface LVMDPModalProps { panel: LVMDP | null; onClose: () => void; onSave: () => void; }
 interface UtilityConfigModalProps { data: { plant: Plant, utility: { type: string, config: UtilityConfig } } | null; onClose: () => void; onSave: () => void; }
+interface PackingConfigModalProps { line: PackingLineConfig | null; onClose: () => void; onSave: () => void; plantId: PlantCode; }
 interface ConfirmDeleteModalProps { itemName: string; onClose: () => void; onConfirm: () => void; }
 
 const MasterDataSettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
@@ -609,46 +622,49 @@ const MasterDataSettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
     const [plants, setPlants] = useState<Plant[]>([]);
     const [machines, setMachines] = useState<Machine[]>([]);
     const [lvmdps, setLvmdps] = useState<LVMDP[]>([]);
+    const [packingLines, setPackingLines] = useState<PackingLineConfig[]>([]);
+    const [packingConfigPlant, setPackingConfigPlant] = useState<PlantCode>(PlantCode.CIKUPA);
+
+    // Search states
+    const [plantSearch, setPlantSearch] = useState('');
+    const [machineSearch, setMachineSearch] = useState('');
+    const [lvmdpSearch, setLvmdpSearch] = useState('');
+    const [utilitySearch, setUtilitySearch] = useState('');
+    const [packingSearch, setPackingSearch] = useState('');
     
     // Modal states
-    const [isPlantModalOpen, setIsPlantModalOpen] = useState(false);
-    const [editingPlant, setEditingPlant] = useState<Plant | null>(null);
-    const [isMachineModalOpen, setIsMachineModalOpen] = useState(false);
-    const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
-    const [isLVMDPModalOpen, setIsLVMDPModalOpen] = useState(false);
-    const [editingLVMDP, setEditingLVMDP] = useState<LVMDP | null>(null);
-    const [isUtilityModalOpen, setIsUtilityModalOpen] = useState(false);
-    const [editingUtility, setEditingUtility] = useState<{ plant: Plant, utility: { type: string, config: UtilityConfig } } | null>(null);
-    
-    // Confirmation state
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState<{ id: string, name: string, type: 'machine' | 'lvmdp' | 'plant' | 'utility', plantId?: PlantCode, utilityType?: string } | null>(null);
+    const [modalState, setModalState] = useState<any>({
+        isPlantModalOpen: false, editingPlant: null,
+        isMachineModalOpen: false, editingMachine: null,
+        isLVMDPModalOpen: false, editingLVMDP: null,
+        isUtilityModalOpen: false, editingUtility: null,
+        isPackingModalOpen: false, editingPackingLine: null,
+        isConfirmOpen: false, itemToDelete: null
+    });
 
     useEffect(() => {
         refreshData();
-    }, []);
+    }, [packingConfigPlant]);
 
     const refreshData = () => {
         setPlants(plantService.getAllPlants());
         setMachines(plantService.getAllMachines());
         setLvmdps(lvmdpService.getAllLVMDPs());
+        setPackingLines(packingConfigService.getPackingLines(packingConfigPlant));
     };
     
     const handleConfirmDelete = () => {
+        const { itemToDelete } = modalState;
         if (!itemToDelete) return;
-        if (itemToDelete.type === 'machine') {
-            plantService.deleteMachine(itemToDelete.id);
-        } else if (itemToDelete.type === 'lvmdp') {
-            lvmdpService.deleteLVMDP(itemToDelete.id);
-        } else if (itemToDelete.type === 'plant') {
-            plantService.deletePlant(itemToDelete.id as PlantCode);
-        } else if (itemToDelete.type === 'utility' && itemToDelete.plantId && itemToDelete.utilityType) {
-            utilityService.deleteUtilityConfig(itemToDelete.plantId, itemToDelete.utilityType);
-        }
-        
+
+        if (itemToDelete.type === 'machine') plantService.deleteMachine(itemToDelete.id);
+        else if (itemToDelete.type === 'lvmdp') lvmdpService.deleteLVMDP(itemToDelete.id);
+        else if (itemToDelete.type === 'plant') plantService.deletePlant(itemToDelete.id as PlantCode);
+        else if (itemToDelete.type === 'utility' && itemToDelete.plantId && itemToDelete.utilityType) utilityService.deleteUtilityConfig(itemToDelete.plantId, itemToDelete.utilityType);
+        else if (itemToDelete.type === 'packing') packingConfigService.deletePackingLine(packingConfigPlant, itemToDelete.id);
+
         refreshData();
-        setIsConfirmOpen(false);
-        setItemToDelete(null);
+        setModalState({ ...modalState, isConfirmOpen: false, itemToDelete: null });
         forceUpdate();
     };
 
@@ -669,6 +685,12 @@ const MasterDataSettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
             <Icon size={16} /> {label}
         </button>
     );
+    
+    // Filtered data for tables
+    const filteredPlants = plants.filter(p => p.name.toLowerCase().includes(plantSearch.toLowerCase()) || p.location.toLowerCase().includes(plantSearch.toLowerCase()));
+    const filteredMachines = machines.filter(m => m.name.toLowerCase().includes(machineSearch.toLowerCase()) || m.plantId.toLowerCase().includes(machineSearch.toLowerCase()));
+    const filteredLvmdps = lvmdps.filter(l => l.name.toLowerCase().includes(lvmdpSearch.toLowerCase()) || l.plantId.toLowerCase().includes(lvmdpSearch.toLowerCase()));
+    const filteredPackingLines = packingLines.filter(p => p.lineName.toLowerCase().includes(packingSearch.toLowerCase()));
 
     return (
         <Card className="bg-slate-900/30">
@@ -677,225 +699,157 @@ const MasterDataSettings = ({ forceUpdate }: { forceUpdate: () => void }) => {
                 <TabButton id="machines" label="Machines" icon={Monitor} />
                 <TabButton id="lvmdps" label="LVMDP Panels" icon={Zap} />
                 <TabButton id="utilities" label="Utilities" icon={Wind} />
+                <TabButton id="packing" label="Packing Config" icon={Package} />
             </div>
 
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 {activeTab === 'plants' && (
-                    <PlantManagementTable 
-                        plants={plants}
-                        onAdd={() => { setEditingPlant(null); setIsPlantModalOpen(true); }}
-                        onEdit={(plant) => { setEditingPlant(plant); setIsPlantModalOpen(true); }}
-                        onDelete={(plant) => { setItemToDelete({ id: plant.id, name: plant.name, type: 'plant' }); setIsConfirmOpen(true); }}
-                    />
+                    <PlantManagementTable items={filteredPlants} onAdd={() => setModalState({ ...modalState, editingPlant: null, isPlantModalOpen: true })} onEdit={(plant) => setModalState({ ...modalState, editingPlant: plant, isPlantModalOpen: true })} onDelete={(plant) => setModalState({ ...modalState, itemToDelete: { id: plant.id, name: plant.name, type: 'plant' }, isConfirmOpen: true })} searchQuery={plantSearch} setSearchQuery={setPlantSearch} />
                 )}
                 {activeTab === 'machines' && (
-                    <MachineManagementTable 
-                        machines={machines}
-                        onAdd={() => { setEditingMachine(null); setIsMachineModalOpen(true); }}
-                        onEdit={(machine) => { setEditingMachine(machine); setIsMachineModalOpen(true); }}
-                        onDelete={(machine) => { setItemToDelete({ id: machine.id, name: machine.name, type: 'machine' }); setIsConfirmOpen(true); }}
-                    />
+                    <MachineManagementTable items={filteredMachines} onAdd={() => setModalState({ ...modalState, editingMachine: null, isMachineModalOpen: true })} onEdit={(machine) => setModalState({ ...modalState, editingMachine: machine, isMachineModalOpen: true })} onDelete={(machine) => setModalState({ ...modalState, itemToDelete: { id: machine.id, name: machine.name, type: 'machine' }, isConfirmOpen: true })} searchQuery={machineSearch} setSearchQuery={setMachineSearch} />
                 )}
                 {activeTab === 'lvmdps' && (
-                    <LVMDPManagementTable
-                        lvmdps={lvmdps}
-                        onAdd={() => { setEditingLVMDP(null); setIsLVMDPModalOpen(true); }}
-                        onEdit={(panel) => { setEditingLVMDP(panel); setIsLVMDPModalOpen(true); }}
-                        onDelete={(panel) => { setItemToDelete({ id: panel.id, name: panel.name, type: 'lvmdp' }); setIsConfirmOpen(true); }}
-                    />
+                    <LVMDPManagementTable items={filteredLvmdps} onAdd={() => setModalState({ ...modalState, editingLVMDP: null, isLVMDPModalOpen: true })} onEdit={(panel) => setModalState({ ...modalState, editingLVMDP: panel, isLVMDPModalOpen: true })} onDelete={(panel) => setModalState({ ...modalState, itemToDelete: { id: panel.id, name: panel.name, type: 'lvmdp' }, isConfirmOpen: true })} searchQuery={lvmdpSearch} setSearchQuery={setLvmdpSearch} />
                 )}
                 {activeTab === 'utilities' && (
-                    <UtilityConfigTable
-                        plants={plants}
-                        onAdd={() => { setEditingUtility(null); setIsUtilityModalOpen(true); }}
-                        onEdit={(plant, utility) => { setEditingUtility({ plant, utility }); setIsUtilityModalOpen(true); }}
-                        onDelete={(plantId, utilityType) => { setItemToDelete({ id: `${plantId}-${utilityType}`, name: `${utilityType} @ ${plantId}`, type: 'utility', plantId, utilityType }); setIsConfirmOpen(true); }}
-                    />
+                    <UtilityConfigTable plants={plants} onAdd={() => setModalState({ ...modalState, editingUtility: null, isUtilityModalOpen: true })} onEdit={(plant, utility) => setModalState({ ...modalState, editingUtility: { plant, utility }, isUtilityModalOpen: true })} onDelete={(plantId, utilityType) => setModalState({ ...modalState, itemToDelete: { id: `${plantId}-${utilityType}`, name: `${utilityType} @ ${plantId}`, type: 'utility', plantId, utilityType }, isConfirmOpen: true })} searchQuery={utilitySearch} setSearchQuery={setUtilitySearch} />
+                )}
+                {activeTab === 'packing' && (
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                            <label htmlFor="packing-plant-select" className="text-sm font-bold text-slate-300 flex items-center gap-2"><Factory size={16} /> Configure Packing For:</label>
+                            <select 
+                                id="packing-plant-select"
+                                value={packingConfigPlant} 
+                                onChange={(e) => {
+                                    setPackingConfigPlant(e.target.value as PlantCode);
+                                    setPackingSearch(''); // Reset search on plant change
+                                }} 
+                                className="bg-slate-900 border border-slate-700 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            >
+                                <option value={PlantCode.CIKUPA}>Plant Cikupa</option>
+                                <option value={PlantCode.CIKOKOL}>Plant Cikokol</option>
+                                <option value={PlantCode.SEMARANG}>Plant Semarang</option>
+                            </select>
+                        </div>
+                        <PackingConfigManagementTable 
+                            items={filteredPackingLines} 
+                            plantId={packingConfigPlant}
+                            onAdd={() => setModalState({ ...modalState, editingPackingLine: null, isPackingModalOpen: true })} 
+                            onEdit={(line) => setModalState({ ...modalState, editingPackingLine: line, isPackingModalOpen: true })} 
+                            onDelete={(line) => setModalState({ ...modalState, itemToDelete: { id: line.lineName, name: `Packing Line: ${line.lineName}`, type: 'packing' }, isConfirmOpen: true })} 
+                            searchQuery={packingSearch} 
+                            setSearchQuery={setPackingSearch} 
+                        />
+                    </div>
                 )}
             </div>
             
-            {isPlantModalOpen && (
-                <PlantModal
-                    plant={editingPlant}
-                    onClose={() => setIsPlantModalOpen(false)}
-                    onSave={() => { handleSave(); setIsPlantModalOpen(false); }}
-                />
-            )}
-            {isMachineModalOpen && (
-                <MachineModal
-                    machine={editingMachine}
-                    onClose={() => setIsMachineModalOpen(false)}
-                    onSave={() => { handleSave(); setIsMachineModalOpen(false); }}
-                />
-            )}
-            {isLVMDPModalOpen && (
-                <LVMDPModal
-                    panel={editingLVMDP}
-                    onClose={() => setIsLVMDPModalOpen(false)}
-                    onSave={() => { handleSave(); setIsLVMDPModalOpen(false); }}
-                />
-            )}
-            {isUtilityModalOpen && (
-                 <UtilityConfigModal
-                    data={editingUtility}
-                    onClose={() => setIsUtilityModalOpen(false)}
-                    onSave={() => { handleSave(); setIsUtilityModalOpen(false); }}
-                />
-            )}
-            {isConfirmOpen && itemToDelete && (
-                 <ConfirmDeleteModal
-                    itemName={itemToDelete.name}
-                    onClose={() => setIsConfirmOpen(false)}
-                    onConfirm={handleConfirmDelete}
-                 />
-            )}
+            {modalState.isPlantModalOpen && <PlantModal plant={modalState.editingPlant} onClose={() => setModalState({ ...modalState, isPlantModalOpen: false })} onSave={() => { handleSave(); setModalState({ ...modalState, isPlantModalOpen: false }); }} />}
+            {modalState.isMachineModalOpen && <MachineModal machine={modalState.editingMachine} onClose={() => setModalState({ ...modalState, isMachineModalOpen: false })} onSave={() => { handleSave(); setModalState({ ...modalState, isMachineModalOpen: false }); }} />}
+            {modalState.isLVMDPModalOpen && <LVMDPModal panel={modalState.editingLVMDP} onClose={() => setModalState({ ...modalState, isLVMDPModalOpen: false })} onSave={() => { handleSave(); setModalState({ ...modalState, isLVMDPModalOpen: false }); }} />}
+            {modalState.isUtilityModalOpen && <UtilityConfigModal data={modalState.editingUtility} onClose={() => setModalState({ ...modalState, isUtilityModalOpen: false })} onSave={() => { handleSave(); setModalState({ ...modalState, isUtilityModalOpen: false }); }} />}
+            {modalState.isPackingModalOpen && <PackingConfigModal plantId={packingConfigPlant} line={modalState.editingPackingLine} onClose={() => setModalState({ ...modalState, isPackingModalOpen: false })} onSave={() => { handleSave(); setModalState({ ...modalState, isPackingModalOpen: false }); }} />}
+            {modalState.isConfirmOpen && modalState.itemToDelete && <ConfirmDeleteModal itemName={modalState.itemToDelete.name} onClose={() => setModalState({ ...modalState, isConfirmOpen: false })} onConfirm={handleConfirmDelete} />}
         </div>
     );
 };
 
 // --- Management Table Components ---
-
-const PlantManagementTable: React.FC<PlantManagementTableProps> = ({ plants, onAdd, onEdit, onDelete }) => (
-    <Card className="bg-slate-800/50">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5">
-            <div>
-                <h3 className="text-lg font-bold text-white">Plant Configuration</h3>
-                <p className="text-sm text-slate-400 mt-1">Add, edit, or remove production facilities.</p>
-            </div>
-            <button onClick={onAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md self-start sm:self-center"><Plus size={16} /> Add Plant</button>
+const ManagementTableHeader: React.FC<{ title: string; subtitle: string; onAdd: () => void; addLabel: string; searchQuery: string; setSearchQuery: (q: string) => void; }> = ({ title, subtitle, onAdd, addLabel, searchQuery, setSearchQuery }) => (
+    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-5">
+        <div>
+            <h3 className="text-lg font-bold text-white">{title}</h3>
+            <p className="text-sm text-slate-400 mt-1">{subtitle}</p>
         </div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+             <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                <input type="search" placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full sm:w-48 bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" />
+             </div>
+            <button onClick={onAdd} className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md self-stretch sm:self-center"><Plus size={16} /> {addLabel}</button>
+        </div>
+    </div>
+);
+
+const PlantManagementTable: React.FC<ManagementTableProps<Plant>> = ({ items, onAdd, onEdit, onDelete, searchQuery, setSearchQuery }) => (
+    <Card className="bg-slate-800/50">
+        <ManagementTableHeader title="Plant Configuration" subtitle="Add, edit, or remove production facilities." onAdd={onAdd} addLabel="Add Plant" searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         <div className="overflow-x-auto">
              <table className="w-full text-left text-slate-300 min-w-[600px]">
                 <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
-                    <tr>
-                        <th className="p-4">Plant Name</th>
-                        <th className="p-4 text-center">Location</th>
-                        <th className="p-4 text-center">ID</th>
-                        <th className="p-4 text-center">Actions</th>
-                    </tr>
+                    <tr><th className="p-4">Plant Name</th><th className="p-4 text-center">Location</th><th className="p-4 text-center">ID</th><th className="p-4 text-center">Actions</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700/50 text-sm">
-                    {plants.map((plant) => (
-                        <tr key={plant.id} className="hover:bg-slate-800/50 transition-colors">
-                            <td className="p-4 font-bold text-white">{plant.name}</td>
-                            <td className="p-4 text-slate-400 text-center">{plant.location}</td>
-                            <td className="p-4 font-mono text-center">{plant.id}</td>
-                            <td className="p-4">
-                                <div className="flex justify-center items-center gap-2">
-                                    <button onClick={() => onEdit(plant)} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button>
-                                    <button onClick={() => onDelete(plant)} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
+                <tbody className="divide-y divide-slate-700/50 text-sm">{items.map((plant) => (<tr key={plant.id} className="hover:bg-slate-800/50 transition-colors"><td className="p-4 font-bold text-white">{plant.name}</td><td className="p-4 text-slate-400 text-center">{plant.location}</td><td className="p-4 font-mono text-center">{plant.id}</td><td className="p-4"><div className="flex justify-center items-center gap-2"><button onClick={() => onEdit(plant)} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button><button onClick={() => onDelete(plant)} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button></div></td></tr>))}</tbody>
             </table>
         </div>
     </Card>
 );
 
-const MachineManagementTable: React.FC<MachineManagementTableProps> = ({ machines, onAdd, onEdit, onDelete }) => (
+const MachineManagementTable: React.FC<ManagementTableProps<Machine>> = ({ items, onAdd, onEdit, onDelete, searchQuery, setSearchQuery }) => (
     <Card className="bg-slate-800/50">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5">
-            <div>
-                <h3 className="text-lg font-bold text-white">Machine Configuration</h3>
-                <p className="text-sm text-slate-400 mt-1">Add, edit, or remove production machines across all plants.</p>
-            </div>
-            <button onClick={onAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md self-start sm:self-center"><Plus size={16} /> Add Machine</button>
-        </div>
+        <ManagementTableHeader title="Machine Configuration" subtitle="Manage production machines across all plants." onAdd={onAdd} addLabel="Add Machine" searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         <div className="overflow-x-auto">
              <table className="w-full text-left text-slate-300 min-w-[600px]">
                 <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
                     <tr><th className="p-4">Name</th><th className="p-4 text-center">Plant</th><th className="p-4 text-center">Actions</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700/50 text-sm">
-                    {machines.map((machine) => (
-                        <tr key={machine.id} className="hover:bg-slate-800/50 transition-colors">
-                            <td className="p-4 font-bold text-white">{machine.name}</td>
-                            <td className="p-4 text-slate-400 text-center">{machine.plantId}</td>
-                            <td className="p-4">
-                                <div className="flex justify-center items-center gap-2">
-                                    <button onClick={() => onEdit(machine)} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button>
-                                    <button onClick={() => onDelete(machine)} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
+                <tbody className="divide-y divide-slate-700/50 text-sm">{items.map((machine) => (<tr key={machine.id} className="hover:bg-slate-800/50 transition-colors"><td className="p-4 font-bold text-white">{machine.name}</td><td className="p-4 text-slate-400 text-center">{machine.plantId}</td><td className="p-4"><div className="flex justify-center items-center gap-2"><button onClick={() => onEdit(machine)} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button><button onClick={() => onDelete(machine)} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button></div></td></tr>))}</tbody>
             </table>
         </div>
     </Card>
 );
 
-const LVMDPManagementTable: React.FC<LVMDPManagementTableProps> = ({ lvmdps, onAdd, onEdit, onDelete }) => (
+const LVMDPManagementTable: React.FC<ManagementTableProps<LVMDP>> = ({ items, onAdd, onEdit, onDelete, searchQuery, setSearchQuery }) => (
      <Card className="bg-slate-800/50">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5">
-            <div>
-                <h3 className="text-lg font-bold text-white">LVMDP Panel Configuration</h3>
-                <p className="text-sm text-slate-400 mt-1">Manage Low Voltage Main Distribution Panels for power monitoring.</p>
-            </div>
-            <button onClick={onAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md self-start sm:self-center"><Plus size={16} /> Add Panel</button>
-        </div>
+        <ManagementTableHeader title="LVMDP Panel Configuration" subtitle="Manage Low Voltage Main Distribution Panels." onAdd={onAdd} addLabel="Add Panel" searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         <div className="overflow-x-auto">
              <table className="w-full text-left text-slate-300 min-w-[600px]">
                 <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
                     <tr><th className="p-4">Name</th><th className="p-4 text-center">Plant</th><th className="p-4 text-center">Code</th><th className="p-4 text-center">Actions</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700/50 text-sm">
-                    {lvmdps.map((panel) => (
-                        <tr key={panel.id} className="hover:bg-slate-800/50 transition-colors">
-                            <td className="p-4 font-bold text-white">{panel.name}</td>
-                            <td className="p-4 text-slate-400 text-center">{panel.plantId}</td>
-                            <td className="p-4 font-mono text-center">{panel.code}</td>
-                            <td className="p-4">
-                                <div className="flex justify-center items-center gap-2">
-                                    <button onClick={() => onEdit(panel)} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button>
-                                    <button onClick={() => onDelete(panel)} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
+                <tbody className="divide-y divide-slate-700/50 text-sm">{items.map((panel) => (<tr key={panel.id} className="hover:bg-slate-800/50 transition-colors"><td className="p-4 font-bold text-white">{panel.name}</td><td className="p-4 text-slate-400 text-center">{panel.plantId}</td><td className="p-4 font-mono text-center">{panel.code}</td><td className="p-4"><div className="flex justify-center items-center gap-2"><button onClick={() => onEdit(panel)} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button><button onClick={() => onDelete(panel)} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button></div></td></tr>))}</tbody>
             </table>
         </div>
     </Card>
 );
 
-const UtilityConfigTable: React.FC<UtilityConfigTableProps> = ({ plants, onAdd, onEdit, onDelete }) => (
-    <Card className="bg-slate-800/50">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5">
-            <div>
-                <h3 className="text-lg font-bold text-white">Utility Baseline Configuration</h3>
-                <p className="text-sm text-slate-400 mt-1">Set baseline daily consumption values for dashboard calculations.</p>
+const UtilityConfigTable: React.FC<{ plants: Plant[]; onAdd: () => void; onEdit: (p: Plant, u: { type: string, config: UtilityConfig }) => void; onDelete: (plantId: PlantCode, utilityType: string) => void; searchQuery: string; setSearchQuery: (q: string) => void; }> = ({ plants, onAdd, onEdit, onDelete, searchQuery, setSearchQuery }) => {
+    const allUtilities = plants.flatMap(plant => utilityService.getUtilityConfigsForPlant(plant.id).map(utility => ({ plant, utility })));
+    const filteredUtilities = allUtilities.filter(({ plant, utility }) => 
+        plant.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        utility.type.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    return (
+        <Card className="bg-slate-800/50">
+            <ManagementTableHeader title="Utility Baseline Configuration" subtitle="Set baseline daily consumption values." onAdd={onAdd} addLabel="Add Utility" searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+            <div className="overflow-x-auto">
+                 <table className="w-full text-left text-slate-300 min-w-[600px]">
+                    <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
+                        <tr><th className="p-4">Plant</th><th className="p-4">Utility</th><th className="p-4 text-center">Base Consumption (/day)</th><th className="p-4 text-center">Actions</th></tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/50 text-sm">{filteredUtilities.map(({ plant, utility }) => (<tr key={`${plant.id}-${utility.type}`} className="hover:bg-slate-800/50 transition-colors"><td className="p-4 font-bold text-white">{plant.name}</td><td className="p-4 capitalize text-slate-300">{utility.type}</td><td className="p-4 font-mono text-center">{utility.config.baseConsumption.toLocaleString()}</td><td className="p-4"><div className="flex justify-center items-center gap-2"><button onClick={() => onEdit(plant, utility)} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button><button onClick={() => onDelete(plant.id, utility.type)} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button></div></td></tr>))}</tbody>
+                </table>
             </div>
-             <button onClick={onAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md self-start sm:self-center"><Plus size={16} /> Add Utility</button>
-        </div>
+        </Card>
+    );
+};
+
+const PackingConfigManagementTable: React.FC<ManagementTableProps<PackingLineConfig> & { plantId: PlantCode }> = ({ items, onAdd, onEdit, onDelete, searchQuery, setSearchQuery, plantId }) => (
+    <Card className="bg-slate-800/50">
+        <ManagementTableHeader title={`${plantId} Packing Line Configuration`} subtitle={`Manage multi-unit packing lines for the ${plantId} plant.`} onAdd={onAdd} addLabel="Add Line" searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         <div className="overflow-x-auto">
              <table className="w-full text-left text-slate-300 min-w-[600px]">
                 <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
-                    <tr><th className="p-4">Plant</th><th className="p-4">Utility</th><th className="p-4 text-center">Base Consumption (/day)</th><th className="p-4 text-center">Actions</th></tr>
+                    <tr><th className="p-4">Line Name</th><th className="p-4 text-center">Bagmakers</th><th className="p-4 text-center">Weighers</th><th className="p-4 text-center">Actions</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700/50 text-sm">
-                    {plants.flatMap(plant => 
-                        utilityService.getUtilityConfigsForPlant(plant.id).map(utility => (
-                            <tr key={`${plant.id}-${utility.type}`} className="hover:bg-slate-800/50 transition-colors">
-                                <td className="p-4 font-bold text-white">{plant.name}</td>
-                                <td className="p-4 capitalize text-slate-300">{utility.type}</td>
-                                <td className="p-4 font-mono text-center">{utility.config.baseConsumption.toLocaleString()}</td>
-                                <td className="p-4">
-                                    <div className="flex justify-center items-center gap-2">
-                                        <button onClick={() => onEdit(plant, utility)} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button>
-                                        <button onClick={() => onDelete(plant.id, utility.type)} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))
-                    )}
-                </tbody>
+                <tbody className="divide-y divide-slate-700/50 text-sm">{items.map((line) => (<tr key={line.lineName} className="hover:bg-slate-800/50 transition-colors"><td className="p-4 font-bold text-white">{line.lineName}</td><td className="p-4 font-mono text-center">{line.bagmakers}</td><td className="p-4 font-mono text-center">{line.weighers}</td><td className="p-4"><div className="flex justify-center items-center gap-2"><button onClick={() => onEdit(line)} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button><button onClick={() => onDelete(line)} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button></div></td></tr>))}</tbody>
             </table>
         </div>
     </Card>
 );
+
 
 // --- Modal Components ---
 const ModalWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -921,11 +875,8 @@ const PlantModal: React.FC<PlantModalProps> = ({ plant, onClose, onSave }) => {
     const [error, setError] = useState('');
     
     useEffect(() => {
-        if (plant) {
-            setFormData({ id: plant.id, name: plant.name, location: plant.location });
-        } else {
-            setFormData({ id: '' as PlantCode, name: '', location: '' });
-        }
+        if (plant) setFormData({ id: plant.id, name: plant.name, location: plant.location });
+        else setFormData({ id: '' as PlantCode, name: '', location: '' });
         setError('');
     }, [plant]);
 
@@ -933,21 +884,13 @@ const PlantModal: React.FC<PlantModalProps> = ({ plant, onClose, onSave }) => {
         e.preventDefault();
         setError('');
         let result;
-        if (plant) {
-            result = plantService.updatePlant(plant.id, { name: formData.name, location: formData.location });
-        } else {
-            if (!formData.id) {
-                setError("Plant ID is required.");
-                return;
-            }
+        if (plant) result = plantService.updatePlant(plant.id, { name: formData.name, location: formData.location });
+        else {
+            if (!formData.id) { setError("Plant ID is required."); return; }
             result = plantService.addPlant(formData);
         }
-        
-        if (result.success) {
-            onSave();
-        } else {
-            setError(result.message || 'An unknown error occurred.');
-        }
+        if (result.success) onSave();
+        else setError(result.message || 'An unknown error occurred.');
     };
 
     return (
@@ -955,22 +898,10 @@ const PlantModal: React.FC<PlantModalProps> = ({ plant, onClose, onSave }) => {
             <ModalHeader title={plant ? "Edit Plant Details" : "Add New Plant"} icon={Factory} onClose={onClose} />
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 {error && <p className="text-rose-400 bg-rose-900/20 p-3 rounded-md text-sm border border-rose-500/30">{error}</p>}
-                <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Plant ID (e.g., CIKARANG)</label>
-                    <input value={formData.id} onChange={e => setFormData({...formData, id: e.target.value.toUpperCase() as PlantCode})} required disabled={!!plant} className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50" />
-                </div>
-                <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Plant Name</label>
-                    <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" />
-                </div>
-                <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Location</label>
-                    <input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" />
-                </div>
-                <div className="pt-2 flex justify-end gap-3">
-                    <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-slate-300 hover:text-white font-bold transition-colors bg-slate-700/50 hover:bg-slate-700">Cancel</button>
-                    <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition"><Save size={16} /> Save Changes</button>
-                </div>
+                <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Plant ID (e.g., CIKARANG)</label><input value={formData.id} onChange={e => setFormData({...formData, id: e.target.value.toUpperCase() as PlantCode})} required disabled={!!plant} className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50" /></div>
+                <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Plant Name</label><input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" /></div>
+                <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Location</label><input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" /></div>
+                <div className="pt-2 flex justify-end gap-3"><button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-slate-300 hover:text-white font-bold transition-colors bg-slate-700/50 hover:bg-slate-700">Cancel</button><button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition"><Save size={16} /> Save Changes</button></div>
             </form>
         </ModalWrapper>
     );
@@ -1047,16 +978,8 @@ const UtilityConfigModal: React.FC<UtilityConfigModalProps> = ({ data, onClose, 
         const allPlants = plantService.getAllPlants();
         setAvailablePlants(allPlants);
         const defaultPlantId = allPlants.length > 0 ? allPlants[0].id : '' as PlantCode;
-
-        if (isEditMode) {
-            setFormData({
-                plantId: data.plant.id,
-                type: data.utility.type,
-                baseConsumption: data.utility.config.baseConsumption
-            });
-        } else {
-            setFormData({ plantId: defaultPlantId, type: '', baseConsumption: 0 });
-        }
+        if (isEditMode) setFormData({ plantId: data.plant.id, type: data.utility.type, baseConsumption: data.utility.config.baseConsumption });
+        else setFormData({ plantId: defaultPlantId, type: '', baseConsumption: 0 });
         setError('');
     }, [data]);
     
@@ -1064,22 +987,13 @@ const UtilityConfigModal: React.FC<UtilityConfigModalProps> = ({ data, onClose, 
         e.preventDefault();
         setError('');
         let result;
-
-        if (isEditMode) {
-            result = utilityService.updateUtilityConfig(formData.plantId, formData.type, { baseConsumption: formData.baseConsumption });
-        } else {
-             if (!formData.plantId || !formData.type) {
-                setError("Plant and utility type are required.");
-                return;
-            }
+        if (isEditMode) result = utilityService.updateUtilityConfig(formData.plantId, formData.type, { baseConsumption: formData.baseConsumption });
+        else {
+             if (!formData.plantId || !formData.type) { setError("Plant and utility type are required."); return; }
             result = utilityService.addUtilityConfig(formData.plantId, { type: formData.type, baseConsumption: formData.baseConsumption });
         }
-        
-        if (result.success) {
-            onSave();
-        } else {
-            setError(result.message || 'An unknown error occurred.');
-        }
+        if (result.success) onSave();
+        else setError(result.message || 'An unknown error occurred.');
     };
 
     return (
@@ -1087,23 +1001,47 @@ const UtilityConfigModal: React.FC<UtilityConfigModalProps> = ({ data, onClose, 
             <ModalHeader title={isEditMode ? `Edit ${formData.type} - ${formData.plantId}` : "Add New Utility Config"} icon={Wind} onClose={onClose} />
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
                  {error && <p className="text-rose-400 bg-rose-900/20 p-3 rounded-md text-sm border border-rose-500/30">{error}</p>}
-                
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Plant</label>
-                        <select value={formData.plantId} onChange={e => setFormData({...formData, plantId: e.target.value as PlantCode})} disabled={isEditMode} className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white h-[46px] disabled:opacity-50">
-                            {availablePlants.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                    </div>
-                     <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Utility Type</label>
-                        <input value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} disabled={isEditMode} required placeholder="e.g., co2" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50" />
-                    </div>
+                     <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Plant</label><select value={formData.plantId} onChange={e => setFormData({...formData, plantId: e.target.value as PlantCode})} disabled={isEditMode} className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white h-[46px] disabled:opacity-50">{availablePlants.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                     <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Utility Type</label><input value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} disabled={isEditMode} required placeholder="e.g., co2" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50" /></div>
                 </div>
+                <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Base Consumption / Day</label><input type="number" value={formData.baseConsumption} onChange={e => setFormData({...formData, baseConsumption: Number(e.target.value)})} required className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" /></div>
+                <div className="pt-2 flex justify-end gap-3"><button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-slate-300 hover:text-white font-bold transition-colors bg-slate-700/50 hover:bg-slate-700">Cancel</button><button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition"><Save size={16} /> Save Changes</button></div>
+            </form>
+        </ModalWrapper>
+    );
+};
 
-                <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Base Consumption / Day</label>
-                    <input type="number" value={formData.baseConsumption} onChange={e => setFormData({...formData, baseConsumption: Number(e.target.value)})} required className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" />
+const PackingConfigModal: React.FC<PackingConfigModalProps> = ({ line, onClose, onSave, plantId }) => {
+    const [formData, setFormData] = useState({ lineName: '', bagmakers: 0, weighers: 0 });
+    const [error, setError] = useState('');
+    
+    useEffect(() => {
+        if (line) setFormData({ lineName: line.lineName, bagmakers: line.bagmakers, weighers: line.weighers });
+        else setFormData({ lineName: '', bagmakers: 0, weighers: 0 });
+        setError('');
+    }, [line]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        let result;
+        if (line) result = packingConfigService.updatePackingLine(plantId, line.lineName, { bagmakers: formData.bagmakers, weighers: formData.weighers });
+        else result = packingConfigService.addPackingLine(plantId, formData);
+        
+        if (result.success) onSave();
+        else setError(result.message || 'An unknown error occurred.');
+    };
+
+    return (
+        <ModalWrapper>
+            <ModalHeader title={line ? "Edit Packing Line" : "Add New Packing Line"} icon={Package} onClose={onClose} />
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                {error && <p className="text-rose-400 bg-rose-900/20 p-3 rounded-md text-sm border border-rose-500/30">{error}</p>}
+                <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Line Name</label><input value={formData.lineName} onChange={e => setFormData({...formData, lineName: e.target.value})} required disabled={!!line} className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition disabled:opacity-50" /></div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1.5"># Bagmakers</label><input type="number" value={formData.bagmakers} onChange={e => setFormData({...formData, bagmakers: Number(e.target.value)})} required className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" /></div>
+                    <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1.5"># Weighers</label><input type="number" value={formData.weighers} onChange={e => setFormData({...formData, weighers: Number(e.target.value)})} required className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" /></div>
                 </div>
                 <div className="pt-2 flex justify-end gap-3"><button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-slate-300 hover:text-white font-bold transition-colors bg-slate-700/50 hover:bg-slate-700">Cancel</button><button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition"><Save size={16} /> Save Changes</button></div>
             </form>

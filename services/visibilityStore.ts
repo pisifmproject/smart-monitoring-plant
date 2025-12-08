@@ -1,6 +1,9 @@
 
 
 
+
+
+
 import { UserRole, DataItem, VisibilityCategory, VisibilityGroup } from '../types';
 import { plantService } from './plantService';
 
@@ -147,14 +150,26 @@ const STATIC_REGISTRY: DataItem[] = [
     { id: 'md_perf_9', key: 'MACHINE_OUTPUT_TREND_CHART', label: 'Output vs Target Trend', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.CHART, location: 'Machine Detail / Performance', defaultVisible: true },
 
     // PACKING
-    { id: 'md_pack_1', key: 'PACKING_WEIGHER_SPEED', label: 'Weigher Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
-    { id: 'md_pack_2', key: 'PACKING_WEIGHER_AVG_WEIGHT', label: 'Weigher Avg. Weight', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_1', key: 'PACKING_WEIGHER_SPEED_1', label: 'Weigher 1 Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_2', key: 'PACKING_WEIGHER_TOTAL_WEIGHT_1', label: 'Weigher 1 Total Weight', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
     { id: 'md_pack_3', key: 'PACKING_WEIGHER_GIVEAWAY', label: 'Weigher Giveaway', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
     { id: 'md_pack_4', key: 'PACKING_WEIGHER_STD_DEV', label: 'Weigher Std. Deviation', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
-    { id: 'md_pack_5', key: 'PACKING_BAGMAKER_SPEED', label: 'Bagmaker Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_5', key: 'PACKING_TARGET_SPEED', label: 'Target Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
     { id: 'md_pack_6', key: 'PACKING_BAGMAKER_FILM', label: 'Bagmaker Film Remaining', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
     { id: 'md_pack_7', key: 'PACKING_BAGMAKER_SEAL_H', label: 'Bagmaker Seal Temp (H)', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
     { id: 'md_pack_8', key: 'PACKING_BAGMAKER_SEAL_V', label: 'Bagmaker Seal Temp (V)', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_9', key: 'PACKING_TOTAL_EFFICIENCY', label: 'Total Efficiency', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PACKING_STATS, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_10', key: 'PACKING_EFFICIENCY_WEIGHER', label: 'Weigher Efficiency', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PACKING_STATS, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_11', key: 'PACKING_EFFICIENCY_BAGMAKER', label: 'Bagmaker Efficiency', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PACKING_STATS, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_12', key: 'PACKING_GOOD_BAG_PERCENT', label: 'Good Bag %', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PACKING_STATS, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_13', key: 'PACKING_WASTED_FILM', label: 'Wasted Film %', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PACKING_STATS, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_14', key: 'PACKING_ACTUAL_SPEED', label: 'Actual Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_15', key: 'PACKING_METAL_DETECT', label: 'Stops: Metal Detect', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_16', key: 'PACKING_PRINTER_ERROR', label: 'Stops: Printer Error', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_17', key: 'PACKING_PRODUCT_IN_SEAL', label: 'Stops: Product in Seal', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_18', key: 'PACKING_SPLICE_DETECT', label: 'Stops: Splice Detect', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_19', key: 'PACKING_WEIGHER_SPEED_2', label: 'Weigher 2 Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_20', key: 'PACKING_WEIGHER_TOTAL_WEIGHT_2', label: 'Weigher 2 Total Weight', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
 
     // PROCESS
     { id: 'md_proc_1', key: 'PARAM_SCREW_SPEED', label: 'Param: Screw Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },

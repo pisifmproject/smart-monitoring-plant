@@ -109,7 +109,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     };
 
     return (
-        <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-300 w-full relative">
+        <div className="space-y-6 animate-in fade-in duration-300 w-full relative">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
