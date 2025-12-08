@@ -21,7 +21,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
     const kpis = useMemo(() => dashboardService.getGlobalKPIs(period), [period]);
     const plants = useMemo(() => dashboardService.getPlantOverview(period), [period]);
 
-    const canDrillDown = ![UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole);
+    const canDrillDown = true; // Always allow drill down
 
     const FilterButton = ({ label }: { label: Period }) => (
         <button 
