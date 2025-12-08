@@ -107,7 +107,11 @@ export const plantService = {
         label = (i: number) => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
         varianceMult = 5;
     } else if (period === 'Month') {
-        points = 30;
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        points = daysInMonth;
         label = (i: number) => `Day ${i + 1}`;
         varianceMult = 8;
     } else if (period === 'Year') {

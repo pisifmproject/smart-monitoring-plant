@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Machine, UserRole, MachineType, PlantCode, BagmakerDetails, WeigherDetails, Alarm } from '../types';
@@ -81,6 +82,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     const accumulatedStats = useMemo(() => ps.getMachineStats(machine.id, period), [machine.id, period]);
 
     const alarmHistory = useMemo(() => maintenanceService.getAlarmHistory(machine.id), [machine.id, tick]); // Refresh on maintenance action
+    const maintenanceHistoryRecords = useMemo(() => maintenanceService.getMaintenanceHistory(machine.id), [machine.id, tick]);
     const activeAlarms = maintenanceService.getMachineActiveAlarms(machine.id);
     const downtimeLogs = useMemo(() => maintenanceService.getDowntimeLogs(machine.id), [machine.id, tick]);
     
@@ -356,12 +358,15 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     };
 
     const SingleBagmakerDetailPanel = ({ unit, unitNumber, userRole, visibilityContext }: { unit: BagmakerDetails, unitNumber: number, userRole: UserRole, visibilityContext: any }) => {
-        const StopEventCounter: React.FC<{ icon: any; label: string; value: number; color: string; }> = ({ icon: Icon, label, value, color }) => (
-            <div className="flex items-center justify-between p-2 bg-slate-950/50 rounded-lg border border-slate-700/50">
-                <div className="flex items-center gap-3"><Icon size={16} className={color} /><span className="text-xs font-medium text-slate-300">{label}</span></div>
-                <span className="font-mono text-base font-bold text-white">{value}</span>
-            </div>
-        );
+        const StopEventCounter: React.FC<{ icon: any; label: string; value: number; color: string; visible: boolean }> = ({ icon: Icon, label, value, color, visible }) => {
+            if (!visible) return null;
+            return (
+                <div className="flex items-center justify-between p-2 bg-slate-950/50 rounded-lg border border-slate-700/50">
+                    <div className="flex items-center gap-3"><Icon size={16} className={color} /><span className="text-xs font-medium text-slate-300">{label}</span></div>
+                    <span className="font-mono text-base font-bold text-white">{value}</span>
+                </div>
+            );
+        };
         return (
              <div className="space-y-4 animate-in fade-in duration-300">
                 <h3 className="text-lg font-bold text-white">Bagmaker #{unitNumber} - <span className="text-emerald-400">{unit.status}</span></h3>
@@ -373,10 +378,10 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                 <div>
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Stop Event Counters (Shift)</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {isDataItemVisible(userRole, 'PACKING_METAL_DETECT', visibilityContext) && <StopEventCounter icon={ScanSearch} label="Metal Detect" value={unit.metalDetectCount} color="text-rose-400" />}
-                        {isDataItemVisible(userRole, 'PACKING_PRINTER_ERROR', visibilityContext) && <StopEventCounter icon={Printer} label="Printer Error" value={unit.printerDateErrorCount} color="text-amber-400" />}
-                        {isDataItemVisible(userRole, 'PACKING_PRODUCT_IN_SEAL', visibilityContext) && <StopEventCounter icon={Archive} label="Product in Seal" value={unit.productInSealCount} color="text-amber-400" />}
-                        {isDataItemVisible(userRole, 'PACKING_SPLICE_DETECT', visibilityContext) && <StopEventCounter icon={Scissors} label="Splice Detect" value={unit.spliceDetectCount} color="text-blue-400" />}
+                        <StopEventCounter icon={ScanSearch} label="Metal Detect" value={unit.metalDetectCount} color="text-rose-400" visible={isDataItemVisible(userRole, 'PACKING_METAL_DETECT', visibilityContext)} />
+                        <StopEventCounter icon={Printer} label="Printer Error" value={unit.printerDateErrorCount} color="text-amber-400" visible={isDataItemVisible(userRole, 'PACKING_PRINTER_ERROR', visibilityContext)} />
+                        <StopEventCounter icon={Archive} label="Product in Seal" value={unit.productInSealCount} color="text-amber-400" visible={isDataItemVisible(userRole, 'PACKING_PRODUCT_IN_SEAL', visibilityContext)} />
+                        <StopEventCounter icon={Scissors} label="Splice Detect" value={unit.spliceDetectCount} color="text-blue-400" visible={isDataItemVisible(userRole, 'PACKING_SPLICE_DETECT', visibilityContext)} />
                     </div>
                 </div>
             </div>
@@ -384,9 +389,12 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     };
     
     const SingleWeigherDetailPanel = ({ unit, unitNumber, userRole, visibilityContext }: { unit: WeigherDetails, unitNumber: number, userRole: UserRole, visibilityContext: any }) => {
-        const StatItem: React.FC<{ label: string; value: string | number; unit?: string; }> = ({ label, value, unit }) => (
-            <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-400">{label}</span><div><span className="font-mono text-base font-bold text-white">{value}</span>{unit && <span className="ml-1.5 text-xs text-slate-500">{unit}</span>}</div></div>
-        );
+        const StatItem: React.FC<{ label: string; value: string | number; unit?: string; visible: boolean }> = ({ label, value, unit, visible }) => {
+            if (!visible) return null;
+            return (
+                <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-400">{label}</span><div><span className="font-mono text-base font-bold text-white">{value}</span>{unit && <span className="ml-1.5 text-xs text-slate-500">{unit}</span>}</div></div>
+            );
+        };
         return (
             <div className="space-y-4 animate-in fade-in duration-300">
                  <h3 className="text-lg font-bold text-white">Weigher #{unitNumber} - <span className="text-emerald-400">{unit.status}</span></h3>
@@ -397,13 +405,13 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-2 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50">
                         <h5 className="font-bold text-white text-sm">Weigher 1</h5>
-                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_1', visibilityContext) && <StatItem label="Speed" value={formatNumber(unit.speed1, 0)} unit="bpm" />}
-                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_1', visibilityContext) && <StatItem label="Total Weight" value={formatNumber(unit.totalWeight1, 0)} unit="kg" />}
+                        <StatItem label="Speed" value={formatNumber(unit.speed1, 0)} unit="bpm" visible={isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_1', visibilityContext)} />
+                        <StatItem label="Total Weight" value={formatNumber(unit.totalWeight1, 0)} unit="kg" visible={isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_1', visibilityContext)} />
                     </div>
                     <div className="space-y-2 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50">
                         <h5 className="font-bold text-white text-sm">Weigher 2</h5>
-                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_2', visibilityContext) && <StatItem label="Speed" value={formatNumber(unit.speed2, 0)} unit="bpm" />}
-                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_2', visibilityContext) && <StatItem label="Total Weight" value={formatNumber(unit.totalWeight2, 0)} unit="kg" />}
+                        <StatItem label="Speed" value={formatNumber(unit.speed2, 0)} unit="bpm" visible={isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_2', visibilityContext)} />
+                        <StatItem label="Total Weight" value={formatNumber(unit.totalWeight2, 0)} unit="kg" visible={isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_2', visibilityContext)} />
                     </div>
                 </div>
             </div>
@@ -687,7 +695,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
-                                {alarmHistory.map(record => (
+                                {maintenanceHistoryRecords.map(record => (
                                      <tr key={record.id} className="hover:bg-slate-800/50">
                                         <td className="p-3 font-mono text-slate-400">{record.timestamp}</td>
                                         <td className="p-3 font-semibold text-white">{record.checkedBy}</td>

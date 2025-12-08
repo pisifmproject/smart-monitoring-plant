@@ -63,24 +63,23 @@ export const lvmdpService = {
                 ? 30
                 : 365;
 
-        const points =
-            period === 'Day'
-                ? 24
-                : period === 'Week'
-                ? 7
-                : period === 'Month'
-                ? 30
-                : 12;
+        let points: number;
+        let labels: (i: number) => string;
 
-        const labels =
-            period === 'Day'
-                ? (i: number) => `${i}:00`
-                : period === 'Week'
-                ? (i: number) =>
-                      ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]
-                : period === 'Month'
-                ? (i: number) => `D${i + 1}`
-                : (i: number) => `M${i + 1}`;
+        if (period === 'Day') {
+            points = 24;
+            labels = (i: number) => `${i}:00`;
+        } else if (period === 'Week') {
+            points = 7;
+            labels = (i: number) => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
+        } else if (period === 'Month') {
+            const now = new Date();
+            points = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            labels = (i: number) => `Day ${i + 1}`;
+        } else { // Year
+            points = 12;
+            labels = (i: number) => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i];
+        }
 
         return Array.from({ length: points }, (_, i) => ({
             time: labels(i),

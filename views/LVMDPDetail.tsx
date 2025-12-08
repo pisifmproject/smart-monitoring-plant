@@ -9,7 +9,7 @@ import { lvmdpService } from '../services/lvmdpService';
 import { maintenanceService } from '../services/maintenanceService';
 import { 
     ArrowLeft, Zap, Activity, Battery, Gauge, AlertTriangle, Clock, 
-    Wrench, Camera, CheckCircle2, Save, FileText, Loader2
+    Wrench, Camera, CheckCircle2, Save, FileText, Loader2, CalendarDays
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -27,9 +27,12 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
     const maintenanceSectionRef = useRef<HTMLDivElement>(null);
     const historySectionRef = useRef<HTMLDivElement>(null);
     
-    // Download State
+    // Download & Report State
     const [isDownloading, setIsDownloading] = useState(false);
     const [showDownloadToast, setShowDownloadToast] = useState(false);
+    const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
+    const [isGeneratingDateReport, setIsGeneratingDateReport] = useState(false);
+    const [showDateReportToast, setShowDateReportToast] = useState(false);
 
     // Auto-scroll logic
     useEffect(() => {
@@ -138,6 +141,18 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
             // Hide toast after 3 seconds
             setTimeout(() => setShowDownloadToast(false), 3000);
         }, 2000);
+    };
+
+    const handleDateReportDownload = (date: string) => {
+        if (isGeneratingDateReport || !date) return;
+        setIsGeneratingDateReport(true);
+        setReportDate(date);
+
+        setTimeout(() => {
+            setIsGeneratingDateReport(false);
+            setShowDateReportToast(true);
+            setTimeout(() => setShowDateReportToast(false), 3000);
+        }, 1500);
     };
     
     const FilterButton = ({ label }: { label: Period }) => {
@@ -324,9 +339,34 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                 </div>
             </div>
 
-            {/* Shift Data Table - Moved outside grid to span full width */}
+            {/* Shift Data Table */}
             {isDataItemVisible(userRole, visibilityKeys.SHIFT_DATA, visibilityContext) && (
-                <Card title={`Shift Energy & Electrical Performance (${period})`}>
+                <Card 
+                    title="Shift Energy & Electrical Performance"
+                    action={
+                        [UserRole.ADMINISTRATOR, UserRole.SUPERVISOR].includes(userRole) && (
+                            <label
+                                className={`relative flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-500 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all group shadow-sm cursor-pointer ${isGeneratingDateReport ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {isGeneratingDateReport ? (
+                                    <Loader2 size={14} className="animate-spin text-blue-400" />
+                                ) : (
+                                    <CalendarDays size={14} className="text-blue-400 group-hover:text-blue-300" />
+                                )}
+                                <span className="hidden sm:inline">
+                                    {isGeneratingDateReport ? 'Generating...' : `Report Date`}
+                                </span>
+                                <input
+                                    type="date"
+                                    value={reportDate}
+                                    onChange={(e) => handleDateReportDownload(e.target.value)}
+                                    disabled={isGeneratingDateReport}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                            </label>
+                        )
+                    }
+                >
                     <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="text-xs text-slate-400 uppercase font-bold bg-slate-900/50">
@@ -498,6 +538,21 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                         <div>
                             <p className="font-bold text-sm">Report Downloaded</p>
                             <p className="text-emerald-100 text-xs mt-0.5">{lvmdp.code}_Report_{period}.pdf</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+             {/* Date Report Success Toast */}
+            {showDateReportToast && (
+                <div className="fixed bottom-8 right-8 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+                    <div className="bg-emerald-600 text-white px-5 py-3 rounded-lg shadow-xl shadow-emerald-900/30 flex items-center gap-3 border border-emerald-500/50">
+                        <div className="bg-white/20 p-1 rounded-full">
+                            <CheckCircle2 size={18} className="text-white" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-sm">Report Downloaded</p>
+                            <p className="text-emerald-100 text-xs mt-0.5">{lvmdp.code}_Report_{reportDate}.pdf</p>
                         </div>
                     </div>
                 </div>

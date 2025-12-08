@@ -174,7 +174,8 @@ export const utilityService = {
             label = (i: number) =>
                 ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
         } else if (period === 'Month') {
-            points = 30;
+            const now = new Date();
+            points = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             label = (i: number) => `Day ${i + 1}`;
         } else if (period === 'Year') {
             points = 12;
