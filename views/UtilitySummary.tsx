@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { Plant, UserRole } from '../types';
 import { Card, MetricCard, formatNumber } from '../components/SharedComponents';
@@ -196,19 +197,23 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
 
                         return (
                             <div key={panel.id} onClick={() => navigate(`/app/lvmdp/${panel.id}`)} className="cursor-pointer">
-                                <Card className={`hover:border-blue-500 transition-all h-full group ${maintenanceUser ? 'border-blue-500/30 bg-blue-900/10' : hasActiveAlarm ? 'border-rose-500/30 bg-rose-900/10' : ''}`}>
+                                <Card className={`hover:border-blue-500 transition-all h-full group ${userRole !== UserRole.VIEWER && maintenanceUser ? 'border-blue-500/30 bg-blue-900/10' : userRole !== UserRole.VIEWER && hasActiveAlarm ? 'border-rose-500/30 bg-rose-900/10' : ''}`}>
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400"><Zap size={20} /></div>
-                                        {maintenanceUser ? (
-                                            <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 px-2 py-1 rounded text-[10px] font-bold uppercase">
-                                                <Clock size={12} /> Maint: {maintenanceUser}
-                                            </div>
-                                        ) : hasActiveAlarm ? (
-                                            <div className="flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 px-2 py-1 rounded text-[10px] font-bold uppercase animate-pulse">
-                                                <AlertTriangle size={12} /> Maintenance Req
-                                            </div>
-                                        ) : (
-                                            <div className="text-slate-600 group-hover:text-blue-400 transition-colors"><TrendingUp size={16} /></div>
+                                        {userRole !== UserRole.VIEWER && (
+                                            <>
+                                                {maintenanceUser ? (
+                                                    <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 px-2 py-1 rounded text-[10px] font-bold uppercase">
+                                                        <Clock size={12} /> Maint: {maintenanceUser}
+                                                    </div>
+                                                ) : hasActiveAlarm ? (
+                                                    <div className="flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 px-2 py-1 rounded text-[10px] font-bold uppercase animate-pulse">
+                                                        <AlertTriangle size={12} /> Maintenance Req
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-slate-600 group-hover:text-blue-400 transition-colors"><TrendingUp size={16} /></div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                     <h4 className="font-bold text-white text-lg mb-1">{panel.name}</h4>

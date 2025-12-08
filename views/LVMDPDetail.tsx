@@ -192,12 +192,12 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                 {lvmdp.name}
                             </h1>
                             <StatusBadge status={lvmdp.status} />
-                            {hasActiveAlarm && !maintenanceUser && (
+                            {userRole !== UserRole.VIEWER && hasActiveAlarm && !maintenanceUser && (
                                 <div className="bg-rose-500/20 border border-rose-500/30 text-rose-400 px-3 py-1 rounded text-xs font-bold uppercase animate-pulse flex items-center gap-2">
                                     <AlertTriangle size={14} /> Maintenance Req
                                 </div>
                             )}
-                            {maintenanceUser && (
+                            {userRole !== UserRole.VIEWER && maintenanceUser && (
                                 <div className="bg-blue-500/20 border border-blue-500/30 text-blue-400 px-3 py-1 rounded text-xs font-bold uppercase flex items-center gap-2">
                                     <Clock size={14} /> Maint: {maintenanceUser}
                                 </div>
@@ -397,136 +397,139 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
             )}
 
             {/* MAINTENANCE SECTION */}
-            <div className="space-y-6" ref={maintenanceSectionRef}>
-                <div className="flex items-center gap-3 border-b border-slate-800 pb-3 mt-8">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2"><Wrench className="text-slate-400" /> Maintenance & Alarms</h2>
-                </div>
+            {userRole !== UserRole.VIEWER && (
+                <div className="space-y-6" ref={maintenanceSectionRef}>
+                    <div className="flex items-center gap-3 border-b border-slate-800 pb-3 mt-8">
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2"><Wrench className="text-slate-400" /> Maintenance & Alarms</h2>
+                    </div>
 
-                {primaryAlarm ? (
-                    <div className="bg-rose-900/20 border border-rose-500/50 rounded-xl p-5 shadow-inner">
-                        <div className="flex flex-col lg:flex-row items-start gap-6">
-                            <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="p-2 bg-rose-500/20 rounded-full animate-pulse">
-                                        <AlertTriangle className="text-rose-500" size={24} />
+                    {primaryAlarm ? (
+                        <div className="bg-rose-900/20 border border-rose-500/50 rounded-xl p-5 shadow-inner">
+                            <div className="flex flex-col lg:flex-row items-start gap-6">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="p-2 bg-rose-500/20 rounded-full animate-pulse">
+                                            <AlertTriangle className="text-rose-500" size={24} />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-white">Active Alarm: {primaryAlarm.message}</h3>
                                     </div>
-                                    <h3 className="text-xl font-bold text-white">Active Alarm: {primaryAlarm.message}</h3>
+                                    <div className="flex flex-wrap gap-4 text-sm text-rose-300 font-mono mb-4 pl-1">
+                                        <span>Code: {primaryAlarm.code}</span>
+                                        <span>Time: {primaryAlarm.timestamp}</span>
+                                        <span>Severity: {primaryAlarm.severity}</span>
+                                    </div>
                                 </div>
-                                <div className="flex flex-wrap gap-4 text-sm text-rose-300 font-mono mb-4 pl-1">
-                                    <span>Code: {primaryAlarm.code}</span>
-                                    <span>Time: {primaryAlarm.timestamp}</span>
-                                    <span>Severity: {primaryAlarm.severity}</span>
-                                </div>
-                            </div>
 
-                            {/* Maintenance Action Form */}
-                            {canPerformMaintenance && (
-                                <div className="w-full lg:w-[500px] bg-slate-900/80 border border-slate-700 rounded-lg p-5">
-                                    <h4 className="text-white font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wide border-b border-slate-800 pb-2">Action Required</h4>
-                                    
-                                    {!primaryAlarm.inProgressBy ? (
-                                        <form onSubmit={handleStartMaintenance} className="space-y-3">
-                                            <div>
-                                                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Technician Name</label>
-                                                <input 
-                                                    type="text" 
-                                                    required
-                                                    className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none"
-                                                    placeholder="Enter your name..."
-                                                    value={startTechnicianName}
-                                                    onChange={e => setStartTechnicianName(e.target.value)}
-                                                />
-                                            </div>
-                                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold transition-colors flex items-center justify-center gap-2">
-                                                Start Maintenance
-                                            </button>
-                                        </form>
-                                    ) : (
-                                        <form onSubmit={handleMaintenanceSubmit} className="space-y-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Maintenance Action Form */}
+                                {canPerformMaintenance && (
+                                    <div className="w-full lg:w-[500px] bg-slate-900/80 border border-slate-700 rounded-lg p-5">
+                                        <h4 className="text-white font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wide border-b border-slate-800 pb-2">Action Required</h4>
+                                        
+                                        {!primaryAlarm.inProgressBy ? (
+                                            <form onSubmit={handleStartMaintenance} className="space-y-3">
                                                 <div>
-                                                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Checked By</label>
+                                                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Technician Name</label>
                                                     <input 
                                                         type="text" 
+                                                        required
                                                         className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none"
-                                                        value={formCheckedBy}
-                                                        onChange={e => setFormCheckedBy(e.target.value)}
+                                                        placeholder="Enter your name..."
+                                                        value={startTechnicianName}
+                                                        onChange={e => setStartTechnicianName(e.target.value)}
                                                     />
                                                 </div>
-                                                <div>
-                                                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Status</label>
-                                                    <div className="flex items-center gap-3 mt-2">
-                                                        <label className="flex items-center gap-2 cursor-pointer bg-slate-800 px-3 py-1.5 rounded border border-slate-700 hover:border-emerald-500 transition-colors">
-                                                            <input type="radio" checked={maintenanceSolved} onChange={() => setMaintenanceSolved(true)} className="accent-emerald-500 w-4 h-4"/>
-                                                            <span className="text-emerald-400 font-bold text-xs uppercase">Solved</span>
-                                                        </label>
-                                                        <label className="flex items-center gap-2 cursor-pointer bg-slate-800 px-3 py-1.5 rounded border border-slate-700 hover:border-rose-500 transition-colors">
-                                                            <input type="radio" checked={!maintenanceSolved} onChange={() => setMaintenanceSolved(false)} className="accent-rose-500 w-4 h-4"/>
-                                                            <span className="text-rose-400 font-bold text-xs uppercase">Pending</span>
-                                                        </label>
+                                                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold transition-colors flex items-center justify-center gap-2">
+                                                    Start Maintenance
+                                                </button>
+                                            </form>
+                                        ) : (
+                                            <form onSubmit={handleMaintenanceSubmit} className="space-y-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Checked By</label>
+                                                        <input 
+                                                            type="text" 
+                                                            className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none"
+                                                            value={formCheckedBy}
+                                                            onChange={e => setFormCheckedBy(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Status</label>
+                                                        <div className="flex items-center gap-3 mt-2">
+                                                            <label className="flex items-center gap-2 cursor-pointer bg-slate-800 px-3 py-1.5 rounded border border-slate-700 hover:border-emerald-500 transition-colors">
+                                                                <input type="radio" checked={maintenanceSolved} onChange={() => setMaintenanceSolved(true)} className="accent-emerald-500 w-4 h-4"/>
+                                                                <span className="text-emerald-400 font-bold text-xs uppercase">Solved</span>
+                                                            </label>
+                                                            <label className="flex items-center gap-2 cursor-pointer bg-slate-800 px-3 py-1.5 rounded border border-slate-700 hover:border-rose-500 transition-colors">
+                                                                <input type="radio" checked={!maintenanceSolved} onChange={() => setMaintenanceSolved(false)} className="accent-rose-500 w-4 h-4"/>
+                                                                <span className="text-rose-400 font-bold text-xs uppercase">Pending</span>
+                                                            </label>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Maintenance Note</label>
-                                                <textarea 
-                                                    required
-                                                    className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none h-20 text-sm"
-                                                    placeholder="Describe action taken..."
-                                                    value={maintenanceNote}
-                                                    onChange={e => setMaintenanceNote(e.target.value)}
-                                                ></textarea>
-                                            </div>
-                                            <button disabled={formSubmitting} type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-bold shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                                                {formSubmitting ? 'Saving...' : <><Save size={16}/> Submit Report</>}
-                                            </button>
-                                        </form>
-                                    )}
-                                </div>
-                            )}
+                                                <div>
+                                                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Maintenance Note</label>
+                                                    <textarea 
+                                                        required
+                                                        className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none h-20 text-sm"
+                                                        placeholder="Describe action taken..."
+                                                        value={maintenanceNote}
+                                                        onChange={e => setMaintenanceNote(e.target.value)}
+                                                    ></textarea>
+                                                </div>
+                                                <button disabled={formSubmitting} type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-bold shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                                                    {formSubmitting ? 'Saving...' : <><Save size={16}/> Submit Report</>}
+                                                </button>
+                                            </form>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                     <div className="bg-emerald-900/10 border border-emerald-500/20 p-6 rounded-xl text-center flex flex-col items-center justify-center min-h-[150px]">
-                        <CheckCircle2 size={40} className="text-emerald-500 mb-3" />
-                        <h3 className="text-lg font-bold text-white">System Healthy</h3>
-                        <p className="text-emerald-400/60 text-sm">No active alarms on this panel.</p>
-                    </div>
-                )}
+                    ) : (
+                         <div className="bg-emerald-900/10 border border-emerald-500/20 p-6 rounded-xl text-center flex flex-col items-center justify-center min-h-[150px]">
+                            <CheckCircle2 size={40} className="text-emerald-500 mb-3" />
+                            <h3 className="text-lg font-bold text-white">System Healthy</h3>
+                            <p className="text-emerald-400/60 text-sm">No active alarms on this panel.</p>
+                        </div>
+                    )}
 
-                <div ref={historySectionRef}>
-                    <Card title="Maintenance History">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-slate-300">
-                                <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
-                                    <tr>
-                                        <th className="p-3">Time</th>
-                                        <th className="p-3">Technician</th>
-                                        <th className="p-3">Status</th>
-                                        <th className="p-3">Note</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-700 text-sm">
-                                    {alarmHistory.length === 0 ? (
-                                        <tr><td colSpan={4} className="p-6 text-center text-slate-500 italic">No maintenance history recorded for this panel.</td></tr>
-                                    ) : alarmHistory.map(record => (
-                                        <tr key={record.id} className="hover:bg-slate-800/50">
-                                            <td className="p-3 font-mono text-slate-400">{record.timestamp}</td>
-                                            <td className="p-3 font-bold text-white">{record.checkedBy}</td>
-                                            <td className="p-3">
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${record.solved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                                                    {record.solved ? 'SOLVED' : 'PENDING'}
-                                                </span>
-                                            </td>
-                                            <td className="p-3 text-slate-300">{record.note}</td>
+                    <div ref={historySectionRef}>
+                        <Card title="Maintenance History">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-slate-300">
+                                    <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
+                                        <tr>
+                                            <th className="p-3">Time</th>
+                                            <th className="p-3">Technician</th>
+                                            <th className="p-3">Status</th>
+                                            <th className="p-3">Note</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </Card>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-700 text-sm">
+                                        {alarmHistory.length === 0 ? (
+                                            <tr><td colSpan={4} className="p-6 text-center text-slate-500 italic">No maintenance history recorded for this panel.</td></tr>
+                                        ) : alarmHistory.map(record => (
+                                            <tr key={record.id} className="hover:bg-slate-800/50">
+                                                <td className="p-3 font-mono text-slate-400">{record.timestamp}</td>
+                                                <td className="p-3 font-bold text-white">{record.checkedBy}</td>
+                                                <td className="p-3">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${record.solved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                                        {record.solved ? 'SOLVED' : 'PENDING'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-3 text-slate-300">{record.note}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </Card>
+                    </div>
                 </div>
-            </div>
+            )}
+
 
             {/* Download Success Toast */}
             {showDownloadToast && (

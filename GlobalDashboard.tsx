@@ -88,7 +88,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                         color="text-yellow-400"
                     />
                 )}
-                {isDataItemVisible(userRole, 'GLOBAL_TOTAL_ALARMS') && (
+                {userRole !== UserRole.VIEWER && isDataItemVisible(userRole, 'GLOBAL_TOTAL_ALARMS') && (
                     <MetricCard 
                         title="Active Alarms" 
                         value={kpis.totalAlarmsValue} 
@@ -107,6 +107,8 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                         const visibilityKey = `GLOBAL_PLANT_${plant.id}`;
                         if (!isDataItemVisible(userRole, visibilityKey)) return null;
 
+                        const plantStatus = userRole === UserRole.VIEWER ? 'NORMAL' : plant.computedStatus;
+
                         return (
                             <div 
                                 key={plant.id}
@@ -120,7 +122,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                                         <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">{plant.name}</h3>
                                         <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mt-1">{plant.location}</p>
                                     </div>
-                                    <StatusBadge status={plant.computedStatus} />
+                                    <StatusBadge status={plantStatus} />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-y-4 gap-x-2 relative z-10">
@@ -138,12 +140,14 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                                         <p className="text-slate-500 text-xs font-bold uppercase">Energy</p>
                                         <p className="text-yellow-400 font-mono font-bold">{formatNumber(plant.scaledEnergy)} <span className="text-xs text-slate-500">kWh</span></p>
                                     </div>
-                                    <div>
-                                        <p className="text-slate-500 text-xs font-bold uppercase">Alarms</p>
-                                        <p className={`font-mono font-bold ${plant.alarmCount > 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                                            {plant.alarmCount} Active
-                                        </p>
-                                    </div>
+                                    {userRole !== UserRole.VIEWER && (
+                                        <div>
+                                            <p className="text-slate-500 text-xs font-bold uppercase">Alarms</p>
+                                            <p className={`font-mono font-bold ${plant.alarmCount > 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                                                {plant.alarmCount} Active
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                                 
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-transparent rounded-bl-full pointer-events-none"></div>

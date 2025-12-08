@@ -43,8 +43,13 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     const location = useLocation();
     const visibilityContext = { plantId: machine.plantId, machineId: machine.id };
     
-    // Check which tabs are visible for this user
-    const visibleTabs = ALL_TABS_BASE.filter(t => isDataItemVisible(userRole, t.visibilityKey, visibilityContext));
+    // Check which tabs are visible for this user, explicitly hiding sensitive tabs for Guests
+    const visibleTabs = ALL_TABS_BASE.filter(t => {
+        if (userRole === UserRole.VIEWER && (t.key === 'Alarms' || t.key === 'Maintenance')) {
+            return false;
+        }
+        return isDataItemVisible(userRole, t.visibilityKey, visibilityContext)
+    });
     
     // Set active tab with priority:
     // 1. Navigation state (e.g. from clicking an alarm on dashboard)

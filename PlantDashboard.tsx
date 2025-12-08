@@ -137,7 +137,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 {isDataItemVisible(userRole, 'PLANT_POWER_USAGE', visibilityContext) && (
                     <MetricCard title={`Energy (${period})`} value={formatNumber(kpis.energy)} unit="kWh" icon={Zap} trend="1.1%" trendUp={false} color="text-yellow-400" />
                 )}
-                {isDataItemVisible(userRole, 'PLANT_ALARM_COUNT', visibilityContext) && (
+                {userRole !== UserRole.VIEWER && isDataItemVisible(userRole, 'PLANT_ALARM_COUNT', visibilityContext) && (
                     <MetricCard title="Total Alarms" value={kpis.alarms} icon={AlertTriangle} color="text-rose-400" />
                 )}
             </div>
@@ -213,7 +213,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                     </Card>
                 )}
 
-                {isDataItemVisible(userRole, 'ACTIVE_ALARMS_LIST', visibilityContext) && (
+                {userRole !== UserRole.VIEWER && isDataItemVisible(userRole, 'ACTIVE_ALARMS_LIST', visibilityContext) && (
                     <Card title="Active Alarms">
                         {activeAlarms.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-48 text-slate-500">
@@ -282,17 +282,22 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                     <StatusBadge status={machine.status} />
                                 </div>
 
-                                {maintenanceUser ? (
-                                    <div className="mb-4 bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-blue-400">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                                        Maintenance by {maintenanceUser}
-                                    </div>
-                                ) : hasActiveAlarm ? (
-                                    <div className="mb-4 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-rose-400">
-                                        <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></div>
-                                        Maintenance Required
-                                    </div>
-                                ) : null}
+                                {userRole !== UserRole.VIEWER && (
+                                    <>
+                                        {maintenanceUser ? (
+                                            <div className="mb-4 bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-blue-400">
+                                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                                Maintenance by {maintenanceUser}
+                                            </div>
+                                        ) : hasActiveAlarm ? (
+                                            <div className="mb-4 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-rose-400">
+                                                <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></div>
+                                                Maintenance Required
+                                            </div>
+                                        ) : null}
+                                    </>
+                                )}
+
 
                                 <div className="grid grid-cols-2 gap-4 relative z-10">
                                     {isDataItemVisible(userRole, 'MACHINE_CARD_OUTPUT', machineContext) && (
