@@ -266,20 +266,22 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                         )
                     ))}
                 </div>
-                <Card title="Process Parameter Trend">
-                    <ResponsiveContainer width="100%" height={350}>
-                        <LineChart data={timeSeriesData.params}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                            <XAxis dataKey="time" stroke="#94a3b8" />
-                            <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
-                            <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                            <Legend />
-                            <Line type="monotone" dataKey="temp" stroke="#f59e0b" name="Temp" dot={false} strokeWidth={2} />
-                            <Line type="monotone" dataKey="pressure" stroke="#3b82f6" name="Pressure" dot={false} strokeWidth={2} />
-                            <Line type="monotone" dataKey="speed" stroke="#10b981" name="Speed" dot={false} strokeWidth={2} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </Card>
+                {isDataItemVisible(userRole, 'MACHINE_PROCESS_TREND_CHART', visibilityContext) && (
+                    <Card title="Process Parameter Trend">
+                        <ResponsiveContainer width="100%" height={350}>
+                            <LineChart data={timeSeriesData.params}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                <XAxis dataKey="time" stroke="#94a3b8" />
+                                <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
+                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
+                                <Legend />
+                                <Line type="monotone" dataKey="temp" stroke="#f59e0b" name="Temp" dot={false} strokeWidth={2} />
+                                <Line type="monotone" dataKey="pressure" stroke="#3b82f6" name="Pressure" dot={false} strokeWidth={2} />
+                                <Line type="monotone" dataKey="speed" stroke="#10b981" name="Speed" dot={false} strokeWidth={2} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </Card>
+                )}
             </div>
         );
     };
@@ -295,73 +297,79 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                     {isDataItemVisible(userRole, 'MACHINE_UTIL_AIR', visibilityContext) && <MetricCard title={`Compressed Air (${period})`} value={formatNumber(util.air)} unit="Nm³" icon={Wind} color="text-cyan-400" />}
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card title={`Electricity Consumption Trend (${period})`}>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <AreaChart data={timeSeriesData.utility.electricity}>
-                                <defs><linearGradient id="colorElec" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/><stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/></linearGradient></defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="time" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
-                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                                <Area type="monotone" dataKey="value" stroke="#f59e0b" fill="url(#colorElec)" name="kWh" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </Card>
-                    <Card title={`Steam Consumption Trend (${period})`}>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <AreaChart data={timeSeriesData.utility.steam}>
-                                <defs><linearGradient id="colorSteam" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/><stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/></linearGradient></defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="time" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
-                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                                <Area type="monotone" dataKey="value" stroke="#94a3b8" fill="url(#colorSteam)" name="kg" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </Card>
+                    {isDataItemVisible(userRole, 'MACHINE_UTIL_ELEC_CHART', visibilityContext) && (
+                        <Card title={`Electricity Consumption Trend (${period})`}>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <AreaChart data={timeSeriesData.utility.electricity}>
+                                    <defs><linearGradient id="colorElec" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/><stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/></linearGradient></defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                    <XAxis dataKey="time" stroke="#94a3b8" />
+                                    <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
+                                    <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
+                                    <Area type="monotone" dataKey="value" stroke="#f59e0b" fill="url(#colorElec)" name="kWh" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    )}
+                    {isDataItemVisible(userRole, 'MACHINE_UTIL_STEAM_CHART', visibilityContext) && (
+                        <Card title={`Steam Consumption Trend (${period})`}>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <AreaChart data={timeSeriesData.utility.steam}>
+                                    <defs><linearGradient id="colorSteam" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/><stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/></linearGradient></defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                    <XAxis dataKey="time" stroke="#94a3b8" />
+                                    <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
+                                    <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
+                                    <Area type="monotone" dataKey="value" stroke="#94a3b8" fill="url(#colorSteam)" name="kg" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    )}
                 </div>
             </div>
         );
     };
 
     const renderAlarmsTab = () => (
-        <Card title="Alarm History" className="animate-in fade-in slide-in-from-bottom-2">
-            <div className="overflow-x-auto">
-                <table className="w-full text-left text-slate-300">
-                    <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
-                        <tr>
-                            <th className="p-3">Time</th>
-                            <th className="p-3">Severity</th>
-                            <th className="p-3">Code</th>
-                            <th className="p-3">Message</th>
-                            <th className="p-3">Source</th>
-                            <th className="p-3">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-700 text-sm">
-                        {maintenanceService.getAlarmHistory(machine.id).map(alarm => (
-                            <tr key={alarm.id} className="hover:bg-slate-800/50">
-                                <td className="p-3 font-mono">{alarm.timestamp}</td>
-                                <td className="p-3"><StatusBadge status={alarm.severity} /></td>
-                                <td className="p-3 font-mono">{alarm.code}</td>
-                                <td className="p-3 font-bold text-white">{alarm.message}</td>
-                                <td className="p-3 text-slate-400">{alarm.source}</td>
-                                <td className="p-3">
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${alarm.isActive ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
-                                        {alarm.isActive ? 'Active' : 'Cleared'}
-                                    </span>
-                                </td>
+        isDataItemVisible(userRole, 'MACHINE_ALARM_HISTORY_TABLE', visibilityContext) && (
+            <Card title="Alarm History" className="animate-in fade-in slide-in-from-bottom-2">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-slate-300">
+                        <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
+                            <tr>
+                                <th className="p-3">Time</th>
+                                <th className="p-3">Severity</th>
+                                <th className="p-3">Code</th>
+                                <th className="p-3">Message</th>
+                                <th className="p-3">Source</th>
+                                <th className="p-3">Status</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </Card>
+                        </thead>
+                        <tbody className="divide-y divide-slate-700 text-sm">
+                            {maintenanceService.getAlarmHistory(machine.id).map(alarm => (
+                                <tr key={alarm.id} className="hover:bg-slate-800/50">
+                                    <td className="p-3 font-mono">{alarm.timestamp}</td>
+                                    <td className="p-3"><StatusBadge status={alarm.severity} /></td>
+                                    <td className="p-3 font-mono">{alarm.code}</td>
+                                    <td className="p-3 font-bold text-white">{alarm.message}</td>
+                                    <td className="p-3 text-slate-400">{alarm.source}</td>
+                                    <td className="p-3">
+                                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${alarm.isActive ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                            {alarm.isActive ? 'Active' : 'Cleared'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+        )
     );
 
     const renderDowntimeTab = () => (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-            {canAddDowntime && (
+            {canAddDowntime && isDataItemVisible(userRole, 'MACHINE_DOWNTIME_ADD_BTN', visibilityContext) && (
                 <div className="flex justify-end">
                     <button 
                         onClick={() => setIsDowntimeModalOpen(true)}
@@ -422,137 +430,143 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                 </div>
             )}
 
-            <Card title="Downtime Logs">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-slate-300">
-                        <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
-                            <tr>
-                                <th className="p-3">Start</th>
-                                <th className="p-3">End</th>
-                                <th className="p-3">Duration</th>
-                                <th className="p-3">Reason</th>
-                                <th className="p-3">Description</th>
-                                <th className="p-3">Source</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-700 text-sm">
-                            {downtimeLogs.map(log => (
-                                <tr key={log.id} className="hover:bg-slate-800/50">
-                                    <td className="p-3 font-mono">{log.start}</td>
-                                    <td className="p-3 font-mono">{log.end}</td>
-                                    <td className="p-3 font-bold text-white">{log.duration}</td>
-                                    <td className="p-3"><span className="bg-slate-700 px-2 py-1 rounded text-xs font-bold uppercase">{log.reason}</span></td>
-                                    <td className="p-3 text-slate-400">{log.description}</td>
-                                    <td className="p-3">
-                                        <span className={`text-xs font-bold uppercase ${log.source === 'AUTO' ? 'text-blue-400' : 'text-yellow-400'}`}>{log.source}</span>
-                                    </td>
+            {isDataItemVisible(userRole, 'MACHINE_DOWNTIME_LOGS_TABLE', visibilityContext) && (
+                <Card title="Downtime Logs">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-slate-300">
+                            <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
+                                <tr>
+                                    <th className="p-3">Start</th>
+                                    <th className="p-3">End</th>
+                                    <th className="p-3">Duration</th>
+                                    <th className="p-3">Reason</th>
+                                    <th className="p-3">Description</th>
+                                    <th className="p-3">Source</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </Card>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700 text-sm">
+                                {downtimeLogs.map(log => (
+                                    <tr key={log.id} className="hover:bg-slate-800/50">
+                                        <td className="p-3 font-mono">{log.start}</td>
+                                        <td className="p-3 font-mono">{log.end}</td>
+                                        <td className="p-3 font-bold text-white">{log.duration}</td>
+                                        <td className="p-3"><span className="bg-slate-700 px-2 py-1 rounded text-xs font-bold uppercase">{log.reason}</span></td>
+                                        <td className="p-3 text-slate-400">{log.description}</td>
+                                        <td className="p-3">
+                                            <span className={`text-xs font-bold uppercase ${log.source === 'AUTO' ? 'text-blue-400' : 'text-yellow-400'}`}>{log.source}</span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            )}
         </div>
     );
 
     const renderMaintenanceTab = () => (
         <div ref={maintenanceRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-            {/* 1. Active Alarm Section */}
-            {primaryAlarm ? (
-                <div className="bg-rose-900/20 border border-rose-500/50 rounded-xl p-5 shadow-inner">
-                    <div className="flex items-start gap-4">
-                        <div className="p-3 bg-rose-500/20 rounded-full animate-pulse">
-                            <AlertTriangle className="text-rose-500" size={32} />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-xl font-bold text-white mb-1">Active Alarm: {primaryAlarm.message}</h3>
-                            <div className="flex gap-4 text-sm text-rose-300 font-mono mb-4">
-                                <span>Code: {primaryAlarm.code}</span>
-                                <span>Time: {primaryAlarm.timestamp}</span>
-                                <span>Source: {primaryAlarm.source}</span>
-                            </div>
+            {isDataItemVisible(userRole, 'MACHINE_MAINTENANCE_ACTIVE_ALARM', visibilityContext) && (
+                <>
+                    {/* 1. Active Alarm Section */}
+                    {primaryAlarm ? (
+                        <div className="bg-rose-900/20 border border-rose-500/50 rounded-xl p-5 shadow-inner">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-rose-500/20 rounded-full animate-pulse">
+                                    <AlertTriangle className="text-rose-500" size={32} />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-xl font-bold text-white mb-1">Active Alarm: {primaryAlarm.message}</h3>
+                                    <div className="flex gap-4 text-sm text-rose-300 font-mono mb-4">
+                                        <span>Code: {primaryAlarm.code}</span>
+                                        <span>Time: {primaryAlarm.timestamp}</span>
+                                        <span>Source: {primaryAlarm.source}</span>
+                                    </div>
 
-                            {/* 2. Maintenance Action Form */}
-                            {canPerformMaintenance && (
-                                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-5 mt-4">
-                                    <h4 className="text-white font-bold mb-4 flex items-center gap-2"><Wrench size={18} /> Maintenance Action</h4>
-                                    
-                                    {!primaryAlarm.inProgressBy ? (
-                                        <form onSubmit={handleStartMaintenance} className="flex flex-col sm:flex-row gap-4 items-end">
-                                            <div className="flex-1 w-full">
-                                                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Technician Name</label>
-                                                <input 
-                                                    type="text" 
-                                                    required
-                                                    className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none"
-                                                    placeholder="Enter your name to start..."
-                                                    value={startTechnicianName}
-                                                    onChange={e => setStartTechnicianName(e.target.value)}
-                                                />
-                                            </div>
-                                            <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold transition-colors w-full sm:w-auto">
-                                                Start Maintenance
-                                            </button>
-                                        </form>
-                                    ) : (
-                                        <form onSubmit={handleMaintenanceSubmit} className="space-y-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Checked By</label>
-                                                    <input 
-                                                        type="text" 
-                                                        className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none"
-                                                        value={formCheckedBy}
-                                                        onChange={e => setFormCheckedBy(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Status</label>
-                                                    <div className="flex items-center gap-4 mt-2">
-                                                        <label className="flex items-center gap-2 cursor-pointer">
-                                                            <input type="radio" checked={maintenanceSolved} onChange={() => setMaintenanceSolved(true)} className="accent-emerald-500 w-4 h-4"/>
-                                                            <span className="text-emerald-400 font-bold">Solved</span>
-                                                        </label>
-                                                        <label className="flex items-center gap-2 cursor-pointer">
-                                                            <input type="radio" checked={!maintenanceSolved} onChange={() => setMaintenanceSolved(false)} className="accent-rose-500 w-4 h-4"/>
-                                                            <span className="text-rose-400 font-bold">Pending</span>
-                                                        </label>
+                                    {/* 2. Maintenance Action Form */}
+                                    {canPerformMaintenance && isDataItemVisible(userRole, 'MACHINE_MAINTENANCE_FORM', visibilityContext) && (
+                                        <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-5 mt-4">
+                                            <h4 className="text-white font-bold mb-4 flex items-center gap-2"><Wrench size={18} /> Maintenance Action</h4>
+                                            
+                                            {!primaryAlarm.inProgressBy ? (
+                                                <form onSubmit={handleStartMaintenance} className="flex flex-col sm:flex-row gap-4 items-end">
+                                                    <div className="flex-1 w-full">
+                                                        <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Technician Name</label>
+                                                        <input 
+                                                            type="text" 
+                                                            required
+                                                            className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none"
+                                                            placeholder="Enter your name to start..."
+                                                            value={startTechnicianName}
+                                                            onChange={e => setStartTechnicianName(e.target.value)}
+                                                        />
                                                     </div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Maintenance Note</label>
-                                                <textarea 
-                                                    required
-                                                    className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none h-24"
-                                                    placeholder="Describe the action taken..."
-                                                    value={maintenanceNote}
-                                                    onChange={e => setMaintenanceNote(e.target.value)}
-                                                ></textarea>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <button type="button" className="text-slate-400 hover:text-white flex items-center gap-2 text-sm"><Camera size={16} /> Attach Photo (Optional)</button>
-                                                <button disabled={formSubmitting} type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2 rounded-lg font-bold shadow-lg transition-all disabled:opacity-50">
-                                                    {formSubmitting ? 'Saving...' : 'Submit & Clear Alarm'}
-                                                </button>
-                                            </div>
-                                        </form>
+                                                    <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold transition-colors w-full sm:w-auto">
+                                                        Start Maintenance
+                                                    </button>
+                                                </form>
+                                            ) : (
+                                                <form onSubmit={handleMaintenanceSubmit} className="space-y-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Checked By</label>
+                                                            <input 
+                                                                type="text" 
+                                                                className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none"
+                                                                value={formCheckedBy}
+                                                                onChange={e => setFormCheckedBy(e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Status</label>
+                                                            <div className="flex items-center gap-4 mt-2">
+                                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                                    <input type="radio" checked={maintenanceSolved} onChange={() => setMaintenanceSolved(true)} className="accent-emerald-500 w-4 h-4"/>
+                                                                    <span className="text-emerald-400 font-bold">Solved</span>
+                                                                </label>
+                                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                                    <input type="radio" checked={!maintenanceSolved} onChange={() => setMaintenanceSolved(false)} className="accent-rose-500 w-4 h-4"/>
+                                                                    <span className="text-rose-400 font-bold">Pending</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Maintenance Note</label>
+                                                        <textarea 
+                                                            required
+                                                            className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none h-24"
+                                                            placeholder="Describe the action taken..."
+                                                            value={maintenanceNote}
+                                                            onChange={e => setMaintenanceNote(e.target.value)}
+                                                        ></textarea>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <button type="button" className="text-slate-400 hover:text-white flex items-center gap-2 text-sm"><Camera size={16} /> Attach Photo (Optional)</button>
+                                                        <button disabled={formSubmitting} type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2 rounded-lg font-bold shadow-lg transition-all disabled:opacity-50">
+                                                            {formSubmitting ? 'Saving...' : 'Submit & Clear Alarm'}
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
-                            )}
+                            </div>
                         </div>
-                    </div>
-                </div>
-            ) : (
-                <div className="bg-emerald-900/20 border border-emerald-500/30 p-6 rounded-xl text-center">
-                    <CheckCircle2 size={48} className="text-emerald-500 mx-auto mb-3" />
-                    <h3 className="text-xl font-bold text-white">All Systems Normal</h3>
-                    <p className="text-emerald-400/80">No active alarms for this machine.</p>
-                </div>
+                    ) : (
+                        <div className="bg-emerald-900/20 border border-emerald-500/30 p-6 rounded-xl text-center">
+                            <CheckCircle2 size={48} className="text-emerald-500 mx-auto mb-3" />
+                            <h3 className="text-xl font-bold text-white">All Systems Normal</h3>
+                            <p className="text-emerald-400/80">No active alarms for this machine.</p>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* 3. Maintenance History Table */}
-            {canViewHistory && (
+            {canViewHistory && isDataItemVisible(userRole, 'MACHINE_MAINTENANCE_HISTORY_TABLE', visibilityContext) && (
                 <Card title="Maintenance History">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-slate-300">

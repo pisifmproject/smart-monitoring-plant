@@ -1,4 +1,5 @@
 
+
 import { UserRole, DataItem, VisibilityCategory, VisibilityGroup } from '../types';
 import { plantService } from './plantService';
 
@@ -33,49 +34,51 @@ const STATIC_REGISTRY: DataItem[] = [
     { id: 'p_util_5', key: 'UTILITY_NITROGEN', label: 'Nitrogen', category: VisibilityCategory.PLANT_DASHBOARD, group: VisibilityGroup.UTILITY_CONSUMPTION, location: 'Plant Dashboard', defaultVisible: true },
     { id: 'p_util_6', key: 'UTILITY_GAS', label: 'Natural Gas', category: VisibilityCategory.PLANT_DASHBOARD, group: VisibilityGroup.UTILITY_CONSUMPTION, location: 'Plant Dashboard', defaultVisible: true },
 
-    // --- ELECTRICITY DETAIL ---
+    { id: 'p5', key: 'SHIFT_PERFORMANCE_TABLE', label: 'Shift Performance', category: VisibilityCategory.PLANT_DASHBOARD, group: VisibilityGroup.TABLE, location: 'Plant Dashboard', defaultVisible: true },
+    { id: 'p6', key: 'ACTIVE_ALARMS_LIST', label: 'Active Alarms', category: VisibilityCategory.PLANT_DASHBOARD, group: VisibilityGroup.LIST, location: 'Plant Dashboard', defaultVisible: true },
+    { id: 'p_mach_1', key: 'MACHINE_CARD_OUTPUT', label: 'Machine Card: Output', category: VisibilityCategory.PLANT_DASHBOARD, group: VisibilityGroup.OUTPUT, location: 'Plant Dashboard / Machine List', defaultVisible: true },
+    { id: 'p_mach_2', key: 'MACHINE_CARD_OEE', label: 'Machine Card: OEE', category: VisibilityCategory.PLANT_DASHBOARD, group: VisibilityGroup.OEE, location: 'Plant Dashboard / Machine List', defaultVisible: true },
+
+    // --- UTILITY: ELECTRICITY DETAIL ---
     { id: 'elec_det_1', key: 'ELECTRICITY_DETAIL_KPI_TOTAL', label: 'Total Electricity', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Electricity Detail', defaultVisible: true },
     { id: 'elec_det_2', key: 'ELECTRICITY_DETAIL_CHART_TREND', label: 'Electricity Usage Trend', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Electricity Detail', defaultVisible: true },
     { id: 'elec_det_3', key: 'ELECTRICITY_DETAIL_KPI_STATS', label: 'Quick Stats', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Electricity Detail', defaultVisible: true },
     { id: 'elec_det_4', key: 'LV_PANEL_LOAD_PERCENT', label: 'Panel Load %', category: VisibilityCategory.UTILITY, group: VisibilityGroup.STATUS, location: 'Electricity Detail', defaultVisible: true },
     
-    // --- STEAM DETAIL ---
+    // --- UTILITY: STEAM DETAIL ---
     { id: 'steam_det_1', key: 'STEAM_DETAIL_KPI_TOTAL', label: 'Total Steam', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Steam Detail', defaultVisible: true },
     { id: 'steam_det_2', key: 'STEAM_DETAIL_CHART_TREND', label: 'Steam Usage Trend', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Steam Detail', defaultVisible: true },
     { id: 'steam_det_3', key: 'STEAM_DETAIL_KPI_STATS', label: 'Quick Stats', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Steam Detail', defaultVisible: true },
     { id: 'steam_det_4', key: 'STEAM_DETAIL_CONSUMPTION_BAR', label: 'Consumption by Area (Bar)', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Steam Detail', defaultVisible: true },
     { id: 'steam_det_5', key: 'STEAM_DETAIL_CONSUMPTION_PIE', label: 'Consumption by Area (Pie)', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Steam Detail', defaultVisible: true },
 
-    // --- WATER DETAIL ---
+    // --- UTILITY: WATER DETAIL ---
     { id: 'water_det_1', key: 'WATER_DETAIL_KPI_TOTAL', label: 'Total Water', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Water Detail', defaultVisible: true },
     { id: 'water_det_2', key: 'WATER_DETAIL_CHART_TREND', label: 'Water Usage Trend', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Water Detail', defaultVisible: true },
     { id: 'water_det_3', key: 'WATER_DETAIL_KPI_STATS', label: 'Quick Stats', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Water Detail', defaultVisible: true },
     { id: 'water_det_4', key: 'WATER_DETAIL_CONSUMPTION_BAR', label: 'Consumption by Area (Bar)', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Water Detail', defaultVisible: true },
     { id: 'water_det_5', key: 'WATER_DETAIL_CONSUMPTION_PIE', label: 'Consumption by Area (Pie)', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Water Detail', defaultVisible: true },
 
-    // --- COMPRESSED AIR DETAIL ---
+    // --- UTILITY: COMPRESSED AIR DETAIL ---
     { id: 'air_det_1', key: 'AIR_DETAIL_KPI_TOTAL', label: 'Total Compressed Air', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Compressed Air Detail', defaultVisible: true },
     { id: 'air_det_2', key: 'AIR_DETAIL_CHART_TREND', label: 'Compressed Air Usage Trend', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Compressed Air Detail', defaultVisible: true },
     { id: 'air_det_3', key: 'AIR_DETAIL_KPI_STATS', label: 'Quick Stats', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Compressed Air Detail', defaultVisible: true },
     { id: 'air_det_4', key: 'AIR_DETAIL_CONSUMPTION_BAR', label: 'Consumption by Area (Bar)', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Compressed Air Detail', defaultVisible: true },
     { id: 'air_det_5', key: 'AIR_DETAIL_CONSUMPTION_PIE', label: 'Consumption by Area (Pie)', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Compressed Air Detail', defaultVisible: true },
 
-    // --- NITROGEN DETAIL ---
+    // --- UTILITY: NITROGEN DETAIL ---
     { id: 'nitro_det_1', key: 'NITROGEN_DETAIL_KPI_TOTAL', label: 'Total Nitrogen', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Nitrogen Detail', defaultVisible: true },
     { id: 'nitro_det_2', key: 'NITROGEN_DETAIL_CHART_TREND', label: 'Nitrogen Usage Trend', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Nitrogen Detail', defaultVisible: true },
     { id: 'nitro_det_3', key: 'NITROGEN_DETAIL_KPI_STATS', label: 'Quick Stats', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Nitrogen Detail', defaultVisible: true },
     { id: 'nitro_det_4', key: 'NITROGEN_DETAIL_CONSUMPTION_BAR', label: 'Consumption by Area (Bar)', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Nitrogen Detail', defaultVisible: true },
     { id: 'nitro_det_5', key: 'NITROGEN_DETAIL_CONSUMPTION_PIE', label: 'Consumption by Area (Pie)', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Nitrogen Detail', defaultVisible: true },
 
-    // --- NATURAL GAS DETAIL ---
+    // --- UTILITY: NATURAL GAS DETAIL ---
     { id: 'gas_det_1', key: 'GAS_DETAIL_KPI_TOTAL', label: 'Total Natural Gas', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Natural Gas Detail', defaultVisible: true },
     { id: 'gas_det_2', key: 'GAS_DETAIL_CHART_TREND', label: 'Natural Gas Usage Trend', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Natural Gas Detail', defaultVisible: true },
     { id: 'gas_det_3', key: 'GAS_DETAIL_KPI_STATS', label: 'Quick Stats', category: VisibilityCategory.UTILITY, group: VisibilityGroup.KPI, location: 'Natural Gas Detail', defaultVisible: true },
     { id: 'gas_det_4', key: 'GAS_DETAIL_CONSUMPTION_BAR', label: 'Consumption by Area (Bar)', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Natural Gas Detail', defaultVisible: true },
     { id: 'gas_det_5', key: 'GAS_DETAIL_CONSUMPTION_PIE', label: 'Consumption by Area (Pie)', category: VisibilityCategory.UTILITY, group: VisibilityGroup.CHART, location: 'Natural Gas Detail', defaultVisible: true },
-
-    { id: 'p5', key: 'SHIFT_PERFORMANCE_TABLE', label: 'Shift Performance', category: VisibilityCategory.PLANT_DASHBOARD, group: VisibilityGroup.TABLE, location: 'Plant Dashboard', defaultVisible: true },
-    { id: 'p6', key: 'ACTIVE_ALARMS_LIST', label: 'Active Alarms', category: VisibilityCategory.PLANT_DASHBOARD, group: VisibilityGroup.LIST, location: 'Plant Dashboard', defaultVisible: true },
 
     // --- MAIN PANEL 1 (Previously LV_SUMMARY) ---
     { id: 'lv1', key: 'LV_KW', label: 'Active Power (kW) - Panel 1', category: VisibilityCategory.MAIN_PANEL_1, group: VisibilityGroup.KPI, location: 'Main Panel 1 Detail', defaultVisible: true },
@@ -120,6 +123,59 @@ const STATIC_REGISTRY: DataItem[] = [
     { id: 'lv4_7', key: 'PANEL4_POWER_METRICS_LIST', label: 'Power Quality Metrics - Panel 4', category: VisibilityCategory.MAIN_PANEL_4, group: VisibilityGroup.STATUS, location: 'Main Panel 4 Detail', defaultVisible: true },
     { id: 'lv4_8', key: 'PANEL4_ENERGY_TREND', label: 'Energy Usage Trend - Panel 4', category: VisibilityCategory.MAIN_PANEL_4, group: VisibilityGroup.CHART, location: 'Main Panel 4 Detail', defaultVisible: true },
     { id: 'lv4_9', key: 'PANEL4_SHIFT_DATA', label: 'Shift Performance - Panel 4', category: VisibilityCategory.MAIN_PANEL_4, group: VisibilityGroup.TABLE, location: 'Main Panel 4 Detail', defaultVisible: true },
+
+    // --- MACHINE DETAIL ---
+    // TABS
+    { id: 'md_tab_1', key: 'MACHINE_TAB_PERFORMANCE', label: 'Tab: Performance', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
+    { id: 'md_tab_2', key: 'MACHINE_TAB_PROCESS', label: 'Tab: Process', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
+    { id: 'md_tab_3', key: 'MACHINE_TAB_UTILITY', label: 'Tab: Utility', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
+    { id: 'md_tab_4', key: 'MACHINE_TAB_ALARMS', label: 'Tab: Alarms', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
+    { id: 'md_tab_5', key: 'MACHINE_TAB_DOWNTIME', label: 'Tab: Downtime', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
+    { id: 'md_tab_6', key: 'MACHINE_TAB_MAINTENANCE', label: 'Tab: Maintenance', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
+
+    // PERFORMANCE
+    { id: 'md_perf_1', key: 'MACHINE_OEE', label: 'OEE', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
+    { id: 'md_perf_2', key: 'MACHINE_AVAILABILITY', label: 'Availability', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
+    { id: 'md_perf_3', key: 'MACHINE_PERFORMANCE', label: 'Performance', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
+    { id: 'md_perf_4', key: 'MACHINE_QUALITY', label: 'Quality', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
+    { id: 'md_perf_5', key: 'MACHINE_OUTPUT_KG_H', label: 'Output Rate', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
+    { id: 'md_perf_6', key: 'MACHINE_OUTPUT_SHIFT', label: 'Total Output (Period)', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
+    { id: 'md_perf_7', key: 'MACHINE_REJECT_KG', label: 'Reject Mass (Period)', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
+    { id: 'md_perf_8', key: 'MACHINE_REJECT_PERCENT', label: 'Reject %', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
+    { id: 'md_perf_9', key: 'MACHINE_OUTPUT_TREND_CHART', label: 'Output vs Target Trend', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.CHART, location: 'Machine Detail / Performance', defaultVisible: true },
+
+    // PROCESS
+    { id: 'md_proc_1', key: 'PARAM_SCREW_SPEED', label: 'Param: Screw Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },
+    { id: 'md_proc_2', key: 'PARAM_BARREL_TEMP_ZONE_1', label: 'Param: Barrel Temp Zone 1', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },
+    { id: 'md_proc_3', key: 'PARAM_BARREL_TEMP_ZONE_2', label: 'Param: Barrel Temp Zone 2', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },
+    { id: 'md_proc_4', key: 'PARAM_FEEDER_SPEED', label: 'Param: Feeder Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },
+    { id: 'md_proc_5', key: 'PARAM_DIE_PRESSURE', label: 'Param: Die Pressure', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },
+    { id: 'md_proc_6', key: 'PARAM_OIL_TEMP', label: 'Param: Oil Temp', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },
+    { id: 'md_proc_7', key: 'PARAM_CONVEYOR_SPEED', label: 'Param: Conveyor Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },
+    { id: 'md_proc_8', key: 'PARAM_OIL_LEVEL', label: 'Param: Oil Level', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },
+    { id: 'md_proc_9', key: 'PARAM_CYCLE_TIME', label: 'Param: Cycle Time', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },
+    { id: 'md_proc_10', key: 'PARAM_VIBRATION', label: 'Param: Vibration', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },
+    { id: 'md_proc_11', key: 'MACHINE_PROCESS_TREND_CHART', label: 'Process Parameter Trend', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.CHART, location: 'Machine Detail / Process', defaultVisible: true },
+
+    // UTILITY
+    { id: 'md_util_1', key: 'MACHINE_UTIL_ELECTRICITY', label: 'Electricity Consumption', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.UTILITY_CONSUMPTION, location: 'Machine Detail / Utility', defaultVisible: true },
+    { id: 'md_util_2', key: 'MACHINE_UTIL_STEAM', label: 'Steam Consumption', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.UTILITY_CONSUMPTION, location: 'Machine Detail / Utility', defaultVisible: true },
+    { id: 'md_util_3', key: 'MACHINE_UTIL_WATER', label: 'Water Consumption', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.UTILITY_CONSUMPTION, location: 'Machine Detail / Utility', defaultVisible: true },
+    { id: 'md_util_4', key: 'MACHINE_UTIL_AIR', label: 'Compressed Air Consumption', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.UTILITY_CONSUMPTION, location: 'Machine Detail / Utility', defaultVisible: true },
+    { id: 'md_util_5', key: 'MACHINE_UTIL_ELEC_CHART', label: 'Electricity Consumption Trend', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.CHART, location: 'Machine Detail / Utility', defaultVisible: true },
+    { id: 'md_util_6', key: 'MACHINE_UTIL_STEAM_CHART', label: 'Steam Consumption Trend', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.CHART, location: 'Machine Detail / Utility', defaultVisible: true },
+
+    // ALARMS
+    { id: 'md_alarm_1', key: 'MACHINE_ALARM_HISTORY_TABLE', label: 'Alarm History Table', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TABLE, location: 'Machine Detail / Alarms', defaultVisible: true },
+
+    // DOWNTIME
+    { id: 'md_dt_1', key: 'MACHINE_DOWNTIME_ADD_BTN', label: 'Add Downtime Button', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.FORM, location: 'Machine Detail / Downtime', defaultVisible: true },
+    { id: 'md_dt_2', key: 'MACHINE_DOWNTIME_LOGS_TABLE', label: 'Downtime Logs Table', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TABLE, location: 'Machine Detail / Downtime', defaultVisible: true },
+
+    // MAINTENANCE
+    { id: 'md_maint_1', key: 'MACHINE_MAINTENANCE_ACTIVE_ALARM', label: 'Active Alarm Section', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.ALARM_DATA, location: 'Machine Detail / Maintenance', defaultVisible: true },
+    { id: 'md_maint_2', key: 'MACHINE_MAINTENANCE_FORM', label: 'Maintenance Action Form', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.FORM, location: 'Machine Detail / Maintenance', defaultVisible: true },
+    { id: 'md_maint_3', key: 'MACHINE_MAINTENANCE_HISTORY_TABLE', label: 'Maintenance History Table', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TABLE, location: 'Machine Detail / Maintenance', defaultVisible: true },
 ];
 
 // Dynamically generate registry items for every machine in the system to allow specific hiding
@@ -241,7 +297,7 @@ export const getVisibilityRulesForRoleAndScope = (role: UserRole, scopeKey: stri
 
 export const updateVisibilityRule = (
     role: UserRole,
-    context: { category: VisibilityCategory, plantId?: string },
+    context: { category: VisibilityCategory, plantId?: string, machineId?: string },
     dataItemKey: string,
     visible: boolean
 ) => {

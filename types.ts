@@ -1,4 +1,5 @@
 
+
 export enum PlantCode {
     CIKOKOL = 'CIKOKOL',
     SEMARANG = 'SEMARANG',
@@ -193,7 +194,9 @@ export enum VisibilityGroup {
     MACHINE_HEALTH = 'MACHINE_HEALTH',
     FORM = 'FORM',
     TAB = 'TAB',
-    MACHINES = 'MACHINES'
+    MACHINES = 'MACHINES',
+    // FIX: Added 'OTHER' to the enum to resolve a compile error in Settings.tsx.
+    OTHER = 'OTHER'
 }
 
 export interface DataItem {
