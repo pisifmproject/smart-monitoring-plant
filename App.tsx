@@ -1,6 +1,6 @@
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import {
   HashRouter,
   Routes,
@@ -21,26 +21,36 @@ import {
   User as UserIcon,
   ChevronsLeft,
   Menu,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 
 import { User, UserRole } from './types';
 
-// Views
-import Landing from './views/Landing';
-import Login from './views/Login';
-import MachineDetail from './views/MachineDetail';
-import LVMDPDetail from './views/LVMDPDetail';
-import UtilitySummary from './views/UtilitySummary';
-import SettingsView from './views/Settings';
-
-// Dashboards
-import GlobalDashboard from './GlobalDashboard';
-import PlantDashboard from './PlantDashboard';
+// Lazy load views for better performance
+const Landing = lazy(() => import('./views/Landing'));
+const Login = lazy(() => import('./views/Login'));
+const MachineDetail = lazy(() => import('./views/MachineDetail'));
+const LVMDPDetail = lazy(() => import('./views/LVMDPDetail'));
+const UtilitySummary = lazy(() => import('./views/UtilitySummary'));
+const SettingsView = lazy(() => import('./views/Settings'));
+const GlobalDashboard = lazy(() => import('./GlobalDashboard'));
+const PlantDashboard = lazy(() => import('./PlantDashboard'));
 
 // Services
 import { plantService } from './services/plantService';
 import { lvmdpService } from './services/lvmdpService';
+
+// Fallback component for Suspense
+const SuspenseSpinner: React.FC = () => (
+  <div className="w-full h-full flex items-center justify-center p-20">
+    <div className="flex flex-col items-center gap-4">
+      <Loader2 size={32} className="text-blue-500 animate-spin" />
+      <span className="text-sm font-medium text-slate-400">Loading Module...</span>
+    </div>
+  </div>
+);
+
 
 // ---------------------------------------
 // SIDEBAR COMPONENTS (MODERN PILL DESIGN)
@@ -60,7 +70,7 @@ const SidebarLink: React.FC<{ to: string; label: string; active: boolean; icon?:
         {Icon && (
             <Icon size={18} className={`transition-colors shrink-0 ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
         )}
-        {!isCollapsed && <span>{label}</span>}
+        {!isCollapsed && <span className="truncate">{label}</span>}
     </div>
     {active && !isCollapsed && <ChevronRight size={14} className="text-white/70" />}
   </Link>
@@ -99,7 +109,6 @@ const ProtectedLayout = ({
   }, [isSidebarOpen]);
   
   useEffect(() => {
-    // Close mobile menu on route change
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
@@ -113,7 +122,6 @@ const ProtectedLayout = ({
   
   const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => (
     <>
-      {/* BRAND HEADER */}
       <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
         <div className="flex flex-col items-center">
           <h1 className={`text-sm font-extrabold text-white tracking-tighter whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
@@ -126,7 +134,6 @@ const ProtectedLayout = ({
         </div>
       </div>
   
-      {/* NAVIGATION */}
       <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-6">
         {canViewGlobal && (
           <div>
@@ -150,7 +157,6 @@ const ProtectedLayout = ({
         )}
       </nav>
   
-      {/* USER PROFILE CARD & TOGGLE */}
       <div className="p-3 border-t border-slate-800">
         <div className={`p-2 transition-all duration-300 bg-slate-900/50 border border-slate-800/80 rounded-2xl ${isCollapsed ? 'w-14 mx-auto' : ''}`}>
           <div className="flex items-center gap-3 mb-4">
@@ -178,7 +184,6 @@ const ProtectedLayout = ({
   return (
     <div className="flex h-screen bg-slate-950 font-sans text-slate-200">
       
-      {/* --- MOBILE SIDEBAR (OVERLAY) --- */}
       <div className={`fixed inset-0 z-40 transform transition-transform duration-300 lg:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="w-72 bg-[#0b1120] border-r border-slate-800 flex flex-col h-full">
             <SidebarContent isCollapsed={false} />
@@ -186,14 +191,12 @@ const ProtectedLayout = ({
       </div>
       {isMobileMenuOpen && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>}
 
-      {/* --- DESKTOP SIDEBAR --- */}
       <div className={`hidden lg:flex flex-col bg-[#0b1120] border-r border-slate-800 shrink-0 z-20 shadow-2xl transition-all duration-300 ${isSidebarOpen ? 'w-72' : 'w-20'}`}>
           <SidebarContent isCollapsed={!isSidebarOpen} />
       </div>
 
-      {/* --- MAIN CONTENT AREA --- */}
-      <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-950">
-        <header className="flex items-center justify-between h-16 px-6 border-b border-slate-800 shrink-0 lg:justify-end">
+      <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-950 transition-all duration-300">
+        <header className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-slate-800 shrink-0">
             <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(true)}>
                 <Menu size={24} />
             </button>
@@ -215,7 +218,7 @@ const ProtectedLayout = ({
 // ---------------------------------------
 // ACCESS CONTROL WRAPPERS
 // ---------------------------------------
-const MachineDetailWrapper = ({ user }: { user: User }) => {
+const MachineDetailWrapper = React.memo(({ user }: { user: User }) => {
   const { machineId } = useParams();
   const navigate = useNavigate();
   const restrictedRoles = [UserRole.MANAGEMENT, UserRole.VIEWER];
@@ -224,7 +227,8 @@ const MachineDetailWrapper = ({ user }: { user: User }) => {
     return <Navigate to="/app/dashboard/global" replace />;
   }
 
-  const machine = plantService.getMachineById(machineId || '');
+  const machine = React.useMemo(() => plantService.getMachineById(machineId || ''), [machineId]);
+  
   if (!machine) return <div className="p-8 text-slate-500">Machine Not Found</div>;
 
   return (
@@ -235,9 +239,9 @@ const MachineDetailWrapper = ({ user }: { user: User }) => {
       currentUser={user.name}
     />
   );
-};
+});
 
-const LVMDPDetailWrapper = ({ userRole }: { userRole: UserRole }) => {
+const LVMDPDetailWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
   const { panelId } = useParams();
   const navigate = useNavigate();
   const restrictedRoles = [UserRole.OPERATOR, UserRole.QC, UserRole.MANAGEMENT, UserRole.VIEWER];
@@ -246,15 +250,16 @@ const LVMDPDetailWrapper = ({ userRole }: { userRole: UserRole }) => {
     return <Navigate to="/app/dashboard/global" replace />;
   }
 
-  const panel = lvmdpService.getPanelById(panelId || '');
+  const panel = React.useMemo(() => lvmdpService.getPanelById(panelId || ''), [panelId]);
+
   if (!panel) return <div className="p-8 text-slate-500">Panel Not Found</div>;
 
   return (
     <LVMDPDetail lvmdp={panel} onBack={() => navigate(-1)} userRole={userRole} />
   );
-};
+});
 
-const UtilitySummaryWrapper = ({ userRole }: { userRole: UserRole }) => {
+const UtilitySummaryWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
   const { type, plantId } = useParams();
   const navigate = useNavigate();
   const restrictedRoles = [UserRole.MANAGEMENT, UserRole.VIEWER];
@@ -262,8 +267,9 @@ const UtilitySummaryWrapper = ({ userRole }: { userRole: UserRole }) => {
   if (restrictedRoles.includes(userRole)) {
     return <Navigate to="/app/dashboard/global" replace />;
   }
+  
+  const plant = React.useMemo(() => plantService.getPlantById(plantId || ''), [plantId]);
 
-  const plant = plantService.getPlantById(plantId || '');
   if (!plant) return <div className="p-8 text-slate-500">Plant Not Found</div>;
 
   return (
@@ -274,14 +280,15 @@ const UtilitySummaryWrapper = ({ userRole }: { userRole: UserRole }) => {
       userRole={userRole}
     />
   );
-};
+});
 
 
-const SettingsWrapper = ({ userRole }: { userRole: UserRole }) => {
+const SettingsWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
   return (
     <SettingsView userRole={userRole} />
   )
-}
+});
+
 // ---------------------------------------
 // MAIN APP ROUTER
 // ---------------------------------------
@@ -298,62 +305,64 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route
-          path="/login"
-          element={user ? <Navigate to="/app" replace /> : <Login onLogin={handleLogin} />}
-        />
-        <Route
-          path="/app"
-          element={user ? <ProtectedLayout user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />}
-        >
-          <Route index element={
-            user && (user.role === UserRole.OPERATOR ? (
-              <Navigate to="plants/CIKOKOL" replace />
-            ) : (
-              <Navigate to="dashboard/global" replace />
-            ))
-          } />
+      <Suspense fallback={<SuspenseSpinner />}>
+        <Routes>
+          <Route path="/" element={<Landing />} />
           <Route
-            path="dashboard/global"
-            element={ user && (
-              user.role !== UserRole.OPERATOR ? (
-                <GlobalDashboard userRole={user.role} />
+            path="/login"
+            element={user ? <Navigate to="/app" replace /> : <Login onLogin={handleLogin} />}
+          />
+          <Route
+            path="/app"
+            element={user ? <ProtectedLayout user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />}
+          >
+            <Route index element={
+              user && (user.role === UserRole.OPERATOR ? (
+                <Navigate to="plants/CIKOKOL" replace />
               ) : (
-                <Navigate to="/app/plants/CIKOKOL" replace />
-              )
-            )}
-          />
-          <Route
-            path="plants/:plantId"
-            element={user && <PlantDashboard userRole={user.role} />}
-          />
-          <Route
-            path="machines/:machineId"
-            element={user && <MachineDetailWrapper user={user} />}
-          />
-          <Route
-            path="lvmdp/:panelId"
-            element={user && <LVMDPDetailWrapper userRole={user.role} />}
-          />
-          <Route
-            path="utility/:type/:plantId"
-            element={user && <UtilitySummaryWrapper userRole={user.role} />}
-          />
-          <Route
-            path="settings"
-            element={ user && (
-              user.role === UserRole.ADMINISTRATOR ? (
-                <SettingsWrapper userRole={user.role} />
-              ) : (
-                <Navigate to="/app/dashboard/global" replace />
-              )
-            )}
-          />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+                <Navigate to="dashboard/global" replace />
+              ))
+            } />
+            <Route
+              path="dashboard/global"
+              element={ user && (
+                user.role !== UserRole.OPERATOR ? (
+                  <GlobalDashboard userRole={user.role} />
+                ) : (
+                  <Navigate to="/app/plants/CIKOKOL" replace />
+                )
+              )}
+            />
+            <Route
+              path="plants/:plantId"
+              element={user && <PlantDashboard userRole={user.role} />}
+            />
+            <Route
+              path="machines/:machineId"
+              element={user && <MachineDetailWrapper user={user} />}
+            />
+            <Route
+              path="lvmdp/:panelId"
+              element={user && <LVMDPDetailWrapper userRole={user.role} />}
+            />
+            <Route
+              path="utility/:type/:plantId"
+              element={user && <UtilitySummaryWrapper userRole={user.role} />}
+            />
+            <Route
+              path="settings"
+              element={ user && (
+                user.role === UserRole.ADMINISTRATOR ? (
+                  <SettingsWrapper userRole={user.role} />
+                ) : (
+                  <Navigate to="/app/dashboard/global" replace />
+                )
+              )}
+            />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </HashRouter>
   );
 };

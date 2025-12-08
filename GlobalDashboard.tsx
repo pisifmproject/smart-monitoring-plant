@@ -18,11 +18,9 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
     const navigate = useNavigate();
     const [period, setPeriod] = useState<Period>('DAY');
 
-    // Fetch Data from Service
     const kpis = useMemo(() => dashboardService.getGlobalKPIs(period), [period]);
     const plants = useMemo(() => dashboardService.getPlantOverview(period), [period]);
 
-    // Role Logic
     const canDrillDown = ![UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole);
 
     const FilterButton = ({ label }: { label: Period }) => (
@@ -40,7 +38,6 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 w-full">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
@@ -57,8 +54,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                 </div>
             </div>
 
-            {/* Corporate KPIs */}
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {isDataItemVisible(userRole, 'GLOBAL_OUTPUT_TODAY') && (
                     <MetricCard 
                         title={`Total Output (${period})`}
@@ -102,12 +98,11 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                 )}
             </div>
 
-            {/* Plant Status Overview */}
             <div className="space-y-4">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
                     <Factory size={20} className="text-slate-400"/> Plant Status Overview
                 </h2>
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-5">
                     {plants.map(plant => {
                         const visibilityKey = `GLOBAL_PLANT_${plant.id}`;
                         if (!isDataItemVisible(userRole, visibilityKey)) return null;
@@ -151,7 +146,6 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                                     </div>
                                 </div>
                                 
-                                {/* Decorative Gradient */}
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-transparent rounded-bl-full pointer-events-none"></div>
                             </div>
                         );

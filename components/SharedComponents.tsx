@@ -8,7 +8,7 @@ export const formatNumber = (value: number | undefined | null, maxDecimals: numb
 };
 
 export const Card: React.FC<{ children: React.ReactNode; className?: string; title?: string; action?: React.ReactNode }> = ({ children, className = "", title, action }) => (
-    <div className={`bg-slate-800 border border-slate-700 rounded-xl p-4 md:p-5 shadow-sm ${className}`}>
+    <div className={`bg-slate-800 border border-slate-700 rounded-xl p-4 md:p-5 shadow-sm transition-all duration-300 ${className}`}>
         {(title || action) && (
             <div className="flex justify-between items-center mb-4">
                 {title && <h3 className="text-slate-200 font-semibold text-lg tracking-normal">{title}</h3>}
@@ -22,7 +22,7 @@ export const Card: React.FC<{ children: React.ReactNode; className?: string; tit
 export const MetricCard: React.FC<{ title: string; value: string | number; unit?: string; icon: LucideIcon; trend?: string; trendUp?: boolean; color?: string }> = ({ 
     title, value, unit, icon: Icon, trend, trendUp, color = "text-blue-400" 
 }) => (
-    <Card className="hover:border-slate-500 transition-colors duration-200">
+    <Card className="hover:border-slate-500 hover:bg-slate-700/50 transition-colors duration-200">
         <div className="flex items-start justify-between">
             <div>
                 <p className="text-slate-400 text-sm font-medium uppercase tracking-wide">{title}</p>

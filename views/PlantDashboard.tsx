@@ -25,30 +25,25 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     const navigate = useNavigate();
     const [period, setPeriod] = useState<Period>('DAY');
     
-    // Download State
     const [isDownloading, setIsDownloading] = useState(false);
     const [showDownloadToast, setShowDownloadToast] = useState(false);
 
-    const plant = plantService.getPlantById(plantId || '');
+    const plant = useMemo(() => plantService.getPlantById(plantId || ''), [plantId]);
     
-    // Services
     const kpis = useMemo(() => plant ? dashboardService.getPlantKPIs(plant, period) : null, [plant, period]);
     const utilityMetrics = useMemo(() => plantId ? dashboardService.getUtilityMetrics(plantId, period) : [], [plantId, period]);
     const shifts = useMemo(() => plant ? dashboardService.getShifts(plant) : [], [plant]);
-    const activeAlarms = useMemo(() => maintenanceService.getActiveAlarms(plantId), [plantId]); // Alarms are always real-time
+    const activeAlarms = useMemo(() => maintenanceService.getActiveAlarms(plantId), [plantId]);
     const productionMachines = useMemo(() => plantId ? plantService.getProductionLines(plantId, period) : [], [plantId, period]);
 
     if (!plant || !kpis) return <div className="p-8 text-slate-400">Plant not found</div>;
 
-    // Role Logic
     const canClickDetails = ![UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole);
     const canDownloadReport = [UserRole.ADMINISTRATOR, UserRole.SUPERVISOR, UserRole.MANAGEMENT].includes(userRole);
     const visibilityContext = { plantId: plant.id };
 
     const FilterButton = ({ label }: { label: Period }) => {
-        // Restricted: Operators can only see DAY
         if (userRole === UserRole.OPERATOR && label !== 'DAY') return null;
-
         return (
             <button 
                 onClick={() => setPeriod(label)}
@@ -63,7 +58,6 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
         );
     };
 
-    // Helper for Alarm Icons
     const getAlarmIcon = (severity: AlarmSeverity) => {
         switch (severity) {
             case AlarmSeverity.CRITICAL: return <AlertOctagon size={16} className="text-rose-500" />;
@@ -74,20 +68,9 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     };
 
     const handleAlarmClick = (alarm: Alarm) => {
-        if (!canClickDetails) return;
-        
-        // Safety check if machineId exists
-        if (!alarm.machineId) return;
-
-        // Determine target tab based on role
-        // MAINTENANCE role -> 'Maintenance' tab (and scroll to form)
-        // Others -> 'Alarms' tab (history)
+        if (!canClickDetails || !alarm.machineId) return;
         const targetTab = userRole === UserRole.MAINTENANCE ? 'Maintenance' : 'Alarms';
-
-        // State to force opening the specific tab
         const state = { initialTab: targetTab };
-
-        // Check if it is an LVMDP or a Machine based on ID convention
         if (alarm.machineId.includes('LVMDP')) {
             navigate(`/app/lvmdp/${alarm.machineId}`, { state });
         } else {
@@ -98,24 +81,22 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     const handleDownloadReport = () => {
         if (isDownloading) return;
         setIsDownloading(true);
-
-        // Simulate PDF generation delay
         setTimeout(() => {
             setIsDownloading(false);
             setShowDownloadToast(true);
-            // Hide toast after 3 seconds
             setTimeout(() => setShowDownloadToast(false), 3000);
         }, 2000);
     };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-300 w-full relative">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/app/dashboard/global')} className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white">
-                        <ArrowLeft size={24} />
-                    </button>
+                    {userRole !== UserRole.OPERATOR && (
+                         <button onClick={() => navigate('/app/dashboard/global')} className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white">
+                            <ArrowLeft size={24} />
+                        </button>
+                    )}
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-3 tracking-tight">
                             <Factory className="text-blue-500" size={28} />
@@ -126,7 +107,6 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
-                    {/* Period Filter */}
                     <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1">
                         <FilterButton label="DAY" />
                         <FilterButton label="WEEK" />
@@ -134,70 +114,35 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                         <FilterButton label="YEAR" />
                     </div>
 
-                    {/* Report Download Button */}
                     {canDownloadReport && (
                         <button 
                             onClick={handleDownloadReport}
                             disabled={isDownloading}
                             className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-500 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed group shadow-sm"
                         >
-                            {isDownloading ? (
-                                <Loader2 size={16} className="animate-spin text-blue-400" />
-                            ) : (
-                                <FileText size={16} className="text-blue-400 group-hover:text-blue-300" />
-                            )}
+                            {isDownloading ? <Loader2 size={16} className="animate-spin text-blue-400" /> : <FileText size={16} className="text-blue-400 group-hover:text-blue-300" />}
                             <span className="hidden sm:inline">{isDownloading ? 'Generating...' : 'Export PDF'}</span>
                         </button>
                     )}
                 </div>
             </div>
 
-            {/* Top KPIs */}
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {isDataItemVisible(userRole, 'PLANT_OUTPUT_TODAY', visibilityContext) && (
-                    <MetricCard 
-                        title={`Output (${period})`} 
-                        value={formatNumber(kpis.output)} 
-                        unit="kg" 
-                        icon={Factory} 
-                        trend="3.2%" 
-                        trendUp={true} 
-                    />
+                    <MetricCard title={`Output (${period})`} value={formatNumber(kpis.output)} unit="kg" icon={Factory} trend="3.2%" trendUp={true} />
                 )}
                 {isDataItemVisible(userRole, 'PLANT_OEE', visibilityContext) && (
-                    <MetricCard 
-                        title="OEE" 
-                        value={formatNumber(kpis.oee)} 
-                        unit="%" 
-                        icon={Activity} 
-                        trend="0.5%" 
-                        trendUp={true} 
-                        color="text-emerald-400" 
-                    />
+                    <MetricCard title="OEE" value={formatNumber(kpis.oee)} unit="%" icon={Activity} trend="0.5%" trendUp={true} color="text-emerald-400" />
                 )}
                 {isDataItemVisible(userRole, 'PLANT_POWER_USAGE', visibilityContext) && (
-                    <MetricCard 
-                        title={`Energy (${period})`} 
-                        value={formatNumber(kpis.energy)} 
-                        unit="kWh" 
-                        icon={Zap} 
-                        trend="1.1%" 
-                        trendUp={false} 
-                        color="text-yellow-400" 
-                    />
+                    <MetricCard title={`Energy (${period})`} value={formatNumber(kpis.energy)} unit="kWh" icon={Zap} trend="1.1%" trendUp={false} color="text-yellow-400" />
                 )}
                 {isDataItemVisible(userRole, 'PLANT_ALARM_COUNT', visibilityContext) && (
-                    <MetricCard 
-                        title="Total Alarms" 
-                        value={kpis.alarms} 
-                        icon={AlertTriangle} 
-                        color="text-rose-400" 
-                    />
+                    <MetricCard title="Total Alarms" value={kpis.alarms} icon={AlertTriangle} color="text-rose-400" />
                 )}
             </div>
 
-            {/* Utility Summary Cards */}
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-5">
                 {utilityMetrics.map((metric) => (
                     isDataItemVisible(userRole, metric.key, visibilityContext) && (
                         <div 
@@ -211,7 +156,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                 <div className={`p-2 rounded-lg bg-slate-700/50 ${metric.color}`}>
                                     <metric.icon size={20} />
                                 </div>
-                                <TrendingUp className="text-slate-600 group-hover:text-blue-400 transition-colors" size={16} />
+                                {canClickDetails && <TrendingUp className="text-slate-600 group-hover:text-blue-400 transition-colors" size={16} />}
                             </div>
                             <div>
                                 <span className="text-xs text-slate-400 font-bold uppercase">{metric.label}</span>
@@ -224,12 +169,11 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 ))}
             </div>
 
-            {/* Shift Performance & Active Alarms */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {isDataItemVisible(userRole, 'SHIFT_PERFORMANCE_TABLE', visibilityContext) && (
                     <Card title="Shift Performance">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
+                            <table className="w-full text-left text-sm min-w-[500px]">
                                 <thead className="bg-slate-900/50 text-slate-400 font-bold uppercase text-xs">
                                     <tr>
                                         <th className="p-3">Shift</th>
@@ -286,12 +230,11 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                             canClickDetails ? 'cursor-pointer hover:border-blue-500 hover:bg-slate-800 hover:shadow-md' : 'hover:border-slate-600'
                                         }`}
                                     >
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-3 min-w-0">
                                             {getAlarmIcon(alarm.severity)}
-                                            <div>
-                                                <p className="text-white font-bold text-sm group-hover:text-blue-400 transition-colors">{alarm.message}</p>
-                                                <p className="text-xs text-slate-400">{alarm.timestamp} • {alarm.source}</p>
-                                                {/* Maintenance Progress Indicator */}
+                                            <div className="min-w-0">
+                                                <p className="text-white font-bold text-sm group-hover:text-blue-400 transition-colors truncate">{alarm.message}</p>
+                                                <p className="text-xs text-slate-400 truncate">{alarm.timestamp} • {alarm.source}</p>
                                                 {maintenanceService.getAlarmInProgress(alarm.machineId || '') && (
                                                     <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-blue-400 bg-blue-900/20 px-1.5 py-0.5 rounded border border-blue-500/30">
                                                         <Clock size={10} /> Maintenance by {maintenanceService.getAlarmInProgress(alarm.machineId || '')}
@@ -308,18 +251,15 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 )}
             </div>
 
-            {/* Production Lines Grid */}
             <div>
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <Activity className="text-slate-400" /> Production Lines
                 </h3>
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
                     {productionMachines.map((machine) => {
-                        // Check if this specific machine should be visible based on its unique key
                         if (!isDataItemVisible(userRole, `SHOW_MACHINE_${machine.id}`, visibilityContext)) {
                             return null;
                         }
-
                         const machineContext = { ...visibilityContext, machineId: machine.id };
                         const maintenanceUser = maintenanceService.getAlarmInProgress(machine.id);
                         const hasActiveAlarm = maintenanceService.hasActiveAlarm(machine.id);
@@ -372,7 +312,6 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                         </div>
                                     )}
                                 </div>
-                                {/* Decorative bar */}
                                 <div className={`absolute bottom-0 left-0 h-1 transition-all duration-300 ${
                                     machine.status === 'RUNNING' ? 'bg-emerald-500 w-full' : 
                                     machine.status === 'IDLE' ? 'bg-amber-500 w-2/3' : 
@@ -384,7 +323,6 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 </div>
             </div>
 
-            {/* Download Success Toast */}
             {showDownloadToast && (
                 <div className="fixed bottom-8 right-8 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
                     <div className="bg-emerald-600 text-white px-5 py-3 rounded-lg shadow-xl shadow-emerald-900/30 flex items-center gap-3 border border-emerald-500/50">
