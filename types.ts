@@ -1,5 +1,6 @@
 
 
+
 export enum PlantCode {
     CIKOKOL = 'CIKOKOL',
     SEMARANG = 'SEMARANG',
@@ -50,6 +51,23 @@ export interface Metric {
     trend?: number; // percentage change
 }
 
+export interface WeigherDetails {
+    averageWeight: number; // grams
+    standardDeviation: number; // grams
+    giveaway: number; // %
+    speed: number; // ppm
+    status: 'RUNNING' | 'IDLE' | 'FAULT';
+}
+
+export interface BagmakerDetails {
+    speed: number; // ppm
+    filmRemaining: number; // %
+    sealTempHorizontal: number; // Celsius
+    sealTempVertical: number; // Celsius
+    status: 'RUNNING' | 'IDLE' | 'FAULT';
+}
+
+
 export interface Machine {
     id: string;
     code: string;
@@ -76,6 +94,10 @@ export interface Machine {
         water: number;
         air: number;
     };
+
+    // Packing specific details
+    weigher?: WeigherDetails;
+    bagmaker?: BagmakerDetails;
 }
 
 export interface LVMDP {
@@ -195,6 +217,8 @@ export enum VisibilityGroup {
     FORM = 'FORM',
     TAB = 'TAB',
     MACHINES = 'MACHINES',
+    WEIGHER = 'WEIGHER',
+    BAGMAKER = 'BAGMAKER',
     // FIX: Added 'OTHER' to the enum to resolve a compile error in Settings.tsx.
     OTHER = 'OTHER'
 }

@@ -152,19 +152,19 @@ export const dashboardService = {
             id: 1,
             name: 'Shift 1',
             time: '07:01 - 14:30',
-            output: plant.outputToday,
+            output: plant.outputToday * 0.6, // Attributing 60% of output to completed shift
             target: 12000,
-            oee: plant.oeeAvg,
-            status: 'ACTIVE'
+            oee: plant.oeeAvg * 1.02, // Slightly higher OEE
+            status: 'COMPLETED'
         },
         {
             id: 2,
             name: 'Shift 2',
             time: '14:31 - 22:00',
-            output: 0,
+            output: plant.outputToday * 0.4, // Attributing 40% to active shift
             target: 12000,
-            oee: 0,
-            status: 'PENDING'
+            oee: plant.oeeAvg,
+            status: 'ACTIVE'
         },
         {
             id: 3,
@@ -173,7 +173,7 @@ export const dashboardService = {
             output: 0,
             target: 12000,
             oee: 0,
-            status: 'PENDING'
+            status: 'UPCOMING'
         }
     ],
 

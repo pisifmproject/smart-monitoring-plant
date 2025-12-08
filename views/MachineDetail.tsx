@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Machine, UserRole, MachineType } from '../types';
@@ -9,7 +8,8 @@ import { plantService as ps } from '../services/plantService'; // Using correct 
 import { 
     Activity, Zap, AlertTriangle, ArrowLeft, 
     ClipboardPen, Wrench, X, CheckCircle2, 
-    Wind, Droplets, Cloud, Box, Clock, Camera, Plus, History, Save, FileText, Loader2
+    Wind, Droplets, Cloud, Box, Clock, Camera, Plus, History, Save, FileText, Loader2,
+    Scale, Package, Film, Thermometer
 } from 'lucide-react';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -25,9 +25,10 @@ interface MachineDetailProps {
 
 type Period = 'Day' | 'Week' | 'Month' | 'Year';
 
-const ALL_TABS = [
+const ALL_TABS_BASE = [
     { key: 'Performance', visibilityKey: 'MACHINE_TAB_PERFORMANCE' },
     { key: 'Process', visibilityKey: 'MACHINE_TAB_PROCESS' },
+    { key: 'Packing', visibilityKey: 'MACHINE_TAB_PACKING' },
     { key: 'Utility', visibilityKey: 'MACHINE_TAB_UTILITY' },
     { key: 'Alarms', visibilityKey: 'MACHINE_TAB_ALARMS' },
     { key: 'Downtime', visibilityKey: 'MACHINE_TAB_DOWNTIME' },
@@ -39,7 +40,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     const visibilityContext = { plantId: machine.plantId, machineId: machine.id };
     
     // Check which tabs are visible for this user
-    const visibleTabs = ALL_TABS.filter(t => isDataItemVisible(userRole, t.visibilityKey, visibilityContext));
+    const visibleTabs = ALL_TABS_BASE.filter(t => isDataItemVisible(userRole, t.visibilityKey, visibilityContext));
     
     // Set active tab with priority:
     // 1. Navigation state (e.g. from clicking an alarm on dashboard)
@@ -251,6 +252,51 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
             </div>
         </div>
     );
+
+    const renderPackingTab = () => {
+        const { weigher, bagmaker } = machine;
+        if (!weigher || !bagmaker) return <div className="p-4 text-slate-500">Packing data not available.</div>;
+
+        return (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+                {/* Weigher Section */}
+                <Card title="Multihead Weigher Status" className="bg-slate-900/30">
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5">
+                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED', visibilityContext) && (
+                            <MetricCard title="Speed" value={formatNumber(weigher.speed)} unit="ppm" icon={Zap} color="text-blue-400" />
+                        )}
+                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_AVG_WEIGHT', visibilityContext) && (
+                            <MetricCard title="Avg. Weight" value={formatNumber(weigher.averageWeight, 2)} unit="g" icon={Scale} color="text-emerald-400" />
+                        )}
+                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_GIVEAWAY', visibilityContext) && (
+                            <MetricCard title="Giveaway" value={formatNumber(weigher.giveaway, 2)} unit="%" icon={AlertTriangle} color="text-amber-400" />
+                        )}
+                        {isDataItemVisible(userRole, 'PACKING_WEIGHER_STD_DEV', visibilityContext) && (
+                            <MetricCard title="Std. Deviation" value={formatNumber(weigher.standardDeviation, 3)} unit="g" icon={Activity} color="text-purple-400" />
+                        )}
+                    </div>
+                </Card>
+
+                {/* Bagmaker Section */}
+                <Card title="Bagmaker Status" className="bg-slate-900/30">
+                     <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5">
+                        {isDataItemVisible(userRole, 'PACKING_BAGMAKER_SPEED', visibilityContext) && (
+                            <MetricCard title="Speed" value={formatNumber(bagmaker.speed)} unit="ppm" icon={Zap} color="text-blue-400" />
+                        )}
+                        {isDataItemVisible(userRole, 'PACKING_BAGMAKER_FILM', visibilityContext) && (
+                            <MetricCard title="Film Remaining" value={formatNumber(bagmaker.filmRemaining, 1)} unit="%" icon={Film} color="text-cyan-400" />
+                        )}
+                        {isDataItemVisible(userRole, 'PACKING_BAGMAKER_SEAL_H', visibilityContext) && (
+                            <MetricCard title="Seal Temp (H)" value={formatNumber(bagmaker.sealTempHorizontal)} unit="°C" icon={Thermometer} color="text-rose-400" />
+                        )}
+                        {isDataItemVisible(userRole, 'PACKING_BAGMAKER_SEAL_V', visibilityContext) && (
+                           <MetricCard title="Seal Temp (V)" value={formatNumber(bagmaker.sealTempVertical)} unit="°C" icon={Thermometer} color="text-rose-400" />
+                        )}
+                    </div>
+                </Card>
+            </div>
+        );
+    };
 
     const renderProcessTab = () => {
         const params = machine.processParams || {};
@@ -673,6 +719,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
             {/* Content Area */}
             <div className="min-h-[500px] pt-2">
                 {activeTab === 'Performance' && renderPerformanceTab()}
+                {activeTab === 'Packing' && renderPackingTab()}
                 {activeTab === 'Process' && renderProcessTab()}
                 {activeTab === 'Utility' && renderUtilityTab()}
                 {activeTab === 'Alarms' && renderAlarmsTab()}

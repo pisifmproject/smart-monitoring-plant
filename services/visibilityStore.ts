@@ -1,5 +1,6 @@
 
 
+
 import { UserRole, DataItem, VisibilityCategory, VisibilityGroup } from '../types';
 import { plantService } from './plantService';
 
@@ -127,6 +128,7 @@ const STATIC_REGISTRY: DataItem[] = [
     // --- MACHINE DETAIL ---
     // TABS
     { id: 'md_tab_1', key: 'MACHINE_TAB_PERFORMANCE', label: 'Tab: Performance', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
+    { id: 'md_tab_7', key: 'MACHINE_TAB_PACKING', label: 'Tab: Packing', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
     { id: 'md_tab_2', key: 'MACHINE_TAB_PROCESS', label: 'Tab: Process', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
     { id: 'md_tab_3', key: 'MACHINE_TAB_UTILITY', label: 'Tab: Utility', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
     { id: 'md_tab_4', key: 'MACHINE_TAB_ALARMS', label: 'Tab: Alarms', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
@@ -143,6 +145,16 @@ const STATIC_REGISTRY: DataItem[] = [
     { id: 'md_perf_7', key: 'MACHINE_REJECT_KG', label: 'Reject Mass (Period)', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
     { id: 'md_perf_8', key: 'MACHINE_REJECT_PERCENT', label: 'Reject %', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
     { id: 'md_perf_9', key: 'MACHINE_OUTPUT_TREND_CHART', label: 'Output vs Target Trend', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.CHART, location: 'Machine Detail / Performance', defaultVisible: true },
+
+    // PACKING
+    { id: 'md_pack_1', key: 'PACKING_WEIGHER_SPEED', label: 'Weigher Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_2', key: 'PACKING_WEIGHER_AVG_WEIGHT', label: 'Weigher Avg. Weight', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_3', key: 'PACKING_WEIGHER_GIVEAWAY', label: 'Weigher Giveaway', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_4', key: 'PACKING_WEIGHER_STD_DEV', label: 'Weigher Std. Deviation', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.WEIGHER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_5', key: 'PACKING_BAGMAKER_SPEED', label: 'Bagmaker Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_6', key: 'PACKING_BAGMAKER_FILM', label: 'Bagmaker Film Remaining', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_7', key: 'PACKING_BAGMAKER_SEAL_H', label: 'Bagmaker Seal Temp (H)', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
+    { id: 'md_pack_8', key: 'PACKING_BAGMAKER_SEAL_V', label: 'Bagmaker Seal Temp (V)', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.BAGMAKER, location: 'Machine Detail / Packing', defaultVisible: true },
 
     // PROCESS
     { id: 'md_proc_1', key: 'PARAM_SCREW_SPEED', label: 'Param: Screw Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.PROCESS_PARAM, location: 'Machine Detail / Process', defaultVisible: true },

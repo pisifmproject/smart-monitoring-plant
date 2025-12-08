@@ -1,4 +1,3 @@
-
 //mockData.ts
 
 import {
@@ -10,7 +9,9 @@ import {
     Alarm,
     AlarmSeverity,
     MachineType,
-    DowntimeLog
+    DowntimeLog,
+    WeigherDetails,
+    BagmakerDetails
 } from '../types';
 
 // ------------------------------------------------------
@@ -48,6 +49,23 @@ const generateMachines = (plantId: PlantCode, names: string[]): Machine[] => {
         
         // Generate machine-specific process parameters
         let processParams: Record<string, number | string> = {};
+
+        // Weigher and bagmaker details are now generated for ALL machines
+        const weigherDetails: WeigherDetails = {
+            averageWeight: parseFloat((25.1 + Math.random() * 0.2).toFixed(2)),
+            standardDeviation: parseFloat((0.05 + Math.random() * 0.05).toFixed(3)),
+            giveaway: parseFloat((0.8 + Math.random() * 0.4).toFixed(2)),
+            speed: 80 + Math.floor(Math.random() * 5),
+            status: status === 'RUNNING' ? 'RUNNING' : 'IDLE'
+        };
+        const bagmakerDetails: BagmakerDetails = {
+            speed: 80 + Math.floor(Math.random() * 5),
+            filmRemaining: parseFloat((65 + Math.random() * 30).toFixed(1)),
+            sealTempHorizontal: 150 + Math.floor(Math.random() * 5),
+            sealTempVertical: 152 + Math.floor(Math.random() * 5),
+            status: status === 'RUNNING' ? 'RUNNING' : 'IDLE'
+        };
+
         switch(type) {
             case MachineType.EXTRUDER:
                 processParams = { 
@@ -94,7 +112,10 @@ const generateMachines = (plantId: PlantCode, names: string[]): Machine[] => {
                 steam: type === MachineType.FRYER ? 400 + Math.random() * 100 : 0,
                 water: 0.5 + Math.random() * 0.2,
                 air: 200 + Math.random() * 50
-            }
+            },
+            // Packing specific
+            weigher: weigherDetails,
+            bagmaker: bagmakerDetails
         };
     });
 };
