@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect, Suspense, lazy, useMemo } from 'react';
 import {
   HashRouter,
@@ -70,7 +71,7 @@ const SidebarLink: React.FC<{ to: string; label: string; active: boolean; icon?:
     className={`group relative flex items-center justify-between px-4 py-3 mx-2 my-1 rounded-xl text-sm font-medium transition-all duration-200 ${
       active
         ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-        : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
+        : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
     } ${isCollapsed ? 'justify-center' : ''}`}
   >
     <div className="flex items-center gap-3">
@@ -84,7 +85,7 @@ const SidebarLink: React.FC<{ to: string; label: string; active: boolean; icon?:
 );
 
 const NestedSidebarLink: React.FC<{ to: string; label: string; active: boolean; }> = ({ to, label, active }) => (
-    <Link to={to} className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${active ? 'text-white bg-slate-700/50' : 'text-slate-400 hover:text-white'}`}>
+    <Link to={to} className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${active ? 'text-white bg-slate-700/50' : 'text-slate-300 hover:text-white'}`}>
         {label}
     </Link>
 );
@@ -100,7 +101,7 @@ const DropdownMenu: React.FC<{ title: string; icon: any; isCollapsed: boolean; c
     if (isCollapsed) {
         return (
             <div className="flex justify-center my-3 mx-2 p-2 bg-slate-800/30 rounded-lg border border-slate-700/50" title={title}>
-                <Icon size={18} className="text-slate-500" />
+                <Icon size={18} className="text-slate-400" />
             </div>
         );
     }
@@ -109,10 +110,10 @@ const DropdownMenu: React.FC<{ title: string; icon: any; isCollapsed: boolean; c
         <div className="px-3 my-1">
             <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-800 text-slate-300 transition-colors">
                 <div className="flex items-center gap-3">
-                    <Icon size={18} className="text-slate-500" />
+                    <Icon size={18} className="text-slate-400" />
                     <span className="text-sm font-bold">{title}</span>
                 </div>
-                <ChevronRight size={16} className={`text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
+                <ChevronRight size={16} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
             </button>
             <div style={{
                 maxHeight: isOpen ? '1000px' : '0px',
@@ -157,7 +158,7 @@ const UserProfileFooter: React.FC<{ user: User; onLogout: () => void; isCollapse
             {!isCollapsed && (
                 <button
                     onClick={() => { onLogout(); window.location.hash = '/'; }}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-500/10 hover:text-rose-400 text-slate-400 text-xs font-bold uppercase tracking-wider transition-all border border-slate-700 hover:border-rose-500/30 group"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-500/10 hover:text-rose-400 text-slate-300 text-xs font-bold uppercase tracking-wider transition-all border border-slate-700 hover:border-rose-500/30 group"
                 >
                     <LogOut size={14} className="group-hover:scale-110 transition-transform"/> Sign Out
                 </button>
@@ -230,12 +231,12 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                     <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-6">
                         {canViewGlobal && (
                             <div>
-                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Dashboards</div>}
+                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dashboards</div>}
                                 <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
                             </div>
                         )}
                         <div>
-                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Production Plants</div>}
+                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
                             <div className="space-y-0.5">
                                 {allPlants.map((plantItem) => (
                                     <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />
@@ -274,7 +275,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                         </div>
                     </div>
                     <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-1">
-                        {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Production Plants</div>}
+                        {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
                         {allPlants.map(plantItem => {
                             const isCurrentPlantActive = plant?.id === plantItem.id;
                             const isExpanded = expandedPlant === plantItem.id;
@@ -313,7 +314,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                         })}
                         {isAdmin && (
                             <div className="pt-4">
-                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Administration</div>}
+                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administration</div>}
                                 <SidebarLink to="/app/settings" label="System Settings" active={location.pathname.startsWith('/app/settings')} icon={Settings} isCollapsed={isCollapsed} />
                             </div>
                         )}
@@ -333,7 +334,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                     <>
                         <div className={`px-4 py-6 border-b border-slate-800/50 flex items-center gap-4 ${isCollapsed ? 'justify-center py-8' : ''}`}>
                             {!isCollapsed && <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700"><Factory size={20} className="text-blue-400" /></div>}
-                            {!isCollapsed && <div className="min-w-0"><p className="text-base font-bold text-white truncate">{plant.name}</p><p className="text-xs text-slate-400 font-medium">{plant.location}</p></div>}
+                            {!isCollapsed && <div className="min-w-0"><p className="text-base font-bold text-white truncate">{plant.name}</p><p className="text-xs text-slate-300 font-medium">{plant.location}</p></div>}
                             {isCollapsed && <Factory size={24} className="text-blue-400" />}
                         </div>
                         <nav className="flex-1 overflow-y-auto py-4 custom-scrollbar">
@@ -362,17 +363,17 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                         <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-6">
                             {canViewGlobal && (
                                 <div>
-                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Dashboards</div>}
+                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dashboards</div>}
                                     <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
                                 </div>
                             )}
                             <div>
-                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Production Plants</div>}
+                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
                                 <div className="space-y-0.5">{allPlants.map((plantItem) => <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />)}</div>
                             </div>
                             {isAdmin && (
                                 <div>
-                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Administration</div>}
+                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administration</div>}
                                     <SidebarLink to="/app/settings" label="System Settings" active={location.pathname.startsWith('/app/settings')} icon={Settings} isCollapsed={isCollapsed} />
                                 </div>
                             )}
@@ -399,10 +400,10 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-950 transition-all duration-300">
                 <header className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-slate-800 shrink-0">
-                    <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(true)}>
+                    <button className="lg:hidden text-slate-300 hover:text-white" onClick={() => setIsMobileMenuOpen(true)}>
                         <Menu size={24} />
                     </button>
-                    <button className="hidden lg:block text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+                    <button className="hidden lg:block text-slate-300 hover:text-white" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
                         <ChevronsLeft size={20} className={`transition-transform duration-300 ${!isSidebarOpen ? 'rotate-180' : ''}`} />
                     </button>
                 </header>

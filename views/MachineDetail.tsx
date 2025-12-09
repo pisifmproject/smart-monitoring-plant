@@ -229,7 +229,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                 className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                     period === label 
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
                 }`}
             >
                 {label}
@@ -318,15 +318,15 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                         {isDataItemVisible(userRole, 'PACKING_MULTI_UNIT_SUMMARY_TOTALS', visibilityContext) && (
                             <>
-                                <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-400 uppercase font-bold">Total Bagmakers</p><p className="text-2xl font-bold text-white">{onlineBagmakers}/{totalBagmakers}</p></div>
-                                <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-400 uppercase font-bold">Total Weighers</p><p className="text-2xl font-bold text-white">{onlineWeighers}/{totalWeighers}</p></div>
+                                <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-300 uppercase font-bold">Total Bagmakers</p><p className="text-2xl font-bold text-white">{onlineBagmakers}/{totalBagmakers}</p></div>
+                                <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-300 uppercase font-bold">Total Weighers</p><p className="text-2xl font-bold text-white">{onlineWeighers}/{totalWeighers}</p></div>
                             </>
                         )}
                         {isDataItemVisible(userRole, 'PACKING_MULTI_UNIT_SUMMARY_EFFICIENCY', visibilityContext) && (
-                            <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-400 uppercase font-bold">Overall Efficiency</p><p className="text-2xl font-bold text-emerald-400">{formatNumber(overallEfficiency, 1)}%</p></div>
+                            <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-300 uppercase font-bold">Overall Efficiency</p><p className="text-2xl font-bold text-emerald-400">{formatNumber(overallEfficiency, 1)}%</p></div>
                         )}
                         {isDataItemVisible(userRole, 'PACKING_MULTI_UNIT_SUMMARY_STATUS', visibilityContext) && (
-                            <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-400 uppercase font-bold">Line Status</p><p className="text-2xl font-bold text-emerald-400">OPERATIONAL</p></div>
+                            <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-300 uppercase font-bold">Line Status</p><p className="text-2xl font-bold text-emerald-400">OPERATIONAL</p></div>
                         )}
                     </div>
                 </Card>
@@ -388,7 +388,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                     {isDataItemVisible(userRole, 'PACKING_WASTED_FILM', visibilityContext) && <MetricCard title="Wasted Film" value={formatNumber(unit.wastedFilmPercentage, 2)} unit="%" icon={Trash2} color="text-rose-400" />}
                 </div>
                 <div>
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Stop Event Counters (Shift)</h4>
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Stop Event Counters (Shift)</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <StopEventCounter icon={ScanSearch} label="Metal Detect" value={unit.metalDetectCount} color="text-rose-400" visible={isDataItemVisible(userRole, 'PACKING_METAL_DETECT', visibilityContext)} />
                         <StopEventCounter icon={Printer} label="Printer Error" value={unit.printerDateErrorCount} color="text-amber-400" visible={isDataItemVisible(userRole, 'PACKING_PRINTER_ERROR', visibilityContext)} />
@@ -404,7 +404,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         const StatItem: React.FC<{ label: string; value: string | number; unit?: string; visible: boolean }> = ({ label, value, unit, visible }) => {
             if (!visible) return null;
             return (
-                <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-400">{label}</span><div><span className="font-mono text-base font-bold text-white">{value}</span>{unit && <span className="ml-1.5 text-xs text-slate-500">{unit}</span>}</div></div>
+                <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">{label}</span><div><span className="font-mono text-base font-bold text-white">{value}</span>{unit && <span className="ml-1.5 text-xs text-slate-400">{unit}</span>}</div></div>
             );
         };
         return (
@@ -438,7 +438,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         const PackingKPI: React.FC<{ icon: any; title: string; value: string; unit: string; color: string; }> = ({ icon: Icon, title, value, unit, color }) => (
             <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-center gap-4 shadow-sm">
                 <div className={`p-3 rounded-lg bg-slate-800 ${color}`}><Icon size={24} /></div>
-                <div><p className="text-sm text-slate-400 font-medium">{title}</p><p className="text-2xl font-bold text-white tracking-tight">{value} <span className="text-base font-medium text-slate-500">{unit}</span></p></div>
+                <div><p className="text-sm text-slate-300 font-medium">{title}</p><p className="text-2xl font-bold text-white tracking-tight">{value} <span className="text-base font-medium text-slate-400">{unit}</span></p></div>
             </div>
         );
     
@@ -447,7 +447,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         );
     
         const StatItem: React.FC<{ label: string; value: string | number; unit?: string; }> = ({ label, value, unit }) => (
-            <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-400">{label}</span><div><span className="font-mono text-base font-bold text-white">{value}</span>{unit && <span className="ml-1.5 text-xs text-slate-500">{unit}</span>}</div></div>
+            <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">{label}</span><div><span className="font-mono text-base font-bold text-white">{value}</span>{unit && <span className="ml-1.5 text-xs text-slate-400">{unit}</span>}</div></div>
         );
     
         const StopEventCounter: React.FC<{ icon: any; label: string; value: number; color: string; }> = ({ icon: Icon, label, value, color }) => (
@@ -483,7 +483,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                             {isDataItemVisible(userRole, 'PACKING_ACTUAL_SPEED', visibilityContext) && <MetricCard title="Actual Speed" value={formatNumber(bagmaker.actualSpeed)} unit="bpm" icon={Gauge} color="text-blue-400" />}
                         </div>
                         
-                        <div><h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Stop Event Counters (Shift)</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">{isDataItemVisible(userRole, 'PACKING_METAL_DETECT', visibilityContext) && <StopEventCounter icon={ScanSearch} label="Metal Detect" value={bagmaker.metalDetectCount} color="text-rose-400" />}{isDataItemVisible(userRole, 'PACKING_PRINTER_ERROR', visibilityContext) && <StopEventCounter icon={Printer} label="Printer Error" value={bagmaker.printerDateErrorCount} color="text-amber-400" />}{isDataItemVisible(userRole, 'PACKING_PRODUCT_IN_SEAL', visibilityContext) && <StopEventCounter icon={Archive} label="Product in Seal" value={bagmaker.productInSealCount} color="text-amber-400" />}{isDataItemVisible(userRole, 'PACKING_SPLICE_DETECT', visibilityContext) && <StopEventCounter icon={Scissors} label="Splice Detect" value={bagmaker.spliceDetectCount} color="text-blue-400" />}</div></div>
+                        <div><h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Stop Event Counters (Shift)</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">{isDataItemVisible(userRole, 'PACKING_METAL_DETECT', visibilityContext) && <StopEventCounter icon={ScanSearch} label="Metal Detect" value={bagmaker.metalDetectCount} color="text-rose-400" />}{isDataItemVisible(userRole, 'PACKING_PRINTER_ERROR', visibilityContext) && <StopEventCounter icon={Printer} label="Printer Error" value={bagmaker.printerDateErrorCount} color="text-amber-400" />}{isDataItemVisible(userRole, 'PACKING_PRODUCT_IN_SEAL', visibilityContext) && <StopEventCounter icon={Archive} label="Product in Seal" value={bagmaker.productInSealCount} color="text-amber-400" />}{isDataItemVisible(userRole, 'PACKING_SPLICE_DETECT', visibilityContext) && <StopEventCounter icon={Scissors} label="Splice Detect" value={bagmaker.spliceDetectCount} color="text-blue-400" />}</div></div>
                     </AnalysisCard>
                 </div>
             </div>
@@ -507,7 +507,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                     {Object.entries(params).map(([key, value]) => (
                         isDataItemVisible(userRole, `PARAM_${key.toUpperCase().replace(/\s/g,'_')}`, visibilityContext) && (
                             <Card key={key} className="flex flex-col justify-center items-center text-center p-6 bg-slate-800/50">
-                                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">{key}</span>
+                                <span className="text-slate-300 text-xs font-bold uppercase tracking-wider mb-2">{key}</span>
                                 <span className="text-2xl font-bold text-white font-mono">{typeof value === 'number' ? formatNumber(value) : value}</span>
                             </Card>
                         )
@@ -581,7 +581,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         <Card title="Alarm History" className="animate-in fade-in slide-in-from-bottom-2">
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                    <thead className="text-xs text-slate-400 uppercase font-bold bg-slate-900/50">
+                    <thead className="text-xs text-slate-300 uppercase font-bold bg-slate-900/50">
                         <tr>
                             <th className="p-3">Time</th>
                             <th className="p-3">Code</th>
@@ -593,8 +593,8 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                     <tbody className="divide-y divide-slate-800">
                         {alarmHistory.map((alarm : Alarm) => (
                              <tr key={alarm.id} className="hover:bg-slate-800/50">
-                                <td className="p-3 font-mono text-slate-400">{alarm.timestamp}</td>
-                                <td className="p-3 font-mono text-slate-400">{alarm.code}</td>
+                                <td className="p-3 font-mono text-slate-300">{alarm.timestamp}</td>
+                                <td className="p-3 font-mono text-slate-300">{alarm.code}</td>
                                 <td className="p-3 font-semibold text-white">{alarm.message}</td>
                                 <td className="p-3"><StatusBadge status={alarm.severity} /></td>
                                 <td className="p-3">
@@ -622,7 +622,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
             <Card title="Downtime Logs">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="text-xs text-slate-400 uppercase font-bold bg-slate-900/50">
+                        <thead className="text-xs text-slate-300 uppercase font-bold bg-slate-900/50">
                             <tr>
                                 <th className="p-3">Start</th>
                                 <th className="p-3">End</th>
@@ -635,8 +635,8 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                         <tbody className="divide-y divide-slate-800">
                             {downtimeLogs.map(log => (
                                 <tr key={log.id} className="hover:bg-slate-800/50">
-                                    <td className="p-3 font-mono text-slate-400">{log.start}</td>
-                                    <td className="p-3 font-mono text-slate-400">{log.end}</td>
+                                    <td className="p-3 font-mono text-slate-300">{log.start}</td>
+                                    <td className="p-3 font-mono text-slate-300">{log.end}</td>
                                     <td className="p-3 font-bold text-white">{log.duration}</td>
                                     <td className="p-3"><span className="bg-slate-700 px-2 py-1 rounded-md text-xs font-semibold">{log.reason}</span></td>
                                     <td className="p-3 text-slate-300">{log.description}</td>
@@ -668,15 +668,15 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                                 <div className="w-full lg:w-[400px] bg-slate-900/50 border border-slate-700 rounded-lg p-4">
                                      {!primaryAlarm.inProgressBy ? (
                                         <form onSubmit={handleStartMaintenance}>
-                                            <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Technician Name</label>
+                                            <label className="text-xs font-bold text-slate-300 uppercase mb-2 block">Technician Name</label>
                                             <input type="text" value={startTechnicianName} onChange={e => setStartTechnicianName(e.target.value)} required className="w-full bg-slate-800 p-2 rounded border border-slate-600 mb-3" />
                                             <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded font-bold">Start Maintenance</button>
                                         </form>
                                     ) : (
                                          <form onSubmit={handleMaintenanceSubmit} className="space-y-3">
-                                            <div><label className="text-xs font-bold text-slate-400 uppercase block">Checked By</label><input type="text" value={formCheckedBy} onChange={e => setFormCheckedBy(e.target.value)} required className="w-full bg-slate-800 p-2 rounded border border-slate-600" /></div>
-                                            <div><label className="text-xs font-bold text-slate-400 uppercase block">Note</label><textarea value={maintenanceNote} onChange={e => setMaintenanceNote(e.target.value)} required className="w-full bg-slate-800 p-2 rounded border border-slate-600 h-24" /></div>
-                                            <div className="flex items-center gap-4"><label className="text-xs font-bold text-slate-400 uppercase">Solved?</label><input type="checkbox" checked={maintenanceSolved} onChange={e => setMaintenanceSolved(e.target.checked)} className="w-5 h-5 accent-emerald-500" /></div>
+                                            <div><label className="text-xs font-bold text-slate-300 uppercase block">Checked By</label><input type="text" value={formCheckedBy} onChange={e => setFormCheckedBy(e.target.value)} required className="w-full bg-slate-800 p-2 rounded border border-slate-600" /></div>
+                                            <div><label className="text-xs font-bold text-slate-300 uppercase block">Note</label><textarea value={maintenanceNote} onChange={e => setMaintenanceNote(e.target.value)} required className="w-full bg-slate-800 p-2 rounded border border-slate-600 h-24" /></div>
+                                            <div className="flex items-center gap-4"><label className="text-xs font-bold text-slate-300 uppercase">Solved?</label><input type="checkbox" checked={maintenanceSolved} onChange={e => setMaintenanceSolved(e.target.checked)} className="w-5 h-5 accent-emerald-500" /></div>
                                             <button disabled={formSubmitting} type="submit" className="w-full bg-emerald-600 text-white p-2 rounded font-bold flex items-center justify-center gap-2 disabled:opacity-50">
                                                 {formSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Submit Report
                                             </button>
@@ -690,7 +690,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                     <Card className="text-center py-12 bg-emerald-900/10 border-emerald-500/20">
                         <CheckCircle2 size={40} className="text-emerald-500 mx-auto mb-3" />
                         <h3 className="font-bold text-white text-lg">System Healthy</h3>
-                        <p className="text-sm text-emerald-400/70">No active alarms on this machine.</p>
+                        <p className="text-sm text-slate-300">No active alarms on this machine.</p>
                     </Card>
                 )
             )}
@@ -698,7 +698,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                  <Card title="Maintenance History">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="text-xs text-slate-400 uppercase font-bold bg-slate-900/50">
+                            <thead className="text-xs text-slate-300 uppercase font-bold bg-slate-900/50">
                                 <tr>
                                     <th className="p-3">Time</th>
                                     <th className="p-3">Technician</th>
@@ -709,7 +709,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                             <tbody className="divide-y divide-slate-800">
                                 {maintenanceHistoryRecords.map(record => (
                                      <tr key={record.id} className="hover:bg-slate-800/50">
-                                        <td className="p-3 font-mono text-slate-400">{record.timestamp}</td>
+                                        <td className="p-3 font-mono text-slate-300">{record.timestamp}</td>
                                         <td className="p-3 font-semibold text-white">{record.checkedBy}</td>
                                         <td className="p-3">
                                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${record.solved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
@@ -744,7 +744,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         <div className="space-y-6 animate-in fade-in duration-300 w-full pb-10 relative">
              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white">
+                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white">
                         <ArrowLeft size={24} />
                     </button>
                     <div>
@@ -752,7 +752,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                             <h1 className="text-2xl font-bold text-white tracking-tight">{machine.name}</h1>
                             <StatusBadge status={machine.status} />
                         </div>
-                        <p className="text-slate-400 text-sm mt-0.5 font-medium">{machine.plantId} / {machine.type}</p>
+                        <p className="text-slate-300 text-sm mt-0.5 font-medium">{machine.plantId} / {machine.type}</p>
                     </div>
                 </div>
                 
@@ -790,7 +790,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                                 className={`whitespace-nowrap py-3 px-1 border-b-2 font-bold text-sm transition-colors ${
                                     activeTab === tab.key
                                     ? 'border-blue-500 text-blue-400'
-                                    : 'border-transparent text-slate-500 hover:text-slate-200 hover:border-slate-400'
+                                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-300'
                                 }`}
                             >
                                 {tab.key}
@@ -811,16 +811,16 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                         <form onSubmit={handleAddDowntimeSubmit} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Start Time</label>
+                                    <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">Start Time</label>
                                     <input type="time" value={newDowntime.start} onChange={e => setNewDowntime({...newDowntime, start: e.target.value})} required className="w-full bg-slate-800 p-2 rounded border border-slate-600"/>
                                 </div>
                                  <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">End Time</label>
+                                    <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">End Time</label>
                                     <input type="time" value={newDowntime.end} onChange={e => setNewDowntime({...newDowntime, end: e.target.value})} required className="w-full bg-slate-800 p-2 rounded border border-slate-600"/>
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Reason</label>
+                                <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">Reason</label>
                                 <select value={newDowntime.reason} onChange={e => setNewDowntime({...newDowntime, reason: e.target.value})} className="w-full bg-slate-800 p-2 rounded border border-slate-600">
                                     <option>Jam</option>
                                     <option>Changeover</option>
@@ -831,11 +831,11 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                                 </select>
                             </div>
                              <div>
-                                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Description (Optional)</label>
+                                <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">Description (Optional)</label>
                                 <textarea value={newDowntime.description} onChange={e => setNewDowntime({...newDowntime, description: e.target.value})} className="w-full bg-slate-800 p-2 rounded border border-slate-600 h-20" />
                             </div>
                             <div className="flex justify-end gap-3 pt-2">
-                                <button type="button" onClick={() => setIsDowntimeModalOpen(false)} className="px-4 py-2 rounded font-bold text-slate-400 hover:text-white">Cancel</button>
+                                <button type="button" onClick={() => setIsDowntimeModalOpen(false)} className="px-4 py-2 rounded font-bold text-slate-300 hover:text-white">Cancel</button>
                                 <button type="submit" className="px-6 py-2 rounded bg-blue-600 text-white font-bold flex items-center gap-2"><Save size={16}/> Save Log</button>
                             </div>
                         </form>

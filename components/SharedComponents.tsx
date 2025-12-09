@@ -25,10 +25,10 @@ export const MetricCard: React.FC<{ title: string; value: string | number; unit?
     <Card className="hover:border-slate-500 hover:bg-slate-700/50 transition-colors duration-200">
         <div className="flex items-start justify-between">
             <div>
-                <p className="text-slate-400 text-sm font-medium uppercase tracking-wide">{title}</p>
+                <p className="text-slate-300 text-sm font-medium uppercase tracking-wide">{title}</p>
                 <div className="mt-2 flex items-baseline">
                     <span className="text-2xl lg:text-[1.6rem] font-bold text-white tracking-tight leading-none">{value}</span>
-                    {unit && <span className="ml-1.5 text-sm font-medium text-slate-400">{unit}</span>}
+                    {unit && <span className="ml-1.5 text-sm font-medium text-slate-300">{unit}</span>}
                 </div>
             </div>
             <div className={`p-2.5 rounded-lg bg-slate-700/50 ${color}`}>
@@ -38,7 +38,7 @@ export const MetricCard: React.FC<{ title: string; value: string | number; unit?
         {trend && (
             <div className={`mt-3 text-sm font-medium flex items-center ${trendUp ? 'text-emerald-400' : 'text-rose-400'}`}>
                 <span>{trendUp ? '↑' : '↓'} {trend}</span>
-                <span className="text-slate-500 ml-1.5 font-normal">vs yesterday</span>
+                <span className="text-slate-400 ml-1.5 font-normal">vs yesterday</span>
             </div>
         )}
     </Card>

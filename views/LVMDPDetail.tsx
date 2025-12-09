@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { LVMDP, UserRole } from '../types';
@@ -166,7 +167,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                 className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                     period === label 
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
                 }`}
             >
                 {label}
@@ -184,7 +185,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
         <div className="space-y-6 animate-in fade-in duration-300 w-full pb-10 relative">
              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white">
+                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white">
                         <ArrowLeft size={24} />
                     </button>
                     <div>
@@ -204,7 +205,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                 </div>
                             )}
                         </div>
-                        <p className="text-slate-400 text-sm mt-0.5 font-medium">Power Distribution Panel</p>
+                        <p className="text-slate-300 text-sm mt-0.5 font-medium">Power Distribution Panel</p>
                     </div>
                 </div>
                 
@@ -286,35 +287,35 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                         <div className="space-y-6">
                             {isDataItemVisible(userRole, visibilityKeys.VOLT_GROUP, visibilityContext) && (
                                 <div>
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Voltage (L-L)</h4>
+                                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">Voltage (L-L)</h4>
                                     <div className="space-y-3">
-                                        <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage R-S</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageRS)} V</span> <DeltaIndicator value={deltas.v_rs} /></div></div>
-                                        <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage S-T</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageST)} V</span> <DeltaIndicator value={deltas.v_st} /></div></div>
-                                        <div className="flex justify-between items-center text-sm"><span className="text-slate-400">Voltage T-R</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageTR)} V</span> <DeltaIndicator value={deltas.v_tr} /></div></div>
+                                        <div className="flex justify-between items-center text-sm"><span className="text-slate-300">Voltage R-S</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageRS)} V</span> <DeltaIndicator value={deltas.v_rs} /></div></div>
+                                        <div className="flex justify-between items-center text-sm"><span className="text-slate-300">Voltage S-T</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageST)} V</span> <DeltaIndicator value={deltas.v_st} /></div></div>
+                                        <div className="flex justify-between items-center text-sm"><span className="text-slate-300">Voltage T-R</span><div className="flex items-center gap-2"><span className="font-mono text-white font-bold">{formatNumber(lvmdp.voltageTR)} V</span> <DeltaIndicator value={deltas.v_tr} /></div></div>
                                     </div>
                                 </div>
                             )}
                              {isDataItemVisible(userRole, visibilityKeys.CURRENT_LOAD_SECTION, visibilityContext) && (
                                 <div className="pt-4 border-t border-slate-800">
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Current Load</h4>
+                                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">Current Load</h4>
                                     <div className="space-y-3">
                                         <div className="w-full bg-slate-700 rounded-full h-2.5">
                                             <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: `${loadPercent}%` }}></div>
                                         </div>
                                         <div className="flex justify-between items-baseline">
                                             <span className="text-2xl font-bold text-white">{formatNumber(loadPercent)}%</span>
-                                            <span className="text-sm text-slate-400 font-medium">Max: {formatNumber(maxCurrent)} A</span>
+                                            <span className="text-sm text-slate-300 font-medium">Max: {formatNumber(maxCurrent)} A</span>
                                         </div>
-                                        <p className="text-sm text-slate-400">Average Current: <span className="font-bold text-white font-mono">{formatNumber(avgCurrent)} A</span></p>
+                                        <p className="text-sm text-slate-300">Average Current: <span className="font-bold text-white font-mono">{formatNumber(avgCurrent)} A</span></p>
                                     </div>
                                 </div>
                             )}
                              {isDataItemVisible(userRole, visibilityKeys.POWER_METRICS_LIST, visibilityContext) && (
                                 <div className="pt-4 border-t border-slate-800">
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Frequency</h4>
+                                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">Frequency</h4>
                                     <div className="flex items-baseline gap-2 justify-center py-2">
                                         <span className="text-3xl font-bold text-white font-mono tracking-tighter">{formatNumber(lvmdp.frequency)}</span>
-                                        <span className="text-slate-400 font-bold text-base">Hz</span>
+                                        <span className="text-slate-300 font-bold text-base">Hz</span>
                                     </div>
                                 </div>
                             )}
@@ -370,7 +371,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                 >
                     <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="text-xs text-slate-400 uppercase font-bold bg-slate-900/50">
+                        <thead className="text-xs text-slate-300 uppercase font-bold bg-slate-900/50">
                             <tr>
                                 <th className="p-3 text-center">Shift</th>
                                 <th className="p-3 text-center">Total kWh</th>
@@ -429,7 +430,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                         {!primaryAlarm.inProgressBy ? (
                                             <form onSubmit={handleStartMaintenance} className="space-y-3">
                                                 <div>
-                                                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Technician Name</label>
+                                                    <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">Technician Name</label>
                                                     <input 
                                                         type="text" 
                                                         required
@@ -447,7 +448,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                             <form onSubmit={handleMaintenanceSubmit} className="space-y-4">
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Checked By</label>
+                                                        <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">Checked By</label>
                                                         <input 
                                                             type="text" 
                                                             className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none"
@@ -456,7 +457,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Status</label>
+                                                        <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">Status</label>
                                                         <div className="flex items-center gap-3 mt-2">
                                                             <label className="flex items-center gap-2 cursor-pointer bg-slate-800 px-3 py-1.5 rounded border border-slate-700 hover:border-emerald-500 transition-colors">
                                                                 <input type="radio" checked={maintenanceSolved} onChange={() => setMaintenanceSolved(true)} className="accent-emerald-500 w-4 h-4"/>
@@ -470,7 +471,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Maintenance Note</label>
+                                                    <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">Maintenance Note</label>
                                                     <textarea 
                                                         required
                                                         className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:border-blue-500 outline-none h-20 text-sm"
@@ -500,7 +501,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                         <Card title="Maintenance History">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-slate-300">
-                                    <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-400">
+                                    <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-300">
                                         <tr>
                                             <th className="p-3">Time</th>
                                             <th className="p-3">Technician</th>
@@ -513,7 +514,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                             <tr><td colSpan={4} className="p-6 text-center text-slate-500 italic">No maintenance history recorded for this panel.</td></tr>
                                         ) : alarmHistory.map(record => (
                                             <tr key={record.id} className="hover:bg-slate-800/50">
-                                                <td className="p-3 font-mono text-slate-400">{record.timestamp}</td>
+                                                <td className="p-3 font-mono text-slate-300">{record.timestamp}</td>
                                                 <td className="p-3 font-bold text-white">{record.checkedBy}</td>
                                                 <td className="p-3">
                                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${record.solved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>

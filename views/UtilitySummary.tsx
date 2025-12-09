@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useMemo } from 'react';
 import { Plant, UserRole } from '../types';
 import { Card, MetricCard, formatNumber } from '../components/SharedComponents';
@@ -77,7 +78,7 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                 className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                     period === label 
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
                 }`}
             >
                 {label}
@@ -89,10 +90,10 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
         <div className="space-y-6 animate-in fade-in duration-300 w-full relative">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white"><ArrowLeft size={24} /></button>
+                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white"><ArrowLeft size={24} /></button>
                     <div>
                         <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2"><config.icon className={config.color} size={28} />{config.label} Detail</h1>
-                        <p className="text-slate-400 text-sm font-medium">{plant.name}</p>
+                        <p className="text-slate-300 text-sm font-medium">{plant.name}</p>
                     </div>
                 </div>
                 
@@ -156,24 +157,24 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-rose-500/10 text-rose-400 rounded-lg"><ChevronsUp size={20}/></div>
                                 <div>
-                                    <p className="text-sm text-slate-400">Peak Usage</p>
+                                    <p className="text-sm text-slate-300">Peak Usage</p>
                                     <p className="text-lg font-bold text-white">{quickStats.peak.value} {quickStats.peak.unit}</p>
-                                    <p className="text-xs text-slate-500">at {quickStats.peak.time}</p>
+                                    <p className="text-xs text-slate-400">at {quickStats.peak.time}</p>
                                 </div>
                             </div>
                              <div className="flex items-center gap-4">
                                 <div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg"><Clock size={20}/></div>
                                 <div>
-                                    <p className="text-sm text-slate-400">Average Usage</p>
+                                    <p className="text-sm text-slate-300">Average Usage</p>
                                     <p className="text-lg font-bold text-white">{quickStats.average.value} {quickStats.average.unit}</p>
                                 </div>
                             </div>
                              <div className="flex items-center gap-4">
                                 <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg"><ChevronsDown size={20}/></div>
                                 <div>
-                                    <p className="text-sm text-slate-400">Lowest Usage</p>
+                                    <p className="text-sm text-slate-300">Lowest Usage</p>
                                     <p className="text-lg font-bold text-white">{quickStats.low.value} {quickStats.low.unit}</p>
-                                    <p className="text-xs text-slate-500">at {quickStats.low.time}</p>
+                                    <p className="text-xs text-slate-400">at {quickStats.low.time}</p>
                                 </div>
                             </div>
                         </div>
@@ -222,12 +223,12 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                                             <h4 className="font-bold text-white text-lg mb-1">{panel.name}</h4>
                                             <div className="space-y-2 mt-3">
                                                 <div className="flex justify-between text-sm">
-                                                    <span className="text-slate-400 font-medium">Energy ({period})</span>
+                                                    <span className="text-slate-300 font-medium">Energy ({period})</span>
                                                     <span className="text-white font-mono font-bold">{formatNumber(panel.energyToday * periodMult)} kWh</span>
                                                 </div>
                                                 {isDataItemVisible(userRole, 'LV_PANEL_LOAD_PERCENT', visibilityContext) &&
                                                 <div className="flex justify-between text-sm">
-                                                    <span className="text-slate-400 font-medium">Load</span>
+                                                    <span className="text-slate-300 font-medium">Load</span>
                                                     <span className={`font-mono font-bold ${panel.currentLoadPercent > 80 ? 'text-rose-400' : 'text-emerald-400'}`}>{formatNumber(panel.currentLoadPercent)}%</span>
                                                 </div>}
                                             </div>

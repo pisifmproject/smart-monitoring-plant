@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '../types';
@@ -61,13 +62,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             Through Real-time Data.
                         </span>
                     </h1>
-                    <p className="text-slate-400 text-lg max-w-lg leading-relaxed border-l-2 border-blue-500/50 pl-6">
+                    <p className="text-slate-300 text-lg max-w-lg leading-relaxed border-l-2 border-blue-500/50 pl-6">
                         Enterprise-grade monitoring solution for multi-plant industrial operations. 
                         Track performance, utilities, and machine health in one unified platform.
                     </p>
                  </div>
 
-                 <div className="relative z-10 flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider animate-in fade-in duration-1000 delay-300">
+                 <div className="relative z-10 flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase tracking-wider animate-in fade-in duration-1000 delay-300">
                     <ShieldCheck size={14} className="text-emerald-500" />
                     <span>Secure Enterprise Environment</span>
                  </div>
@@ -84,7 +85,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     
                     <div className="text-center lg:text-left">
                         <h2 className="text-3xl font-bold text-white tracking-tight">Welcome Back</h2>
-                        <p className="text-slate-400 mt-2 text-sm">Sign in to access the Smart Monitoring System.</p>
+                        <p className="text-slate-300 mt-2 text-sm">Sign in to access the Smart Monitoring System.</p>
                     </div>
 
                     {error && (
@@ -97,7 +98,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Corporate ID / Username</label>
+                                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Corporate ID / Username</label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <UserIcon className="h-5 w-5 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
@@ -114,7 +115,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             </div>
 
                             <div>
-                                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
+                                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Password</label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Lock className="h-5 w-5 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
@@ -133,7 +134,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
                         <div className="flex items-center">
                             <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-700 bg-slate-800 rounded cursor-pointer" />
-                            <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-400 cursor-pointer hover:text-slate-300">Remember me</label>
+                            <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-300 cursor-pointer hover:text-slate-200">Remember me</label>
                         </div>
 
                         <div>
@@ -166,13 +167,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <button onClick={() => navigate('/')} className="text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors uppercase tracking-widest">
                             ← Return to Landing Page
                         </button>
-                        <p className="text-[10px] text-slate-400 mt-4 leading-relaxed max-w-xs mx-auto">
+                        <p className="text-[10px] text-slate-300 mt-4 leading-relaxed max-w-xs mx-auto">
                             By signing in, you agree to comply with the company's IT security policies and procedures.
                         </p>
                     </div>
                 </div>
 
-                <div className="absolute bottom-6 text-[10px] text-slate-400 font-medium">
+                <div className="absolute bottom-6 text-[10px] text-slate-300 font-medium">
                     © 2025 PT Indofood Fortuna Makmur. All rights reserved.
                 </div>
             </div>
