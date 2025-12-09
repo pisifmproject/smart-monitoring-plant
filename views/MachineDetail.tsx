@@ -1,5 +1,9 @@
 
 
+
+
+
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Machine, UserRole, MachineType, PlantCode, BagmakerDetails, WeigherDetails, Alarm } from '../types';
@@ -276,15 +280,23 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         const { bagmakerUnits = [], weigherUnits = [], code } = machine;
 
         const totalBagmakers = bagmakerUnits.length;
-        const onlineBagmakers = bagmakerUnits.filter(u => u.status === 'RUNNING').length;
+        const onlineBagmakers = bagmakerUnits.filter(u => u.status === 'Production').length;
         const totalWeighers = weigherUnits.length;
-        const onlineWeighers = weigherUnits.filter(u => u.status === 'RUNNING').length;
+        const onlineWeighers = weigherUnits.filter(u => u.status === 'Production').length;
         const overallEfficiency = totalBagmakers > 0 ? (bagmakerUnits.reduce((acc, u) => acc + u.totalEfficiency, 0) / totalBagmakers) * 100 : 0;
     
-        const getStatusColor = (status: 'RUNNING' | 'IDLE' | 'FAULT') => {
-            if (status === 'RUNNING') return 'bg-emerald-500 hover:bg-emerald-400';
-            if (status === 'IDLE') return 'bg-amber-500 hover:bg-amber-400';
-            return 'bg-rose-500 hover:bg-rose-400';
+        const getStatusColor = (status: 'Production' | 'Stop' | 'Offline' | 'Idle') => {
+            if (status === 'Production') return 'bg-emerald-500 hover:bg-emerald-400';
+            if (status === 'Stop') return 'bg-rose-500 hover:bg-rose-400';
+            if (status === 'Idle') return 'bg-amber-500 hover:bg-amber-400';
+            return 'bg-slate-700 hover:bg-slate-600';
+        };
+
+        const getStatusTextColor = (status: 'Production' | 'Stop' | 'Offline' | 'Idle') => {
+            if (status === 'Production') return 'text-emerald-400';
+            if (status === 'Stop') return 'text-rose-400';
+            if (status === 'Idle') return 'text-amber-400';
+            return 'text-slate-500';
         };
     
         const renderDetailPanel = () => {
@@ -370,6 +382,12 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     };
 
     const SingleBagmakerDetailPanel = ({ unit, unitNumber, userRole, visibilityContext }: { unit: BagmakerDetails, unitNumber: number, userRole: UserRole, visibilityContext: any }) => {
+        const getStatusTextColor = (status: 'Production' | 'Stop' | 'Offline' | 'Idle') => {
+            if (status === 'Production') return 'text-emerald-400';
+            if (status === 'Stop') return 'text-rose-400';
+            if (status === 'Idle') return 'text-amber-400';
+            return 'text-slate-500';
+        };
         const StopEventCounter: React.FC<{ icon: any; label: string; value: number; color: string; visible: boolean }> = ({ icon: Icon, label, value, color, visible }) => {
             if (!visible) return null;
             return (
@@ -381,7 +399,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         };
         return (
              <div className="space-y-4 animate-in fade-in duration-300">
-                <h3 className="text-lg font-bold text-white">Bagmaker #{unitNumber} - <span className="text-emerald-400">{unit.status}</span></h3>
+                <h3 className="text-lg font-bold text-white">Bagmaker #{unitNumber} - <span className={getStatusTextColor(unit.status)}>{unit.status}</span></h3>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                     {isDataItemVisible(userRole, 'PACKING_ACTUAL_SPEED', visibilityContext) && <MetricCard title="Actual Speed" value={formatNumber(unit.actualSpeed)} unit="bpm" icon={Gauge} color="text-blue-400" />}
                     {isDataItemVisible(userRole, 'PACKING_GOOD_BAG_PERCENT', visibilityContext) && <MetricCard title="Good Bag %" value={formatNumber(unit.bagPercentage, 2)} unit="%" icon={CheckCircle2} color="text-emerald-400" />}
@@ -401,6 +419,12 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     };
     
     const SingleWeigherDetailPanel = ({ unit, unitNumber, userRole, visibilityContext }: { unit: WeigherDetails, unitNumber: number, userRole: UserRole, visibilityContext: any }) => {
+        const getStatusTextColor = (status: 'Production' | 'Stop' | 'Offline' | 'Idle') => {
+            if (status === 'Production') return 'text-emerald-400';
+            if (status === 'Stop') return 'text-rose-400';
+            if (status === 'Idle') return 'text-amber-400';
+            return 'text-slate-500';
+        };
         const StatItem: React.FC<{ label: string; value: string | number; unit?: string; visible: boolean }> = ({ label, value, unit, visible }) => {
             if (!visible) return null;
             return (
@@ -409,7 +433,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         };
         return (
             <div className="space-y-4 animate-in fade-in duration-300">
-                 <h3 className="text-lg font-bold text-white">Weigher #{unitNumber} - <span className="text-emerald-400">{unit.status}</span></h3>
+                 <h3 className="text-lg font-bold text-white">Weigher #{unitNumber} - <span className={getStatusTextColor(unit.status)}>{unit.status}</span></h3>
                  <div className="grid grid-cols-2 gap-3">
                     {isDataItemVisible(userRole, 'PACKING_WEIGHER_GIVEAWAY', visibilityContext) && <MetricCard title="Giveaway" value={formatNumber(unit.giveaway, 2)} unit="%" icon={AlertTriangle} color="text-amber-400" />}
                     {isDataItemVisible(userRole, 'PACKING_WEIGHER_STD_DEV', visibilityContext) && <MetricCard title="Std. Deviation" value={formatNumber(unit.standardDeviation, 3)} unit="g" icon={Activity} color="text-purple-400" />}
@@ -434,57 +458,62 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     const renderSingleUnitPackingTab = () => {
         const { weigher, bagmaker } = machine;
         if (!weigher || !bagmaker) return <div className="p-4 text-slate-500">Packing data not available.</div>;
-    
-        const PackingKPI: React.FC<{ icon: any; title: string; value: string; unit: string; color: string; }> = ({ icon: Icon, title, value, unit, color }) => (
-            <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-center gap-4 shadow-sm">
-                <div className={`p-3 rounded-lg bg-slate-800 ${color}`}><Icon size={24} /></div>
-                <div><p className="text-sm text-slate-300 font-medium">{title}</p><p className="text-2xl font-bold text-white tracking-tight">{value} <span className="text-base font-medium text-slate-400">{unit}</span></p></div>
-            </div>
-        );
-    
-        const AnalysisCard: React.FC<{ title: string; children: React.ReactNode; }> = ({ title, children }) => (
-            <div className="bg-slate-800/70 border border-slate-700/50 rounded-xl p-5 shadow-sm flex-1"><h3 className="text-base font-bold text-white mb-4 pb-3 border-b border-slate-700/80">{title}</h3><div className="space-y-4">{children}</div></div>
-        );
-    
-        const StatItem: React.FC<{ label: string; value: string | number; unit?: string; }> = ({ label, value, unit }) => (
-            <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">{label}</span><div><span className="font-mono text-base font-bold text-white">{value}</span>{unit && <span className="ml-1.5 text-xs text-slate-400">{unit}</span>}</div></div>
-        );
-    
-        const StopEventCounter: React.FC<{ icon: any; label: string; value: number; color: string; }> = ({ icon: Icon, label, value, color }) => (
-            <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded-lg border border-slate-700/50"><div className="flex items-center gap-3"><Icon size={18} className={color} /><span className="text-sm font-medium text-slate-300">{label}</span></div><span className="font-mono text-lg font-bold text-white">{value}</span></div>
-        );
-    
+        
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                 <Card title="Line Performance Summary">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        {isDataItemVisible(userRole, 'PACKING_TOTAL_EFFICIENCY', visibilityContext) && <PackingKPI icon={GaugeCircle} title="Total Efficiency" value={formatNumber(bagmaker.totalEfficiency * 100, 1)} unit="%" color="text-blue-400" />}
-                        {isDataItemVisible(userRole, 'PACKING_EFFICIENCY_WEIGHER', visibilityContext) && <PackingKPI icon={Scale} title="Weigher Efficiency" value={formatNumber(bagmaker.efficiencyWeigher * 100, 1)} unit="%" color="text-emerald-400" />}
-                        {isDataItemVisible(userRole, 'PACKING_EFFICIENCY_BAGMAKER', visibilityContext) && <PackingKPI icon={Package} title="Bagmaker Efficiency" value={formatNumber(bagmaker.efficiencyBagmaker * 100, 1)} unit="%" color="text-purple-400" />}
+                        {isDataItemVisible(userRole, 'PACKING_TOTAL_EFFICIENCY', visibilityContext) && 
+                            <MetricCard icon={GaugeCircle} title="Total Efficiency" value={formatNumber(bagmaker.totalEfficiency * 100, 1)} unit="%" color="text-blue-400" />}
+                        {isDataItemVisible(userRole, 'PACKING_EFFICIENCY_WEIGHER', visibilityContext) && 
+                            <MetricCard icon={Scale} title="Weigher Efficiency" value={formatNumber(bagmaker.efficiencyWeigher * 100, 1)} unit="%" color="text-emerald-400" />}
+                        {isDataItemVisible(userRole, 'PACKING_EFFICIENCY_BAGMAKER', visibilityContext) && 
+                            <MetricCard icon={Package} title="Bagmaker Efficiency" value={formatNumber(bagmaker.efficiencyBagmaker * 100, 1)} unit="%" color="text-purple-400" />}
                     </div>
                 </Card>
     
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <AnalysisCard title="Multihead Weigher Analysis">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {isDataItemVisible(userRole, 'PACKING_WEIGHER_GIVEAWAY', visibilityContext) && <MetricCard title="Giveaway" value={formatNumber(weigher.giveaway, 2)} unit="%" icon={AlertTriangle} color="text-amber-400" />}
-                            {isDataItemVisible(userRole, 'PACKING_WEIGHER_STD_DEV', visibilityContext) && <MetricCard title="Std. Deviation" value={formatNumber(weigher.standardDeviation, 3)} unit="g" icon={Activity} color="text-purple-400" />}
+                    <Card title="Multihead Weigher Analysis">
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="text-sm font-bold text-slate-300 mb-3 pb-2 border-b border-slate-700/80">Overall Performance</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {isDataItemVisible(userRole, 'PACKING_WEIGHER_GIVEAWAY', visibilityContext) && <MetricCard title="Giveaway" value={formatNumber(weigher.giveaway, 2)} unit="%" icon={AlertTriangle} color="text-amber-400" />}
+                                    {isDataItemVisible(userRole, 'PACKING_WEIGHER_STD_DEV', visibilityContext) && <MetricCard title="Std. Deviation" value={formatNumber(weigher.standardDeviation, 3)} unit="g" icon={Activity} color="text-purple-400" />}
+                                </div>
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-slate-300 mb-3 mt-4 pb-2 border-b border-slate-700/80">Individual Weigher Stats</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-3 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50"><h5 className="font-bold text-white text-sm">Weigher 1</h5>{isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_1', visibilityContext) && <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">Speed</span><div><span className="font-mono text-base font-bold text-white">{formatNumber(weigher.speed1, 0)}</span><span className="ml-1.5 text-xs text-slate-400">bpm</span></div></div>}{isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_1', visibilityContext) && <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">Total Weight</span><div><span className="font-mono text-base font-bold text-white">{formatNumber(weigher.totalWeight1, 0)}</span><span className="ml-1.5 text-xs text-slate-400">kg</span></div></div>}</div>
+                                    <div className="space-y-3 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50"><h5 className="font-bold text-white text-sm">Weigher 2</h5>{isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_2', visibilityContext) && <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">Speed</span><div><span className="font-mono text-base font-bold text-white">{formatNumber(weigher.speed2, 0)}</span><span className="ml-1.5 text-xs text-slate-400">bpm</span></div></div>}{isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_2', visibilityContext) && <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">Total Weight</span><div><span className="font-mono text-base font-bold text-white">{formatNumber(weigher.totalWeight2, 0)}</span><span className="ml-1.5 text-xs text-slate-400">kg</span></div></div>}</div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-3 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50"><h5 className="font-bold text-white text-sm">Weigher 1</h5>{isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_1', visibilityContext) && <StatItem label="Speed" value={formatNumber(weigher.speed1, 0)} unit="bpm" />}{isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_1', visibilityContext) && <StatItem label="Total Weight" value={formatNumber(weigher.totalWeight1, 0)} unit="kg" />}</div>
-                            <div className="space-y-3 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50"><h5 className="font-bold text-white text-sm">Weigher 2</h5>{isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_2', visibilityContext) && <StatItem label="Speed" value={formatNumber(weigher.speed2, 0)} unit="bpm" />}{isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_2', visibilityContext) && <StatItem label="Total Weight" value={formatNumber(weigher.totalWeight2, 0)} unit="kg" />}</div>
-                        </div>
-                    </AnalysisCard>
+                    </Card>
     
-                    <AnalysisCard title="Bagmaker Analysis">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {isDataItemVisible(userRole, 'PACKING_GOOD_BAG_PERCENT', visibilityContext) && <MetricCard title="Good Bag %" value={formatNumber(bagmaker.bagPercentage, 2)} unit="%" icon={CheckCircle2} color="text-emerald-400" />}
-                            {isDataItemVisible(userRole, 'PACKING_WASTED_FILM', visibilityContext) && <MetricCard title="Wasted Film" value={formatNumber(bagmaker.wastedFilmPercentage, 2)} unit="%" icon={Trash2} color="text-rose-400" />}
-                            {isDataItemVisible(userRole, 'PACKING_ACTUAL_SPEED', visibilityContext) && <MetricCard title="Actual Speed" value={formatNumber(bagmaker.actualSpeed)} unit="bpm" icon={Gauge} color="text-blue-400" />}
+                    <Card title="Bagmaker Analysis">
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="text-sm font-bold text-slate-300 mb-3 pb-2 border-b border-slate-700/80">Key Metrics</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {isDataItemVisible(userRole, 'PACKING_GOOD_BAG_PERCENT', visibilityContext) && <MetricCard title="Good Bag %" value={formatNumber(bagmaker.bagPercentage, 2)} unit="%" icon={CheckCircle2} color="text-emerald-400" />}
+                                    {isDataItemVisible(userRole, 'PACKING_WASTED_FILM', visibilityContext) && <MetricCard title="Wasted Film" value={formatNumber(bagmaker.wastedFilmPercentage, 2)} unit="%" icon={Trash2} color="text-rose-400" />}
+                                    {isDataItemVisible(userRole, 'PACKING_ACTUAL_SPEED', visibilityContext) && <MetricCard title="Actual Speed" value={formatNumber(bagmaker.actualSpeed)} unit="bpm" icon={Gauge} color="text-blue-400" />}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 className="text-sm font-bold text-slate-300 mb-3 mt-4 pb-2 border-b border-slate-700/80">Stop Event Counters (Shift)</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                    {isDataItemVisible(userRole, 'PACKING_METAL_DETECT', visibilityContext) && <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded-lg border border-slate-700/50"><div className="flex items-center gap-3"><ScanSearch size={18} className="text-rose-400" /><span className="text-sm font-medium text-slate-300">Metal Detect</span></div><span className="font-mono text-lg font-bold text-white">{bagmaker.metalDetectCount}</span></div>}
+                                    {isDataItemVisible(userRole, 'PACKING_PRINTER_ERROR', visibilityContext) && <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded-lg border border-slate-700/50"><div className="flex items-center gap-3"><Printer size={18} className="text-amber-400" /><span className="text-sm font-medium text-slate-300">Printer Error</span></div><span className="font-mono text-lg font-bold text-white">{bagmaker.printerDateErrorCount}</span></div>}
+                                    {isDataItemVisible(userRole, 'PACKING_PRODUCT_IN_SEAL', visibilityContext) && <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded-lg border border-slate-700/50"><div className="flex items-center gap-3"><Archive size={18} className="text-amber-400" /><span className="text-sm font-medium text-slate-300">Product in Seal</span></div><span className="font-mono text-lg font-bold text-white">{bagmaker.productInSealCount}</span></div>}
+                                    {isDataItemVisible(userRole, 'PACKING_SPLICE_DETECT', visibilityContext) && <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded-lg border border-slate-700/50"><div className="flex items-center gap-3"><Scissors size={18} className="text-blue-400" /><span className="text-sm font-medium text-slate-300">Splice Detect</span></div><span className="font-mono text-lg font-bold text-white">{bagmaker.spliceDetectCount}</span></div>}
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div><h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Stop Event Counters (Shift)</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">{isDataItemVisible(userRole, 'PACKING_METAL_DETECT', visibilityContext) && <StopEventCounter icon={ScanSearch} label="Metal Detect" value={bagmaker.metalDetectCount} color="text-rose-400" />}{isDataItemVisible(userRole, 'PACKING_PRINTER_ERROR', visibilityContext) && <StopEventCounter icon={Printer} label="Printer Error" value={bagmaker.printerDateErrorCount} color="text-amber-400" />}{isDataItemVisible(userRole, 'PACKING_PRODUCT_IN_SEAL', visibilityContext) && <StopEventCounter icon={Archive} label="Product in Seal" value={bagmaker.productInSealCount} color="text-amber-400" />}{isDataItemVisible(userRole, 'PACKING_SPLICE_DETECT', visibilityContext) && <StopEventCounter icon={Scissors} label="Splice Detect" value={bagmaker.spliceDetectCount} color="text-blue-400" />}</div></div>
-                    </AnalysisCard>
+                    </Card>
                 </div>
             </div>
         );

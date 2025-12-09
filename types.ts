@@ -53,7 +53,7 @@ export interface WeigherDetails {
     standardDeviation: number; // grams
     giveaway: number; // %
     averageSpeed: number; // bpm, renamed from speed
-    status: 'RUNNING' | 'IDLE' | 'FAULT';
+    status: 'Production' | 'Stop' | 'Offline' | 'Idle';
     
     // New detailed stats assuming dual weigher
     totalWeight1: number; // kg for the shift
@@ -68,7 +68,7 @@ export interface BagmakerDetails {
     filmRemaining: number; // %
     sealTempHorizontal: number; // Celsius
     sealTempVertical: number; // Celsius
-    status: 'RUNNING' | 'IDLE' | 'FAULT';
+    status: 'Production' | 'Stop' | 'Offline' | 'Idle';
     totalEfficiency: number; // % (new)
     efficiencyWeigher: number; // % (new)
     efficiencyBagmaker: number; // % (new)

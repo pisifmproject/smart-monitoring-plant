@@ -7,8 +7,9 @@ export const formatNumber = (value: number | undefined | null, maxDecimals: numb
     return value.toLocaleString('id-ID', { maximumFractionDigits: maxDecimals });
 };
 
-export const Card: React.FC<{ children: React.ReactNode; className?: string; title?: string; action?: React.ReactNode }> = ({ children, className = "", title, action }) => (
-    <div className={`bg-slate-800 border border-slate-700 rounded-xl p-4 md:p-5 shadow-sm transition-all duration-300 ${className}`}>
+// FIX: Added onClick prop to allow Card component to be clickable.
+export const Card: React.FC<{ children: React.ReactNode; className?: string; title?: string; action?: React.ReactNode; onClick?: React.MouseEventHandler<HTMLDivElement>; }> = ({ children, className = "", title, action, onClick }) => (
+    <div onClick={onClick} className={`bg-slate-800 border border-slate-700 rounded-xl p-4 md:p-5 shadow-sm transition-all duration-300 ${className}`}>
         {(title || action) && (
             <div className="flex justify-between items-center mb-4">
                 {title && <h3 className="text-slate-200 font-semibold text-lg tracking-normal">{title}</h3>}

@@ -69,9 +69,16 @@ const getMachineType = (name: string): MachineType => {
 // ------------------------------------------------------
 export const generateSingleWeigherDetails = (): WeigherDetails => {
     const statusR = Math.random();
-    let status: 'RUNNING' | 'IDLE' | 'FAULT' = 'RUNNING';
-    if (statusR > 0.85) status = 'IDLE';
-    if (statusR > 0.97) status = 'FAULT';
+    let status: 'Production' | 'Stop' | 'Offline' | 'Idle';
+    if (statusR > 0.95) {
+        status = 'Offline'; // 5%
+    } else if (statusR > 0.8) {
+        status = 'Stop'; // 15%
+    } else if (statusR > 0.7) {
+        status = 'Idle'; // 10%
+    } else {
+        status = 'Production'; // 70%
+    }
 
     return {
         averageWeight: parseFloat((25.1 + Math.random() * 0.2).toFixed(2)),
@@ -88,9 +95,16 @@ export const generateSingleWeigherDetails = (): WeigherDetails => {
 
 export const generateSingleBagmakerDetails = (): BagmakerDetails => {
     const statusR = Math.random();
-    let status: 'RUNNING' | 'IDLE' | 'FAULT' = 'RUNNING';
-    if (statusR > 0.9) status = 'IDLE';
-    if (statusR > 0.98) status = 'FAULT';
+    let status: 'Production' | 'Stop' | 'Offline' | 'Idle';
+    if (statusR > 0.95) {
+        status = 'Offline'; // 5%
+    } else if (statusR > 0.8) {
+        status = 'Stop'; // 15%
+    } else if (statusR > 0.7) {
+        status = 'Idle'; // 10%
+    } else {
+        status = 'Production'; // 70%
+    }
 
     const targetSpeed = 80 + Math.floor(Math.random() * 5);
     return {
