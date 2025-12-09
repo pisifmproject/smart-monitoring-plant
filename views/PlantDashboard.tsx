@@ -2,12 +2,12 @@
 
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { UserRole, AlarmSeverity, Alarm } from './types';
-import { Card, MetricCard, StatusBadge, formatNumber } from './components/SharedComponents';
-import { isDataItemVisible } from './services/visibilityStore';
-import { dashboardService } from './services/dashboardService';
-import { plantService } from './services/plantService';
-import { maintenanceService } from './services/maintenanceService';
+import { UserRole, AlarmSeverity, Alarm } from '../types';
+import { Card, MetricCard, StatusBadge, formatNumber } from '../components/SharedComponents';
+import { isDataItemVisible } from '../services/visibilityStore';
+import { dashboardService } from '../services/dashboardService';
+import { plantService } from '../services/plantService';
+import { maintenanceService } from '../services/maintenanceService';
 import { 
     Factory, Activity, Zap, AlertTriangle, 
     ArrowLeft, TrendingUp, Clock, AlertCircle, AlertOctagon, Info,
@@ -127,7 +127,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${userRole === UserRole.VIEWER ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-5`}>
                 {isDataItemVisible(userRole, 'PLANT_OUTPUT_TODAY', visibilityContext) && (
                     <MetricCard title={`Output (${period})`} value={formatNumber(kpis.output)} unit="kg" icon={Factory} trend="3.2%" trendUp={true} />
                 )}
@@ -137,7 +137,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 {isDataItemVisible(userRole, 'PLANT_POWER_USAGE', visibilityContext) && (
                     <MetricCard title={`Energy (${period})`} value={formatNumber(kpis.energy)} unit="kWh" icon={Zap} trend="1.1%" trendUp={false} color="text-yellow-400" />
                 )}
-                {isDataItemVisible(userRole, 'PLANT_ALARM_COUNT', visibilityContext) && (
+                {userRole !== UserRole.VIEWER && isDataItemVisible(userRole, 'PLANT_ALARM_COUNT', visibilityContext) && (
                     <MetricCard title="Total Alarms" value={kpis.alarms} icon={AlertTriangle} color="text-rose-400" />
                 )}
             </div>
@@ -171,49 +171,51 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {isDataItemVisible(userRole, 'SHIFT_PERFORMANCE_TABLE', visibilityContext) && (
-                    <Card title="Shift Performance">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm min-w-[500px]">
-                                <thead className="bg-slate-900/50 text-slate-400 font-bold uppercase text-xs">
-                                    <tr>
-                                        <th className="p-3">Shift</th>
-                                        <th className="p-3">Time</th>
-                                        <th className="p-3">Output (kg)</th>
-                                        <th className="p-3 text-center">OEE</th>
-                                        <th className="p-3 text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-700 text-slate-300">
-                                    {shifts.map((shift) => (
-                                        <tr key={shift.id} className={`transition-all duration-200 ${
-                                            shift.status === 'ACTIVE' 
-                                            ? 'bg-blue-600/20 border-l-4 border-blue-500 shadow-lg shadow-blue-900/10' 
-                                            : 'hover:bg-slate-800/50 border-l-4 border-transparent'
-                                        }`}>
-                                            <td className="p-3 font-semibold text-white">{shift.name}</td>
-                                            <td className="p-3 font-mono text-xs">{shift.time}</td>
-                                            <td className="p-3 font-mono">{formatNumber(shift.output)}</td>
-                                            <td className="p-3 text-center">
-                                                <span className={`font-bold ${shift.oee > 0.8 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                                    {formatNumber(shift.oee * 100)}%
-                                                </span>
-                                            </td>
-                                            <td className="p-3 text-center">
-                                                <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full font-bold ${
-                                                    shift.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'
-                                                }`}>
-                                                    {shift.status}
-                                                </span>
-                                            </td>
+                    <div className={userRole === UserRole.VIEWER ? 'xl:col-span-2' : ''}>
+                        <Card title="Shift Performance">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm min-w-[500px]">
+                                    <thead className="bg-slate-900/50 text-slate-400 font-bold uppercase text-xs">
+                                        <tr>
+                                            <th className="p-3">Shift</th>
+                                            <th className="p-3">Time</th>
+                                            <th className="p-3">Output (kg)</th>
+                                            <th className="p-3 text-center">OEE</th>
+                                            <th className="p-3 text-center">Status</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </Card>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-700 text-slate-300">
+                                        {shifts.map((shift) => (
+                                            <tr key={shift.id} className={`transition-all duration-200 ${
+                                                shift.status === 'ACTIVE' 
+                                                ? 'bg-blue-600/20 border-l-4 border-blue-500 shadow-lg shadow-blue-900/10' 
+                                                : 'hover:bg-slate-800/50 border-l-4 border-transparent'
+                                            }`}>
+                                                <td className="p-3 font-semibold text-white">{shift.name}</td>
+                                                <td className="p-3 font-mono text-xs">{shift.time}</td>
+                                                <td className="p-3 font-mono">{formatNumber(shift.output)}</td>
+                                                <td className="p-3 text-center">
+                                                    <span className={`font-bold ${shift.oee > 0.8 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                                        {formatNumber(shift.oee * 100)}%
+                                                    </span>
+                                                </td>
+                                                <td className="p-3 text-center">
+                                                    <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full font-bold ${
+                                                        shift.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'
+                                                    }`}>
+                                                        {shift.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </Card>
+                    </div>
                 )}
 
-                {isDataItemVisible(userRole, 'ACTIVE_ALARMS_LIST', visibilityContext) && (
+                {userRole !== UserRole.VIEWER && isDataItemVisible(userRole, 'ACTIVE_ALARMS_LIST', visibilityContext) && (
                     <Card title="Active Alarms">
                         {activeAlarms.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-48 text-slate-500">
@@ -282,17 +284,22 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                     <StatusBadge status={machine.status} />
                                 </div>
 
-                                {maintenanceUser ? (
-                                    <div className="mb-4 bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-blue-400">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                                        Maintenance by {maintenanceUser}
-                                    </div>
-                                ) : hasActiveAlarm ? (
-                                    <div className="mb-4 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-rose-400">
-                                        <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></div>
-                                        Maintenance Required
-                                    </div>
-                                ) : null}
+                                {userRole !== UserRole.VIEWER && (
+                                    <>
+                                        {maintenanceUser ? (
+                                            <div className="mb-4 bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-blue-400">
+                                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                                Maintenance by {maintenanceUser}
+                                            </div>
+                                        ) : hasActiveAlarm ? (
+                                            <div className="mb-4 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-rose-400">
+                                                <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></div>
+                                                Maintenance Required
+                                            </div>
+                                        ) : null}
+                                    </>
+                                )}
+
 
                                 <div className="grid grid-cols-2 gap-4 relative z-10">
                                     {isDataItemVisible(userRole, 'MACHINE_CARD_OUTPUT', machineContext) && (

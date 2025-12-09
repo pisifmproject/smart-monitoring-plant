@@ -35,7 +35,7 @@ const LVMDPDetail = lazy(() => import('./views/LVMDPDetail'));
 const UtilitySummary = lazy(() => import('./views/UtilitySummary'));
 const SettingsView = lazy(() => import('./views/Settings'));
 const GlobalDashboard = lazy(() => import('./GlobalDashboard'));
-const PlantDashboard = lazy(() => import('./PlantDashboard'));
+const PlantDashboard = lazy(() => import('./views/PlantDashboard'));
 
 // Services
 import { plantService } from './services/plantService';

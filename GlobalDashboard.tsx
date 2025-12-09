@@ -54,7 +54,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${userRole === UserRole.VIEWER ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-5`}>
                 {isDataItemVisible(userRole, 'GLOBAL_OUTPUT_TODAY') && (
                     <MetricCard 
                         title={`Total Output (${period})`}
