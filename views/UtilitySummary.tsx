@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useMemo } from 'react';
 import { Plant, UserRole } from '../types';
 import { Card, MetricCard, formatNumber } from '../components/SharedComponents';
@@ -141,10 +137,10 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                 {isDataItemVisible(userRole, visibilityKeys.CHART_TREND, visibilityContext) && (
                     <Card title={`${config.label} Usage Trend (${period})`} className="xl:col-span-2 min-h-[350px]">
                          <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={trendData}>
+                            <LineChart data={trendData} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} />
-                                <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickFormatter={(val) => formatNumber(val, 0)} />
+                                <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
+                                <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickFormatter={(val) => formatNumber(val, 0)} label={{ value: `Usage (${config.unit})`, angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
                                 <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
                                 <Line type="monotone" dataKey="value" stroke={config.hexColor} strokeWidth={2} name={`Usage (${config.unit})`} dot={false} />
                             </LineChart>
@@ -242,10 +238,10 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                             {isDataItemVisible(userRole, visibilityKeys.CONSUMPTION_BAR, visibilityContext) && (
                                 <Card title="Consumption by Area (Bar)" className="min-h-[350px]">
                                     <ResponsiveContainer width="100%" height={300}>
-                                        <RechartsBarChart data={genericBreakdownData} layout="vertical">
+                                        <RechartsBarChart data={genericBreakdownData} layout="vertical" margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                            <XAxis type="number" stroke="#94a3b8" tick={{fontSize: 12}} />
-                                            <YAxis type="category" dataKey="name" stroke="#94a3b8" tick={{fontSize: 12}} width={100} />
+                                            <XAxis type="number" stroke="#94a3b8" tick={{fontSize: 12}} label={{ value: 'Consumption (%)', position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
+                                            <YAxis type="category" dataKey="name" stroke="#94a3b8" tick={{fontSize: 12}} width={100} label={{ value: 'Area', angle: -90, position: 'insideLeft', dx: -25, fill: '#94a3b8', fontSize: 12 }} />
                                             <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
                                             <Bar dataKey="value" fill={config.hexColor} name="Consumption (%)" radius={[0, 4, 4, 0]} />
                                         </RechartsBarChart>

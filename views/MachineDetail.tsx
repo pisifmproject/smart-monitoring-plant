@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Machine, UserRole, MachineType, PlantCode, BagmakerDetails, WeigherDetails, Alarm } from '../types';
@@ -257,13 +251,13 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                 {isDataItemVisible(userRole, 'MACHINE_OUTPUT_TREND_CHART', visibilityContext) && (
                     <Card title={`Output vs Target Trend (${period})`}>
                          <ResponsiveContainer width="100%" height={300}>
-                            <AreaChart data={timeSeriesData.output}>
+                            <AreaChart data={timeSeriesData.output} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                 <defs><linearGradient id="colorOutput" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient></defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 13}} />
-                                <YAxis stroke="#94a3b8" tick={{fontSize: 13}} tickFormatter={(val) => formatNumber(val, 0)} />
+                                <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 13}} label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
+                                <YAxis stroke="#94a3b8" tick={{fontSize: 13}} tickFormatter={(val) => formatNumber(val, 0)} label={{ value: 'Output (kg)', angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
                                 <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9', fontSize: '14px' }} />
-                                <Legend />
+                                <Legend verticalAlign="top" />
                                 <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorOutput)" name="Actual (kg)" />
                                 <Line type="step" dataKey="target" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" name="Target" dot={false} />
                             </AreaChart>
@@ -545,12 +539,12 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                 {isDataItemVisible(userRole, 'MACHINE_PROCESS_TREND_CHART', visibilityContext) && (
                     <Card title="Process Parameter Trend">
                         <ResponsiveContainer width="100%" height={350}>
-                            <LineChart data={timeSeriesData.params}>
+                            <LineChart data={timeSeriesData.params} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="time" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} />
+                                <XAxis dataKey="time" stroke="#94a3b8" label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
+                                <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} label={{ value: 'Value', angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
                                 <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                                <Legend />
+                                <Legend verticalAlign="top" />
                                 <Line type="monotone" dataKey="temp" stroke="#f59e0b" name="Temp" dot={false} strokeWidth={2} />
                                 <Line type="monotone" dataKey="pressure" stroke="#3b82f6" name="Pressure" dot={false} strokeWidth={2} />
                                 <Line type="monotone" dataKey="speed" stroke="#10b981" name="Speed" dot={false} strokeWidth={2} />
@@ -576,11 +570,11 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                     {isDataItemVisible(userRole, 'MACHINE_UTIL_ELEC_CHART', visibilityContext) && (
                         <Card title="Electricity Consumption Trend">
                             <ResponsiveContainer width="100%" height={300}>
-                                <AreaChart data={timeSeriesData.utility.electricity}>
+                                <AreaChart data={timeSeriesData.utility.electricity} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                     <defs><linearGradient id="colorElec" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#facc15" stopOpacity={0.3}/><stop offset="95%" stopColor="#facc15" stopOpacity={0}/></linearGradient></defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis dataKey="time" stroke="#94a3b8" />
-                                    <YAxis stroke="#94a3b8" />
+                                    <XAxis dataKey="time" stroke="#94a3b8" label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
+                                    <YAxis stroke="#94a3b8" label={{ value: 'Energy (kWh)', angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
                                     <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
                                     <Area type="monotone" dataKey="value" stroke="#facc15" fill="url(#colorElec)" name="kWh" />
                                 </AreaChart>
@@ -590,11 +584,11 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                      {isDataItemVisible(userRole, 'MACHINE_UTIL_STEAM_CHART', visibilityContext) && (
                         <Card title="Steam Consumption Trend">
                             <ResponsiveContainer width="100%" height={300}>
-                                <AreaChart data={timeSeriesData.utility.steam}>
+                                <AreaChart data={timeSeriesData.utility.steam} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                     <defs><linearGradient id="colorSteam" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#e2e8f0" stopOpacity={0.3}/><stop offset="95%" stopColor="#e2e8f0" stopOpacity={0}/></linearGradient></defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis dataKey="time" stroke="#94a3b8" />
-                                    <YAxis stroke="#94a3b8" />
+                                    <XAxis dataKey="time" stroke="#94a3b8" label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
+                                    <YAxis stroke="#94a3b8" label={{ value: 'Usage (kg)', angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
                                     <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
                                     <Area type="monotone" dataKey="value" stroke="#e2e8f0" fill="url(#colorSteam)" name="kg" />
                                 </AreaChart>

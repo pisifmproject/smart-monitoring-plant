@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { LVMDP, UserRole } from '../types';
@@ -327,11 +323,11 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                     {isDataItemVisible(userRole, visibilityKeys.ENERGY_TREND, visibilityContext) && (
                         <Card title={`Energy Usage Trend (${period})`} className="min-h-[400px]">
                              <ResponsiveContainer width="100%" height={320}>
-                                <AreaChart data={energyTrend}>
+                                <AreaChart data={energyTrend} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                     <defs><linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/><stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/></linearGradient></defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} />
-                                    <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickFormatter={(val) => formatNumber(val, 0)} />
+                                    <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
+                                    <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickFormatter={(val) => formatNumber(val, 0)} label={{ value: 'Energy (kWh)', angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
                                     <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
                                     <Area type="monotone" dataKey="value" stroke="#f59e0b" fill="url(#colorEnergy)" name="Energy (kWh)" />
                                 </AreaChart>

@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useState, useEffect, Suspense, lazy, useMemo } from 'react';
 import {
   HashRouter,
@@ -400,10 +402,18 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-950 transition-all duration-300">
                 <header className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-slate-800 shrink-0">
-                    <button className="lg:hidden text-slate-300 hover:text-white" onClick={() => setIsMobileMenuOpen(true)}>
-                        <Menu size={24} />
+                    <button
+                        className="lg:hidden flex items-center justify-center w-9 h-9 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-300 hover:bg-slate-700/50 hover:border-slate-600 hover:text-white transition-all duration-200"
+                        onClick={() => setIsMobileMenuOpen(true)}
+                        aria-label="Open menu"
+                    >
+                        <Menu size={20} />
                     </button>
-                    <button className="hidden lg:block text-slate-300 hover:text-white" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+                    <button
+                        className="hidden lg:flex items-center justify-center w-9 h-9 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-300 hover:bg-slate-700/50 hover:border-slate-600 hover:text-white transition-all duration-200"
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                    >
                         <ChevronsLeft size={20} className={`transition-transform duration-300 ${!isSidebarOpen ? 'rotate-180' : ''}`} />
                     </button>
                 </header>
