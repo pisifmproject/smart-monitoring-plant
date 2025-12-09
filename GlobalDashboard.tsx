@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from './types';
@@ -36,6 +37,8 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
         </button>
     );
 
+    const showAlarms = ![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole);
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500 w-full">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -54,7 +57,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                 </div>
             </div>
 
-            <div className={`grid grid-cols-1 sm:grid-cols-2 ${userRole === UserRole.VIEWER ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-5`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${!showAlarms ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-5`}>
                 {isDataItemVisible(userRole, 'GLOBAL_OUTPUT_TODAY') && (
                     <MetricCard 
                         title={`Total Output (${period})`}
@@ -88,7 +91,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                         color="text-yellow-400"
                     />
                 )}
-                {userRole !== UserRole.VIEWER && isDataItemVisible(userRole, 'GLOBAL_TOTAL_ALARMS') && (
+                {showAlarms && isDataItemVisible(userRole, 'GLOBAL_TOTAL_ALARMS') && (
                     <MetricCard 
                         title="Active Alarms" 
                         value={kpis.totalAlarmsValue} 
@@ -107,7 +110,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                         const visibilityKey = `GLOBAL_PLANT_${plant.id}`;
                         if (!isDataItemVisible(userRole, visibilityKey)) return null;
 
-                        const plantStatus = userRole === UserRole.VIEWER ? 'NORMAL' : plant.computedStatus;
+                        const plantStatus = !showAlarms ? 'NORMAL' : plant.computedStatus;
 
                         return (
                             <div 
@@ -140,7 +143,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                                         <p className="text-slate-500 text-xs font-bold uppercase">Energy</p>
                                         <p className="text-yellow-400 font-mono font-bold">{formatNumber(plant.scaledEnergy)} <span className="text-xs text-slate-500">kWh</span></p>
                                     </div>
-                                    {userRole !== UserRole.VIEWER && (
+                                    {showAlarms && (
                                         <div>
                                             <p className="text-slate-500 text-xs font-bold uppercase">Alarms</p>
                                             <p className={`font-mono font-bold ${plant.alarmCount > 0 ? 'text-rose-400' : 'text-slate-400'}`}>

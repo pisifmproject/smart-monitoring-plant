@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { LVMDP, UserRole } from '../types';
@@ -192,12 +193,12 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                                 {lvmdp.name}
                             </h1>
                             <StatusBadge status={lvmdp.status} />
-                            {userRole !== UserRole.VIEWER && hasActiveAlarm && !maintenanceUser && (
+                            {![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole) && hasActiveAlarm && !maintenanceUser && (
                                 <div className="bg-rose-500/20 border border-rose-500/30 text-rose-400 px-3 py-1 rounded text-xs font-bold uppercase animate-pulse flex items-center gap-2">
                                     <AlertTriangle size={14} /> Maintenance Req
                                 </div>
                             )}
-                            {userRole !== UserRole.VIEWER && maintenanceUser && (
+                            {![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole) && maintenanceUser && (
                                 <div className="bg-blue-500/20 border border-blue-500/30 text-blue-400 px-3 py-1 rounded text-xs font-bold uppercase flex items-center gap-2">
                                     <Clock size={14} /> Maint: {maintenanceUser}
                                 </div>
@@ -397,7 +398,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
             )}
 
             {/* MAINTENANCE SECTION */}
-            {userRole !== UserRole.VIEWER && (
+            {![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole) && (
                 <div className="space-y-6" ref={maintenanceSectionRef}>
                     <div className="flex items-center gap-3 border-b border-slate-800 pb-3 mt-8">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2"><Wrench className="text-slate-400" /> Maintenance & Alarms</h2>

@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, Suspense, lazy, useMemo } from 'react';
 import {
   HashRouter,
@@ -422,7 +423,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
 const MachineDetailWrapper = React.memo(({ user }: { user: User }) => {
   const { machineId } = useParams();
   const navigate = useNavigate();
-  const restrictedRoles = [UserRole.MANAGEMENT, UserRole.VIEWER];
+  const restrictedRoles = [UserRole.VIEWER];
   
   if (restrictedRoles.includes(user.role)) {
     return <Navigate to="/app/dashboard/global" replace />;
@@ -445,7 +446,7 @@ const MachineDetailWrapper = React.memo(({ user }: { user: User }) => {
 const LVMDPDetailWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
   const { panelId } = useParams();
   const navigate = useNavigate();
-  const restrictedRoles = [UserRole.OPERATOR, UserRole.QC, UserRole.MANAGEMENT, UserRole.VIEWER];
+  const restrictedRoles = [UserRole.OPERATOR, UserRole.QC, UserRole.VIEWER];
 
   if (restrictedRoles.includes(userRole)) {
     return <Navigate to="/app/dashboard/global" replace />;
@@ -463,7 +464,7 @@ const LVMDPDetailWrapper = React.memo(({ userRole }: { userRole: UserRole }) => 
 const UtilitySummaryWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
   const { type, plantId } = useParams();
   const navigate = useNavigate();
-  const restrictedRoles = [UserRole.MANAGEMENT, UserRole.VIEWER];
+  const restrictedRoles = [UserRole.VIEWER];
 
   if (restrictedRoles.includes(userRole)) {
     return <Navigate to="/app/dashboard/global" replace />;

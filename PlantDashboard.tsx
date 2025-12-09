@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserRole, AlarmSeverity, Alarm } from './types';
@@ -38,9 +39,10 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
 
     if (!plant || !kpis) return <div className="p-8 text-slate-400">Plant not found</div>;
 
-    const canClickDetails = ![UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole);
+    const canClickDetails = ![UserRole.VIEWER].includes(userRole);
     const canDownloadReport = [UserRole.ADMINISTRATOR, UserRole.SUPERVISOR, UserRole.MANAGEMENT].includes(userRole);
     const visibilityContext = { plantId: plant.id };
+    const showAlarms = ![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole);
 
     const FilterButton = ({ label }: { label: Period }) => {
         if (userRole === UserRole.OPERATOR && label !== 'DAY') return null;
@@ -127,7 +129,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 </div>
             </div>
 
-            <div className={`grid grid-cols-1 sm:grid-cols-2 ${userRole === UserRole.VIEWER ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-5`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${!showAlarms ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-5`}>
                 {isDataItemVisible(userRole, 'PLANT_OUTPUT_TODAY', visibilityContext) && (
                     <MetricCard title={`Output (${period})`} value={formatNumber(kpis.output)} unit="kg" icon={Factory} trend="3.2%" trendUp={true} />
                 )}
@@ -137,7 +139,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                 {isDataItemVisible(userRole, 'PLANT_POWER_USAGE', visibilityContext) && (
                     <MetricCard title={`Energy (${period})`} value={formatNumber(kpis.energy)} unit="kWh" icon={Zap} trend="1.1%" trendUp={false} color="text-yellow-400" />
                 )}
-                {userRole !== UserRole.VIEWER && isDataItemVisible(userRole, 'PLANT_ALARM_COUNT', visibilityContext) && (
+                {showAlarms && isDataItemVisible(userRole, 'PLANT_ALARM_COUNT', visibilityContext) && (
                     <MetricCard title="Total Alarms" value={kpis.alarms} icon={AlertTriangle} color="text-rose-400" />
                 )}
             </div>
@@ -171,7 +173,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                  {isDataItemVisible(userRole, 'SHIFT_PERFORMANCE_TABLE', visibilityContext) && (
-                    <div className={userRole === UserRole.VIEWER ? 'xl:col-span-2' : ''}>
+                    <div className={!showAlarms ? 'xl:col-span-2' : ''}>
                         <Card title="Shift Performance">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm min-w-[500px]">
@@ -215,7 +217,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                     </div>
                 )}
 
-                {userRole !== UserRole.VIEWER && isDataItemVisible(userRole, 'ACTIVE_ALARMS_LIST', visibilityContext) && (
+                {showAlarms && isDataItemVisible(userRole, 'ACTIVE_ALARMS_LIST', visibilityContext) && (
                     <Card title="Active Alarms">
                         {activeAlarms.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-48 text-slate-500">
@@ -284,7 +286,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                     <StatusBadge status={machine.status} />
                                 </div>
 
-                                {userRole !== UserRole.VIEWER && (
+                                {showAlarms && (
                                     <>
                                         {maintenanceUser ? (
                                             <div className="mb-4 bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 flex items-center gap-2 text-xs font-bold text-blue-400">

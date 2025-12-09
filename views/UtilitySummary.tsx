@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo } from 'react';
 import { Plant, UserRole } from '../types';
 import { Card, MetricCard, formatNumber } from '../components/SharedComponents';
@@ -180,86 +181,90 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                 )}
             </div>
 
-            <h3 className="text-xl font-bold text-slate-200 mt-2 mb-4 flex items-center gap-2">
-                <TrendingUp size={22} /> {config.breakdownTitle}
-            </h3>
-
-            {type.toLowerCase() === 'electricity' ? (
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
-                    {plant.lvmdps.map((panel) => {
-                        // Check if this specific panel card is visible
-                        if (!isDataItemVisible(userRole, `SHOW_LVMDP_CARD_${panel.id}`, visibilityContext)) {
-                            return null;
-                        }
-
-                        const hasActiveAlarm = maintenanceService.hasActiveAlarm(panel.id);
-                        const maintenanceUser = maintenanceService.getAlarmInProgress(panel.id);
-
-                        return (
-                            <div key={panel.id} onClick={() => navigate(`/app/lvmdp/${panel.id}`)} className="cursor-pointer">
-                                <Card className={`hover:border-blue-500 transition-all h-full group ${userRole !== UserRole.VIEWER && maintenanceUser ? 'border-blue-500/30 bg-blue-900/10' : userRole !== UserRole.VIEWER && hasActiveAlarm ? 'border-rose-500/30 bg-rose-900/10' : ''}`}>
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400"><Zap size={20} /></div>
-                                        {userRole !== UserRole.VIEWER && (
-                                            <>
-                                                {maintenanceUser ? (
-                                                    <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 px-2 py-1 rounded text-[10px] font-bold uppercase">
-                                                        <Clock size={12} /> Maint: {maintenanceUser}
-                                                    </div>
-                                                ) : hasActiveAlarm ? (
-                                                    <div className="flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 px-2 py-1 rounded text-[10px] font-bold uppercase animate-pulse">
-                                                        <AlertTriangle size={12} /> Maintenance Req
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-slate-600 group-hover:text-blue-400 transition-colors"><TrendingUp size={16} /></div>
+            {![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole) && (
+                <>
+                    <h3 className="text-xl font-bold text-slate-200 mt-2 mb-4 flex items-center gap-2">
+                        <TrendingUp size={22} /> {config.breakdownTitle}
+                    </h3>
+                    
+                    {type.toLowerCase() === 'electricity' ? (
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
+                            {plant.lvmdps.map((panel) => {
+                                // Check if this specific panel card is visible
+                                if (!isDataItemVisible(userRole, `SHOW_LVMDP_CARD_${panel.id}`, visibilityContext)) {
+                                    return null;
+                                }
+        
+                                const hasActiveAlarm = maintenanceService.hasActiveAlarm(panel.id);
+                                const maintenanceUser = maintenanceService.getAlarmInProgress(panel.id);
+        
+                                return (
+                                    <div key={panel.id} onClick={() => navigate(`/app/lvmdp/${panel.id}`)} className="cursor-pointer">
+                                        <Card className={`hover:border-blue-500 transition-all h-full group ${userRole !== UserRole.VIEWER && maintenanceUser ? 'border-blue-500/30 bg-blue-900/10' : userRole !== UserRole.VIEWER && hasActiveAlarm ? 'border-rose-500/30 bg-rose-900/10' : ''}`}>
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400"><Zap size={20} /></div>
+                                                {![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole) && (
+                                                    <>
+                                                        {maintenanceUser ? (
+                                                            <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 px-2 py-1 rounded text-[10px] font-bold uppercase">
+                                                                <Clock size={12} /> Maint: {maintenanceUser}
+                                                            </div>
+                                                        ) : hasActiveAlarm ? (
+                                                            <div className="flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 px-2 py-1 rounded text-[10px] font-bold uppercase animate-pulse">
+                                                                <AlertTriangle size={12} /> Maintenance Req
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-slate-600 group-hover:text-blue-400 transition-colors"><TrendingUp size={16} /></div>
+                                                        )}
+                                                    </>
                                                 )}
-                                            </>
-                                        )}
+                                            </div>
+                                            <h4 className="font-bold text-white text-lg mb-1">{panel.name}</h4>
+                                            <div className="space-y-2 mt-3">
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-slate-400 font-medium">Energy ({period})</span>
+                                                    <span className="text-white font-mono font-bold">{formatNumber(panel.energyToday * periodMult)} kWh</span>
+                                                </div>
+                                                {isDataItemVisible(userRole, 'LV_PANEL_LOAD_PERCENT', visibilityContext) &&
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-slate-400 font-medium">Load</span>
+                                                    <span className={`font-mono font-bold ${panel.currentLoadPercent > 80 ? 'text-rose-400' : 'text-emerald-400'}`}>{formatNumber(panel.currentLoadPercent)}%</span>
+                                                </div>}
+                                            </div>
+                                        </Card>
                                     </div>
-                                    <h4 className="font-bold text-white text-lg mb-1">{panel.name}</h4>
-                                    <div className="space-y-2 mt-3">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-slate-400 font-medium">Energy ({period})</span>
-                                            <span className="text-white font-mono font-bold">{formatNumber(panel.energyToday * periodMult)} kWh</span>
-                                        </div>
-                                        {isDataItemVisible(userRole, 'LV_PANEL_LOAD_PERCENT', visibilityContext) &&
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-slate-400 font-medium">Load</span>
-                                            <span className={`font-mono font-bold ${panel.currentLoadPercent > 80 ? 'text-rose-400' : 'text-emerald-400'}`}>{formatNumber(panel.currentLoadPercent)}%</span>
-                                        </div>}
-                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {isDataItemVisible(userRole, visibilityKeys.CONSUMPTION_BAR, visibilityContext) && (
+                                <Card title="Consumption by Area (Bar)" className="min-h-[350px]">
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <RechartsBarChart data={genericBreakdownData} layout="vertical">
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                            <XAxis type="number" stroke="#94a3b8" tick={{fontSize: 12}} />
+                                            <YAxis type="category" dataKey="name" stroke="#94a3b8" tick={{fontSize: 12}} width={100} />
+                                            <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
+                                            <Bar dataKey="value" fill={config.hexColor} name="Consumption (%)" radius={[0, 4, 4, 0]} />
+                                        </RechartsBarChart>
+                                    </ResponsiveContainer>
                                 </Card>
-                            </div>
-                        );
-                    })}
-                </div>
-            ) : (
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {isDataItemVisible(userRole, visibilityKeys.CONSUMPTION_BAR, visibilityContext) && (
-                        <Card title="Consumption by Area (Bar)" className="min-h-[350px]">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <RechartsBarChart data={genericBreakdownData} layout="vertical">
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis type="number" stroke="#94a3b8" tick={{fontSize: 12}} />
-                                    <YAxis type="category" dataKey="name" stroke="#94a3b8" tick={{fontSize: 12}} width={100} />
-                                    <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
-                                    <Bar dataKey="value" fill={config.hexColor} name="Consumption (%)" radius={[0, 4, 4, 0]} />
-                                </RechartsBarChart>
-                            </ResponsiveContainer>
-                        </Card>
+                            )}
+                            {isDataItemVisible(userRole, visibilityKeys.CONSUMPTION_PIE, visibilityContext) && (
+                                <Card title="Consumption by Area (Pie)" className="min-h-[350px]">
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <PieChart>
+                                            <Pie data={genericBreakdownData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label />
+                                            <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
+                                            <Legend />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </Card>
+                            )}
+                         </div>
                     )}
-                    {isDataItemVisible(userRole, visibilityKeys.CONSUMPTION_PIE, visibilityContext) && (
-                        <Card title="Consumption by Area (Pie)" className="min-h-[350px]">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <PieChart>
-                                    <Pie data={genericBreakdownData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label />
-                                    <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
-                                    <Legend />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </Card>
-                    )}
-                 </div>
+                </>
             )}
 
             {/* Download Success Toast */}

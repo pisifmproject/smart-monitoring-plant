@@ -43,13 +43,20 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
     const location = useLocation();
     const visibilityContext = { plantId: machine.plantId, machineId: machine.id };
     
-    // Check which tabs are visible for this user, explicitly hiding sensitive tabs for Guests
-    const visibleTabs = ALL_TABS_BASE.filter(t => {
-        if (userRole === UserRole.VIEWER && (t.key === 'Alarms' || t.key === 'Maintenance')) {
-            return false;
+    // Check which tabs are visible based on role
+    const visibleTabs = useMemo(() => {
+        if (userRole === UserRole.MANAGEMENT) {
+            return ALL_TABS_BASE.filter(t => t.key === 'Performance');
         }
-        return isDataItemVisible(userRole, t.visibilityKey, visibilityContext)
-    });
+
+        // Existing logic for other roles
+        return ALL_TABS_BASE.filter(t => {
+            if (userRole === UserRole.VIEWER && (t.key === 'Alarms' || t.key === 'Maintenance')) {
+                return false;
+            }
+            return isDataItemVisible(userRole, t.visibilityKey, visibilityContext)
+        });
+    }, [userRole, visibilityContext]);
     
     // Set active tab with priority:
     // 1. Navigation state (e.g. from clicking an alarm on dashboard)
@@ -773,23 +780,25 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                 </div>
             </div>
             
-             <div className="border-b border-slate-800">
-                <nav className="-mb-px flex space-x-6 overflow-x-auto">
-                    {visibleTabs.map(tab => (
-                        <button
-                            key={tab.key}
-                            onClick={() => setActiveTab(tab.key)}
-                            className={`whitespace-nowrap py-3 px-1 border-b-2 font-bold text-sm transition-colors ${
-                                activeTab === tab.key
-                                ? 'border-blue-500 text-blue-400'
-                                : 'border-transparent text-slate-500 hover:text-slate-200 hover:border-slate-400'
-                            }`}
-                        >
-                            {tab.key}
-                        </button>
-                    ))}
-                </nav>
-            </div>
+             {visibleTabs.length > 1 && (
+                <div className="border-b border-slate-800">
+                    <nav className="-mb-px flex space-x-6 overflow-x-auto">
+                        {visibleTabs.map(tab => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`whitespace-nowrap py-3 px-1 border-b-2 font-bold text-sm transition-colors ${
+                                    activeTab === tab.key
+                                    ? 'border-blue-500 text-blue-400'
+                                    : 'border-transparent text-slate-500 hover:text-slate-200 hover:border-slate-400'
+                                }`}
+                            >
+                                {tab.key}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            )}
             
             <div className="mt-6">
                 {renderActiveTab()}
