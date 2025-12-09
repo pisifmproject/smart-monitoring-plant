@@ -9,6 +9,20 @@ export type Period = 'Day' | 'Week' | 'Month' | 'Year';
 export const utilityService = {
 
     // ----------------------------------------------
+    // NEW: Get all available utility types for sidebar menu
+    // ----------------------------------------------
+    getUtilityTypes: () => {
+        return [
+            { key: 'electricity', label: 'Electricity', icon: Zap },
+            { key: 'steam', label: 'Steam', icon: Cloud },
+            { key: 'water', label: 'Water', icon: Droplets },
+            { key: 'air', label: 'Compressed Air', icon: Wind },
+            { key: 'nitrogen', label: 'Nitrogen', icon: Box },
+            { key: 'gas', label: 'Natural Gas', icon: Flame },
+        ];
+    },
+
+    // ----------------------------------------------
     // GLOBAL MULTIPLIER (menyesuaikan ukuran plant)
     // ----------------------------------------------
     getMultipliers: (plantId: string, period: Period) => {

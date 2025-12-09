@@ -348,6 +348,7 @@ const UsersAndRolesSettings = memo(() => {
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         setUsers(getUsers());
@@ -381,14 +382,31 @@ const UsersAndRolesSettings = memo(() => {
         refreshUsers();
     };
 
+    const filteredUsers = users.filter(user => 
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        user.username.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="space-y-6">
             <Card>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <h3 className="text-lg font-bold text-white">Current Users</h3>
-                    <button onClick={openAddModal} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md">
-                        <Plus size={16} /> Add New User
-                    </button>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                        <div className="relative">
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                            <input 
+                                type="search" 
+                                placeholder="Search by name or ID..." 
+                                value={searchQuery} 
+                                onChange={e => setSearchQuery(e.target.value)} 
+                                className="w-full sm:w-48 bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" 
+                            />
+                        </div>
+                        <button onClick={openAddModal} className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md">
+                            <Plus size={16} /> Add New User
+                        </button>
+                    </div>
                 </div>
                 <div className="overflow-x-auto">
                      <table className="w-full text-left text-slate-300 min-w-[600px]">
@@ -396,7 +414,7 @@ const UsersAndRolesSettings = memo(() => {
                             <tr><th className="p-3">Full Name</th><th className="p-3">Corporate ID</th><th className="p-3">Role</th><th className="p-3 text-right">Actions</th></tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800 text-sm">
-                            {users.map(user => (
+                            {filteredUsers.map(user => (
                                 <tr key={user.username} className="hover:bg-slate-800/50">
                                     <td className="p-3 font-bold text-white">{user.name}</td><td className="p-3 font-mono">{user.username}</td>
                                     <td className="p-3"><span className="bg-slate-700 px-2 py-1 rounded-md text-xs font-bold text-blue-300">{user.role}</span></td>
