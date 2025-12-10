@@ -11,7 +11,7 @@ interface ProductionLinesOverviewProps {
 
 const MetricItem: React.FC<{ icon: React.ElementType; label: string; value: string; colorClass?: string }> = ({ icon: Icon, label, value, colorClass = "text-white" }) => (
     <div>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+        <p className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <Icon size={14} />
             {label}
         </p>
@@ -30,7 +30,7 @@ const ProductionLinesOverview: React.FC<ProductionLinesOverviewProps> = ({ userR
     }
 
     const machines = plant.machines;
-    const canClickDetails = userRole !== UserRole.VIEWER;
+    const canClickDetails = true; // Allow all roles to click, including Guest
 
     const getOeeColor = (oee: number) => {
         if (oee > 0.8) return 'text-emerald-400';

@@ -76,7 +76,7 @@ const SidebarLink: React.FC<{ to: string; label: string; active: boolean; icon?:
   >
     <div className="flex items-center gap-3">
         {Icon && (
-            <Icon size={18} className={`transition-colors shrink-0 ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
+            <Icon size={18} className={`transition-colors shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`} />
         )}
         {!isCollapsed && <span className="truncate">{label}</span>}
     </div>
@@ -213,40 +213,40 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
             return null;
         }, [location.pathname, params.machineId, plantsToShow]);
         
-        // Update expandedPlant state when plantContext changes for hybrid sidebar
+        // --- CONSOLIDATED USE EFFECT FOR SIDEBAR STATE ---
         useEffect(() => {
+            const path = location.pathname;
+            const isMachineDetail = path.startsWith('/app/machines/');
+            const isUtilityDetail = path.startsWith('/app/utility/');
+            const isPlantDashboard = path.match(/^\/app\/plants\/[^/]+$/);
+            const isOverviewPage = path.endsWith('/utilities') || path.endsWith('/production-lines');
+        
             if (plantContext) {
-                 if (location.pathname.endsWith(plantContext.id)) {
-                     // Keep accordion closed by default on plant dashboard
-                     setExpandedPlant(null); 
-                 } else if (params.machineId || location.pathname.startsWith('/app/utility/')) {
-                     // Open accordion when on a detail page
-                     setExpandedPlant(plantContext.id);
-                 }
+                if (isMachineDetail || isUtilityDetail) {
+                    // On DEEP pages (machine/utility details), force open the accordion and correct dropdown.
+                    setExpandedPlant(plantContext.id);
+                    if (isMachineDetail) {
+                        setOpenDropdown('production');
+                    } else if (isUtilityDetail) {
+                        setOpenDropdown('utilities');
+                    }
+                } else if (isPlantDashboard || isOverviewPage) {
+                    // On PLANT DASHBOARD or OVERVIEW pages, close the dropdowns but keep the accordion open for hybrid view.
+                    setExpandedPlant(plantContext.id);
+                    setOpenDropdown(null);
+                }
             }
-        }, [plantContext, params.machineId, location.pathname]);
-
-        // Logic to automatically open the correct dropdown when on a detail page
-        // BUG FIX: Removed the `else` block that was causing the dropdown to flicker and close immediately.
-        useEffect(() => {
-            if (location.pathname.startsWith('/app/utility/')) {
-                setOpenDropdown('utilities');
-            } else if (location.pathname.startsWith('/app/machines/')) {
-                setOpenDropdown('production');
-            }
-        }, [location.pathname]);
+        }, [location.pathname, plantContext]);
 
 
-        const canSeeGlobalDashboard = [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role);
+        const canSeeGlobalDashboard = user.role === UserRole.ADMINISTRATOR || [UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role);
 
         let displayMode: 'GLOBAL' | 'CONTEXTUAL' | 'HYBRID' = 'GLOBAL';
 
         if (plantContext) {
             if ([UserRole.ADMINISTRATOR, UserRole.MANAGEMENT].includes(user.role)) {
                 displayMode = 'CONTEXTUAL';
-            } else if (user.role === UserRole.VIEWER) {
-                displayMode = 'GLOBAL';
-            } else {
+            } else { // All other roles get HYBRID
                 displayMode = 'HYBRID';
             }
         }
@@ -269,10 +269,10 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                     {/* CONTEXTUAL: Admin/Management on a Plant page */}
                     {displayMode === 'CONTEXTUAL' && plantContext && (
                         <>
-                           {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Navigation</div>}
+                           {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Navigation</div>}
                            <SidebarLink to="/app/dashboard/global" label="Back to Global Overview" active={false} icon={ArrowLeft} isCollapsed={isCollapsed} />
                            
-                           {!isCollapsed && <div className="px-5 mb-2 mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">{plantContext.name}</div>}
+                           {!isCollapsed && <div className="px-5 mb-2 mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{plantContext.name}</div>}
                            <SidebarLink to={`/app/plants/${plantContext.id}`} label="Plant Dashboard" active={location.pathname === `/app/plants/${plantContext.id}`} icon={Factory} isCollapsed={isCollapsed} />
 
                            <DropdownMenu 
@@ -299,10 +299,10 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                         </>
                     )}
 
-                    {/* HYBRID: Supervisor/Operator etc on any page */}
+                    {/* HYBRID: Supervisor/Operator/Guest etc on any page */}
                     {displayMode === 'HYBRID' && (
                          <>
-                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
+                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Production Plants</div>}
                             {plantsToShow.map(plantItem => {
                                 const isActivePlant = plantContext?.id === plantItem.id;
                                 const isExpanded = expandedPlant === plantItem.id;
@@ -312,7 +312,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                                         <SidebarLink 
                                             to={`/app/plants/${plantItem.id}`} 
                                             label={plantItem.name} 
-                                            active={isActivePlant && !params.machineId && !location.pathname.includes('/utilities') && !location.pathname.includes('/production-lines')}
+                                            active={isActivePlant && !isExpanded}
                                             icon={Building2} 
                                             isCollapsed={isCollapsed}
                                             onClick={(e) => {
@@ -321,6 +321,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                                                     setExpandedPlant(isExpanded ? null : plantItem.id);
                                                 } else {
                                                     setExpandedPlant(null); // Collapse others when switching
+                                                    setOpenDropdown(null);
                                                 }
                                             }}
                                         />
@@ -355,17 +356,17 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                          </>
                     )}
                     
-                    {/* GLOBAL: Default view for Guests, or Admins/Mgmt on non-plant pages */}
+                    {/* GLOBAL: Default view for Admins/Mgmt/Guests on non-plant pages */}
                     {displayMode === 'GLOBAL' && (
                          <>
                             {canSeeGlobalDashboard && (
                                 <div className="mb-4">
-                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dashboards</div>}
+                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dashboards</div>}
                                     <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
                                 </div>
                             )}
                             
-                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
+                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Production Plants</div>}
                             {plantsToShow.map(plantItem => (
                                 <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />
                             ))}
@@ -375,7 +376,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                     {/* Admin settings link, always available at the bottom */}
                     {user.role === UserRole.ADMINISTRATOR && (
                         <div className="pt-4">
-                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administration</div>}
+                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Administration</div>}
                             <SidebarLink to="/app/settings" label="System Settings" active={location.pathname.startsWith('/app/settings')} icon={Settings} isCollapsed={isCollapsed} />
                         </div>
                     )}
@@ -554,7 +555,8 @@ const App: React.FC = () => {
           >
             <Route index element={
               user && (
-                [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role) ? (
+                user.role === UserRole.ADMINISTRATOR || 
+                ([UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role) && user.plantAccess && user.plantAccess.length > 0) ? (
                   <Navigate to="dashboard/global" replace />
                 ) : (
                   user.plantAccess && user.plantAccess.length > 0 ?
@@ -566,11 +568,9 @@ const App: React.FC = () => {
             <Route
               path="dashboard/global"
               element={ user && (
-                [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role) ? (
+                user.role === UserRole.ADMINISTRATOR || (user.plantAccess && user.plantAccess.length > 0) ? (
                   <GlobalDashboard user={user} />
                 ) : (
-                  user.plantAccess && user.plantAccess.length > 0 ?
-                  <Navigate to={`/app/plants/${user.plantAccess[0]}`} replace /> :
                   <Navigate to="/login" replace />
                 )
               )}
