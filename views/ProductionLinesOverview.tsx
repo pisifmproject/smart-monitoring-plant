@@ -1,13 +1,24 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plant, UserRole } from '../types';
+import { Plant, UserRole, Machine } from '../types';
 import { plantService } from '../services/plantService';
 import { Card, formatNumber, StatusBadge } from '../components/SharedComponents';
-import { ArrowLeft, Cpu } from 'lucide-react';
+import { ArrowLeft, Cpu, Activity, Box, Clock, AlertTriangle } from 'lucide-react';
 
 interface ProductionLinesOverviewProps {
     userRole: UserRole;
 }
+
+const MetricItem: React.FC<{ icon: React.ElementType; label: string; value: string; colorClass?: string }> = ({ icon: Icon, label, value, colorClass = "text-white" }) => (
+    <div>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Icon size={14} />
+            {label}
+        </p>
+        <p className={`text-2xl font-bold font-mono mt-1 ${colorClass}`}>{value}</p>
+    </div>
+);
+
 
 const ProductionLinesOverview: React.FC<ProductionLinesOverviewProps> = ({ userRole }) => {
     const { plantId } = useParams();
@@ -20,6 +31,12 @@ const ProductionLinesOverview: React.FC<ProductionLinesOverviewProps> = ({ userR
 
     const machines = plant.machines;
     const canClickDetails = userRole !== UserRole.VIEWER;
+
+    const getOeeColor = (oee: number) => {
+        if (oee > 0.8) return 'text-emerald-400';
+        if (oee > 0.6) return 'text-amber-400';
+        return 'text-rose-400';
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-300 w-full">
@@ -36,42 +53,45 @@ const ProductionLinesOverview: React.FC<ProductionLinesOverviewProps> = ({ userR
                 </div>
             </div>
 
-            <Card>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-900/50 text-slate-300 font-bold uppercase text-xs tracking-wider">
-                            <tr>
-                                <th className="p-4">Machine Name</th>
-                                <th className="p-4 text-center">Status</th>
-                                <th className="p-4 text-center">OEE</th>
-                                <th className="p-4 text-center">Output (Shift)</th>
-                                <th className="p-4 text-center">Reject Rate</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800">
-                            {machines.map(machine => (
-                                <tr 
-                                    key={machine.id}
-                                    onClick={() => canClickDetails && navigate(`/app/machines/${machine.id}`)}
-                                    className={`group transition-colors ${canClickDetails ? 'cursor-pointer hover:bg-slate-800/50' : ''}`}
-                                >
-                                    <td className={`p-4 font-bold text-white transition-colors ${canClickDetails ? 'group-hover:text-blue-400' : ''}`}>{machine.name}</td>
-                                    <td className="p-4 text-center"><StatusBadge status={machine.status} /></td>
-                                    <td className={`p-4 text-center font-mono font-bold ${machine.oee > 0.8 ? 'text-emerald-400' : machine.oee > 0.6 ? 'text-amber-400' : 'text-rose-400'}`}>
-                                        {formatNumber(machine.oee * 100, 1)}%
-                                    </td>
-                                    <td className="p-4 text-center font-mono text-white">
-                                        {formatNumber(machine.totalOutputShift, 0)} kg
-                                    </td>
-                                    <td className="p-4 text-center font-mono text-rose-400">
-                                        {formatNumber(machine.rejectRate, 2)}%
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {machines.map(machine => (
+                    <Card 
+                        key={machine.id}
+                        onClick={() => canClickDetails && navigate(`/app/machines/${machine.id}`)}
+                        className={`flex flex-col transition-all duration-200 group ${canClickDetails ? 'cursor-pointer hover:border-blue-500 hover:shadow-lg hover:-translate-y-1' : ''}`}
+                    >
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className={`font-bold text-white text-lg transition-colors ${canClickDetails ? 'group-hover:text-blue-400' : ''}`}>{machine.name}</h3>
+                            <StatusBadge status={machine.status} />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-y-5 gap-x-4 mt-auto pt-4 border-t border-slate-700/50">
+                            <MetricItem 
+                                icon={Activity}
+                                label="OEE"
+                                value={`${formatNumber(machine.oee * 100, 1)}%`}
+                                colorClass={getOeeColor(machine.oee)}
+                            />
+                            <MetricItem 
+                                icon={Box}
+                                label="Output (Shift)"
+                                value={`${formatNumber(machine.totalOutputShift, 0)} kg`}
+                            />
+                             <MetricItem 
+                                icon={Clock}
+                                label="Availability"
+                                value={`${formatNumber((machine.availability || 0) * 100, 1)}%`}
+                            />
+                            <MetricItem 
+                                icon={AlertTriangle}
+                                label="Reject Rate"
+                                value={`${formatNumber(machine.rejectRate, 2)}%`}
+                                colorClass="text-rose-400"
+                            />
+                        </div>
+                    </Card>
+                ))}
+            </div>
         </div>
     );
 };
