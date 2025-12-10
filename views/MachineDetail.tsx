@@ -250,7 +250,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
             <div className="grid grid-cols-[repeat(auto-fit,minmax(550px,1fr))] gap-6">
                 {isDataItemVisible(userRole, 'MACHINE_OUTPUT_TREND_CHART', visibilityContext) && (
                     <Card title={`Output vs Target Trend (${period})`}>
-                         <ResponsiveContainer width="100%" height={300}>
+                         <ResponsiveContainer width="100%" height={300} minWidth={0}>
                             <AreaChart data={timeSeriesData.output} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                 <defs><linearGradient id="colorOutput" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient></defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -538,7 +538,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                 </div>
                 {isDataItemVisible(userRole, 'MACHINE_PROCESS_TREND_CHART', visibilityContext) && (
                     <Card title="Process Parameter Trend">
-                        <ResponsiveContainer width="100%" height={350}>
+                        <ResponsiveContainer width="100%" height={350} minWidth={0}>
                             <LineChart data={timeSeriesData.params} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                 <XAxis dataKey="time" stroke="#94a3b8" label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
@@ -569,7 +569,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {isDataItemVisible(userRole, 'MACHINE_UTIL_ELEC_CHART', visibilityContext) && (
                         <Card title="Electricity Consumption Trend">
-                            <ResponsiveContainer width="100%" height={300}>
+                            <ResponsiveContainer width="100%" height={300} minWidth={0}>
                                 <AreaChart data={timeSeriesData.utility.electricity} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                     <defs><linearGradient id="colorElec" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#facc15" stopOpacity={0.3}/><stop offset="95%" stopColor="#facc15" stopOpacity={0}/></linearGradient></defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -583,7 +583,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
                     )}
                      {isDataItemVisible(userRole, 'MACHINE_UTIL_STEAM_CHART', visibilityContext) && (
                         <Card title="Steam Consumption Trend">
-                            <ResponsiveContainer width="100%" height={300}>
+                            <ResponsiveContainer width="100%" height={300} minWidth={0}>
                                 <AreaChart data={timeSeriesData.utility.steam} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                     <defs><linearGradient id="colorSteam" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#e2e8f0" stopOpacity={0.3}/><stop offset="95%" stopColor="#e2e8f0" stopOpacity={0}/></linearGradient></defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />

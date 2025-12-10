@@ -38,6 +38,9 @@ const UtilitySummary = lazy(() => import('./views/UtilitySummary'));
 const SettingsView = lazy(() => import('./views/Settings'));
 const GlobalDashboard = lazy(() => import('./GlobalDashboard'));
 const PlantDashboard = lazy(() => import('./views/PlantDashboard'));
+const UtilitiesOverview = lazy(() => import('./views/UtilitiesOverview'));
+const ProductionLinesOverview = lazy(() => import('./views/ProductionLinesOverview'));
+
 
 // Services
 import { plantService } from './services/plantService';
@@ -87,13 +90,7 @@ const NestedSidebarLink: React.FC<{ to: string; label: string; active: boolean; 
     </Link>
 );
 
-const DropdownMenu: React.FC<{ title: string; icon: any; isCollapsed: boolean; children: React.ReactNode; defaultOpen?: boolean; }> = ({ title, icon: Icon, isCollapsed, children, defaultOpen = false }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
-
-    useEffect(() => {
-        setIsOpen(defaultOpen);
-    }, [defaultOpen]);
-
+const DropdownMenu: React.FC<{ title: string; to: string; icon: any; isCollapsed: boolean; children: React.ReactNode; isOpen: boolean; onToggle: () => void; }> = ({ title, to, icon: Icon, isCollapsed, children, isOpen, onToggle }) => {
     if (isCollapsed) {
         return (
             <div className="flex justify-center my-3 mx-2 p-2 bg-slate-800/30 rounded-lg border border-slate-700/50" title={title}>
@@ -104,13 +101,15 @@ const DropdownMenu: React.FC<{ title: string; icon: any; isCollapsed: boolean; c
 
     return (
         <div className="px-3 my-1">
-            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-800 text-slate-300 transition-colors">
-                <div className="flex items-center gap-3">
+            <div className="w-full flex items-center justify-between p-1 rounded-lg hover:bg-slate-800 text-slate-300 transition-colors">
+                <Link to={to} className="flex-1 flex items-center gap-3 p-2 rounded-md">
                     <Icon size={18} className="text-slate-400" />
                     <span className="text-sm font-bold">{title}</span>
-                </div>
-                <ChevronRight size={16} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
-            </button>
+                </Link>
+                <button onClick={onToggle} className="p-2 rounded-md hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                    <ChevronRight size={16} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
+                </button>
+            </div>
             <div style={{
                 maxHeight: isOpen ? '1000px' : '0px',
                 transition: 'max-height 0.5s ease-in-out, opacity 0.3s ease-in-out',
@@ -173,6 +172,10 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => localStorage.getItem('sidebarOpen') !== 'false');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    
+    // State for hybrid accordion
+    const [expandedPlant, setExpandedPlant] = useState<string | null>(null);
+    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
     useEffect(() => {
         localStorage.setItem('sidebarOpen', String(isSidebarOpen));
@@ -186,34 +189,68 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
 
     const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => {
         const allPlants = plantService.getAllPlants();
+        const utilityTypes = utilityService.getUtilityTypes();
+        
         const plantsToShow = useMemo(() => {
-            if (user.role === UserRole.ADMINISTRATOR) {
-                return allPlants;
-            }
+            if (user.role === UserRole.ADMINISTRATOR) return allPlants;
             return allPlants.filter(p => user.plantAccess?.includes(p.id));
         }, [allPlants, user.role, user.plantAccess]);
 
         const plantContext = useMemo(() => {
-            if (params.plantId && plantsToShow.some(p => p.id === params.plantId)) return plantService.getPlantById(params.plantId);
+            const pathSegments = location.pathname.split('/').filter(Boolean);
+            const plantIdFromPath = pathSegments.find(seg => Object.values(PlantCode).includes(seg as PlantCode));
+            
+            if (plantIdFromPath && plantsToShow.some(p => p.id === plantIdFromPath)) {
+                return plantService.getPlantById(plantIdFromPath as PlantCode);
+            }
+
             if (params.machineId) {
                 const machine = plantService.getMachineById(params.machineId);
                 if (machine && plantsToShow.some(p => p.id === machine.plantId)) {
                     return plantService.getPlantById(machine.plantId);
                 }
             }
-            if (location.pathname.startsWith('/app/utility/')) {
-                 const pathParts = location.pathname.split('/');
-                 const plantId = pathParts[pathParts.length-1];
-                 if (plantsToShow.some(p => p.id === plantId)) {
-                    return plantService.getPlantById(plantId);
+            return null;
+        }, [location.pathname, params.machineId, plantsToShow]);
+        
+        // Update expandedPlant state when plantContext changes for hybrid sidebar
+        useEffect(() => {
+            if (plantContext) {
+                 if (location.pathname.endsWith(plantContext.id)) {
+                     // Keep accordion closed by default on plant dashboard
+                     setExpandedPlant(null); 
+                 } else if (params.machineId || location.pathname.startsWith('/app/utility/')) {
+                     // Open accordion when on a detail page
+                     setExpandedPlant(plantContext.id);
                  }
             }
-            return null;
-        }, [params.plantId, params.machineId, location.pathname, plantsToShow]);
+        }, [plantContext, params.machineId, location.pathname]);
+
+        // Logic to automatically open the correct dropdown when on a detail page
+        // BUG FIX: Removed the `else` block that was causing the dropdown to flicker and close immediately.
+        useEffect(() => {
+            if (location.pathname.startsWith('/app/utility/')) {
+                setOpenDropdown('utilities');
+            } else if (location.pathname.startsWith('/app/machines/')) {
+                setOpenDropdown('production');
+            }
+        }, [location.pathname]);
+
 
         const canSeeGlobalDashboard = [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role);
 
-        // Common Header for all sidebars
+        let displayMode: 'GLOBAL' | 'CONTEXTUAL' | 'HYBRID' = 'GLOBAL';
+
+        if (plantContext) {
+            if ([UserRole.ADMINISTRATOR, UserRole.MANAGEMENT].includes(user.role)) {
+                displayMode = 'CONTEXTUAL';
+            } else if (user.role === UserRole.VIEWER) {
+                displayMode = 'GLOBAL';
+            } else {
+                displayMode = 'HYBRID';
+            }
+        }
+        
         const SidebarHeader = () => (
              <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
                 <div className="flex flex-col items-center">
@@ -224,23 +261,118 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
             </div>
         );
 
-        // --- Render Logic Based on Role ---
+        // --- Render Logic Based on Role & Context ---
         return (
             <>
                 <SidebarHeader />
                  <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-1">
-                    {canSeeGlobalDashboard && (
-                        <div className="mb-4">
-                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dashboards</div>}
-                            <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
-                        </div>
+                    {/* CONTEXTUAL: Admin/Management on a Plant page */}
+                    {displayMode === 'CONTEXTUAL' && plantContext && (
+                        <>
+                           {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Navigation</div>}
+                           <SidebarLink to="/app/dashboard/global" label="Back to Global Overview" active={false} icon={ArrowLeft} isCollapsed={isCollapsed} />
+                           
+                           {!isCollapsed && <div className="px-5 mb-2 mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">{plantContext.name}</div>}
+                           <SidebarLink to={`/app/plants/${plantContext.id}`} label="Plant Dashboard" active={location.pathname === `/app/plants/${plantContext.id}`} icon={Factory} isCollapsed={isCollapsed} />
+
+                           <DropdownMenu 
+                                title="Energy & Utilities"
+                                to={`/app/plants/${plantContext.id}/utilities`}
+                                icon={Zap} 
+                                isCollapsed={isCollapsed}
+                                isOpen={openDropdown === 'utilities'}
+                                onToggle={() => setOpenDropdown(prev => prev === 'utilities' ? null : 'utilities')}
+                           >
+                                {utilityTypes.map(util => <NestedSidebarLink key={util.key} to={`/app/utility/${util.key}/${plantContext.id}`} label={util.label} active={location.pathname === `/app/utility/${util.key}/${plantContext.id}`} />)}
+                           </DropdownMenu>
+
+                           <DropdownMenu 
+                                title="Production Lines"
+                                to={`/app/plants/${plantContext.id}/production-lines`}
+                                icon={Cpu} 
+                                isCollapsed={isCollapsed}
+                                isOpen={openDropdown === 'production'}
+                                onToggle={() => setOpenDropdown(prev => prev === 'production' ? null : 'production')}
+                           >
+                                {plantContext.machines.map(m => <NestedSidebarLink key={m.id} to={`/app/machines/${m.id}`} label={m.name} active={params.machineId === m.id} />)}
+                           </DropdownMenu>
+                        </>
+                    )}
+
+                    {/* HYBRID: Supervisor/Operator etc on any page */}
+                    {displayMode === 'HYBRID' && (
+                         <>
+                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
+                            {plantsToShow.map(plantItem => {
+                                const isActivePlant = plantContext?.id === plantItem.id;
+                                const isExpanded = expandedPlant === plantItem.id;
+
+                                return (
+                                     <div key={plantItem.id} className={`mx-2 my-1 rounded-xl transition-all duration-300 ${isActivePlant ? 'bg-slate-800' : ''}`}>
+                                        <SidebarLink 
+                                            to={`/app/plants/${plantItem.id}`} 
+                                            label={plantItem.name} 
+                                            active={isActivePlant && !params.machineId && !location.pathname.includes('/utilities') && !location.pathname.includes('/production-lines')}
+                                            icon={Building2} 
+                                            isCollapsed={isCollapsed}
+                                            onClick={(e) => {
+                                                if (isActivePlant) {
+                                                    e.preventDefault();
+                                                    setExpandedPlant(isExpanded ? null : plantItem.id);
+                                                } else {
+                                                    setExpandedPlant(null); // Collapse others when switching
+                                                }
+                                            }}
+                                        />
+                                        {isActivePlant && !isCollapsed && (
+                                            <div style={{ maxHeight: isExpanded ? '1000px' : '0px', transition: 'max-height 0.5s ease-in-out', overflow: 'hidden' }}>
+                                                 <div className="border-t border-slate-700/50 mx-4 my-2"></div>
+                                                 <DropdownMenu 
+                                                    title="Energy & Utilities" 
+                                                    to={`/app/plants/${plantItem.id}/utilities`}
+                                                    icon={Zap} 
+                                                    isCollapsed={isCollapsed}
+                                                    isOpen={openDropdown === 'utilities'}
+                                                    onToggle={() => setOpenDropdown(prev => prev === 'utilities' ? null : 'utilities')}
+                                                  >
+                                                    {utilityTypes.map(util => <NestedSidebarLink key={util.key} to={`/app/utility/${util.key}/${plantItem.id}`} label={util.label} active={location.pathname === `/app/utility/${util.key}/${plantItem.id}`} />)}
+                                                </DropdownMenu>
+                                                 <DropdownMenu 
+                                                    title="Production Lines" 
+                                                    to={`/app/plants/${plantItem.id}/production-lines`}
+                                                    icon={Cpu} 
+                                                    isCollapsed={isCollapsed}
+                                                    isOpen={openDropdown === 'production'}
+                                                    onToggle={() => setOpenDropdown(prev => prev === 'production' ? null : 'production')}
+                                                 >
+                                                    {plantItem.machines.map(m => <NestedSidebarLink key={m.id} to={`/app/machines/${m.id}`} label={m.name} active={params.machineId === m.id} />)}
+                                                </DropdownMenu>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                         </>
                     )}
                     
-                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
-                    {plantsToShow.map(plantItem => (
-                        <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />
-                    ))}
-                    
+                    {/* GLOBAL: Default view for Guests, or Admins/Mgmt on non-plant pages */}
+                    {displayMode === 'GLOBAL' && (
+                         <>
+                            {canSeeGlobalDashboard && (
+                                <div className="mb-4">
+                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dashboards</div>}
+                                    <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
+                                </div>
+                            )}
+                            
+                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
+                            {plantsToShow.map(plantItem => (
+                                <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />
+                            ))}
+                         </>
+                    )}
+
+                    {/* Admin settings link, always available at the bottom */}
                     {user.role === UserRole.ADMINISTRATOR && (
                         <div className="pt-4">
                             {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administration</div>}
@@ -372,11 +504,19 @@ const UtilitySummaryWrapper = React.memo(({ user }: { user: User }) => {
     <UtilitySummary
       plant={plant}
       type={type || 'electricity'}
-      onBack={() => navigate(`/app/plants/${plantId}`)}
+      onBack={() => navigate(-1)}
       userRole={user.role}
     />
   );
 });
+
+const UtilitiesOverviewWrapper = React.memo(({ userRole }: { userRole: UserRole }) => (
+    <UtilitiesOverview userRole={userRole} />
+));
+
+const ProductionLinesOverviewWrapper = React.memo(({ userRole }: { userRole: UserRole }) => (
+    <ProductionLinesOverview userRole={userRole} />
+));
 
 
 const SettingsWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
@@ -438,6 +578,14 @@ const App: React.FC = () => {
             <Route
               path="plants/:plantId"
               element={user && <PlantDashboardAccessWrapper user={user} />}
+            />
+            <Route 
+                path="plants/:plantId/utilities" 
+                element={user && <UtilitiesOverviewWrapper userRole={user.role} />} 
+            />
+            <Route 
+                path="plants/:plantId/production-lines" 
+                element={user && <ProductionLinesOverviewWrapper userRole={user.role} />} 
             />
             <Route
               path="machines/:machineId"

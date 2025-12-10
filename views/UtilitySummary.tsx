@@ -136,7 +136,7 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 {isDataItemVisible(userRole, visibilityKeys.CHART_TREND, visibilityContext) && (
                     <Card title={`${config.label} Usage Trend (${period})`} className="xl:col-span-2 min-h-[350px]">
-                         <ResponsiveContainer width="100%" height={300}>
+                         <ResponsiveContainer width="100%" height={300} minWidth={0}>
                             <LineChart data={trendData} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                 <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
@@ -237,7 +237,7 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {isDataItemVisible(userRole, visibilityKeys.CONSUMPTION_BAR, visibilityContext) && (
                                 <Card title="Consumption by Area (Bar)" className="min-h-[350px]">
-                                    <ResponsiveContainer width="100%" height={300}>
+                                    <ResponsiveContainer width="100%" height={300} minWidth={0}>
                                         <RechartsBarChart data={genericBreakdownData} layout="vertical" margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                             <XAxis type="number" stroke="#94a3b8" tick={{fontSize: 12}} label={{ value: 'Consumption (%)', position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
@@ -250,7 +250,7 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                             )}
                             {isDataItemVisible(userRole, visibilityKeys.CONSUMPTION_PIE, visibilityContext) && (
                                 <Card title="Consumption by Area (Pie)" className="min-h-[350px]">
-                                    <ResponsiveContainer width="100%" height={300}>
+                                    <ResponsiveContainer width="100%" height={300} minWidth={0}>
                                         <PieChart>
                                             <Pie data={genericBreakdownData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label />
                                             <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>

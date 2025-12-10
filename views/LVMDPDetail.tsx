@@ -322,7 +322,7 @@ const LVMDPDetail: React.FC<LVMDPDetailProps> = ({ lvmdp, onBack, userRole }) =>
                 <div className="xl:col-span-2 space-y-6">
                     {isDataItemVisible(userRole, visibilityKeys.ENERGY_TREND, visibilityContext) && (
                         <Card title={`Energy Usage Trend (${period})`} className="min-h-[400px]">
-                             <ResponsiveContainer width="100%" height={320}>
+                             <ResponsiveContainer width="100%" height={320} minWidth={0}>
                                 <AreaChart data={energyTrend} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
                                     <defs><linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/><stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/></linearGradient></defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
