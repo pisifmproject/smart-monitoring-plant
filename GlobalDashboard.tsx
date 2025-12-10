@@ -1,23 +1,31 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserRole } from './types';
+import { UserRole, User } from './types';
 import { Card, MetricCard, StatusBadge, formatNumber } from './components/SharedComponents';
 import { isDataItemVisible } from './services/visibilityStore';
 import { dashboardService } from './services/dashboardService';
 import { Globe, Activity, Zap, AlertTriangle, Factory } from 'lucide-react';
 
 interface GlobalDashboardProps {
-    userRole: UserRole;
+    user: User;
 }
 
 type Period = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR';
 
-const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
+const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ user }) => {
     const navigate = useNavigate();
     const [period, setPeriod] = useState<Period>('DAY');
+    const { role: userRole } = user;
 
     const kpis = useMemo(() => dashboardService.getGlobalKPIs(period), [period]);
     const plants = useMemo(() => dashboardService.getPlantOverview(period), [period]);
+
+    const plantsToShow = useMemo(() => {
+        if (user.role === UserRole.ADMINISTRATOR || !user.plantAccess || user.plantAccess.length === 0) {
+            return plants;
+        }
+        return plants.filter(p => user.plantAccess?.includes(p.id));
+    }, [plants, user]);
 
     const canDrillDown = true; // Always allow drill down
 
@@ -105,7 +113,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                     <Factory size={20} className="text-slate-300"/> Plant Status Overview
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-5">
-                    {plants.map(plant => {
+                    {plantsToShow.map(plant => {
                         const visibilityKey = `GLOBAL_PLANT_${plant.id}`;
                         if (!isDataItemVisible(userRole, visibilityKey)) return null;
 

@@ -171,7 +171,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                 <div className={!showAlarms ? "lg:col-span-5" : "lg:col-span-3"}>
+                 <div className={![UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole) ? "lg:col-span-3" : "lg:col-span-5"}>
                     {isDataItemVisible(userRole, 'SHIFT_PERFORMANCE_TABLE', visibilityContext) && (
                         <Card title="Shift Performance">
                             <div className="overflow-x-auto">
@@ -262,13 +262,15 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                         }
                         const machineContext = { ...visibilityContext, machineId: machine.id };
                         const hasActiveAlarm = maintenanceService.hasActiveAlarm(machine.id);
+                        
+                        const canClick = ![UserRole.VIEWER].includes(userRole);
 
                         return (
                             <Card 
                                 key={machine.id}
-                                onClick={() => canClickDetails && navigate(`/app/machines/${machine.id}`)}
+                                onClick={() => canClick && navigate(`/app/machines/${machine.id}`)}
                                 className={`transition-all duration-200 group ${
-                                    canClickDetails ? 'hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer' : 'opacity-90 cursor-default'
+                                    canClick ? 'hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer' : 'opacity-90 cursor-default'
                                 }`}
                             >
                                 <div className="flex justify-between items-start mb-3">

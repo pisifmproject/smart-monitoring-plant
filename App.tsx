@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect, Suspense, lazy, useMemo } from 'react';
 import {
   HashRouter,
@@ -33,7 +27,7 @@ import {
   Cpu
 } from 'lucide-react';
 
-import { User, UserRole, Plant } from './types';
+import { User, UserRole, Plant, PlantCode } from './types';
 
 // Lazy load views for better performance
 const Landing = lazy(() => import('./views/Landing'));
@@ -49,6 +43,7 @@ const PlantDashboard = lazy(() => import('./views/PlantDashboard'));
 import { plantService } from './services/plantService';
 import { lvmdpService } from './services/lvmdpService';
 import { utilityService } from './services/utilityService';
+import { login } from './services/auth';
 
 // Fallback component for Suspense
 const SuspenseSpinner: React.FC = () => (
@@ -95,7 +90,6 @@ const NestedSidebarLink: React.FC<{ to: string; label: string; active: boolean; 
 const DropdownMenu: React.FC<{ title: string; icon: any; isCollapsed: boolean; children: React.ReactNode; defaultOpen?: boolean; }> = ({ title, icon: Icon, isCollapsed, children, defaultOpen = false }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
-    // Sync open state if defaultOpen prop changes (e.g., on navigation)
     useEffect(() => {
         setIsOpen(defaultOpen);
     }, [defaultOpen]);
@@ -191,200 +185,72 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
     if (!user || !user.role) return <Navigate to="/login" replace />;
 
     const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => {
-        // --- CONTEXT & ROLE DETECTION ---
-        const plant = useMemo(() => {
-            if (params.plantId) return plantService.getPlantById(params.plantId);
+        const allPlants = plantService.getAllPlants();
+        const plantsToShow = useMemo(() => {
+            if (user.role === UserRole.ADMINISTRATOR) {
+                return allPlants;
+            }
+            return allPlants.filter(p => user.plantAccess?.includes(p.id));
+        }, [allPlants, user.role, user.plantAccess]);
+
+        const plantContext = useMemo(() => {
+            if (params.plantId && plantsToShow.some(p => p.id === params.plantId)) return plantService.getPlantById(params.plantId);
             if (params.machineId) {
                 const machine = plantService.getMachineById(params.machineId);
-                return machine ? plantService.getPlantById(machine.plantId) : null;
+                if (machine && plantsToShow.some(p => p.id === machine.plantId)) {
+                    return plantService.getPlantById(machine.plantId);
+                }
             }
             if (location.pathname.startsWith('/app/utility/')) {
                  const pathParts = location.pathname.split('/');
                  const plantId = pathParts[pathParts.length-1];
-                 return plantService.getPlantById(plantId);
+                 if (plantsToShow.some(p => p.id === plantId)) {
+                    return plantService.getPlantById(plantId);
+                 }
             }
             return null;
-        }, [params.plantId, params.machineId, location.pathname]);
+        }, [params.plantId, params.machineId, location.pathname, plantsToShow]);
 
-        const isPrivilegedRole = [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT].includes(user.role);
-        const isGuestRole = user.role === UserRole.VIEWER;
-        const isOperationalRole = !isPrivilegedRole && !isGuestRole;
+        const canSeeGlobalDashboard = [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role);
 
-        const allPlants = plantService.getAllPlants();
-        const isAdmin = user.role === UserRole.ADMINISTRATOR;
-        const canViewGlobal = [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role);
+        // Common Header for all sidebars
+        const SidebarHeader = () => (
+             <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
+                <div className="flex flex-col items-center">
+                    <h1 className={`text-sm font-extrabold text-white tracking-tighter whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
+                        PT INDOFOOD FORTUNA MAKMUR
+                    </h1>
+                </div>
+            </div>
+        );
 
-        // --- RENDER LOGIC BASED ON ROLE ---
-        if (isGuestRole) {
-            // --- GUEST SIDEBAR (ALWAYS GLOBAL) ---
-            return (
-                <>
-                    <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-                        <div className="flex flex-col items-center">
-                            <h1 className={`text-sm font-extrabold text-white tracking-tighter whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
-                                PT INDOFOOD FORTUNA MAKMUR
-                            </h1>
-                            <p className={`text-[11px] font-bold text-blue-500 mt-1.5 uppercase tracking-wider flex items-center gap-2 transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                                Smart Monitoring Multi Plant
-                            </p>
+        // --- Render Logic Based on Role ---
+        return (
+            <>
+                <SidebarHeader />
+                 <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-1">
+                    {canSeeGlobalDashboard && (
+                        <div className="mb-4">
+                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dashboards</div>}
+                            <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
                         </div>
-                    </div>
-                    <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-6">
-                        {canViewGlobal && (
-                            <div>
-                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dashboards</div>}
-                                <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
-                            </div>
-                        )}
-                        <div>
-                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
-                            <div className="space-y-0.5">
-                                {allPlants.map((plantItem) => (
-                                    <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />
-                                ))}
-                            </div>
+                    )}
+                    
+                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
+                    {plantsToShow.map(plantItem => (
+                        <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />
+                    ))}
+                    
+                    {user.role === UserRole.ADMINISTRATOR && (
+                        <div className="pt-4">
+                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administration</div>}
+                            <SidebarLink to="/app/settings" label="System Settings" active={location.pathname.startsWith('/app/settings')} icon={Settings} isCollapsed={isCollapsed} />
                         </div>
-                    </nav>
-                    <UserProfileFooter user={user} onLogout={onLogout} isCollapsed={isCollapsed} />
-                </>
-            );
-        } else if (isOperationalRole) {
-            // --- OPERATIONAL (HYBRID ACCORDION) SIDEBAR ---
-            const [expandedPlant, setExpandedPlant] = useState<string | null>(null);
-
-            useEffect(() => {
-                // If we are on a detail page, expand its parent plant
-                if (plant && (location.pathname.startsWith('/app/machines/') || location.pathname.startsWith('/app/utility/'))) {
-                    setExpandedPlant(plant.id);
-                } else {
-                    // When on a plant dashboard, keep it collapsed by default.
-                    setExpandedPlant(null);
-                }
-            }, [location.pathname, plant]);
-
-            const togglePlant = (plantId: string) => {
-                setExpandedPlant(current => current === plantId ? null : plantId);
-            };
-
-            return (
-                <>
-                    <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-                         <div className="flex flex-col items-center">
-                            <h1 className={`text-sm font-extrabold text-white tracking-tighter whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
-                                PT INDOFOOD FORTUNA MAKMUR
-                            </h1>
-                        </div>
-                    </div>
-                    <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-1">
-                        {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
-                        {allPlants.map(plantItem => {
-                            const isCurrentPlantActive = plant?.id === plantItem.id;
-                            const isExpanded = expandedPlant === plantItem.id;
-
-                            return (
-                                <div key={plantItem.id} className={`mx-2 my-1 rounded-xl transition-colors ${isCurrentPlantActive ? 'bg-slate-800/30 border border-slate-800' : ''}`}>
-                                    <SidebarLink 
-                                        to={`/app/plants/${plantItem.id}`} 
-                                        onClick={(e) => {
-                                            if (isCurrentPlantActive) {
-                                                e.preventDefault();
-                                                togglePlant(plantItem.id);
-                                            }
-                                        }}
-                                        label={plantItem.name} 
-                                        active={location.pathname === `/app/plants/${plantItem.id}`} 
-                                        icon={Building2} 
-                                        isCollapsed={isCollapsed} 
-                                    />
-                                    <div style={{ maxHeight: isExpanded ? '1000px' : '0px', transition: 'max-height 0.4s ease-out', overflow: 'hidden' }}>
-                                        <div className="pt-2 pb-1 border-t border-slate-800/50 mx-4">
-                                            <DropdownMenu title="Energy & Utilities" icon={Zap} isCollapsed={isCollapsed} defaultOpen={location.pathname.startsWith(`/app/utility/`)}>
-                                                {utilityService.getUtilityTypes().map(util => (
-                                                    <NestedSidebarLink key={util.key} to={`/app/utility/${util.key}/${plantItem.id}`} label={util.label} active={location.pathname === `/app/utility/${util.key}/${plantItem.id}`} />
-                                                ))}
-                                            </DropdownMenu>
-                                            <DropdownMenu title="Production Lines" icon={Cpu} isCollapsed={isCollapsed} defaultOpen={location.pathname.startsWith(`/app/machines/`)}>
-                                                {plantItem.machines.map(machine => (
-                                                    <NestedSidebarLink key={machine.id} to={`/app/machines/${machine.id}`} label={machine.name} active={location.pathname === `/app/machines/${machine.id}`} />
-                                                ))}
-                                            </DropdownMenu>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        {isAdmin && (
-                            <div className="pt-4">
-                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administration</div>}
-                                <SidebarLink to="/app/settings" label="System Settings" active={location.pathname.startsWith('/app/settings')} icon={Settings} isCollapsed={isCollapsed} />
-                            </div>
-                        )}
-                    </nav>
-                    <UserProfileFooter user={user} onLogout={onLogout} isCollapsed={isCollapsed} />
-                </>
-            );
-        } else { // Privileged Roles (Admin/Management)
-            if (plant) {
-                // --- PRIVILEGED PLANT-SPECIFIC SIDEBAR ---
-                const utilityTypes = utilityService.getUtilityTypes();
-                const machines = plant.machines;
-                const isUtilityActive = location.pathname.startsWith(`/app/utility/`);
-                const isProductionActive = location.pathname.startsWith(`/app/machines/`);
-                
-                return (
-                    <>
-                        <div className={`px-4 py-6 border-b border-slate-800/50 flex items-center gap-4 ${isCollapsed ? 'justify-center py-8' : ''}`}>
-                            {!isCollapsed && <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700"><Factory size={20} className="text-blue-400" /></div>}
-                            {!isCollapsed && <div className="min-w-0"><p className="text-base font-bold text-white truncate">{plant.name}</p><p className="text-xs text-slate-300 font-medium">{plant.location}</p></div>}
-                            {isCollapsed && <Factory size={24} className="text-blue-400" />}
-                        </div>
-                        <nav className="flex-1 overflow-y-auto py-4 custom-scrollbar">
-                            <SidebarLink to="/app/dashboard/global" label="Back to Global" icon={ArrowLeft} isCollapsed={isCollapsed} active={false} />
-                            <div className="my-4 border-t border-slate-800 mx-4"></div>
-                            <DropdownMenu title="Energy & Utilities" icon={Zap} isCollapsed={isCollapsed} defaultOpen={isUtilityActive}>
-                                {utilityTypes.map(util => <NestedSidebarLink key={util.key} to={`/app/utility/${util.key}/${plant.id}`} label={util.label} active={location.pathname === `/app/utility/${util.key}/${plant.id}`} />)}
-                            </DropdownMenu>
-                            <DropdownMenu title="Production Lines" icon={Cpu} isCollapsed={isCollapsed} defaultOpen={isProductionActive}>
-                                {machines.map(machine => <NestedSidebarLink key={machine.id} to={`/app/machines/${machine.id}`} label={machine.name} active={location.pathname === `/app/machines/${machine.id}`} />)}
-                            </DropdownMenu>
-                        </nav>
-                        <UserProfileFooter user={user} onLogout={onLogout} isCollapsed={isCollapsed} />
-                    </>
-                );
-            } else {
-                // --- PRIVILEGED GLOBAL SIDEBAR ---
-                return (
-                    <>
-                        <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-                            <div className="flex flex-col items-center">
-                                <h1 className={`text-sm font-extrabold text-white tracking-tighter whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>PT INDOFOOD FORTUNA MAKMUR</h1>
-                                <p className={`text-[11px] font-bold text-blue-500 mt-1.5 uppercase tracking-wider flex items-center gap-2 transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}><span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>Smart Monitoring Multi Plant</p>
-                            </div>
-                        </div>
-                        <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-6">
-                            {canViewGlobal && (
-                                <div>
-                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dashboards</div>}
-                                    <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
-                                </div>
-                            )}
-                            <div>
-                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
-                                <div className="space-y-0.5">{allPlants.map((plantItem) => <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />)}</div>
-                            </div>
-                            {isAdmin && (
-                                <div>
-                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administration</div>}
-                                    <SidebarLink to="/app/settings" label="System Settings" active={location.pathname.startsWith('/app/settings')} icon={Settings} isCollapsed={isCollapsed} />
-                                </div>
-                            )}
-                        </nav>
-                        <UserProfileFooter user={user} onLogout={onLogout} isCollapsed={isCollapsed} />
-                    </>
-                );
-            }
-        }
+                    )}
+                </nav>
+                <UserProfileFooter user={user} onLogout={onLogout} isCollapsed={isCollapsed} />
+            </>
+        );
     };
 
     return (
@@ -431,18 +297,33 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
 // ---------------------------------------
 // ACCESS CONTROL WRAPPERS
 // ---------------------------------------
+
+const PlantDashboardAccessWrapper = ({ user }: { user: User }) => {
+    const { plantId } = useParams();
+    const navigate = useNavigate();
+
+    if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(plantId as PlantCode)) {
+        const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
+        useEffect(() => navigate(redirectTo, { replace: true }), []);
+        return <SuspenseSpinner />;
+    }
+    return <PlantDashboard userRole={user.role} />;
+};
+
+
 const MachineDetailWrapper = React.memo(({ user }: { user: User }) => {
   const { machineId } = useParams();
   const navigate = useNavigate();
-  const restrictedRoles = [UserRole.VIEWER];
-  
-  if (restrictedRoles.includes(user.role)) {
-    return <Navigate to="/app/dashboard/global" replace />;
-  }
 
   const machine = React.useMemo(() => plantService.getMachineById(machineId || ''), [machineId]);
   
   if (!machine) return <div className="p-8 text-slate-500">Machine Not Found</div>;
+
+  if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(machine.plantId)) {
+      const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
+      useEffect(() => navigate(redirectTo, { replace: true }), []);
+      return <SuspenseSpinner />;
+  }
 
   return (
     <MachineDetail
@@ -454,43 +335,45 @@ const MachineDetailWrapper = React.memo(({ user }: { user: User }) => {
   );
 });
 
-const LVMDPDetailWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
+const LVMDPDetailWrapper = React.memo(({ user }: { user: User }) => {
   const { panelId } = useParams();
   const navigate = useNavigate();
-  const restrictedRoles = [UserRole.OPERATOR, UserRole.QC, UserRole.VIEWER];
-
-  if (restrictedRoles.includes(userRole)) {
-    return <Navigate to="/app/dashboard/global" replace />;
-  }
 
   const panel = React.useMemo(() => lvmdpService.getPanelById(panelId || ''), [panelId]);
 
   if (!panel) return <div className="p-8 text-slate-500">Panel Not Found</div>;
 
+  if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(panel.plantId)) {
+      const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
+      useEffect(() => navigate(redirectTo, { replace: true }), []);
+      return <SuspenseSpinner />;
+  }
+  
   return (
-    <LVMDPDetail lvmdp={panel} onBack={() => navigate(-1)} userRole={userRole} />
+    <LVMDPDetail lvmdp={panel} onBack={() => navigate(-1)} userRole={user.role} />
   );
 });
 
-const UtilitySummaryWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
+const UtilitySummaryWrapper = React.memo(({ user }: { user: User }) => {
   const { type, plantId } = useParams();
   const navigate = useNavigate();
-  const restrictedRoles = [UserRole.VIEWER];
-
-  if (restrictedRoles.includes(userRole)) {
-    return <Navigate to="/app/dashboard/global" replace />;
-  }
   
   const plant = React.useMemo(() => plantService.getPlantById(plantId || ''), [plantId]);
 
   if (!plant) return <div className="p-8 text-slate-500">Plant Not Found</div>;
+
+  if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(plant.id)) {
+      const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
+      useEffect(() => navigate(redirectTo, { replace: true }), []);
+      return <SuspenseSpinner />;
+  }
 
   return (
     <UtilitySummary
       plant={plant}
       type={type || 'electricity'}
       onBack={() => navigate(`/app/plants/${plantId}`)}
-      userRole={userRole}
+      userRole={user.role}
     />
   );
 });
@@ -534,7 +417,9 @@ const App: React.FC = () => {
                 [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role) ? (
                   <Navigate to="dashboard/global" replace />
                 ) : (
-                  <Navigate to="plants/CIKOKOL" replace /> 
+                  user.plantAccess && user.plantAccess.length > 0 ?
+                  <Navigate to={`plants/${user.plantAccess[0]}`} replace /> :
+                  <Navigate to="/login" replace /> // Fallback for misconfigured user
                 )
               )
             } />
@@ -542,15 +427,17 @@ const App: React.FC = () => {
               path="dashboard/global"
               element={ user && (
                 [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role) ? (
-                  <GlobalDashboard userRole={user.role} />
+                  <GlobalDashboard user={user} />
                 ) : (
-                  <Navigate to="/app/plants/CIKOKOL" replace />
+                  user.plantAccess && user.plantAccess.length > 0 ?
+                  <Navigate to={`/app/plants/${user.plantAccess[0]}`} replace /> :
+                  <Navigate to="/login" replace />
                 )
               )}
             />
             <Route
               path="plants/:plantId"
-              element={user && <PlantDashboard userRole={user.role} />}
+              element={user && <PlantDashboardAccessWrapper user={user} />}
             />
             <Route
               path="machines/:machineId"
@@ -558,11 +445,11 @@ const App: React.FC = () => {
             />
             <Route
               path="lvmdp/:panelId"
-              element={user && <LVMDPDetailWrapper userRole={user.role} />}
+              element={user && <LVMDPDetailWrapper user={user} />}
             />
             <Route
               path="utility/:type/:plantId"
-              element={user && <UtilitySummaryWrapper userRole={user.role} />}
+              element={user && <UtilitySummaryWrapper user={user} />}
             />
             <Route
               path="settings"
@@ -570,7 +457,9 @@ const App: React.FC = () => {
                 user.role === UserRole.ADMINISTRATOR ? (
                   <SettingsWrapper userRole={user.role} />
                 ) : (
-                  <Navigate to="/app/dashboard/global" replace />
+                   user.plantAccess && user.plantAccess.length > 0 ?
+                  <Navigate to={`/app/plants/${user.plantAccess[0]}`} replace /> :
+                  <Navigate to="/login" replace />
                 )
               )}
             />

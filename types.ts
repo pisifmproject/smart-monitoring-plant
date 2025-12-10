@@ -40,6 +40,7 @@ export interface User {
     username: string;
     name: string;
     role: UserRole;
+    plantAccess?: PlantCode[];
 }
 
 export interface Metric {

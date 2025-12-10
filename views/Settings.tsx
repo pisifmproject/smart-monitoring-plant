@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { UserRole, VisibilityCategory, VisibilityGroup, DataItem, User, PlantCode, MachineType, Machine, LVMDP, Plant, UtilityConfig, MachineStatus, PackingLineConfig } from '../types';
 import { Card } from '../components/SharedComponents';
@@ -412,13 +408,21 @@ const UsersAndRolesSettings = memo(() => {
                 <div className="overflow-x-auto">
                      <table className="w-full text-left text-slate-300 min-w-[600px]">
                         <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-300">
-                            <tr><th className="p-3">Full Name</th><th className="p-3">Corporate ID</th><th className="p-3">Role</th><th className="p-3 text-right">Actions</th></tr>
+                            <tr><th className="p-3">Full Name</th><th className="p-3">Corporate ID</th><th className="p-3">Role</th><th className="p-3">Accessible Plants</th><th className="p-3 text-right">Actions</th></tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800 text-sm">
                             {filteredUsers.map(user => (
                                 <tr key={user.username} className="hover:bg-slate-800/50">
                                     <td className="p-3 font-bold text-white">{user.name}</td><td className="p-3 font-mono">{user.username}</td>
                                     <td className="p-3"><span className="bg-slate-700 px-2 py-1 rounded-md text-xs font-bold text-blue-300">{user.role}</span></td>
+                                    <td className="p-3">
+                                        <div className="flex flex-wrap gap-1">
+                                            {user.plantAccess && user.plantAccess.length > 0
+                                                ? user.plantAccess.map(p => <span key={p} className="bg-slate-700 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded">{p}</span>)
+                                                : <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-1.5 py-0.5 rounded">GLOBAL</span>
+                                            }
+                                        </div>
+                                    </td>
                                     <td className="p-3 text-right"><div className="flex justify-end items-center gap-2"><button onClick={() => openEditModal(user)} className="p-2 text-slate-300 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button><button onClick={() => openDeleteConfirm(user.username)} className="p-2 text-slate-300 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button></div></td>
                                 </tr>
                             ))}
@@ -587,7 +591,7 @@ const PackingConfigManagementTable: React.FC<ManagementTableProps<PackingLineCon
 // --- Modal Components ---
 const ModalWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-        <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300">
             {children}
         </div>
     </div>
@@ -601,11 +605,12 @@ const ModalHeader: React.FC<{ title: string; icon: React.ElementType; onClose: (
 );
 
 const UserModal: React.FC<{ user: User | null; onClose: () => void; onSave: () => void; }> = ({ user, onClose, onSave }) => {
-    const [formData, setFormData] = useState({ username: '', name: '', role: UserRole.OPERATOR, password: '' });
+    const [formData, setFormData] = useState({ username: '', name: '', role: UserRole.OPERATOR, password: '', plantAccess: [] as PlantCode[] });
     const [formError, setFormError] = useState('');
+    const allPlants = useMemo(() => plantService.getAllPlants(), []);
     
     useEffect(() => {
-        setFormData(user ? { username: user.username, name: user.name, role: user.role, password: '' } : { username: '', name: '', role: UserRole.OPERATOR, password: '' });
+        setFormData(user ? { username: user.username, name: user.name, role: user.role, password: '', plantAccess: user.plantAccess || [] } : { username: '', name: '', role: UserRole.OPERATOR, password: '', plantAccess: [] });
         setFormError('');
     }, [user]);
 
@@ -613,12 +618,27 @@ const UserModal: React.FC<{ user: User | null; onClose: () => void; onSave: () =
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handlePlantAccessChange = (plantId: PlantCode) => {
+        setFormData(prev => {
+            const newAccess = prev.plantAccess.includes(plantId)
+                ? prev.plantAccess.filter(p => p !== plantId)
+                : [...prev.plantAccess, plantId];
+            return { ...prev, plantAccess: newAccess };
+        });
+    };
+
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setFormError('');
         if (!formData.name || !formData.username) { setFormError('Username and Full Name are required.'); return; }
         if (!user && !formData.password) { setFormError('Password is required for new users.'); return; }
-        const result = user ? updateUser(user.username, { name: formData.name, role: formData.role, ...(formData.password && { pass: formData.password }) }) : addUser({ username: formData.username, name: formData.name, role: formData.role }, formData.password);
+        
+        const finalPlantAccess = formData.role === UserRole.ADMINISTRATOR ? undefined : formData.plantAccess;
+
+        const result = user 
+            ? updateUser(user.username, { name: formData.name, role: formData.role, ...(formData.password && { pass: formData.password }), plantAccess: finalPlantAccess }) 
+            : addUser({ username: formData.username, name: formData.name, role: formData.role, plantAccess: finalPlantAccess }, formData.password);
+        
         if (result.success) onSave(); else setFormError(result.message || 'An unknown error occurred.');
     };
 
@@ -630,8 +650,21 @@ const UserModal: React.FC<{ user: User | null; onClose: () => void; onSave: () =
                 <div><label className="block text-xs font-bold text-slate-300 uppercase mb-1">Full Name</label><input name="name" value={formData.name} onChange={handleFormChange} required type="text" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none" /></div>
                 <div className="grid grid-cols-2 gap-4">
                     <div><label className="block text-xs font-bold text-slate-300 uppercase mb-1">Corporate ID</label><input name="username" value={formData.username} onChange={handleFormChange} required type="text" disabled={!!user} className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none disabled:opacity-50" /></div>
-                    <div><label className="block text-xs font-bold text-slate-300 uppercase mb-1">Role</label><select name="role" value={formData.role} onChange={handleFormChange} className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none h-[42px]">{Object.values(UserRole).filter(r => r !== UserRole.ADMINISTRATOR).map(role => (<option key={role} value={role}>{role}</option>))}</select></div>
+                    <div><label className="block text-xs font-bold text-slate-300 uppercase mb-1">Role</label><select name="role" value={formData.role} onChange={handleFormChange} className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none h-[42px]">{Object.values(UserRole).map(role => (<option key={role} value={role}>{role}</option>))}</select></div>
                 </div>
+                {formData.role !== UserRole.ADMINISTRATOR && (
+                     <div>
+                        <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Accessible Plants</label>
+                        <div className="p-3 bg-slate-950 border border-slate-700 rounded-lg grid grid-cols-2 gap-2">
+                            {allPlants.map(plant => (
+                                <label key={plant.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-slate-800 cursor-pointer">
+                                    <input type="checkbox" checked={formData.plantAccess.includes(plant.id)} onChange={() => handlePlantAccessChange(plant.id)} className="w-4 h-4 accent-blue-500 bg-slate-700 border-slate-600 rounded" />
+                                    <span className="text-sm font-medium text-slate-200">{plant.name}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                )}
                 <div><label className="block text-xs font-bold text-slate-300 uppercase mb-1">Password</label><input name="password" value={formData.password} onChange={handleFormChange} type="password" placeholder={user ? 'Leave blank to keep unchanged' : 'Required'} className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none" /></div>
                 <div className="pt-2 flex justify-end gap-3"><button type="button" onClick={onClose} className="px-4 py-2 rounded text-slate-300 hover:text-white font-bold transition-colors">Cancel</button><button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2"><Save size={16} /> Save Changes</button></div>
             </form>
