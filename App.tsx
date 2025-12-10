@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy, useMemo } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useMemo, useRef } from 'react';
 import {
   HashRouter,
   Routes,
@@ -169,13 +169,32 @@ const UserProfileFooter: React.FC<{ user: User; onLogout: () => void; isCollapse
 const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () => void; }) => {
     const location = useLocation();
     const params = useParams();
-
+    const navigate = useNavigate();
+    
+    // All hooks are now at the top level
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => localStorage.getItem('sidebarOpen') !== 'false');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    
-    // State for hybrid accordion
     const [expandedPlant, setExpandedPlant] = useState<string | null>(null);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+    const userInteractedRef = useRef(false);
+
+    // --- FIX: CONSOLIDATED REDIRECTION LOGIC ---
+    useEffect(() => {
+        // 1. Redirect to login if user is not authenticated
+        if (!user) {
+            navigate('/login', { replace: true });
+            return;
+        }
+
+        // 2. Redirect non-global roles away from the global dashboard
+        const isTryingGlobal = location.pathname === '/app' || location.pathname === '/app/dashboard/global';
+        const canSeeGlobal = user.role === UserRole.ADMINISTRATOR || [UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role);
+
+        if (!canSeeGlobal && isTryingGlobal && user.plantAccess && user.plantAccess.length > 0) {
+            navigate(`/app/plants/${user.plantAccess[0]}`, { replace: true });
+        }
+    }, [user, location.pathname, navigate]);
+
 
     useEffect(() => {
         localStorage.setItem('sidebarOpen', String(isSidebarOpen));
@@ -185,7 +204,10 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
         setIsMobileMenuOpen(false);
     }, [location.pathname]);
 
-    if (!user || !user.role) return <Navigate to="/login" replace />;
+    // This guard prevents the rest of the component from rendering before authentication is confirmed and redirection logic runs.
+    if (!user) {
+        return <SuspenseSpinner />;
+    }
 
     const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => {
         const allPlants = plantService.getAllPlants();
@@ -210,33 +232,49 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                     return plantService.getPlantById(machine.plantId);
                 }
             }
+             if (params.panelId) { // Check for LVMDP panels as well
+                const panel = lvmdpService.getPanelById(params.panelId);
+                if (panel && plantsToShow.some(p => p.id === panel.plantId)) {
+                    return plantService.getPlantById(panel.plantId);
+                }
+            }
             return null;
-        }, [location.pathname, params.machineId, plantsToShow]);
+        }, [location.pathname, params.machineId, params.panelId, plantsToShow]);
         
-        // --- CONSOLIDATED USE EFFECT FOR SIDEBAR STATE ---
-        useEffect(() => {
+         useEffect(() => {
+            if (userInteractedRef.current) {
+                return;
+            }
+
             const path = location.pathname;
             const isMachineDetail = path.startsWith('/app/machines/');
             const isUtilityDetail = path.startsWith('/app/utility/');
-            const isPlantDashboard = path.match(/^\/app\/plants\/[^/]+$/);
-            const isOverviewPage = path.endsWith('/utilities') || path.endsWith('/production-lines');
-        
-            if (plantContext) {
-                if (isMachineDetail || isUtilityDetail) {
-                    // On DEEP pages (machine/utility details), force open the accordion and correct dropdown.
-                    setExpandedPlant(plantContext.id);
-                    if (isMachineDetail) {
-                        setOpenDropdown('production');
-                    } else if (isUtilityDetail) {
-                        setOpenDropdown('utilities');
-                    }
-                } else if (isPlantDashboard || isOverviewPage) {
-                    // On PLANT DASHBOARD or OVERVIEW pages, close the dropdowns but keep the accordion open for hybrid view.
-                    setExpandedPlant(plantContext.id);
-                    setOpenDropdown(null);
-                }
+            const isPlantDashboard = path.match(/^\/app\/plants\/[A-Z_]+$/);
+            const isOverview = path.endsWith('/utilities') || path.endsWith('/production-lines');
+    
+            if (isMachineDetail) {
+                setOpenDropdown('production');
+            } else if (isUtilityDetail) {
+                setOpenDropdown('utilities');
             }
+            
+            if (isMachineDetail || isUtilityDetail) {
+                 if (plantContext) setExpandedPlant(plantContext.id);
+            } else if (isPlantDashboard || isOverview) {
+                 if (plantContext) setExpandedPlant(plantContext.id);
+            }
+
         }, [location.pathname, plantContext]);
+        
+        const handleManualDropdownToggle = (dropdown: 'utilities' | 'production') => {
+            userInteractedRef.current = true;
+            setOpenDropdown(prev => (prev === dropdown ? null : dropdown));
+        };
+        
+         const handleManualAccordionToggle = (plantId: string) => {
+            userInteractedRef.current = true;
+            setExpandedPlant(prev => (prev === plantId ? null : plantId));
+        };
 
 
         const canSeeGlobalDashboard = user.role === UserRole.ADMINISTRATOR || [UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role);
@@ -281,7 +319,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                                 icon={Zap} 
                                 isCollapsed={isCollapsed}
                                 isOpen={openDropdown === 'utilities'}
-                                onToggle={() => setOpenDropdown(prev => prev === 'utilities' ? null : 'utilities')}
+                                onToggle={() => handleManualDropdownToggle('utilities')}
                            >
                                 {utilityTypes.map(util => <NestedSidebarLink key={util.key} to={`/app/utility/${util.key}/${plantContext.id}`} label={util.label} active={location.pathname === `/app/utility/${util.key}/${plantContext.id}`} />)}
                            </DropdownMenu>
@@ -292,7 +330,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                                 icon={Cpu} 
                                 isCollapsed={isCollapsed}
                                 isOpen={openDropdown === 'production'}
-                                onToggle={() => setOpenDropdown(prev => prev === 'production' ? null : 'production')}
+                                onToggle={() => handleManualDropdownToggle('production')}
                            >
                                 {plantContext.machines.map(m => <NestedSidebarLink key={m.id} to={`/app/machines/${m.id}`} label={m.name} active={params.machineId === m.id} />)}
                            </DropdownMenu>
@@ -312,16 +350,15 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                                         <SidebarLink 
                                             to={`/app/plants/${plantItem.id}`} 
                                             label={plantItem.name} 
-                                            active={isActivePlant && !isExpanded}
+                                            active={location.pathname === `/app/plants/${plantItem.id}`}
                                             icon={Building2} 
                                             isCollapsed={isCollapsed}
                                             onClick={(e) => {
                                                 if (isActivePlant) {
                                                     e.preventDefault();
-                                                    setExpandedPlant(isExpanded ? null : plantItem.id);
+                                                    handleManualAccordionToggle(plantItem.id);
                                                 } else {
-                                                    setExpandedPlant(null); // Collapse others when switching
-                                                    setOpenDropdown(null);
+                                                    userInteractedRef.current = false;
                                                 }
                                             }}
                                         />
@@ -334,7 +371,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                                                     icon={Zap} 
                                                     isCollapsed={isCollapsed}
                                                     isOpen={openDropdown === 'utilities'}
-                                                    onToggle={() => setOpenDropdown(prev => prev === 'utilities' ? null : 'utilities')}
+                                                    onToggle={() => handleManualDropdownToggle('utilities')}
                                                   >
                                                     {utilityTypes.map(util => <NestedSidebarLink key={util.key} to={`/app/utility/${util.key}/${plantItem.id}`} label={util.label} active={location.pathname === `/app/utility/${util.key}/${plantItem.id}`} />)}
                                                 </DropdownMenu>
@@ -344,7 +381,7 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
                                                     icon={Cpu} 
                                                     isCollapsed={isCollapsed}
                                                     isOpen={openDropdown === 'production'}
-                                                    onToggle={() => setOpenDropdown(prev => prev === 'production' ? null : 'production')}
+                                                    onToggle={() => handleManualDropdownToggle('production')}
                                                  >
                                                     {plantItem.machines.map(m => <NestedSidebarLink key={m.id} to={`/app/machines/${m.id}`} label={m.name} active={params.machineId === m.id} />)}
                                                 </DropdownMenu>
@@ -431,7 +468,8 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
 // ACCESS CONTROL WRAPPERS
 // ---------------------------------------
 
-const PlantDashboardAccessWrapper = ({ user }: { user: User }) => {
+const PlantDashboardAccessWrapper = ({ user }: { user: User | null }) => {
+    if (!user) return <SuspenseSpinner />;
     const { plantId } = useParams();
     const navigate = useNavigate();
 
@@ -444,7 +482,8 @@ const PlantDashboardAccessWrapper = ({ user }: { user: User }) => {
 };
 
 
-const MachineDetailWrapper = React.memo(({ user }: { user: User }) => {
+const MachineDetailWrapper = React.memo(({ user }: { user: User | null }) => {
+  if (!user) return <SuspenseSpinner />;
   const { machineId } = useParams();
   const navigate = useNavigate();
 
@@ -468,7 +507,8 @@ const MachineDetailWrapper = React.memo(({ user }: { user: User }) => {
   );
 });
 
-const LVMDPDetailWrapper = React.memo(({ user }: { user: User }) => {
+const LVMDPDetailWrapper = React.memo(({ user }: { user: User | null }) => {
+  if (!user) return <SuspenseSpinner />;
   const { panelId } = useParams();
   const navigate = useNavigate();
 
@@ -487,7 +527,8 @@ const LVMDPDetailWrapper = React.memo(({ user }: { user: User }) => {
   );
 });
 
-const UtilitySummaryWrapper = React.memo(({ user }: { user: User }) => {
+const UtilitySummaryWrapper = React.memo(({ user }: { user: User | null }) => {
+  if (!user) return <SuspenseSpinner />;
   const { type, plantId } = useParams();
   const navigate = useNavigate();
   
@@ -511,18 +552,21 @@ const UtilitySummaryWrapper = React.memo(({ user }: { user: User }) => {
   );
 });
 
-const UtilitiesOverviewWrapper = React.memo(({ userRole }: { userRole: UserRole }) => (
-    <UtilitiesOverview userRole={userRole} />
-));
+const UtilitiesOverviewWrapper = React.memo(({ user }: { user: User | null }) => {
+    if (!user) return <SuspenseSpinner />;
+    return <UtilitiesOverview userRole={user.role} />
+});
 
-const ProductionLinesOverviewWrapper = React.memo(({ userRole }: { userRole: UserRole }) => (
-    <ProductionLinesOverview userRole={userRole} />
-));
+const ProductionLinesOverviewWrapper = React.memo(({ user }: { user: User | null }) => {
+    if (!user) return <SuspenseSpinner />;
+    return <ProductionLinesOverview userRole={user.role} />
+});
 
 
-const SettingsWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
+const SettingsWrapper = React.memo(({ user }: { user: User | null }) => {
+  if (!user) return <SuspenseSpinner />;
   return (
-    <SettingsView userRole={userRole} />
+    <SettingsView userRole={user.role} />
   )
 });
 
@@ -533,90 +577,42 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
 
   const handleLogin = (loggedInUser: User) => {
-    if (loggedInUser && Object.values(UserRole).includes(loggedInUser.role)) {
-      setUser(loggedInUser);
-    } else {
-      setUser(null);
-    }
+    setUser(loggedInUser);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
   };
 
   return (
-    <HashRouter>
-      <Suspense fallback={<SuspenseSpinner />}>
+    <Suspense fallback={<SuspenseSpinner />}>
+      <HashRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route
-            path="/login"
-            element={user ? <Navigate to="/app" replace /> : <Login onLogin={handleLogin} />}
-          />
+          <Route path="/login" element={<Login onLogin={handleLogin} />} />
+
           <Route
             path="/app"
-            element={user ? <ProtectedLayout user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />}
+            element={<ProtectedLayout user={user} onLogout={handleLogout} />}
           >
-            <Route index element={
-              user && (
-                user.role === UserRole.ADMINISTRATOR || 
-                ([UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role) && user.plantAccess && user.plantAccess.length > 0) ? (
-                  <Navigate to="dashboard/global" replace />
-                ) : (
-                  user.plantAccess && user.plantAccess.length > 0 ?
-                  <Navigate to={`plants/${user.plantAccess[0]}`} replace /> :
-                  <Navigate to="/login" replace /> // Fallback for misconfigured user
-                )
-              )
-            } />
-            <Route
-              path="dashboard/global"
-              element={ user && (
-                user.role === UserRole.ADMINISTRATOR || (user.plantAccess && user.plantAccess.length > 0) ? (
-                  <GlobalDashboard user={user} />
-                ) : (
-                  <Navigate to="/login" replace />
-                )
-              )}
-            />
-            <Route
-              path="plants/:plantId"
-              element={user && <PlantDashboardAccessWrapper user={user} />}
-            />
-            <Route 
-                path="plants/:plantId/utilities" 
-                element={user && <UtilitiesOverviewWrapper userRole={user.role} />} 
-            />
-            <Route 
-                path="plants/:plantId/production-lines" 
-                element={user && <ProductionLinesOverviewWrapper userRole={user.role} />} 
-            />
-            <Route
-              path="machines/:machineId"
-              element={user && <MachineDetailWrapper user={user} />}
-            />
-            <Route
-              path="lvmdp/:panelId"
-              element={user && <LVMDPDetailWrapper user={user} />}
-            />
-            <Route
-              path="utility/:type/:plantId"
-              element={user && <UtilitySummaryWrapper user={user} />}
-            />
-            <Route
-              path="settings"
-              element={ user && (
-                user.role === UserRole.ADMINISTRATOR ? (
-                  <SettingsWrapper userRole={user.role} />
-                ) : (
-                   user.plantAccess && user.plantAccess.length > 0 ?
-                  <Navigate to={`/app/plants/${user.plantAccess[0]}`} replace /> :
-                  <Navigate to="/login" replace />
-                )
-              )}
-            />
+            <Route index element={<Navigate to="dashboard/global" replace />} />
+            <Route path="dashboard/global" element={<GlobalDashboard user={user} />} />
+            
+            <Route path="plants/:plantId" element={<PlantDashboardAccessWrapper user={user} />} />
+            <Route path="plants/:plantId/utilities" element={<UtilitiesOverviewWrapper user={user} />} />
+            <Route path="plants/:plantId/production-lines" element={<ProductionLinesOverviewWrapper user={user} />} />
+            
+            <Route path="machines/:machineId" element={<MachineDetailWrapper user={user} />} />
+            <Route path="lvmdp/:panelId" element={<LVMDPDetailWrapper user={user} />} />
+            <Route path="utility/:type/:plantId" element={<UtilitySummaryWrapper user={user} />} />
+
+            <Route path="settings" element={<SettingsWrapper user={user} />} />
+            
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Suspense>
-    </HashRouter>
+      </HashRouter>
+    </Suspense>
   );
 };
-
+// FIX: Added default export for the App component.
 export default App;

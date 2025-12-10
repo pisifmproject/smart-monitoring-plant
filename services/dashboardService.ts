@@ -3,9 +3,8 @@
 import { PLANTS } from './mockData';
 import { maintenanceService } from './maintenanceService';
 import { utilityService } from './utilityService';
-// FIX: Import lvmdpService to resolve reference error in getLVMDPTrend.
 import { lvmdpService } from './lvmdpService';
-import { PlantCode, Plant } from '../types';
+import { PlantCode, Plant, User, UserRole } from '../types';
 import { Zap, Cloud, Droplets, Wind, Box, Flame } from 'lucide-react';
 
 type Period = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR';
@@ -17,25 +16,51 @@ const convertPeriod = (p: Period) =>
 export const dashboardService = {
 
     // --------------------------------------------------
-    // GLOBAL KPIs
+    // GLOBAL KPIs (REFACTORED to be access-aware)
     // --------------------------------------------------
-    getGlobalKPIs: (period: Period) => {
-        const plants = Object.values(PLANTS);
+    getGlobalKPIs: (period: Period, user: User | null) => {
+        let plantsToCalculate: Plant[];
+
+        if (!user || user.role === UserRole.ADMINISTRATOR || !user.plantAccess || user.plantAccess.length === 0) {
+            plantsToCalculate = Object.values(PLANTS);
+        } else {
+            plantsToCalculate = Object.values(PLANTS).filter(p => user.plantAccess!.includes(p.id));
+        }
+
         const multiplier = period === 'DAY' ? 1 : period === 'WEEK' ? 6.5 : period === 'MONTH' ? 28 : 340;
 
-        const totalOutput = plants.reduce((acc, p) => acc + p.outputToday, 0) * multiplier;
-        const totalEnergy = plants.reduce((acc, p) => acc + p.energyTotal, 0) * multiplier;
-
-        const baseAvgOEE =
-            (plants.reduce((acc, p) => acc + p.oeeAvg, 0) /
-                plants.filter(p => p.oeeAvg > 0).length) * 100;
+        const totalOutput = plantsToCalculate.reduce((acc, p) => acc + p.outputToday, 0) * multiplier;
+        const totalEnergy = plantsToCalculate.reduce((acc, p) => acc + p.energyTotal, 0) * multiplier;
+        
+        const plantsWithOEE = plantsToCalculate.filter(p => p.oeeAvg > 0);
+        const baseAvgOEE = plantsWithOEE.length > 0
+            ? (plantsWithOEE.reduce((acc, p) => acc + p.oeeAvg, 0) / plantsWithOEE.length) * 100
+            : 0;
 
         const avgOEE = Math.min(
             99.9,
             baseAvgOEE * (1 + (period === 'DAY' ? 0 : Math.random() * 0.05 - 0.025))
         );
 
-        const activeAlarmsCount = maintenanceService.getActiveAlarms().length;
+        // Filter alarms based on user's plant access
+        const allActiveAlarms = maintenanceService.getActiveAlarms();
+        let filteredAlarms;
+
+        if (!user || user.role === UserRole.ADMINISTRATOR || !user.plantAccess || user.plantAccess.length === 0) {
+            filteredAlarms = allActiveAlarms;
+        } else {
+            const allowedPlantIds = user.plantAccess;
+            filteredAlarms = allActiveAlarms.filter(alarm => {
+                if (!alarm.machineId && !alarm.source) return false;
+                return allowedPlantIds.some(plantId =>
+                    (alarm.machineId && alarm.machineId.toUpperCase().includes(plantId)) ||
+                    (alarm.source && alarm.source.toUpperCase().includes(plantId))
+                );
+            });
+        }
+        
+        const activeAlarmsCount = filteredAlarms.length;
+
         const totalAlarmsValue =
             period === 'DAY'
                 ? activeAlarmsCount

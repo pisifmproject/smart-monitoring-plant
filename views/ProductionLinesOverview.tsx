@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plant, UserRole, Machine } from '../types';
 import { plantService } from '../services/plantService';
@@ -8,6 +8,8 @@ import { ArrowLeft, Cpu, Activity, Box, Clock, AlertTriangle } from 'lucide-reac
 interface ProductionLinesOverviewProps {
     userRole: UserRole;
 }
+
+type Period = 'Day' | 'Week' | 'Month' | 'Year';
 
 const MetricItem: React.FC<{ icon: React.ElementType; label: string; value: string; colorClass?: string }> = ({ icon: Icon, label, value, colorClass = "text-white" }) => (
     <div>
@@ -24,37 +26,68 @@ const ProductionLinesOverview: React.FC<ProductionLinesOverviewProps> = ({ userR
     const { plantId } = useParams();
     const navigate = useNavigate();
     const plant = plantService.getPlantById(plantId!);
+    const [period, setPeriod] = useState<Period>('Day');
 
     if (!plant) {
         return <div className="p-8 text-slate-300">Plant not found.</div>;
     }
 
-    const machines = plant.machines;
-    const canClickDetails = true; // Allow all roles to click, including Guest
+    const scaledMachines = useMemo(() => {
+        const multiplier = period === 'Day' ? 1 : period === 'Week' ? 7 : period === 'Month' ? 30 : 365;
+        return plant.machines.map(machine => ({
+            ...machine,
+            scaledOutput: machine.totalOutputShift * multiplier,
+            // OEE is an average, so we add a slight random variance for different periods for realism
+            scaledOee: Math.min(0.99, machine.oee * (1 + (multiplier > 1 ? (Math.random() - 0.5) * 0.1 : 0))),
+        }));
+    }, [plant.machines, period]);
+
+    const canClickDetails = true;
 
     const getOeeColor = (oee: number) => {
         if (oee > 0.8) return 'text-emerald-400';
         if (oee > 0.6) return 'text-amber-400';
         return 'text-rose-400';
     };
+    
+    const FilterButton = ({ label }: { label: Period }) => (
+        <button
+            onClick={() => setPeriod(label)}
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                period === label
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+            }`}
+        >
+            {label}
+        </button>
+    );
 
     return (
         <div className="space-y-6 animate-in fade-in duration-300 w-full">
-            <div className="flex items-center gap-4">
-                <button onClick={() => navigate(`/app/plants/${plantId}`)} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white">
-                    <ArrowLeft size={24} />
-                </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-                        <Cpu className="text-blue-500" />
-                        Production Lines Overview
-                    </h1>
-                    <p className="text-slate-300 text-sm font-medium">{plant.name}</p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => navigate(`/app/plants/${plantId}`)} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white">
+                        <ArrowLeft size={24} />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                            <Cpu className="text-blue-500" />
+                            Production Lines Overview
+                        </h1>
+                        <p className="text-slate-300 text-sm font-medium">{plant.name}</p>
+                    </div>
+                </div>
+                 <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1 self-start sm:self-auto">
+                    <FilterButton label="Day" />
+                    <FilterButton label="Week" />
+                    <FilterButton label="Month" />
+                    <FilterButton label="Year" />
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {machines.map(machine => (
+                {scaledMachines.map(machine => (
                     <Card 
                         key={machine.id}
                         onClick={() => canClickDetails && navigate(`/app/machines/${machine.id}`)}
@@ -69,13 +102,13 @@ const ProductionLinesOverview: React.FC<ProductionLinesOverviewProps> = ({ userR
                             <MetricItem 
                                 icon={Activity}
                                 label="OEE"
-                                value={`${formatNumber(machine.oee * 100, 1)}%`}
-                                colorClass={getOeeColor(machine.oee)}
+                                value={`${formatNumber(machine.scaledOee * 100, 1)}%`}
+                                colorClass={getOeeColor(machine.scaledOee)}
                             />
                             <MetricItem 
                                 icon={Box}
-                                label="Output (Shift)"
-                                value={`${formatNumber(machine.totalOutputShift, 0)} kg`}
+                                label={`Output (${period})`}
+                                value={`${formatNumber(machine.scaledOutput, 0)} kg`}
                             />
                              <MetricItem 
                                 icon={Clock}
