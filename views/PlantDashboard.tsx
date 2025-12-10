@@ -36,7 +36,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
 
     if (!plant || !kpis) return <div className="p-8 text-slate-400">Plant not found</div>;
 
-    const canClickDetails = ![UserRole.VIEWER].includes(userRole);
+    const canClickDetails = true; // Guests can now navigate to a simplified view
     const canDownloadReport = [UserRole.ADMINISTRATOR, UserRole.SUPERVISOR, UserRole.MANAGEMENT].includes(userRole);
     const visibilityContext = { plantId: plant.id };
     const showAlarms = ![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole);
@@ -67,7 +67,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     };
 
     const handleAlarmClick = (alarm: Alarm) => {
-        if (!canClickDetails || !alarm.machineId) return;
+        if (!alarm.machineId) return; // Cannot navigate if no machine ID
         const targetTab = userRole === UserRole.MAINTENANCE ? 'Maintenance' : 'Alarms';
         const state = { initialTab: targetTab };
         if (alarm.machineId.includes('LVMDP')) {
@@ -171,7 +171,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                 <div className={![UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole) ? "lg:col-span-3" : "lg:col-span-5"}>
+                 <div className={!showAlarms ? "lg:col-span-5" : "lg:col-span-3"}>
                     {isDataItemVisible(userRole, 'SHIFT_PERFORMANCE_TABLE', visibilityContext) && (
                         <Card title="Shift Performance">
                             <div className="overflow-x-auto">
@@ -263,14 +263,12 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                         const machineContext = { ...visibilityContext, machineId: machine.id };
                         const hasActiveAlarm = maintenanceService.hasActiveAlarm(machine.id);
                         
-                        const canClick = ![UserRole.VIEWER].includes(userRole);
-
                         return (
                             <Card 
                                 key={machine.id}
-                                onClick={() => canClick && navigate(`/app/machines/${machine.id}`)}
+                                onClick={() => canClickDetails && navigate(`/app/machines/${machine.id}`)}
                                 className={`transition-all duration-200 group ${
-                                    canClick ? 'hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer' : 'opacity-90 cursor-default'
+                                    canClickDetails ? 'hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer' : 'opacity-90 cursor-default'
                                 }`}
                             >
                                 <div className="flex justify-between items-start mb-3">

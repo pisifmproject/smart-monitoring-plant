@@ -31,7 +31,6 @@ export enum UserRole {
 export enum MachineType {
     EXTRUDER = 'EXTRUDER',
     FRYER = 'FRYER',
-    SEASONING = 'SEASONING',
     PACKING = 'PACKING',
     GENERIC = 'GENERIC'
 }
@@ -81,6 +80,19 @@ export interface BagmakerDetails {
     spliceDetectCount: number; // count (new)
 }
 
+export interface SeasoningDetails {
+    throughput: number; // kg/h
+    seasoningCoverage: number; // %
+    seasoningGiveaway: number; // %
+    drumSpeed: number; // RPM
+    feederRate: number; // g/s
+    oilSprayRate: number; // L/min
+    inletTemp: number; // Celsius
+    outletTemp: number; // Celsius
+    seasoningUsed: number; // kg / shift
+    oilUsed: number; // L / shift
+}
+
 
 export interface Machine {
     id: string;
@@ -112,6 +124,9 @@ export interface Machine {
     // Packing specific details
     weigher?: WeigherDetails;
     bagmaker?: BagmakerDetails;
+
+    // Seasoning specific details
+    seasoning?: SeasoningDetails;
 
     // Multi-unit packing details for Cikupa PC39
     bagmakerUnits?: BagmakerDetails[];
@@ -249,6 +264,7 @@ export enum VisibilityGroup {
     FORM = 'FORM',
     TAB = 'TAB',
     MACHINES = 'MACHINES',
+    SEASONING_PROCESS = 'Seasoning Process',
     // New, organized groups for Packing dashboard
     PACKING_LINE_KPI = 'Line Performance KPIs',
     PACKING_WEIGHER = 'Weigher Analysis',

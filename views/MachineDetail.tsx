@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Machine, UserRole, MachineType, PlantCode, BagmakerDetails, WeigherDetails, Alarm } from '../types';
+import { Machine, UserRole, MachineType, PlantCode, BagmakerDetails, WeigherDetails, Alarm, SeasoningDetails } from '../types';
 import { Card, StatusBadge, MetricCard, formatNumber } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
 import { maintenanceService } from '../services/maintenanceService';
@@ -11,7 +11,9 @@ import {
     Wind, Droplets, Cloud, Box, Clock, Camera, Plus, History, Save, FileText, Loader2,
     Scale, Package, Film, Thermometer, Gauge, TrendingUp, Trash2, ScanSearch, Printer, Archive, Scissors, GaugeCircle, Server, Eye,
     // FIX: Add missing icons for alarm tab
-    AlertOctagon, Info, AlertCircle
+    AlertOctagon, Info, AlertCircle,
+    // Icons for Seasoning Tab
+    Sparkles, Atom, Replace
 } from 'lucide-react';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -30,6 +32,7 @@ type Period = 'Day' | 'Week' | 'Month' | 'Year';
 const ALL_TABS_BASE = [
     { key: 'Performance', visibilityKey: 'MACHINE_TAB_PERFORMANCE' },
     { key: 'Process', visibilityKey: 'MACHINE_TAB_PROCESS' },
+    { key: 'Seasoning', visibilityKey: 'MACHINE_TAB_SEASONING' },
     { key: 'Packing', visibilityKey: 'MACHINE_TAB_PACKING' },
     { key: 'Utility', visibilityKey: 'MACHINE_TAB_UTILITY' },
     { key: 'Alarms', visibilityKey: 'MACHINE_TAB_ALARMS' },
@@ -46,15 +49,21 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         if (userRole === UserRole.MANAGEMENT) {
             return ALL_TABS_BASE.filter(t => t.key === 'Performance');
         }
-
-        // Existing logic for other roles
-        return ALL_TABS_BASE.filter(t => {
-            if (userRole === UserRole.VIEWER && (t.key === 'Alarms' || t.key === 'Maintenance')) {
-                return false;
+        
+        if (userRole === UserRole.VIEWER) {
+            const guestTabs = ['Process', 'Seasoning'];
+            if (machine.type === MachineType.PACKING) {
+                guestTabs.push('Packing');
             }
+            return ALL_TABS_BASE.filter(t => guestTabs.includes(t.key));
+        }
+
+        // Existing logic for other roles, also considering machine type for some tabs
+        return ALL_TABS_BASE.filter(t => {
+            if (t.key === 'Packing' && machine.type !== MachineType.PACKING) return false;
             return isDataItemVisible(userRole, t.visibilityKey, visibilityContext)
         });
-    }, [userRole, visibilityContext]);
+    }, [userRole, machine.type, visibilityContext]);
     
     // Set active tab with priority:
     // 1. Navigation state (e.g. from clicking an alarm on dashboard)
@@ -521,6 +530,48 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         return renderSingleUnitPackingTab();
     };
 
+    const renderSeasoningTab = () => {
+        const { seasoning } = machine;
+        if (!seasoning) return <div className="p-4 text-slate-500">Seasoning data not available.</div>;
+
+        const ParamItem: React.FC<{ label: string; value: string | number; unit: string; visible: boolean; icon: React.ElementType }> = ({ label, value, unit, visible, icon: Icon }) => {
+            if (!visible) return null;
+            return (
+                <div className="flex justify-between items-center p-3 bg-slate-900/40 rounded-lg border border-slate-700/50">
+                    <div className="flex items-center gap-2"><Icon size={16} className="text-slate-400" /><span className="text-sm font-medium text-slate-300">{label}</span></div>
+                    <div><span className="font-mono text-base font-bold text-white">{value}</span><span className="ml-1.5 text-xs text-slate-400">{unit}</span></div>
+                </div>
+            );
+        };
+        
+        return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {isDataItemVisible(userRole, 'SEASONING_COVERAGE_KPI', visibilityContext) && <MetricCard icon={Sparkles} title="Seasoning Coverage" value={formatNumber(seasoning.seasoningCoverage, 1)} unit="%" color="text-emerald-400" />}
+                    {isDataItemVisible(userRole, 'SEASONING_GIVEAWAY_KPI', visibilityContext) && <MetricCard icon={AlertTriangle} title="Seasoning Giveaway" value={formatNumber(seasoning.seasoningGiveaway, 2)} unit="%" color="text-amber-400" />}
+                    {isDataItemVisible(userRole, 'SEASONING_THROUGHPUT_KPI', visibilityContext) && <MetricCard icon={Activity} title="Throughput" value={formatNumber(seasoning.throughput, 0)} unit="kg/h" color="text-blue-400" />}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card title="Live Process Parameters">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <ParamItem label="Drum Speed" value={seasoning.drumSpeed} unit="RPM" icon={Gauge} visible={isDataItemVisible(userRole, 'SEASONING_DRUM_SPEED', visibilityContext)} />
+                            <ParamItem label="Feeder Rate" value={seasoning.feederRate} unit="g/s" icon={Replace} visible={isDataItemVisible(userRole, 'SEASONING_FEEDER_RATE', visibilityContext)} />
+                            <ParamItem label="Oil Spray Rate" value={seasoning.oilSprayRate} unit="L/min" icon={Droplets} visible={isDataItemVisible(userRole, 'SEASONING_OIL_SPRAY_RATE', visibilityContext)} />
+                            <ParamItem label="Inlet Temp" value={seasoning.inletTemp} unit="°C" icon={Thermometer} visible={isDataItemVisible(userRole, 'SEASONING_INLET_TEMP', visibilityContext)} />
+                            <ParamItem label="Outlet Temp" value={seasoning.outletTemp} unit="°C" icon={Thermometer} visible={isDataItemVisible(userRole, 'SEASONING_OUTLET_TEMP', visibilityContext)} />
+                        </div>
+                    </Card>
+                     <Card title="Consumption (Shift)">
+                        <div className="space-y-4">
+                             {isDataItemVisible(userRole, 'SEASONING_USED_SHIFT', visibilityContext) && <div className="flex items-center gap-4"><div className="p-3 bg-purple-500/10 text-purple-400 rounded-lg"><Atom size={24}/></div><div><p className="text-sm text-slate-300">Seasoning Used</p><p className="text-2xl font-bold text-white">{formatNumber(seasoning.seasoningUsed, 1)} <span className="text-base font-normal text-slate-400">kg</span></p></div></div>}
+                            {isDataItemVisible(userRole, 'SEASONING_OIL_USED_SHIFT', visibilityContext) && <div className="flex items-center gap-4"><div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg"><Droplets size={24}/></div><div><p className="text-sm text-slate-300">Oil Used</p><p className="text-2xl font-bold text-white">{formatNumber(seasoning.oilUsed, 1)} <span className="text-base font-normal text-slate-400">L</span></p></div></div>}
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        );
+    };
+
 
     const renderProcessTab = () => {
         const params = machine.processParams || {};
@@ -754,6 +805,7 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         switch (activeTab) {
             case 'Performance': return renderPerformanceTab();
             case 'Process': return renderProcessTab();
+            case 'Seasoning': return renderSeasoningTab();
             case 'Packing': return renderPackingTab();
             case 'Utility': return renderUtilityTab();
             case 'Alarms': return renderAlarmsTab();

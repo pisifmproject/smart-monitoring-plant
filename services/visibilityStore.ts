@@ -125,6 +125,7 @@ const STATIC_REGISTRY: DataItem[] = [
     // --- MACHINE DETAIL ---
     // TABS
     { id: 'md_tab_1', key: 'MACHINE_TAB_PERFORMANCE', label: 'Tab: Performance', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
+    { id: 'md_tab_8', key: 'MACHINE_TAB_SEASONING', label: 'Tab: Seasoning', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
     { id: 'md_tab_7', key: 'MACHINE_TAB_PACKING', label: 'Tab: Packing', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
     { id: 'md_tab_2', key: 'MACHINE_TAB_PROCESS', label: 'Tab: Process', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
     { id: 'md_tab_3', key: 'MACHINE_TAB_UTILITY', label: 'Tab: Utility', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.TAB, location: 'Machine Detail', defaultVisible: true },
@@ -142,6 +143,18 @@ const STATIC_REGISTRY: DataItem[] = [
     { id: 'md_perf_7', key: 'MACHINE_REJECT_KG', label: 'Reject Mass (Period)', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
     { id: 'md_perf_8', key: 'MACHINE_REJECT_PERCENT', label: 'Reject %', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.KPI, location: 'Machine Detail / Performance', defaultVisible: true },
     { id: 'md_perf_9', key: 'MACHINE_OUTPUT_TREND_CHART', label: 'Output vs Target Trend', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.CHART, location: 'Machine Detail / Performance', defaultVisible: true },
+
+    // SEASONING DASHBOARD
+    { id: 'md_seas_1', key: 'SEASONING_COVERAGE_KPI', label: 'KPI: Seasoning Coverage', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.SEASONING_PROCESS, location: 'Machine Detail / Seasoning', defaultVisible: true },
+    { id: 'md_seas_2', key: 'SEASONING_GIVEAWAY_KPI', label: 'KPI: Seasoning Giveaway', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.SEASONING_PROCESS, location: 'Machine Detail / Seasoning', defaultVisible: true },
+    { id: 'md_seas_3', key: 'SEASONING_THROUGHPUT_KPI', label: 'KPI: Throughput', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.SEASONING_PROCESS, location: 'Machine Detail / Seasoning', defaultVisible: true },
+    { id: 'md_seas_4', key: 'SEASONING_DRUM_SPEED', label: 'Param: Drum Speed', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.SEASONING_PROCESS, location: 'Machine Detail / Seasoning', defaultVisible: true },
+    { id: 'md_seas_5', key: 'SEASONING_FEEDER_RATE', label: 'Param: Feeder Rate', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.SEASONING_PROCESS, location: 'Machine Detail / Seasoning', defaultVisible: true },
+    { id: 'md_seas_6', key: 'SEASONING_OIL_SPRAY_RATE', label: 'Param: Oil Spray Rate', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.SEASONING_PROCESS, location: 'Machine Detail / Seasoning', defaultVisible: true },
+    { id: 'md_seas_7', key: 'SEASONING_INLET_TEMP', label: 'Param: Inlet Temp', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.SEASONING_PROCESS, location: 'Machine Detail / Seasoning', defaultVisible: true },
+    { id: 'md_seas_8', key: 'SEASONING_OUTLET_TEMP', label: 'Param: Outlet Temp', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.SEASONING_PROCESS, location: 'Machine Detail / Seasoning', defaultVisible: true },
+    { id: 'md_seas_9', key: 'SEASONING_USED_SHIFT', label: 'Consumption: Seasoning Used', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.SEASONING_PROCESS, location: 'Machine Detail / Seasoning', defaultVisible: true },
+    { id: 'md_seas_10', key: 'SEASONING_OIL_USED_SHIFT', label: 'Consumption: Oil Used', category: VisibilityCategory.MACHINE_DETAIL, group: VisibilityGroup.SEASONING_PROCESS, location: 'Machine Detail / Seasoning', defaultVisible: true },
 
     // PACKING DASHBOARD (Re-organized)
     // Group: Line Performance KPIs
