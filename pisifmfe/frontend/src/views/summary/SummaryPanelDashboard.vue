@@ -89,96 +89,6 @@
 
     <!-- Main Content -->
     <div v-else class="dashboard-content">
-      <!-- Top Stats Row -->
-      <div class="stats-overview">
-        <div class="stat-card primary">
-          <div class="stat-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <div class="stat-label">Total Load</div>
-            <div class="stat-value">
-              {{ summaryData.totalKVA }}<span class="stat-unit">kVA</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon secondary">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <div class="stat-label">Installed Capacity</div>
-            <div class="stat-value">
-              {{ summaryData.installedCapacity
-              }}<span class="stat-unit">kVA</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon success">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <div class="stat-label">Available Power</div>
-            <div class="stat-value">
-              {{ availableCapacity }}<span class="stat-unit">kVA</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon" :class="getLoadColorClass">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v6l4 2" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <div class="stat-label">Utilization</div>
-            <div class="stat-value" :class="getLoadColorClass">
-              {{ summaryData.loadPercentage }}<span class="stat-unit">%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Load Progress Bar -->
       <div class="load-bar-card">
         <div class="load-bar-header">
@@ -394,12 +304,6 @@ const summaryData = ref<SummaryData>({
 
 let refreshInterval: number | null = null;
 
-const availableCapacity = computed(() => {
-  return (
-    summaryData.value.installedCapacity - summaryData.value.totalKVA
-  ).toFixed(2);
-});
-
 const formattedLastUpdate = computed(() => {
   if (!summaryData.value.lastUpdated) return "N/A";
   const date = new Date(summaryData.value.lastUpdated);
@@ -407,8 +311,8 @@ const formattedLastUpdate = computed(() => {
     day: "2-digit",
     month: "short",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+    // hour: "2-digit",
+    // minute: "2-digit",
     // second: "2-digit",
   });
 });
@@ -647,128 +551,6 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-/* Stats Overview */
-.stats-overview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-.stat-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
-  border-left: 4px solid #e5e7eb;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card.primary {
-  border-left-color: #3b82f6;
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #eff6ff;
-  flex-shrink: 0;
-}
-
-.stat-icon svg {
-  width: 28px;
-  height: 28px;
-  color: #3b82f6;
-}
-
-.stat-icon.secondary {
-  background: #f3f4f6;
-}
-
-.stat-icon.secondary svg {
-  color: #6b7280;
-}
-
-.stat-icon.success {
-  background: #d1fae5;
-}
-
-.stat-icon.success svg {
-  color: #059669;
-}
-
-.stat-icon.normal {
-  background: #d1fae5;
-}
-
-.stat-icon.normal svg {
-  color: #059669;
-}
-
-.stat-icon.warning {
-  background: #fef3c7;
-}
-
-.stat-icon.warning svg {
-  color: #f59e0b;
-}
-
-.stat-icon.critical {
-  background: #fee2e2;
-}
-
-.stat-icon.critical svg {
-  color: #dc2626;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
-.stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-  line-height: 1;
-}
-
-.stat-value.normal {
-  color: #059669;
-}
-
-.stat-value.warning {
-  color: #f59e0b;
-}
-
-.stat-value.critical {
-  color: #dc2626;
-}
-
-.stat-unit {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #6b7280;
-  margin-left: 0.25rem;
 }
 
 /* Load Bar Card */
@@ -1122,12 +904,6 @@ onUnmounted(() => {
 }
 
 /* Responsive */
-@media (max-width: 1200px) {
-  .stats-overview {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 768px) {
   .summary-dashboard {
     padding: 1rem;
@@ -1144,14 +920,6 @@ onUnmounted(() => {
 
   .page-title {
     font-size: 1.25rem;
-  }
-
-  .stats-overview {
-    grid-template-columns: 1fr;
-  }
-
-  .stat-value {
-    font-size: 1.5rem;
   }
 
   .load-bar-info {
