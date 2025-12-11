@@ -22,12 +22,13 @@ const generateHourlyReportsFromView = async (dateStr) => {
     console.log(`[LVMDP3 Hourly] Generating hourly reports for ${dateStr}...`);
     const t0 = Date.now();
     // Query dengan agregasi di database - SUPER CEPAT!
+    // totalKwh = SUM(real_power) × (3/3600) karena sampling rate 3 detik
     const query = (0, drizzle_orm_1.sql) `
     SELECT 
       DATE(waktu AT TIME ZONE 'Asia/Jakarta') as report_date,
       EXTRACT(HOUR FROM waktu AT TIME ZONE 'Asia/Jakarta')::integer as hour,
       COUNT(*)::integer as count,
-      SUM(real_power::double precision)::double precision as total_kwh,
+      (SUM(real_power::double precision) * (3.0 / 3600.0))::double precision as total_kwh,
       AVG(real_power::double precision)::double precision as avg_kwh,
       AVG(avg_current::double precision)::double precision as avg_current,
       MIN(avg_current::double precision)::double precision as min_current,
@@ -78,7 +79,7 @@ const generateSingleHourReport = async (dateStr, hour) => {
     const query = (0, drizzle_orm_1.sql) `
     SELECT 
       COUNT(*)::integer as count,
-      SUM(real_power::double precision)::double precision as total_kwh,
+      (SUM(real_power::double precision) * (3.0 / 3600.0))::double precision as total_kwh,
       AVG(real_power::double precision)::double precision as avg_kwh,
       AVG(avg_current::double precision)::double precision as avg_current,
       MIN(avg_current::double precision)::double precision as min_current,

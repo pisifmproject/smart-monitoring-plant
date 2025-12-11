@@ -51,9 +51,12 @@ function computeAverages(rows) {
         }
         n++;
     }
+    // Convert real_power sum to kWh: sampling rate 3 seconds
+    // totalKwh = SUM(real_power_kW) × (3 seconds / 3600 seconds)
+    const totalKwh = sumRealPower * (3.0 / 3600.0);
     return {
         count: n,
-        totalKwh: sumRealPower, // Sum of all real power
+        totalKwh: totalKwh, // Sum converted to kWh
         avgKwh: n ? sumRealPower / n : 0, // Average of real power (kW)
         avgCurrent: n ? sumI / n : 0,
         minCurrent: minI === Infinity ? 0 : minI,
@@ -74,7 +77,32 @@ const getShiftAveragesLVMDP4 = async (dateStr) => {
             const t = r.waktu instanceof Date ? r.waktu : new Date(r.waktu);
             return inRange(t, start, end);
         });
-        out[s.key] = computeAverages(rows);
+        // Group by hour first, then sum totalKwh from each hour
+        const hourlyMap = new Map();
+        for (const r of rows) {
+            const t = r.waktu instanceof Date ? r.waktu : new Date(r.waktu);
+            const wibTime = new Date(t.getTime() + 7 * 60 * 60 * 1000);
+            const hourStr = `${String(wibTime.getUTCHours()).padStart(2, "0")}:00`;
+            if (!hourlyMap.has(hourStr)) {
+                hourlyMap.set(hourStr, []);
+            }
+            hourlyMap.get(hourStr).push(r);
+        }
+        // Calculate totalKwh per hour, then sum them for the shift
+        let shiftTotalKwh = 0;
+        const hourlyAverages = [];
+        for (const [hour, hourRows] of hourlyMap.entries()) {
+            const hourAvg = computeAverages(hourRows);
+            shiftTotalKwh += hourAvg.totalKwh; // Sum up hourly totals
+            hourlyAverages.push(hourAvg);
+        }
+        // For shift averages (power, current, cos phi), use all rows
+        const shiftAvg = computeAverages(rows);
+        // Override totalKwh with sum of hourly totals
+        out[s.key] = {
+            ...shiftAvg,
+            totalKwh: shiftTotalKwh, // Sum of hourly kWh totals
+        };
     }
     return out;
 };

@@ -39,6 +39,7 @@ export const dailyReportLVMDP1 = pgTable("daily_report_lvmdp_1", {
   reportDate: date("report_date").notNull().unique(),
 
   shift1Count: integer("shift1_count").default(0),
+  shift1TotalKwh: doublePrecision("shift1_total_kwh").default(0),
   shift1AvgKwh: doublePrecision("shift1_avg_kwh").default(0),
   shift1AvgCurrent: doublePrecision("shift1_avg_current").default(0),
   shift1MinCurrent: doublePrecision("shift1_min_current").default(0),
@@ -46,6 +47,7 @@ export const dailyReportLVMDP1 = pgTable("daily_report_lvmdp_1", {
   shift1AvgCosPhi: doublePrecision("shift1_avg_cos_phi").default(0),
 
   shift2Count: integer("shift2_count").default(0),
+  shift2TotalKwh: doublePrecision("shift2_total_kwh").default(0),
   shift2AvgKwh: doublePrecision("shift2_avg_kwh").default(0),
   shift2AvgCurrent: doublePrecision("shift2_avg_current").default(0),
   shift2MinCurrent: doublePrecision("shift2_min_current").default(0),
@@ -53,6 +55,7 @@ export const dailyReportLVMDP1 = pgTable("daily_report_lvmdp_1", {
   shift2AvgCosPhi: doublePrecision("shift2_avg_cos_phi").default(0),
 
   shift3Count: integer("shift3_count").default(0),
+  shift3TotalKwh: doublePrecision("shift3_total_kwh").default(0),
   shift3AvgKwh: doublePrecision("shift3_avg_kwh").default(0),
   shift3AvgCurrent: doublePrecision("shift3_avg_current").default(0),
   shift3MinCurrent: doublePrecision("shift3_min_current").default(0),
@@ -70,6 +73,7 @@ export const dailyReportLVMDP2 = pgTable("daily_report_lvmdp_2", {
   reportDate: date("report_date").notNull().unique(),
 
   shift1Count: integer("shift1_count").default(0),
+  shift1TotalKwh: doublePrecision("shift1_total_kwh").default(0),
   shift1AvgKwh: doublePrecision("shift1_avg_kwh").default(0),
   shift1AvgCurrent: doublePrecision("shift1_avg_current").default(0),
   shift1MinCurrent: doublePrecision("shift1_min_current").default(0),
@@ -77,6 +81,7 @@ export const dailyReportLVMDP2 = pgTable("daily_report_lvmdp_2", {
   shift1AvgCosPhi: doublePrecision("shift1_avg_cos_phi").default(0),
 
   shift2Count: integer("shift2_count").default(0),
+  shift2TotalKwh: doublePrecision("shift2_total_kwh").default(0),
   shift2AvgKwh: doublePrecision("shift2_avg_kwh").default(0),
   shift2AvgCurrent: doublePrecision("shift2_avg_current").default(0),
   shift2MinCurrent: doublePrecision("shift2_min_current").default(0),
@@ -84,6 +89,7 @@ export const dailyReportLVMDP2 = pgTable("daily_report_lvmdp_2", {
   shift2AvgCosPhi: doublePrecision("shift2_avg_cos_phi").default(0),
 
   shift3Count: integer("shift3_count").default(0),
+  shift3TotalKwh: doublePrecision("shift3_total_kwh").default(0),
   shift3AvgKwh: doublePrecision("shift3_avg_kwh").default(0),
   shift3AvgCurrent: doublePrecision("shift3_avg_current").default(0),
   shift3MinCurrent: doublePrecision("shift3_min_current").default(0),
@@ -101,6 +107,7 @@ export const dailyReportLVMDP3 = pgTable("daily_report_lvmdp_3", {
   reportDate: date("report_date").notNull().unique(),
 
   shift1Count: integer("shift1_count").default(0),
+  shift1TotalKwh: doublePrecision("shift1_total_kwh").default(0),
   shift1AvgKwh: doublePrecision("shift1_avg_kwh").default(0),
   shift1AvgCurrent: doublePrecision("shift1_avg_current").default(0),
   shift1MinCurrent: doublePrecision("shift1_min_current").default(0),
@@ -108,6 +115,7 @@ export const dailyReportLVMDP3 = pgTable("daily_report_lvmdp_3", {
   shift1AvgCosPhi: doublePrecision("shift1_avg_cos_phi").default(0),
 
   shift2Count: integer("shift2_count").default(0),
+  shift2TotalKwh: doublePrecision("shift2_total_kwh").default(0),
   shift2AvgKwh: doublePrecision("shift2_avg_kwh").default(0),
   shift2AvgCurrent: doublePrecision("shift2_avg_current").default(0),
   shift2MinCurrent: doublePrecision("shift2_min_current").default(0),
@@ -115,6 +123,7 @@ export const dailyReportLVMDP3 = pgTable("daily_report_lvmdp_3", {
   shift2AvgCosPhi: doublePrecision("shift2_avg_cos_phi").default(0),
 
   shift3Count: integer("shift3_count").default(0),
+  shift3TotalKwh: doublePrecision("shift3_total_kwh").default(0),
   shift3AvgKwh: doublePrecision("shift3_avg_kwh").default(0),
   shift3AvgCurrent: doublePrecision("shift3_avg_current").default(0),
   shift3MinCurrent: doublePrecision("shift3_min_current").default(0),
@@ -132,6 +141,7 @@ export const dailyReportLVMDP4 = pgTable("daily_report_lvmdp_4", {
   reportDate: date("report_date").notNull().unique(),
 
   shift1Count: integer("shift1_count").default(0),
+  shift1TotalKwh: doublePrecision("shift1_total_kwh").default(0),
   shift1AvgKwh: doublePrecision("shift1_avg_kwh").default(0),
   shift1AvgCurrent: doublePrecision("shift1_avg_current").default(0),
   shift1MinCurrent: doublePrecision("shift1_min_current").default(0),
@@ -139,6 +149,7 @@ export const dailyReportLVMDP4 = pgTable("daily_report_lvmdp_4", {
   shift1AvgCosPhi: doublePrecision("shift1_avg_cos_phi").default(0),
 
   shift2Count: integer("shift2_count").default(0),
+  shift2TotalKwh: doublePrecision("shift2_total_kwh").default(0),
   shift2AvgKwh: doublePrecision("shift2_avg_kwh").default(0),
   shift2AvgCurrent: doublePrecision("shift2_avg_current").default(0),
   shift2MinCurrent: doublePrecision("shift2_min_current").default(0),
@@ -146,6 +157,7 @@ export const dailyReportLVMDP4 = pgTable("daily_report_lvmdp_4", {
   shift2AvgCosPhi: doublePrecision("shift2_avg_cos_phi").default(0),
 
   shift3Count: integer("shift3_count").default(0),
+  shift3TotalKwh: doublePrecision("shift3_total_kwh").default(0),
   shift3AvgKwh: doublePrecision("shift3_avg_kwh").default(0),
   shift3AvgCurrent: doublePrecision("shift3_avg_current").default(0),
   shift3MinCurrent: doublePrecision("shift3_min_current").default(0),

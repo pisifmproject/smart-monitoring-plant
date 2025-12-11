@@ -57,6 +57,7 @@ const saveShiftReport = async (dateStr, shiftNumber) => {
         // Update existing report
         const updateData = {
             [`shift${shiftNumber}Count`]: shiftData.count,
+            [`shift${shiftNumber}TotalKwh`]: shiftData.totalKwh,
             [`shift${shiftNumber}AvgCurrent`]: shiftData.avgCurrent,
             [`shift${shiftNumber}MinCurrent`]: shiftData.minCurrent,
             [`shift${shiftNumber}MaxCurrent`]: shiftData.maxCurrent,
@@ -80,6 +81,7 @@ const saveShiftReport = async (dateStr, shiftNumber) => {
         // Initialize all shifts to 0
         for (let i = 1; i <= 3; i++) {
             reportData[`shift${i}Count`] = 0;
+            reportData[`shift${i}TotalKwh`] = 0;
             reportData[`shift${i}AvgKwh`] = 0;
             reportData[`shift${i}AvgCurrent`] = 0;
             reportData[`shift${i}MinCurrent`] = 0;
@@ -88,6 +90,7 @@ const saveShiftReport = async (dateStr, shiftNumber) => {
         }
         // Fill only the requested shift
         reportData[`shift${shiftNumber}Count`] = shiftData.count;
+        reportData[`shift${shiftNumber}TotalKwh`] = shiftData.totalKwh;
         reportData[`shift${shiftNumber}AvgKwh`] = shiftData.avgKwh;
         reportData[`shift${shiftNumber}AvgCurrent`] = shiftData.avgCurrent;
         reportData[`shift${shiftNumber}MinCurrent`] = shiftData.minCurrent;

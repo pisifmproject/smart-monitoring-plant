@@ -158,12 +158,12 @@ router.get("/all", async (req, res) => {
         }
         const data = reports.map((r) => ({
             ...r,
-            // Compute totalKwh from avgKwh * count
-            shift1TotalKwh: (r.shift1AvgKwh || 0) * (r.shift1Count || 1),
+            // Use stored totalKwh if available, otherwise calculate from avgKwh * count
+            shift1TotalKwh: r.shift1TotalKwh ?? (r.shift1AvgKwh || 0) * (r.shift1Count || 1),
             shift1CosPhi: r.shift1AvgCosPhi || 0,
-            shift2TotalKwh: (r.shift2AvgKwh || 0) * (r.shift2Count || 1),
+            shift2TotalKwh: r.shift2TotalKwh ?? (r.shift2AvgKwh || 0) * (r.shift2Count || 1),
             shift2CosPhi: r.shift2AvgCosPhi || 0,
-            shift3TotalKwh: (r.shift3AvgKwh || 0) * (r.shift3Count || 1),
+            shift3TotalKwh: r.shift3TotalKwh ?? (r.shift3AvgKwh || 0) * (r.shift3Count || 1),
             shift3CosPhi: r.shift3AvgCosPhi || 0,
             // field tambahan khusus buat frontend
             date: formatLocalYMD(r.reportDate || r.reportDate),
