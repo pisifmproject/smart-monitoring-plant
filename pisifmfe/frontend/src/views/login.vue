@@ -72,7 +72,7 @@ function handleLogin() {
   error.value = "";
 
   if (login(username.value, password.value)) {
-    router.push("/app/lvmdp1");
+    router.push("/app/summary");
   } else {
     error.value = "Username atau password salah";
     password.value = "";

@@ -73,6 +73,10 @@ app.use("/api/daily-report", dailyReportRouter);
 import hourlyReportRouter from "./routes/hourlyReport.router";
 app.use("/api/hourly-report", hourlyReportRouter);
 
+// Summary routes
+import summaryRouter from "./routes/summary.router";
+app.use("/api/summary", summaryRouter);
+
 // app.listen(PORT, () => {
 //   console.log(`Server is running on port ${PORT}`);
 // });

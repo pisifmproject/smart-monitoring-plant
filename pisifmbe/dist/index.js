@@ -62,6 +62,9 @@ app.use("/api/daily-report", dailyReport_router_1.default);
 // Hourly Report routes
 const hourlyReport_router_1 = __importDefault(require("./routes/hourlyReport.router"));
 app.use("/api/hourly-report", hourlyReport_router_1.default);
+// Summary routes
+const summary_router_1 = __importDefault(require("./routes/summary.router"));
+app.use("/api/summary", summary_router_1.default);
 // app.listen(PORT, () => {
 //   console.log(`Server is running on port ${PORT}`);
 // });

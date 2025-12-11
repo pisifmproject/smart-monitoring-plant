@@ -30,8 +30,8 @@ function submitLogin() {
   errorMsg.value = "";
 
   if (login(username.value, password.value)) {
-    // Force reload to ensure auth state is properly initialized
-    window.location.href = "/app/lvmdp1";
+    // Redirect to summary dashboard
+    window.location.href = "/app/summary";
   } else {
     errorMsg.value = "Username atau password salah!";
     password.value = "";

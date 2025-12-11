@@ -9,6 +9,7 @@ import Lvmdp1 from "../views/lvmdp/lvmdp1.vue";
 import Lvmdp2 from "../views/lvmdp/lvmdp2.vue";
 import Lvmdp3 from "../views/lvmdp/lvmdp3.vue";
 import Lvmdp4 from "../views/lvmdp/lvmdp4.vue";
+import SummaryPanelDashboard from "../views/summary/SummaryPanelDashboard.vue";
 const LvmdpDailyReport = () =>
   import("../views/dailyReport/lvmdp/lvmdpDailyReport.vue");
 
@@ -132,6 +133,17 @@ const router = createRouter({
       component: DashboardLayout,
       meta: { requiresAuth: true },
       children: [
+        // Summary Dashboard - Default route
+        {
+          path: "",
+          redirect: "summary",
+        },
+        {
+          path: "summary",
+          name: "summary",
+          component: SummaryPanelDashboard,
+        },
+
         // LVMDP routes
         { path: "lvmdp1", name: "lvmdp1", component: Lvmdp1 },
         { path: "lvmdp2", name: "lvmdp2", component: Lvmdp2 },

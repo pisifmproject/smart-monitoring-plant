@@ -33,7 +33,11 @@ watchEffect(() => {
   const routePath = String(route.path || "");
 
   // Buka Utility > Electrical jika di lvmdp* atau daily-report
-  if (routeName.startsWith("lvmdp") || routePath.includes("daily-report")) {
+  if (
+    routeName.startsWith("lvmdp") ||
+    routePath.includes("daily-report") ||
+    routeName === "summary"
+  ) {
     openMenus.value.utility = true;
     openMenus.value.lvmdp = true;
   }
@@ -320,11 +324,12 @@ const mainMenus = computed(() => [
         id: "lvmdp",
         name: "Electrical",
         icon: Zap,
+        summaryRoute: "summary", // Add summary route
         children: [
-          { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1" },
-          { id: "lvmdp2", name: "LVMDP 2", routeName: "lvmdp2" },
-          { id: "lvmdp3", name: "LVMDP 3", routeName: "lvmdp3" },
-          { id: "lvmdp4", name: "LVMDP 4", routeName: "lvmdp4" },
+          { id: "lvmdp1", name: "Panel 1", routeName: "lvmdp1" },
+          { id: "lvmdp2", name: "Panel 2", routeName: "lvmdp2" },
+          { id: "lvmdp3", name: "Panel 3", routeName: "lvmdp3" },
+          { id: "lvmdp4", name: "Panel 4", routeName: "lvmdp4" },
         ],
       },
     ],
@@ -451,9 +456,59 @@ function isItemActive(routeName: string): boolean {
           <div v-show="isMenuOpen(mainMenu.id)" class="submenu level-1">
             <!-- Level 2: Submenu items -->
             <template v-for="subMenu in mainMenu.children" :key="subMenu.id">
-              <!-- Jika submenu punya children lagi (nested level 2) -->
+              <!-- Jika submenu punya children lagi (nested level 2) dengan summaryRoute -->
+              <div
+                v-if="(subMenu as any).children && (subMenu as any).summaryRoute"
+              >
+                <!-- Summary Route - ditampilkan saat klik parent -->
+                <RouterLink
+                  :to="{ name: (subMenu as any).summaryRoute }"
+                  class="group-trigger level-2 summary-link"
+                  active-class="active-summary"
+                  @click="toggleMenu(subMenu.id)"
+                >
+                  <span class="flex items-center gap-2">
+                    <component
+                      v-if="subMenu.icon"
+                      :is="subMenu.icon"
+                      class="w-4 h-4"
+                    />
+                    <span>{{ subMenu.name }}</span>
+                  </span>
+                  <span class="chev" :class="{ rot: isMenuOpen(subMenu.id) }"
+                    >▾</span
+                  >
+                </RouterLink>
+
+                <!-- Toggle untuk show/hide children -->
+                <!-- Children hanya muncul ketika arrow diklik -->
+                <transition name="fade">
+                  <div v-show="isMenuOpen(subMenu.id)" class="submenu level-2">
+                    <template
+                      v-for="childMenu in ((subMenu as any).children || [])"
+                      :key="childMenu?.id || Math.random()"
+                    >
+                      <RouterLink
+                        v-if="
+                          childMenu &&
+                          childMenu.routeName &&
+                          routeExists(childMenu.routeName)
+                        "
+                        :to="{ name: childMenu.routeName }"
+                        class="submenu-item level-3"
+                        :class="{ active: isItemActive(childMenu.routeName) }"
+                      >
+                        <div class="h-2.5 w-2.5 rounded-full bg-slate-600" />
+                        <span>{{ childMenu.name }}</span>
+                      </RouterLink>
+                    </template>
+                  </div>
+                </transition>
+              </div>
+
+              <!-- Jika submenu punya children lagi (nested level 2) tanpa summaryRoute -->
               <button
-                v-if="(subMenu as any).children"
+                v-else-if="(subMenu as any).children"
                 class="group-trigger level-2"
                 @click="toggleMenu(subMenu.id)"
                 :aria-expanded="isMenuOpen(subMenu.id) ? 'true' : 'false'"
@@ -482,10 +537,10 @@ function isItemActive(routeName: string): boolean {
                 <span>{{ subMenu.name }}</span>
               </RouterLink>
 
-              <!-- Submenu Level 2 (nested children) -->
+              <!-- Submenu Level 2 (nested children) untuk yang tanpa summaryRoute -->
               <transition name="fade">
                 <div
-                  v-show="(subMenu as any).children && isMenuOpen(subMenu.id)"
+                  v-show="(subMenu as any).children && !((subMenu as any).summaryRoute) && isMenuOpen(subMenu.id)"
                   class="submenu level-2"
                 >
                   <template
@@ -605,6 +660,27 @@ function isItemActive(routeName: string): boolean {
 
 .group-trigger.level-2:hover {
   background-color: rgba(14, 165, 233, 0.1);
+}
+
+/* Summary link styling */
+.summary-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-decoration: none;
+  color: #cbd5e1;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.summary-link:hover {
+  background-color: rgba(14, 165, 233, 0.15);
+  color: #fff;
+}
+
+.summary-link.active-summary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  color: white;
 }
 
 .chev {
