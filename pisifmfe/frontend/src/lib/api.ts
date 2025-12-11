@@ -72,9 +72,27 @@ export async function getShiftAvg(panelId: 1 | 2 | 3 | 4, date?: string) {
   ];
   const { data } = await api.get(`${path}/shift-avg`, { params: { date } });
   return data as {
-    shift1: { avgPower: number; avgCurrent: number; count: number };
-    shift2: { avgPower: number; avgCurrent: number; count: number };
-    shift3: { avgPower: number; avgCurrent: number; count: number };
+    shift1: {
+      avgPower: number;
+      avgCurrent: number;
+      minCurrent: number;
+      maxCurrent: number;
+      count: number;
+    };
+    shift2: {
+      avgPower: number;
+      avgCurrent: number;
+      minCurrent: number;
+      maxCurrent: number;
+      count: number;
+    };
+    shift3: {
+      avgPower: number;
+      avgCurrent: number;
+      minCurrent: number;
+      maxCurrent: number;
+      count: number;
+    };
   };
 }
 

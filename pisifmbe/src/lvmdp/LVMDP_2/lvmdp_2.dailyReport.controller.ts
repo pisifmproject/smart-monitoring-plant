@@ -248,6 +248,8 @@ router.get("/hourly/:date", async (req, res) => {
       avgKwh: h.avgKwh,
       cosPhi: h.cosPhi || 0,
       avgCurrent: h.avgCurrent,
+      minCurrent: h.minCurrent || 0,
+      maxCurrent: h.maxCurrent || 0,
     }));
 
     res.json(formatted);

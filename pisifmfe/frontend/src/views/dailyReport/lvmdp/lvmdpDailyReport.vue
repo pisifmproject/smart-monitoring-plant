@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import { getDailyReportAll, getDailyHourly } from "@/lib/api";
+import { useExcelExport } from "@/composables/useExcelExport";
 import {
   Download,
   CalendarSearch,
@@ -9,6 +10,12 @@ import {
   ClockFading,
   FileChartColumn,
 } from "lucide-vue-next";
+
+const {
+  exportShiftReportByDate,
+  exportHourlyReportByDate,
+  exportMonthlyReport,
+} = useExcelExport();
 
 const route = useRoute();
 const panelId = (parseInt(String(route.query.panel || 1)) || 1) as
@@ -106,6 +113,15 @@ function formatDate(dateStr: string) {
   }
 }
 
+// Get color class based on load percentage
+function getLoadClass(loadRatio: number): string {
+  const percentage = loadRatio * 100;
+  if (percentage >= 90) return "load-critical";
+  if (percentage >= 75) return "load-high";
+  if (percentage >= 50) return "load-medium";
+  return "load-normal";
+}
+
 // Cache for shift reports to avoid repeated API calls
 const shiftReportsCache = new Map<string, any[]>();
 
@@ -152,6 +168,8 @@ async function loadShiftReports() {
             totalKwh: report.shift1TotalKwh || 0,
             avgKwh: report.shift1AvgKwh || 0,
             iavg: report.shift1AvgCurrent || 0,
+            imin: report.shift1MinCurrent || 0,
+            imax: report.shift1MaxCurrent || 0,
             cosPhi: report.shift1CosPhi || 0,
           },
           {
@@ -159,6 +177,8 @@ async function loadShiftReports() {
             totalKwh: report.shift2TotalKwh || 0,
             avgKwh: report.shift2AvgKwh || 0,
             iavg: report.shift2AvgCurrent || 0,
+            imin: report.shift2MinCurrent || 0,
+            imax: report.shift2MaxCurrent || 0,
             cosPhi: report.shift2CosPhi || 0,
           },
           {
@@ -166,6 +186,8 @@ async function loadShiftReports() {
             totalKwh: report.shift3TotalKwh || 0,
             avgKwh: report.shift3AvgKwh || 0,
             iavg: report.shift3AvgCurrent || 0,
+            imin: report.shift3MinCurrent || 0,
+            imax: report.shift3MaxCurrent || 0,
             cosPhi: report.shift3CosPhi || 0,
           },
         ];
@@ -182,9 +204,33 @@ async function loadShiftReports() {
         shiftReportsCache.set(cacheKey, result);
       } else {
         const emptyResult = [
-          { shift: 1, totalKwh: 0, avgKwh: 0, iavg: 0, cosPhi: 0 },
-          { shift: 2, totalKwh: 0, avgKwh: 0, iavg: 0, cosPhi: 0 },
-          { shift: 3, totalKwh: 0, avgKwh: 0, iavg: 0, cosPhi: 0 },
+          {
+            shift: 1,
+            totalKwh: 0,
+            avgKwh: 0,
+            iavg: 0,
+            imin: 0,
+            imax: 0,
+            cosPhi: 0,
+          },
+          {
+            shift: 2,
+            totalKwh: 0,
+            avgKwh: 0,
+            iavg: 0,
+            imin: 0,
+            imax: 0,
+            cosPhi: 0,
+          },
+          {
+            shift: 3,
+            totalKwh: 0,
+            avgKwh: 0,
+            iavg: 0,
+            imin: 0,
+            imax: 0,
+            cosPhi: 0,
+          },
         ];
 
         // Final check before updating
@@ -266,6 +312,8 @@ async function loadHourlyReports() {
         cosPhi: row.cosPhi ?? row.avg_cos_phi ?? row.cos_phi ?? 0,
         avgCurrent:
           row.avgCurrent ?? row.avg_avg_current ?? row.avg_current ?? 0,
+        minCurrent: row.minCurrent ?? row.min_current ?? 0,
+        maxCurrent: row.maxCurrent ?? row.max_current ?? 0,
       }));
 
       // Final check before updating - prevent race condition
@@ -407,15 +455,21 @@ function downloadCSV(content: string, filename: string) {
   document.body.removeChild(link);
 }
 
-function downloadByDate() {
-  const dateFormatted = selectedDate.value.replace(/-/g, "-");
-  const shiftCSV = generateShiftCSV();
-  const hourlyCSV = generateHourlyCSV();
+async function downloadByDate() {
+  // Ensure both shift and hourly data are loaded
+  await Promise.all([
+    shiftReports.value.length === 0 ? loadShiftReports() : Promise.resolve(),
+    hourlyReports.value.length === 0 ? loadHourlyReports() : Promise.resolve(),
+  ]);
 
-  downloadCSV(shiftCSV, `LVMDP${panelId}_ShiftReport_${dateFormatted}.csv`);
+  // Export shift report first
+  exportShiftReportByDate(panelId, selectedDate.value, shiftReports.value);
+
+  // Then export hourly report with a small delay to prevent browser blocking multiple downloads
   setTimeout(() => {
-    downloadCSV(hourlyCSV, `LVMDP${panelId}_HourlyReport_${dateFormatted}.csv`);
-  }, 100);
+    exportHourlyReportByDate(panelId, selectedDate.value, hourlyReports.value);
+  }, 300);
+
   showDownloadMenu.value = false;
 }
 
@@ -424,107 +478,20 @@ async function downloadByMonth() {
   const monthFormatted = `${year}-${month}`;
 
   try {
-    // Fetch all data for the panel
     const allData = await getDailyReportAll(panelId);
+    if (!Array.isArray(allData)) return;
 
-    if (!Array.isArray(allData)) {
-      // console.error("No data available for month export");
-      return;
-    }
-
-    // Filter data for the selected month
     const monthData = allData.filter((row) => {
       const rowDate = row.date || row.reportDate;
       if (!rowDate) return false;
       return rowDate.startsWith(monthFormatted);
     });
 
-    if (monthData.length === 0) {
-      // console.warn("No data found for selected month");
-      return;
-    }
+    if (monthData.length === 0) return;
 
-    // Generate shift CSV for entire month
-    const shiftHeaders = [
-      "LVMDP",
-      "Tanggal",
-      "Shift",
-      "Total kWh",
-      "Avg kWh",
-      "Avg Current (A)",
-      "Power Factor",
-    ];
-
-    const shiftRows: any[] = [];
-    monthData.forEach((dayReport) => {
-      const reportDate = dayReport.date || dayReport.reportDate;
-      for (let shiftNum = 1; shiftNum <= 3; shiftNum++) {
-        shiftRows.push([
-          `LVMDP ${panelId}`,
-          reportDate,
-          `Shift ${shiftNum}`,
-          dayReport[`shift${shiftNum}TotalKwh`] || 0,
-          dayReport[`shift${shiftNum}AvgKwh`] || 0,
-          dayReport[`shift${shiftNum}AvgCurrent`] || 0,
-          dayReport[`shift${shiftNum}CosPhi`] || 0,
-        ]);
-      }
-    });
-
-    const shiftCSV = [
-      shiftHeaders.map(escapeCSV).join(","),
-      ...shiftRows.map((row) => row.map(escapeCSV).join(",")),
-    ].join("\n");
-
-    downloadCSV(shiftCSV, `LVMDP${panelId}_ShiftReport_${monthFormatted}.csv`);
-
-    // Fetch hourly data for each day in the month
-    const hourlyHeaders = [
-      "LVMDP",
-      "Tanggal",
-      "Waktu",
-      "Total kWh",
-      "Avg Power (kW)",
-      "Power Factor",
-      "Avg Current (A)",
-    ];
-
-    const hourlyRows: any[] = [];
-    for (const dayReport of monthData) {
-      const reportDate = dayReport.date || dayReport.reportDate;
-      try {
-        const hourlyData = await getDailyHourly(panelId, reportDate);
-        if (Array.isArray(hourlyData)) {
-          hourlyData.forEach((hourRow: any) => {
-            hourlyRows.push([
-              `LVMDP ${panelId}`,
-              reportDate,
-              formatTime(hourRow.hour),
-              hourRow.totalKwh ?? hourRow.avg_total_kwh ?? 0,
-              hourRow.avgKwh ?? hourRow.avg_kwh ?? 0,
-              hourRow.cosPhi ?? hourRow.avg_cos_phi ?? 0,
-              hourRow.avgCurrent ?? hourRow.avg_avg_current ?? 0,
-            ]);
-          });
-        }
-      } catch (err) {
-        // console.warn(`Failed to fetch hourly data for ${reportDate}:`, err);
-      }
-    }
-
-    const hourlyCSV = [
-      hourlyHeaders.map(escapeCSV).join(","),
-      ...hourlyRows.map((row) => row.map(escapeCSV).join(",")),
-    ].join("\n");
-
-    setTimeout(() => {
-      downloadCSV(
-        hourlyCSV,
-        `LVMDP${panelId}_HourlyReport_${monthFormatted}.csv`
-      );
-    }, 100);
+    exportMonthlyReport(panelId, monthData, monthFormatted);
   } catch (err) {
-    // console.error("Error downloading month data:", err);
+    console.error("Error downloading month data:", err);
   } finally {
     showDownloadMenu.value = false;
   }
@@ -638,33 +605,45 @@ onUnmounted(() => {
           <div v-else-if="shiftReports.length === 0" class="empty-state">
             <p>No shift data available for this date</p>
           </div>
-          <div v-else class="shift-table-wrapper">
-            <table class="shift-table">
-              <thead>
-                <tr>
-                  <th>Shift</th>
-                  <th>Total kWh</th>
-                  <th>Avg Power (kW)</th>
-                  <th>Avg Current (A)</th>
-                  <th>Power Factor</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="(row, idx) in shiftReports"
-                  :key="idx"
-                  class="shift-row"
-                >
-                  <td class="shift-name">SHIFT {{ row.shift }}</td>
-                  <td class="numeric">{{ formatNumber(row.totalKwh) }}</td>
-                  <td class="numeric">{{ formatNumber(row.avgKwh) }}</td>
-                  <td class="numeric">{{ formatNumber(row.iavg) }}</td>
-                  <td class="numeric power-factor">
-                    {{ formatNumber(row.cosPhi) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-else>
+            <!-- Detailed Table -->
+            <div class="shift-table-wrapper">
+              <h3 class="table-title">Detailed Shift Data</h3>
+              <table class="shift-table">
+                <thead>
+                  <tr>
+                    <th>Shift</th>
+                    <th>Total kWh</th>
+                    <th>Avg Power (kW)</th>
+                    <th>Avg Current (A)</th>
+                    <th>Min Current (A)</th>
+                    <th>Max Current (A)</th>
+                    <th>Load (%)</th>
+                    <th>Power Factor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(row, idx) in shiftReports"
+                    :key="idx"
+                    class="shift-row"
+                  >
+                    <td class="shift-name">SHIFT {{ row.shift }}</td>
+                    <td class="numeric">{{ formatNumber(row.totalKwh) }}</td>
+                    <td class="numeric">{{ formatNumber(row.avgKwh) }}</td>
+                    <td class="numeric">{{ formatNumber(row.iavg) }}</td>
+                    <td class="numeric">{{ formatNumber(row.imin) }}</td>
+                    <td class="numeric">{{ formatNumber(row.imax) }}</td>
+                    <td class="numeric load-percentage">
+                      {{ formatNumber((row.iavg / 2500) * 100) }}%
+                    </td>
+                    <td class="numeric power-factor">
+                      {{ formatNumber(row.cosPhi) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -683,6 +662,9 @@ onUnmounted(() => {
                   <th>Total kWh</th>
                   <th>Avg Power (kW)</th>
                   <th>Avg Current (A)</th>
+                  <th>Min Current (A)</th>
+                  <th>Max Current (A)</th>
+                  <th>Load (%)</th>
                   <th>Power Factor</th>
                 </tr>
               </thead>
@@ -696,6 +678,15 @@ onUnmounted(() => {
                   <td class="numeric">{{ formatNumber(row.totalKwh) }}</td>
                   <td class="numeric">{{ formatNumber(row.avgKwh) }}</td>
                   <td class="numeric">{{ formatNumber(row.avgCurrent) }}</td>
+                  <td class="numeric">
+                    {{ formatNumber(row.minCurrent || 0) }}
+                  </td>
+                  <td class="numeric">
+                    {{ formatNumber(row.maxCurrent || 0) }}
+                  </td>
+                  <td class="numeric">
+                    {{ formatNumber((row.avgCurrent / 2500) * 100) }}%
+                  </td>
                   <td class="numeric power-factor">
                     {{ formatNumber(row.cosPhi) }}
                   </td>
@@ -1109,6 +1100,16 @@ onUnmounted(() => {
   color: #059669;
 }
 
+.load-percentage {
+  color: #f59e0b;
+  font-weight: 800;
+}
+
+.shift-row:hover .load-percentage,
+.hourly-row:hover .load-percentage {
+  color: #d97706;
+}
+
 .shift-name,
 .time {
   font-weight: 700;
@@ -1146,6 +1147,14 @@ onUnmounted(() => {
 
 .cache-icon {
   font-size: 1rem;
+}
+
+.table-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+  padding: 0 4px;
 }
 
 /* Responsive Design */

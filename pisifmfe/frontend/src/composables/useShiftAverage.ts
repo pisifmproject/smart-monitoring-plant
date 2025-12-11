@@ -2,9 +2,27 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { getShiftAvg } from "@/lib/api";
 
 export function useShiftAverages(panelId: 1 | 2 | 3 | 4, dateStr?: string) {
-  const s1 = ref({ avgPower: 0, avgCurrent: 0, count: 0 });
-  const s2 = ref({ avgPower: 0, avgCurrent: 0, count: 0 });
-  const s3 = ref({ avgPower: 0, avgCurrent: 0, count: 0 });
+  const s1 = ref({
+    avgPower: 0,
+    avgCurrent: 0,
+    minCurrent: 0,
+    maxCurrent: 0,
+    count: 0,
+  });
+  const s2 = ref({
+    avgPower: 0,
+    avgCurrent: 0,
+    minCurrent: 0,
+    maxCurrent: 0,
+    count: 0,
+  });
+  const s3 = ref({
+    avgPower: 0,
+    avgCurrent: 0,
+    minCurrent: 0,
+    maxCurrent: 0,
+    count: 0,
+  });
   let intervalId: number | null = null;
 
   async function reload() {

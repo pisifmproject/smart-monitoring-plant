@@ -29,10 +29,12 @@ export const generateHourlyReportsFromView = async (dateStr: string) => {
       DATE(waktu AT TIME ZONE 'Asia/Jakarta') as report_date,
       EXTRACT(HOUR FROM waktu AT TIME ZONE 'Asia/Jakarta')::integer as hour,
       COUNT(*)::integer as count,
-      SUM(real_power)::double precision as total_kwh,
-      AVG(real_power)::double precision as avg_kwh,
-      AVG(avg_current)::double precision as avg_current,
-      AVG(cos_phi)::double precision as avg_cos_phi
+      SUM(real_power::double precision)::double precision as total_kwh,
+      AVG(real_power::double precision)::double precision as avg_kwh,
+      AVG(avg_current::double precision)::double precision as avg_current,
+      MIN(avg_current::double precision)::double precision as min_current,
+      MAX(avg_current::double precision)::double precision as max_current,
+      AVG(cos_phi::double precision)::double precision as avg_cos_phi
     FROM public.v_lvmdp_4
     WHERE waktu >= ${dateStr}::date 
       AND waktu < (${dateStr}::date + interval '1 day')
@@ -58,6 +60,8 @@ export const generateHourlyReportsFromView = async (dateStr: string) => {
     totalKwh: Number(row.total_kwh) || 0,
     avgKwh: Number(row.avg_kwh) || 0,
     avgCurrent: Number(row.avg_current) || 0,
+    minCurrent: Number(row.min_current) || 0,
+    maxCurrent: Number(row.max_current) || 0,
     avgCosPhi: Number(row.avg_cos_phi) || 0,
     createdAt: now,
     updatedAt: now,
@@ -89,10 +93,12 @@ export const generateSingleHourReport = async (
   const query = sql`
     SELECT 
       COUNT(*)::integer as count,
-      SUM(real_power)::double precision as total_kwh,
-      AVG(real_power)::double precision as avg_kwh,
-      AVG(avg_current)::double precision as avg_current,
-      AVG(cos_phi)::double precision as avg_cos_phi
+      SUM(real_power::double precision)::double precision as total_kwh,
+      AVG(real_power::double precision)::double precision as avg_kwh,
+      AVG(avg_current::double precision)::double precision as avg_current,
+      MIN(avg_current::double precision)::double precision as min_current,
+      MAX(avg_current::double precision)::double precision as max_current,
+      AVG(cos_phi::double precision)::double precision as avg_cos_phi
     FROM public.v_lvmdp_4
     WHERE DATE(waktu AT TIME ZONE 'Asia/Jakarta') = ${dateStr}::date
       AND EXTRACT(HOUR FROM waktu AT TIME ZONE 'Asia/Jakarta')::integer = ${hour}
@@ -115,6 +121,8 @@ export const generateSingleHourReport = async (
     totalKwh: Number(row.total_kwh) || 0,
     avgKwh: Number(row.avg_kwh) || 0,
     avgCurrent: Number(row.avg_current) || 0,
+    minCurrent: Number(row.min_current) || 0,
+    maxCurrent: Number(row.max_current) || 0,
     avgCosPhi: Number(row.avg_cos_phi) || 0,
     createdAt: now,
     updatedAt: now,

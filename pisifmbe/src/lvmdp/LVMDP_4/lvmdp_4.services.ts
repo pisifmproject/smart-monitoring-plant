@@ -15,6 +15,8 @@ type ShiftAvg = {
   totalKwh: number; // Sum of all kWh
   avgKwh: number; // Average of kWh
   avgCurrent: number;
+  minCurrent: number; // Minimum current
+  maxCurrent: number; // Maximum current
   avgCosPhi: number; // Average of power factor
 };
 
@@ -41,6 +43,8 @@ function computeAverages(rows: Array<any>): ShiftAvg {
   let sumRealPower = 0;
   let sumI = 0;
   let sumCosPhi = 0;
+  let minI = Infinity;
+  let maxI = -Infinity;
   let n = 0;
 
   for (const r of rows) {
@@ -50,6 +54,12 @@ function computeAverages(rows: Array<any>): ShiftAvg {
     sumRealPower += realPower;
     sumI += I;
     sumCosPhi += cosPhi;
+
+    // Track min/max current
+    if (I > 0) {
+      minI = Math.min(minI, I);
+      maxI = Math.max(maxI, I);
+    }
     n++;
   }
 
@@ -58,6 +68,8 @@ function computeAverages(rows: Array<any>): ShiftAvg {
     totalKwh: sumRealPower, // Sum of all real power
     avgKwh: n ? sumRealPower / n : 0, // Average of real power (kW)
     avgCurrent: n ? sumI / n : 0,
+    minCurrent: minI === Infinity ? 0 : minI,
+    maxCurrent: maxI === -Infinity ? 0 : maxI,
     avgCosPhi: n ? sumCosPhi / n : 0, // Average power factor
   };
 }
@@ -117,7 +129,9 @@ const getHourlyAveragesLVMDP4 = async (dateStr?: string) => {
       hourlyMap.set(key, []);
     }
     hourlyMap.get(key)!.push(r);
-  } // Compute averages per jam
+  }
+
+  // Compute averages per jam
   const result = Array.from(hourlyMap.entries())
     .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
     .map(([hour, rows]) => {
@@ -127,6 +141,8 @@ const getHourlyAveragesLVMDP4 = async (dateStr?: string) => {
         totalKwh: avg.totalKwh, // Sum of kWh for this hour
         avgKwh: avg.avgKwh, // Average kWh
         avgCurrent: avg.avgCurrent,
+        minCurrent: avg.minCurrent,
+        maxCurrent: avg.maxCurrent,
         cosPhi: avg.avgCosPhi, // Average power factor
         count: avg.count,
       };

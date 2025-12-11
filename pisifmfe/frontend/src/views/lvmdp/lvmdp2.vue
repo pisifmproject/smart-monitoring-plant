@@ -30,6 +30,15 @@ const reactiveCalc = computed(() => {
   const kvar = Math.sqrt(Math.max(0, kva * kva - kw * kw));
   return kvar;
 });
+
+// Get color class based on load percentage
+function getLoadClass(loadRatio: number): string {
+  const percentage = loadRatio * 100;
+  if (percentage >= 90) return "load-critical";
+  if (percentage >= 75) return "load-high";
+  if (percentage >= 50) return "load-medium";
+  return "load-normal";
+}
 </script>
 
 <template>
@@ -113,6 +122,51 @@ const reactiveCalc = computed(() => {
                 </div>
               </div>
 
+              <!-- Current Load Section -->
+              <div class="current-section">
+                <div class="current-header">
+                  <span class="section-title">Current Load</span>
+                  <span class="load-value"
+                    >{{ ((s1.avgCurrent / 2500) * 100).toFixed(1) }}%</span
+                  >
+                </div>
+
+                <div class="load-bar-container">
+                  <div
+                    class="load-bar"
+                    :style="{
+                      width: `${Math.min((s1.avgCurrent / 2500) * 100, 100)}%`,
+                    }"
+                    :class="getLoadClass(s1.avgCurrent / 2500)"
+                  ></div>
+                </div>
+
+                <div class="current-details">
+                  <div class="current-stat">
+                    <span class="stat-label">Average</span>
+                    <span class="stat-value"
+                      >{{ s1.avgCurrent.toFixed(1) }} A</span
+                    >
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Min</span>
+                    <span class="stat-value"
+                      >{{ s1.minCurrent.toFixed(1) }} A</span
+                    >
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Max</span>
+                    <span class="stat-value"
+                      >{{ s1.maxCurrent.toFixed(1) }} A</span
+                    >
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Capacity</span>
+                    <span class="stat-value">2500 A</span>
+                  </div>
+                </div>
+              </div>
+
               <div class="shift-footer">
                 <div
                   class="trend-indicator"
@@ -179,6 +233,51 @@ const reactiveCalc = computed(() => {
                 </div>
               </div>
 
+              <!-- Current Load Section -->
+              <div class="current-section">
+                <div class="current-header">
+                  <span class="section-title">Current Load</span>
+                  <span class="load-value"
+                    >{{ ((s2.avgCurrent / 2500) * 100).toFixed(1) }}%</span
+                  >
+                </div>
+
+                <div class="load-bar-container">
+                  <div
+                    class="load-bar"
+                    :style="{
+                      width: `${Math.min((s2.avgCurrent / 2500) * 100, 100)}%`,
+                    }"
+                    :class="getLoadClass(s2.avgCurrent / 2500)"
+                  ></div>
+                </div>
+
+                <div class="current-details">
+                  <div class="current-stat">
+                    <span class="stat-label">Average</span>
+                    <span class="stat-value"
+                      >{{ s2.avgCurrent.toFixed(1) }} A</span
+                    >
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Min</span>
+                    <span class="stat-value"
+                      >{{ s2.minCurrent.toFixed(1) }} A</span
+                    >
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Max</span>
+                    <span class="stat-value"
+                      >{{ s2.maxCurrent.toFixed(1) }} A</span
+                    >
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Capacity</span>
+                    <span class="stat-value">2500 A</span>
+                  </div>
+                </div>
+              </div>
+
               <div class="shift-footer">
                 <div
                   class="trend-indicator"
@@ -241,6 +340,51 @@ const reactiveCalc = computed(() => {
                     <span class="value-secondary muted"
                       >{{ s3Yesterday.avgCurrent.toFixed(1) }} A</span
                     >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Current Load Section -->
+              <div class="current-section">
+                <div class="current-header">
+                  <span class="section-title">Current Load</span>
+                  <span class="load-value"
+                    >{{ ((s3.avgCurrent / 2500) * 100).toFixed(1) }}%</span
+                  >
+                </div>
+
+                <div class="load-bar-container">
+                  <div
+                    class="load-bar"
+                    :style="{
+                      width: `${Math.min((s3.avgCurrent / 2500) * 100, 100)}%`,
+                    }"
+                    :class="getLoadClass(s3.avgCurrent / 2500)"
+                  ></div>
+                </div>
+
+                <div class="current-details">
+                  <div class="current-stat">
+                    <span class="stat-label">Average</span>
+                    <span class="stat-value"
+                      >{{ s3.avgCurrent.toFixed(1) }} A</span
+                    >
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Min</span>
+                    <span class="stat-value"
+                      >{{ s3.minCurrent.toFixed(1) }} A</span
+                    >
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Max</span>
+                    <span class="stat-value"
+                      >{{ s3.maxCurrent.toFixed(1) }} A</span
+                    >
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Capacity</span>
+                    <span class="stat-value">2500 A</span>
                   </div>
                 </div>
               </div>
@@ -694,5 +838,119 @@ const reactiveCalc = computed(() => {
   .gauges-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
+}
+
+/* Current Load Section */
+.current-section {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  margin-top: 16px;
+}
+
+.current-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.load-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0ea5e9;
+}
+
+.load-bar-container {
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.load-bar {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.6s ease, background-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.load-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.load-bar.load-normal {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+}
+
+.load-bar.load-medium {
+  background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+}
+
+.load-bar.load-high {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.load-bar.load-critical {
+  background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+
+.current-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.current-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.stat-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
 }
 </style>

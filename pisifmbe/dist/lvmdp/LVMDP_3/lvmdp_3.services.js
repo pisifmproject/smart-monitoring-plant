@@ -34,6 +34,8 @@ function computeAverages(rows) {
     let sumRealPower = 0;
     let sumI = 0;
     let sumCosPhi = 0;
+    let minI = Infinity;
+    let maxI = -Infinity;
     let n = 0;
     for (const r of rows) {
         const realPower = Number(r.realPower) || 0;
@@ -42,6 +44,11 @@ function computeAverages(rows) {
         sumRealPower += realPower;
         sumI += I;
         sumCosPhi += cosPhi;
+        // Track min/max current
+        if (I > 0) {
+            minI = Math.min(minI, I);
+            maxI = Math.max(maxI, I);
+        }
         n++;
     }
     return {
@@ -49,6 +56,8 @@ function computeAverages(rows) {
         totalKwh: sumRealPower, // Sum of all real power
         avgKwh: n ? sumRealPower / n : 0, // Average of real power (kW)
         avgCurrent: n ? sumI / n : 0,
+        minCurrent: minI === Infinity ? 0 : minI,
+        maxCurrent: maxI === -Infinity ? 0 : maxI,
         avgCosPhi: n ? sumCosPhi / n : 0, // Average power factor
     };
 }
@@ -95,7 +104,8 @@ const getHourlyAveragesLVMDP3 = async (dateStr) => {
             hourlyMap.set(key, []);
         }
         hourlyMap.get(key).push(r);
-    } // Compute averages per jam
+    }
+    // Compute averages per jam
     const result = Array.from(hourlyMap.entries())
         .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
         .map(([hour, rows]) => {
@@ -105,6 +115,8 @@ const getHourlyAveragesLVMDP3 = async (dateStr) => {
             totalKwh: avg.totalKwh, // Sum of kWh for this hour
             avgKwh: avg.avgKwh, // Average kWh
             avgCurrent: avg.avgCurrent,
+            minCurrent: avg.minCurrent,
+            maxCurrent: avg.maxCurrent,
             cosPhi: avg.avgCosPhi, // Average power factor
             count: avg.count,
         };

@@ -58,16 +58,22 @@ r.get("/shift-avg", async (req, res) => {
         shift1: {
             avgPower: data.shift1.avgKwh,
             avgCurrent: data.shift1.avgCurrent,
+            minCurrent: data.shift1.minCurrent,
+            maxCurrent: data.shift1.maxCurrent,
             count: data.shift1.count,
         },
         shift2: {
             avgPower: data.shift2.avgKwh,
             avgCurrent: data.shift2.avgCurrent,
+            minCurrent: data.shift2.minCurrent,
+            maxCurrent: data.shift2.maxCurrent,
             count: data.shift2.count,
         },
         shift3: {
             avgPower: data.shift3.avgKwh,
             avgCurrent: data.shift3.avgCurrent,
+            minCurrent: data.shift3.minCurrent,
+            maxCurrent: data.shift3.maxCurrent,
             count: data.shift3.count,
         },
     };

@@ -277,6 +277,8 @@ router.get("/hourly/:date", async (req, res) => {
       totalKwh: h.totalKwh || 0,
       avgKwh: h.avgKwh || 0,
       avgCurrent: h.avgCurrent || 0,
+      minCurrent: h.minCurrent || 0,
+      maxCurrent: h.maxCurrent || 0,
       cosPhi: h.avgCosPhi || 0,
     }));
 

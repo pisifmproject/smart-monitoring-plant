@@ -74,6 +74,8 @@ export const saveShiftReport = async (
       [`shift${shiftNumber}Count`]: shiftData.count,
       [`shift${shiftNumber}AvgKwh`]: shiftData.avgKwh,
       [`shift${shiftNumber}AvgCurrent`]: shiftData.avgCurrent,
+      [`shift${shiftNumber}MinCurrent`]: shiftData.minCurrent,
+      [`shift${shiftNumber}MaxCurrent`]: shiftData.maxCurrent,
       [`shift${shiftNumber}AvgCosPhi`]: shiftData.avgCosPhi,
       updatedAt: now,
     };
@@ -96,6 +98,8 @@ export const saveShiftReport = async (
       reportData[`shift${i}Count`] = 0;
       reportData[`shift${i}AvgKwh`] = 0;
       reportData[`shift${i}AvgCurrent`] = 0;
+      reportData[`shift${i}MinCurrent`] = 0;
+      reportData[`shift${i}MaxCurrent`] = 0;
       reportData[`shift${i}AvgCosPhi`] = 0;
     }
 
@@ -103,6 +107,8 @@ export const saveShiftReport = async (
     reportData[`shift${shiftNumber}Count`] = shiftData.count;
     reportData[`shift${shiftNumber}AvgKwh`] = shiftData.avgKwh;
     reportData[`shift${shiftNumber}AvgCurrent`] = shiftData.avgCurrent;
+    reportData[`shift${shiftNumber}MinCurrent`] = shiftData.minCurrent;
+    reportData[`shift${shiftNumber}MaxCurrent`] = shiftData.maxCurrent;
     reportData[`shift${shiftNumber}AvgCosPhi`] = shiftData.avgCosPhi;
 
     return await saveDailyReport(reportData);
