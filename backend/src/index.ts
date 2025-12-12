@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 
 import { authRouter } from './modules/auth/auth.routes';
 import { plantRouter } from './modules/plants/plants.routes';
@@ -23,6 +24,7 @@ const port = process.env.PORT || 4000;
 // Security Middleware
 app.use(helmet()); // Secure HTTP headers
 app.use(cors());   // Allow CORS (configure strictly in production)
+app.use(compression()); // Gzip compression
 
 // Rate Limiting
 const limiter = rateLimit({
