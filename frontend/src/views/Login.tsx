@@ -49,10 +49,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             return;
         }
 
-        // Simulate network delay for better UX feel
-        setTimeout(() => {
-            const authenticatedUser = authLogin(username, password);
-
+        // Call authLogin async
+        authLogin(username, password).then(authenticatedUser => {
             if (authenticatedUser) {
                 onLogin(authenticatedUser);
                 navigate('/app');
@@ -60,7 +58,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 setError('Invalid credentials provided. Please contact your system administrator.');
                 setIsLoading(false);
             }
-        }, 800);
+        });
     };
 
     return (

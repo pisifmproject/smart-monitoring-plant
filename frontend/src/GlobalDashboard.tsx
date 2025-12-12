@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole, User } from './types';
 import { Card, MetricCard, StatusBadge, formatNumber } from './components/SharedComponents';
@@ -16,6 +16,35 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ user }) => {
     const navigate = useNavigate();
     const [period, setPeriod] = useState<Period>('DAY');
 
+    const [kpis, setKpis] = useState<any>({ totalOutput: 0, totalEnergy: 0, avgOEE: 0, totalAlarmsValue: 0 });
+    const [plants, setPlants] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let mounted = true;
+        const fetchData = async () => {
+            if (!user) return;
+            setLoading(true);
+            try {
+                const [kpisData, plantsData] = await Promise.all([
+                    dashboardService.getGlobalKPIs(period, user),
+                    dashboardService.getPlantOverview(period)
+                ]);
+
+                if (mounted) {
+                    setKpis(kpisData);
+                    setPlants(plantsData);
+                }
+            } catch (err) {
+                console.error("Dashboard data fetch failed", err);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+        fetchData();
+        return () => { mounted = false; };
+    }, [period, user]);
+
     if (!user) {
         return (
             <div className="w-full h-full flex items-center justify-center p-20">
@@ -24,17 +53,23 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ user }) => {
         );
     }
 
+    if (loading) {
+         return (
+            <div className="w-full h-full flex items-center justify-center p-20">
+                <Loader2 size={32} className="text-blue-500 animate-spin" />
+                <span className="ml-2 text-slate-400">Loading Dashboard...</span>
+            </div>
+        );
+    }
+
     const { role: userRole } = user;
 
-    const kpis = useMemo(() => dashboardService.getGlobalKPIs(period, user), [period, user]);
-    const plants = useMemo(() => dashboardService.getPlantOverview(period), [period]);
-
-    const plantsToShow = useMemo(() => {
+    const plantsToShow = (() => {
         if (user.role === UserRole.ADMINISTRATOR || !user.plantAccess || user.plantAccess.length === 0) {
             return plants;
         }
         return plants.filter(p => user.plantAccess?.includes(p.id));
-    }, [plants, user]);
+    })();
 
     const canDrillDown = true;
 

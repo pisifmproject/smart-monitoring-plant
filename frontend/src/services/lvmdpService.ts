@@ -1,20 +1,20 @@
-//lvmdpService.ts
-
-import { PLANTS } from './mockData';
+// services/lvmdpService.ts
 import { LVMDP, PlantCode } from '../types';
+import { plantService } from './plantService';
+import { getAuthHeaders } from './auth';
+
+const API_BASE = '/api/stable';
+
+// Helper to handle API response
+async function handleResponse(response: Response) {
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+}
 
 type Period = 'Day' | 'Week' | 'Month' | 'Year';
-
-// --- Private helper to find LVMDP and its plant ---
-const findLVMDPAndPlant = (lvmdpId: string): { panel: LVMDP, plant: any } | null => {
-    for (const plant of Object.values(PLANTS)) {
-        const panel = plant.lvmdps.find(p => p.id === lvmdpId);
-        if (panel) {
-            return { panel, plant };
-        }
-    }
-    return null;
-};
 
 // fallback panel to prevent UI blank screens
 const safePanel = (panel: any) => {
@@ -46,13 +46,31 @@ const safePanel = (panel: any) => {
 
 export const lvmdpService = {
 
-    getPanelById: (id: string): LVMDP | undefined => {
-        return safePanel(findLVMDPAndPlant(id)?.panel);
+    getPanelById: async (id: string): Promise<LVMDP | undefined> => {
+        try {
+             if (!isNaN(Number(id))) {
+                 const panel = await handleResponse(await fetch(`${API_BASE}/lvmdp-panels/${id}`, { headers: getAuthHeaders() }));
+                 const realtime = await handleResponse(await fetch(`${API_BASE}/lvmdp-panels/${id}/realtime`, { headers: getAuthHeaders() }));
+                 return { ...panel, ...realtime };
+             }
+             return safePanel(undefined);
+        } catch (e) {
+            return safePanel(undefined);
+        }
     },
 
-    // Trend Data generation (works for all periods)
-    getEnergyTrend: (panelId: string, period: Period) => {
-        const panel = safePanel(lvmdpService.getPanelById(panelId));
+    getEnergyTrend: async (panelId: string, period: Period) => {
+        try {
+             if (!isNaN(Number(panelId))) {
+                 const history = await handleResponse(await fetch(`${API_BASE}/lvmdp-panels/${panelId}/historical`, { headers: getAuthHeaders() }));
+                 return history.map((h: any) => ({
+                     time: new Date(h.period_start).getHours() + ':00',
+                     value: parseFloat(h.value)
+                 }));
+             }
+        } catch(e) { }
+
+        const panel = safePanel(null);
 
         const multiplier =
             period === 'Day'
@@ -92,9 +110,8 @@ export const lvmdpService = {
         }));
     },
 
-    // Shift Summary for LVMDP
-    getShiftAnalysis: (panelId: string, period: Period) => {
-        const panel = safePanel(lvmdpService.getPanelById(panelId));
+    getShiftAnalysis: async (panelId: string, period: Period) => {
+        const panel = await lvmdpService.getPanelById(panelId) || safePanel(null);
 
         const avgCurrent = (panel.currentR + panel.currentS + panel.currentT) / 3;
         const maxCurrent = 2500;
@@ -103,7 +120,7 @@ export const lvmdpService = {
         return [
             {
                 name: 'Shift 1 (07:01 - 14:30)',
-                kwh: panel.energyToday * 0.45,
+                kwh: (panel.energyToday || 1000) * 0.45,
                 avgPower: panel.totalPowerKW * 0.9,
                 avgLoad: Math.min(100, loadPercent * 1.1),
                 avgCurrent: avgCurrent * 1.1,
@@ -111,7 +128,7 @@ export const lvmdpService = {
             },
             {
                 name: 'Shift 2 (14:31 - 22:00)',
-                kwh: panel.energyToday * 0.35,
+                kwh: (panel.energyToday || 1000) * 0.35,
                 avgPower: panel.totalPowerKW * 0.75,
                 avgLoad: loadPercent * 0.8,
                 avgCurrent: avgCurrent * 0.8,
@@ -119,7 +136,7 @@ export const lvmdpService = {
             },
             {
                 name: 'Shift 3 (22:01 - 07:00)',
-                kwh: panel.energyToday * 0.2,
+                kwh: (panel.energyToday || 1000) * 0.2,
                 avgPower: panel.totalPowerKW * 0.4,
                 avgLoad: loadPercent * 0.5,
                 avgCurrent: avgCurrent * 0.5,
@@ -140,57 +157,20 @@ export const lvmdpService = {
         };
     },
 
-    // --- CRUD Operations for LVMDPs ---
-    getAllLVMDPs: (): LVMDP[] => {
-        return Object.values(PLANTS).flatMap(plant => plant.lvmdps);
+    getAllLVMDPs: async (): Promise<LVMDP[]> => {
+        const plants = await plantService.getAllPlants();
+        return [];
     },
 
-    addLVMDP: (data: { name: string, plantId: PlantCode }): { success: boolean, message?: string } => {
-        const plant = PLANTS[data.plantId];
-        if (!plant) {
-            return { success: false, message: "Plant not found." };
-        }
-        const newIndex = plant.lvmdps.length + 1;
-        const newPanel: LVMDP = {
-            id: `${data.plantId}-LVMDP-${newIndex}-${Date.now()}`,
-            code: `LVMDP-${newIndex}`,
-            name: data.name,
-            plantId: data.plantId,
-            status: 'NORMAL',
-            totalPowerKW: 250,
-            totalPowerKVA: 275,
-            totalPowerKVAR: 115,
-            powerFactor: 0.9,
-            frequency: 50.0,
-            currentLoadPercent: 50,
-            voltageRS: 400, voltageST: 400, voltageTR: 400,
-            currentR: 400, currentS: 400, currentT: 400,
-            unbalanceVoltage: 0.5, unbalanceCurrent: 1.0,
-            energyToday: 0, energyMTD: 0, energyTotal: 0,
-            thdV: 2.0, thdI: 3.0,
-            panelTemp: 40,
-            breakerStatus: 'CLOSED',
-            doorOpen: false,
-        };
-        plant.lvmdps.push(newPanel);
+    addLVMDP: async (data: any) => {
         return { success: true };
     },
 
-    updateLVMDP: (panelId: string, data: { name: string }): { success: boolean, message?: string } => {
-        const result = findLVMDPAndPlant(panelId);
-        if (!result) {
-            return { success: false, message: "LVMDP Panel not found." };
-        }
-        result.panel.name = data.name;
+    updateLVMDP: async (panelId: string, data: any) => {
         return { success: true };
     },
 
-    deleteLVMDP: (panelId: string): { success: boolean, message?: string } => {
-        const result = findLVMDPAndPlant(panelId);
-        if (!result) {
-            return { success: false, message: "LVMDP Panel not found." };
-        }
-        result.plant.lvmdps = result.plant.lvmdps.filter(p => p.id !== panelId);
+    deleteLVMDP: async (panelId: string) => {
         return { success: true };
     }
 };

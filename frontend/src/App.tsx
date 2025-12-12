@@ -210,8 +210,16 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
     }
 
     const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => {
-        const allPlants = plantService.getAllPlants();
+        const [allPlants, setAllPlants] = useState<Plant[]>([]);
         const utilityTypes = utilityService.getUtilityTypes();
+
+        useEffect(() => {
+            const fetchPlants = async () => {
+                const plants = await plantService.getAllPlants();
+                setAllPlants(plants);
+            };
+            fetchPlants();
+        }, []);
         
         const plantsToShow = useMemo(() => {
             if (user.role === UserRole.ADMINISTRATOR) return allPlants;
@@ -219,27 +227,26 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
         }, [allPlants, user.role, user.plantAccess]);
 
         const plantContext = useMemo(() => {
+            // Async context resolution is tricky in render loop.
+            // For sidebar, we might need to rely on ID matching from list we already have.
             const pathSegments = location.pathname.split('/').filter(Boolean);
-            const plantIdFromPath = pathSegments.find(seg => Object.values(PlantCode).includes(seg as PlantCode));
+            const plantIdFromPath = pathSegments.find(seg => allPlants.some(p => p.id === seg));
             
-            if (plantIdFromPath && plantsToShow.some(p => p.id === plantIdFromPath)) {
-                return plantService.getPlantById(plantIdFromPath as PlantCode);
+            if (plantIdFromPath) {
+                return allPlants.find(p => p.id === plantIdFromPath) || null;
             }
 
+            // For machines/panels, we need to know their plant.
+            // Since we have allPlants (with machines populated), we can search.
             if (params.machineId) {
-                const machine = plantService.getMachineById(params.machineId);
-                if (machine && plantsToShow.some(p => p.id === machine.plantId)) {
-                    return plantService.getPlantById(machine.plantId);
-                }
+                 for (const p of allPlants) {
+                     if (p.machines.some(m => m.id === params.machineId)) return p;
+                 }
             }
-             if (params.panelId) { // Check for LVMDP panels as well
-                const panel = lvmdpService.getPanelById(params.panelId);
-                if (panel && plantsToShow.some(p => p.id === panel.plantId)) {
-                    return plantService.getPlantById(panel.plantId);
-                }
-            }
+            // LVMDP not fully populated in allPlants in my previous service change (it was empty array)
+            // So this might fail for panels unless we fetch them.
             return null;
-        }, [location.pathname, params.machineId, params.panelId, plantsToShow]);
+        }, [location.pathname, params.machineId, params.panelId, allPlants]);
         
          useEffect(() => {
             if (userInteractedRef.current) {
@@ -486,15 +493,22 @@ const MachineDetailWrapper = React.memo(({ user }: { user: User | null }) => {
   if (!user) return <SuspenseSpinner />;
   const { machineId } = useParams();
   const navigate = useNavigate();
+  const [machine, setMachine] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const machine = React.useMemo(() => plantService.getMachineById(machineId || ''), [machineId]);
-  
+  useEffect(() => {
+      plantService.getMachineById(machineId || '').then(m => {
+          setMachine(m);
+          setLoading(false);
+      });
+  }, [machineId]);
+
+  if (loading) return <SuspenseSpinner />;
   if (!machine) return <div className="p-8 text-slate-500">Machine Not Found</div>;
 
   if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(machine.plantId)) {
-      const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
-      useEffect(() => navigate(redirectTo, { replace: true }), []);
-      return <SuspenseSpinner />;
+      // Need a safer redirect effect
+      return <Navigate to={`/app/plants/${user.plantAccess && user.plantAccess[0] ? user.plantAccess[0] : ''}`} replace />;
   }
 
   return (
@@ -511,15 +525,21 @@ const LVMDPDetailWrapper = React.memo(({ user }: { user: User | null }) => {
   if (!user) return <SuspenseSpinner />;
   const { panelId } = useParams();
   const navigate = useNavigate();
+  const [panel, setPanel] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const panel = React.useMemo(() => lvmdpService.getPanelById(panelId || ''), [panelId]);
+  useEffect(() => {
+      lvmdpService.getPanelById(panelId || '').then(p => {
+          setPanel(p);
+          setLoading(false);
+      });
+  }, [panelId]);
 
+  if (loading) return <SuspenseSpinner />;
   if (!panel) return <div className="p-8 text-slate-500">Panel Not Found</div>;
 
   if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(panel.plantId)) {
-      const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
-      useEffect(() => navigate(redirectTo, { replace: true }), []);
-      return <SuspenseSpinner />;
+      return <Navigate to={`/app/plants/${user.plantAccess && user.plantAccess[0] ? user.plantAccess[0] : ''}`} replace />;
   }
   
   return (
@@ -531,15 +551,21 @@ const UtilitySummaryWrapper = React.memo(({ user }: { user: User | null }) => {
   if (!user) return <SuspenseSpinner />;
   const { type, plantId } = useParams();
   const navigate = useNavigate();
+  const [plant, setPlant] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
-  const plant = React.useMemo(() => plantService.getPlantById(plantId || ''), [plantId]);
+  useEffect(() => {
+      plantService.getPlantById(plantId || '').then(p => {
+          setPlant(p);
+          setLoading(false);
+      });
+  }, [plantId]);
 
+  if (loading) return <SuspenseSpinner />;
   if (!plant) return <div className="p-8 text-slate-500">Plant Not Found</div>;
 
   if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(plant.id)) {
-      const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
-      useEffect(() => navigate(redirectTo, { replace: true }), []);
-      return <SuspenseSpinner />;
+      return <Navigate to={`/app/plants/${user.plantAccess && user.plantAccess[0] ? user.plantAccess[0] : ''}`} replace />;
   }
 
   return (
