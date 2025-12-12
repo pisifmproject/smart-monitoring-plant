@@ -1,27 +1,9 @@
-import express, { Request, Response } from 'express';
-import { db } from '../../config/database';
-import { visibilityDataItems, visibilityRules } from '../../db/schema';
+import express from 'express';
+import { visibilityController } from './visibility.controller';
 
 const router = express.Router();
 
-router.get('/visibility/items', async (req: Request, res: Response) => {
-    try {
-        const result = await db.select().from(visibilityDataItems);
-        res.json(result);
-    } catch (err) {
-        console.error('DB Error:', err);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-router.get('/visibility/rules', async (req: Request, res: Response) => {
-    try {
-        const result = await db.select().from(visibilityRules);
-        res.json(result);
-    } catch (err) {
-        console.error('DB Error:', err);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
+router.get('/visibility/items', visibilityController.getItems);
+router.get('/visibility/rules', visibilityController.getRules);
 
 export { router as visibilityRouter };
