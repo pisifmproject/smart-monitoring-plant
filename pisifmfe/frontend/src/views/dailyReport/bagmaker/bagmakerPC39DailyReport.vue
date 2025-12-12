@@ -466,7 +466,7 @@ onUnmounted(() => {
 .report-container {
   max-width: 1200px;
   margin: 0 auto;
-  background: white;
+  background: #1e293b; border: 1px solid #334155;
   border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
   overflow: hidden;
@@ -575,7 +575,7 @@ onUnmounted(() => {
 }
 
 .download-button:hover {
-  background: white;
+  background: #1e293b; border: 1px solid #334155;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
@@ -593,7 +593,7 @@ onUnmounted(() => {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: white;
+  background: #1e293b; border: 1px solid #334155;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   overflow: hidden;
@@ -619,7 +619,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: white;
+  background: #1e293b; border: 1px solid #334155;
   border: none;
   color: #374151;
   font-weight: 500;
@@ -845,3 +845,4 @@ onUnmounted(() => {
   }
 }
 </style>
+

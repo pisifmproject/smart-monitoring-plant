@@ -711,7 +711,7 @@ onUnmounted(() => {
 <style scoped>
 .report-wrapper {
   width: 100%;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #0f172a;
   min-height: 100vh;
   padding: 24px 16px;
 }
@@ -719,7 +719,8 @@ onUnmounted(() => {
 .report-container {
   max-width: 1200px;
   margin: 0 auto;
-  background: white;
+  background: #1e293b;
+  border: 1px solid #334155;
   border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
   overflow: hidden;
@@ -727,7 +728,7 @@ onUnmounted(() => {
 
 /* Header Section */
 .header-section {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   padding: 32px 24px;
   color: white;
 }
@@ -853,7 +854,8 @@ onUnmounted(() => {
   position: absolute;
   top: 100%;
   right: 0;
-  background: white;
+  background: #1e293b;
+  border: 1px solid #334155;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   margin-top: 8px;
@@ -871,7 +873,7 @@ onUnmounted(() => {
   padding: 12px 16px;
   background: none;
   border: none;
-  color: #1e293b;
+  color: #f1f5f9;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -880,12 +882,12 @@ onUnmounted(() => {
 }
 
 .dropdown-item:hover {
-  background: #f1f5f9;
+  background: #334155;
   color: #0ea5e9;
 }
 
 .dropdown-item:first-child {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #334155;
 }
 
 .dropdown-item .icon {
@@ -902,8 +904,8 @@ onUnmounted(() => {
 /* Tabs */
 .tabs-header {
   display: flex;
-  border-bottom: 2px solid #e2e8f0;
-  background: #f8fafc;
+  border-bottom: 2px solid #334155;
+  background: #0f172a;
 }
 
 .tab-button {
@@ -913,7 +915,7 @@ onUnmounted(() => {
   border: none;
   font-size: 1rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -974,7 +976,7 @@ onUnmounted(() => {
   text-align: center;
   padding: 40px 24px;
   font-size: 1rem;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .error {
@@ -989,9 +991,9 @@ onUnmounted(() => {
   padding: 60px 24px;
   color: #94a3b8;
   font-size: 1.05rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #0f172a;
   border-radius: 16px;
-  border: 2px dashed #cbd5e1;
+  border: 2px dashed #334155;
 }
 
 /* Tables */
@@ -999,10 +1001,10 @@ onUnmounted(() => {
 .hourly-table-wrapper {
   overflow-x: auto;
   overflow-y: hidden;
-  background: white;
+  background: #1e293b;
+  border: 1px solid #334155;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
   transition: box-shadow 0.3s ease;
 }
 
@@ -1050,15 +1052,15 @@ onUnmounted(() => {
 
 .shift-row,
 .hourly-row {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #334155;
   transition: background 0.2s ease, border-left 0.2s ease, box-shadow 0.2s ease;
-  background: white;
+  background: #1e293b;
   border-left: 4px solid transparent;
 }
 
 .shift-row:hover,
 .hourly-row:hover {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  background: linear-gradient(135deg, #1e3a4f 0%, #1e4559 100%);
   box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
   border-left: 4px solid #0ea5e9;
 }
@@ -1071,7 +1073,7 @@ onUnmounted(() => {
 .shift-table td,
 .hourly-table td {
   padding: 16px 20px;
-  color: #1e293b;
+  color: #f1f5f9;
   font-size: 1rem;
   text-align: center;
   transition: all 0.2s ease;
@@ -1113,9 +1115,9 @@ onUnmounted(() => {
 .shift-name,
 .time {
   font-weight: 700;
-  color: #1e293b;
+  color: #f1f5f9;
   font-size: 1.05rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   padding: 12px 16px !important;
   border-radius: 8px;
 }
@@ -1130,8 +1132,8 @@ onUnmounted(() => {
 /* Cache Info */
 .cache-info {
   padding: 12px 24px;
-  background: #eff6ff;
-  border-top: 1px solid #e2e8f0;
+  background: #0f172a;
+  border-top: 1px solid #334155;
   text-align: center;
 }
 
@@ -1152,7 +1154,7 @@ onUnmounted(() => {
 .table-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #f1f5f9;
   margin: 0 0 16px 0;
   padding: 0 4px;
 }

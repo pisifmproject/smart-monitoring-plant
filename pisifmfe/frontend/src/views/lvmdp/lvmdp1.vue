@@ -497,9 +497,9 @@ function getLoadClass(loadRatio: number): string {
 
 .lvmdp-wrapper {
   min-height: 100vh;
-  background-color: #f1f5f9;
+  background-color: #0f172a;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  color: #1e293b;
+  color: #e2e8f0;
 }
 
 .lvmdp-container {
@@ -511,10 +511,11 @@ function getLoadClass(loadRatio: number): string {
 
 /* Header Styling */
 .header-section {
-  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   padding: 1.5rem 2rem;
   color: white;
-  box-shadow: 0 4px 20px rgba(2, 132, 199, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
   flex-shrink: 0;
   z-index: 10;
 }
@@ -629,13 +630,13 @@ function getLoadClass(loadRatio: number): string {
 .section-title {
   font-size: 1.75rem;
   font-weight: 750;
-  color: #0f172a;
+  color: #f1f5f9;
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .section-subtitle {
-  color: #64748b;
+  color: #94a3b8;
   margin: 0.25rem 0 0;
   font-size: 0.95rem;
 }
@@ -648,20 +649,18 @@ function getLoadClass(loadRatio: number): string {
 }
 
 .shift-card {
-  background: white;
+  background: #1e293b;
   border-radius: 1.25rem;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
-    0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  border: 1px solid #334155;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .shift-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08),
-    0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  border-color: #bae6fd;
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.3);
+  border-color: #3b82f6;
 }
 
 .shift-header {
@@ -674,7 +673,7 @@ function getLoadClass(loadRatio: number): string {
 .shift-badge {
   width: 3rem;
   height: 3rem;
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
   border-radius: 0.75rem;
   display: flex;
@@ -682,19 +681,19 @@ function getLoadClass(loadRatio: number): string {
   justify-content: center;
   font-size: 1.5rem;
   font-weight: 800;
-  box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
 .shift-details h3 {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f1f5f9;
 }
 
 .shift-details span {
   font-size: 0.875rem;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 500;
 }
 
@@ -713,7 +712,7 @@ function getLoadClass(loadRatio: number): string {
 .metric-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -726,14 +725,14 @@ function getLoadClass(loadRatio: number): string {
   display: block;
   font-size: 1.65rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #e2e8f0;
   line-height: 0.5;
 }
 
 .value-primary small {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .value-secondary {
@@ -793,11 +792,11 @@ function getLoadClass(loadRatio: number): string {
 }
 
 .gauge-card {
-  background: white;
+  background: #1e293b;
   border-radius: 1.25rem;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  border: 1px solid #334155;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -807,7 +806,7 @@ function getLoadClass(loadRatio: number): string {
 
 .gauge-card:hover {
   transform: translateY(-4px);
-  border-color: #bae6fd;
+  border-color: #3b82f6;
 }
 
 /* Responsive Adjustments */
@@ -842,10 +841,10 @@ function getLoadClass(loadRatio: number): string {
 
 /* Current Load Section */
 .current-section {
-  background: #f8fafc;
+  background: #1e293b;
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #334155;
   margin-top: 16px;
 }
 
@@ -859,7 +858,7 @@ function getLoadClass(loadRatio: number): string {
 .section-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #475569;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -867,16 +866,17 @@ function getLoadClass(loadRatio: number): string {
 .load-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0ea5e9;
+  color: #60a5fa;
 }
 
 .load-bar-container {
   height: 12px;
-  background: #e2e8f0;
+  background: #0f172a;
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 16px;
   position: relative;
+  border: 1px solid #334155;
 }
 
 .load-bar {
@@ -942,7 +942,7 @@ function getLoadClass(loadRatio: number): string {
 
 .stat-label {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -951,6 +951,6 @@ function getLoadClass(loadRatio: number): string {
 .stat-value {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #e2e8f0;
 }
 </style>

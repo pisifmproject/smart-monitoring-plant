@@ -341,9 +341,9 @@ onMounted(() => {
 
 .production-wrapper {
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: #0f172a;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  color: #1e293b;
+  color: #e2e8f0;
 }
 
 .production-container {
@@ -355,10 +355,10 @@ onMounted(() => {
 
 /* Header */
 .header-section {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   padding: 1.5rem 2rem;
   color: white;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
   flex-shrink: 0;
   z-index: 10;
 }
@@ -453,7 +453,7 @@ onMounted(() => {
 .section-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f1f5f9;
   margin-bottom: 1.5rem;
 }
 
@@ -465,19 +465,21 @@ onMounted(() => {
 }
 
 .metric-card {
-  background: white;
+  background: #1e293b;
   border-radius: 1.25rem;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  border: 1px solid #334155;
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  transition: transform 0.2s;
+  transition: all 0.2s;
 }
 
 .metric-card:hover {
   transform: translateY(-4px);
+  border-color: #3b82f6;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
 }
 
 .metric-icon {
@@ -488,24 +490,24 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 1.75rem;
-  background: #f1f5f9;
+  background: #334155;
 }
 
 .metric-card.primary .metric-icon {
-  background: #e0e7ff;
-  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.2);
+  color: #818cf8;
 }
 .metric-card.success .metric-icon {
-  background: #dcfce7;
-  color: #16a34a;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
 }
 .metric-card.danger .metric-icon {
-  background: #fee2e2;
-  color: #dc2626;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
 }
 .metric-card.info .metric-icon {
-  background: #e0f2fe;
-  color: #0284c7;
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
 }
 
 .metric-content {
@@ -516,13 +518,13 @@ onMounted(() => {
 .metric-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .metric-value {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #e2e8f0;
   line-height: 1.2;
 }
 
@@ -540,11 +542,11 @@ onMounted(() => {
 }
 
 .oee-card {
-  background: white;
+  background: #1e293b;
   border-radius: 1.25rem;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  border: 1px solid #334155;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -569,7 +571,7 @@ onMounted(() => {
 
 .circle-bg {
   fill: none;
-  stroke: #f1f5f9;
+  stroke: #334155;
   stroke-width: 2.5;
 }
 
@@ -577,7 +579,7 @@ onMounted(() => {
   fill: none;
   stroke-width: 2.5;
   stroke-linecap: round;
-  stroke: #4f46e5;
+  stroke: #3b82f6;
   animation: progress 1s ease-out forwards;
 }
 
@@ -585,12 +587,12 @@ onMounted(() => {
   position: absolute;
   font-size: 1.5rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #e2e8f0;
 }
 
 .oee-label {
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 /* Power Grid */
@@ -601,10 +603,10 @@ onMounted(() => {
 }
 
 .power-card {
-  background: white;
+  background: #1e293b;
   border-radius: 1rem;
   padding: 1.25rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #334155;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -634,14 +636,14 @@ onMounted(() => {
 .power-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   text-transform: uppercase;
 }
 
 .power-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #e2e8f0;
 }
 
 .power-unit {
@@ -657,18 +659,18 @@ onMounted(() => {
 }
 
 .shift-summary-card {
-  background: white;
+  background: #1e293b;
   border-radius: 1rem;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #334155;
 }
 
 .shift-summary-header {
-  background: #f8fafc;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   padding: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #334155;
   font-weight: 700;
-  color: #0f172a;
+  color: #f1f5f9;
   text-align: center;
 }
 
@@ -680,7 +682,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #334155;
   font-size: 0.9rem;
 }
 

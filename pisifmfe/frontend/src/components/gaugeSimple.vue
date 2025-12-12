@@ -56,7 +56,7 @@ function setOption() {
               width: 20,
               color: [
                 [pct.value, barColor.value],
-                [1, "#e5e7eb"],
+                [1, "#334155"],
               ],
             },
           },
@@ -66,7 +66,7 @@ function setOption() {
           axisLabel: {
             show: true,
             distance: 6,
-            color: "#9ca3af",
+            color: "#94a3b8",
             fontSize: 10,
             formatter: (val: number) =>
               val === props.min || val === props.max ? String(val) : "",
@@ -79,10 +79,10 @@ function setOption() {
               v: {
                 fontSize: 32,
                 fontWeight: 700,
-                color: "#111827",
+                color: "#f1f5f9",
                 lineHeight: 34,
               },
-              u: { fontSize: 12, color: "#9ca3af", lineHeight: 16 },
+              u: { fontSize: 12, color: "#94a3b8", lineHeight: 16 },
             },
             formatter: () => {
               const formatted = props.title
@@ -145,7 +145,7 @@ watch(() => [props.value, props.min, props.max], setOption);
   margin-top: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #475569;
+  color: #e2e8f0;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   text-align: center;

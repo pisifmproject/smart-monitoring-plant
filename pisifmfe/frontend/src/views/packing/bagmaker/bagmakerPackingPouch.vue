@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import ReportButton from "@/components/reportButton.vue";
 
@@ -99,10 +99,10 @@ onMounted(() => {
       <div class="header-section">
         <div class="header-content">
           <div class="header-left">
-            <div class="icon-circle">📦</div>
+            <div class="icon-circle">??</div>
             <div>
               <h1 class="page-title">BagMaker Production</h1>
-              <p class="page-subtitle">Line I • Real-time Monitoring</p>
+              <p class="page-subtitle">Line I � Real-time Monitoring</p>
             </div>
           </div>
           <div class="status-badge" :class="status">
@@ -124,13 +124,13 @@ onMounted(() => {
         <!-- Key Metrics Dashboard -->
         <div class="metrics-dashboard">
           <h2 class="section-heading">
-            <span class="heading-icon">📈</span>
+            <span class="heading-icon">??</span>
             Production Overview
           </h2>
           <div class="metrics-grid-2x2">
             <div class="metric-card-large primary">
               <div class="card-header">
-                <div class="metric-icon-large">🎯</div>
+                <div class="metric-icon-large">??</div>
                 <div class="metric-label">Target Production</div>
               </div>
               <div class="card-body">
@@ -143,7 +143,7 @@ onMounted(() => {
 
             <div class="metric-card-large success">
               <div class="card-header">
-                <div class="metric-icon-large">✓</div>
+                <div class="metric-icon-large">?</div>
                 <div class="metric-label">Actual Production</div>
               </div>
               <div class="card-body">
@@ -156,7 +156,7 @@ onMounted(() => {
 
             <div class="metric-card-large accent">
               <div class="card-header">
-                <div class="metric-icon-large">⚡</div>
+                <div class="metric-icon-large">?</div>
                 <div class="metric-label">Total Efficiency</div>
               </div>
               <div class="card-body">
@@ -174,7 +174,7 @@ onMounted(() => {
 
             <div class="metric-card-large info">
               <div class="card-header">
-                <div class="metric-icon-large">🚀</div>
+                <div class="metric-icon-large">??</div>
                 <div class="metric-label">Current Speed</div>
               </div>
               <div class="card-body">
@@ -190,13 +190,13 @@ onMounted(() => {
         <!-- Efficiency Analysis -->
         <div class="efficiency-dashboard">
           <h2 class="section-heading">
-            <span class="heading-icon">⚙️</span>
+            <span class="heading-icon">??</span>
             Efficiency Analysis
           </h2>
           <div class="efficiency-cards">
             <div class="efficiency-item">
               <div class="efficiency-label">
-                <span class="label-icon">⚖️</span>
+                <span class="label-icon">??</span>
                 <span>Weigher Efficiency</span>
               </div>
               <div class="efficiency-display">
@@ -218,7 +218,7 @@ onMounted(() => {
 
             <div class="efficiency-item">
               <div class="efficiency-label">
-                <span class="label-icon">📦</span>
+                <span class="label-icon">??</span>
                 <span>BagMaker Efficiency</span>
               </div>
               <div class="efficiency-display">
@@ -243,14 +243,14 @@ onMounted(() => {
         <!-- Quality Control Panel -->
         <div class="quality-dashboard">
           <h2 class="section-heading">
-            <span class="heading-icon">🎯</span>
+            <span class="heading-icon">??</span>
             Quality Control & Detection
           </h2>
 
           <!-- Good vs Bad Bags -->
           <div class="quality-summary">
             <div class="quality-stat good-stat">
-              <div class="stat-icon">✅</div>
+              <div class="stat-icon">?</div>
               <div class="stat-content">
                 <div class="stat-value">
                   {{ bagmakerData.goodBags.toLocaleString() }}
@@ -272,7 +272,7 @@ onMounted(() => {
             </div>
 
             <div class="quality-stat bad-stat">
-              <div class="stat-icon">❌</div>
+              <div class="stat-icon">?</div>
               <div class="stat-content">
                 <div class="stat-value">
                   {{ bagmakerData.notGoodBags.toLocaleString() }}
@@ -297,21 +297,21 @@ onMounted(() => {
           <!-- Detection Systems -->
           <div class="detection-grid">
             <div class="detection-card">
-              <div class="detection-icon">🔍</div>
+              <div class="detection-icon">??</div>
               <div class="detection-label">Metal Detector</div>
               <div class="detection-value">{{ bagmakerData.metalDetect }}</div>
               <div class="detection-status">detections</div>
             </div>
 
             <div class="detection-card">
-              <div class="detection-icon">🖨️</div>
+              <div class="detection-icon">???</div>
               <div class="detection-label">Printer Errors</div>
               <div class="detection-value">{{ bagmakerData.printerError }}</div>
               <div class="detection-status">errors</div>
             </div>
 
             <div class="detection-card">
-              <div class="detection-icon">🔒</div>
+              <div class="detection-icon">??</div>
               <div class="detection-label">Seal Issues</div>
               <div class="detection-value">
                 {{ bagmakerData.productInSeal }}
@@ -320,7 +320,7 @@ onMounted(() => {
             </div>
 
             <div class="detection-card">
-              <div class="detection-icon">🔗</div>
+              <div class="detection-icon">??</div>
               <div class="detection-label">Splice Detected</div>
               <div class="detection-value">{{ bagmakerData.spliceDetect }}</div>
               <div class="detection-status">splices</div>
@@ -331,12 +331,12 @@ onMounted(() => {
         <!-- Waste Management -->
         <div class="waste-dashboard">
           <h2 class="section-heading">
-            <span class="heading-icon">♻️</span>
+            <span class="heading-icon">??</span>
             Waste Management
           </h2>
           <div class="waste-monitor">
             <div class="waste-header">
-              <div class="waste-icon-large">🗑️</div>
+              <div class="waste-icon-large">???</div>
               <div class="waste-info">
                 <div class="waste-title">Film Waste Percentage</div>
                 <div class="waste-percentage">
@@ -354,12 +354,12 @@ onMounted(() => {
                 }"
               >
                 <span v-if="bagmakerData.wastedFilmPercentage < 2"
-                  >✓ Excellent</span
+                  >? Excellent</span
                 >
                 <span v-else-if="bagmakerData.wastedFilmPercentage < 5"
-                  >⚠ Acceptable</span
+                  >? Acceptable</span
                 >
-                <span v-else>✕ High</span>
+                <span v-else>? High</span>
               </div>
             </div>
             <div class="waste-bar-wrapper">
@@ -409,7 +409,7 @@ onMounted(() => {
         <!-- Shift Performance -->
         <div class="shift-dashboard">
           <h2 class="section-heading">
-            <span class="heading-icon">🕐</span>
+            <span class="heading-icon">??</span>
             Shift Performance
           </h2>
           <div class="shift-cards">
@@ -452,12 +452,12 @@ onMounted(() => {
             Loading data...
           </div>
           <div v-else-if="!hasData" class="status-message waiting">
-            <span class="icon">📡</span>
+            <span class="icon">??</span>
             Waiting for data from API
           </div>
           <div v-else class="status-message connected">
-            <span class="icon">✅</span>
-            Connected to API • Auto-refresh: 30s
+            <span class="icon">?</span>
+            Connected to API � Auto-refresh: 30s
           </div>
         </div>
       </div>
@@ -472,7 +472,7 @@ onMounted(() => {
 
 .bagmaker-wrapper {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0f172a;
   padding: 0;
   width: 100%;
   overflow-x: hidden;
@@ -481,16 +481,16 @@ onMounted(() => {
 .bagmaker-container {
   max-width: 1600px;
   margin: 0 auto;
-  background: #f8f9fc;
+  background: #0f172a;
   width: 100%;
   overflow-x: hidden;
 }
 
 /* Header */
 .header-section {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   padding: 32px 40px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   width: 100%;
   box-sizing: border-box;
 }
@@ -524,14 +524,14 @@ onMounted(() => {
 .page-title {
   font-size: 2rem;
   font-weight: 800;
-  color: white;
+  color: #f1f5f9;
   margin: 0;
   letter-spacing: -0.5px;
 }
 
 .page-subtitle {
   font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #94a3b8;
   margin: 4px 0 0 0;
   font-weight: 500;
 }
@@ -558,13 +558,13 @@ onMounted(() => {
 
 .status-badge.running {
   background: rgba(16, 185, 129, 0.95);
-  color: white;
+  color: #f1f5f9;
   animation: pulse-status 2s ease-in-out infinite;
 }
 
 .status-badge.offline {
   background: rgba(148, 163, 184, 0.95);
-  color: white;
+  color: #f1f5f9;
 }
 
 @keyframes pulse-status {
@@ -598,10 +598,10 @@ onMounted(() => {
   gap: 12px;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #e2e8f0;
   margin: 0 0 24px 0;
   padding-bottom: 12px;
-  border-bottom: 3px solid #e2e8f0;
+  border-bottom: 3px solid #334155;
 }
 
 .heading-icon {
@@ -621,12 +621,12 @@ onMounted(() => {
 }
 
 .metric-card-large {
-  background: white;
+  background: #1e293b;
   border-radius: 14px;
   padding: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid transparent;
+  border: 2px solid #334155;
   box-sizing: border-box;
   min-width: 0;
   min-height: 120px;
@@ -636,27 +636,27 @@ onMounted(() => {
 
 .metric-card-large:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
 .metric-card-large.primary {
-  border-color: #8b5cf6;
-  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border-color: #334155;
+  background: #1e293b;
 }
 
 .metric-card-large.success {
-  border-color: #10b981;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #334155;
+  background: #1e293b;
 }
 
 .metric-card-large.accent {
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #334155;
+  background: #1e293b;
 }
 
 .metric-card-large.info {
-  border-color: #06b6d4;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #334155;
+  background: #1e293b;
 }
 
 .card-header {
@@ -682,7 +682,7 @@ onMounted(() => {
 .metric-label {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #475569;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -690,24 +690,24 @@ onMounted(() => {
 .metric-value-large {
   font-size: 2.125rem;
   font-weight: 800;
-  color: #1e293b;
+  color: #e2e8f0;
   line-height: 1;
   margin-bottom: 5px;
 }
 
 .metric-unit-large {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 600;
 }
 
 .metric-progress-large {
   margin-top: 10px;
   height: 8px;
-  background: #e2e8f0;
+  background: #334155;
   border-radius: 4px;
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .progress-fill-large {
@@ -729,10 +729,10 @@ onMounted(() => {
 }
 
 .efficiency-item {
-  background: white;
+  background: #1e293b;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .efficiency-label {
@@ -741,7 +741,7 @@ onMounted(() => {
   gap: 10px;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #334155;
+  color: #94a3b8;
   margin-bottom: 16px;
 }
 
@@ -758,14 +758,14 @@ onMounted(() => {
 .efficiency-number {
   font-size: 2.25rem;
   font-weight: 800;
-  color: #1e293b;
+  color: #e2e8f0;
   min-width: 110px;
 }
 
 .efficiency-bar-container {
   flex: 1;
   height: 32px;
-  background: #e2e8f0;
+  background: #334155;
   border-radius: 16px;
   overflow: hidden;
   position: relative;
@@ -791,7 +791,7 @@ onMounted(() => {
 }
 
 .bar-label {
-  color: white;
+  color: #f1f5f9;
   font-weight: 700;
   font-size: 0.875rem;
 }
@@ -810,13 +810,13 @@ onMounted(() => {
 }
 
 .quality-stat {
-  background: white;
+  background: #1e293b;
   border-radius: 16px;
   padding: 24px;
   display: flex;
   align-items: center;
   gap: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   border-left: 5px solid;
   box-sizing: border-box;
   min-width: 0;
@@ -824,12 +824,12 @@ onMounted(() => {
 
 .good-stat {
   border-left-color: #10b981;
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  background: #1e293b;
 }
 
 .bad-stat {
   border-left-color: #ef4444;
-  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+  background: #1e293b;
 }
 
 .stat-icon {
@@ -843,7 +843,7 @@ onMounted(() => {
 .stat-value {
   font-size: 2.25rem;
   font-weight: 800;
-  color: #1e293b;
+  color: #e2e8f0;
   line-height: 1;
   margin-bottom: 6px;
 }
@@ -851,7 +851,7 @@ onMounted(() => {
 .stat-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   margin-bottom: 6px;
 }
 
@@ -877,21 +877,21 @@ onMounted(() => {
 }
 
 .detection-card {
-  background: white;
+  background: #1e293b;
   border-radius: 12px;
   padding: 20px;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   box-sizing: border-box;
   min-width: 0;
   transition: all 0.3s ease;
-  border: 2px solid #f1f5f9;
+  border: 2px solid #334155;
 }
 
 .detection-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: #e2e8f0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  border-color: #3b82f6;
 }
 
 .detection-icon {
@@ -902,14 +902,14 @@ onMounted(() => {
 .detection-label {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   margin-bottom: 10px;
 }
 
 .detection-value {
   font-size: 1.875rem;
   font-weight: 800;
-  color: #1e293b;
+  color: #e2e8f0;
   margin-bottom: 4px;
 }
 
@@ -925,10 +925,10 @@ onMounted(() => {
 }
 
 .waste-monitor {
-  background: white;
+  background: #1e293b;
   border-radius: 16px;
   padding: 28px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .waste-header {
@@ -952,14 +952,14 @@ onMounted(() => {
 .waste-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   margin-bottom: 6px;
 }
 
 .waste-percentage {
   font-size: 2.75rem;
   font-weight: 800;
-  color: #1e293b;
+  color: #e2e8f0;
   line-height: 1;
 }
 
@@ -973,17 +973,17 @@ onMounted(() => {
 
 .waste-badge.excellent {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  color: #f1f5f9;
 }
 
 .waste-badge.acceptable {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
+  color: #f1f5f9;
 }
 
 .waste-badge.high {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
+  color: #f1f5f9;
 }
 
 .waste-bar-wrapper {
@@ -1001,7 +1001,7 @@ onMounted(() => {
   overflow: visible;
   margin-bottom: 32px;
   position: relative;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .waste-bar-fill {
@@ -1078,17 +1078,17 @@ onMounted(() => {
 
 .marker-excellent .marker-value {
   background: #10b981;
-  color: white;
+  color: #f1f5f9;
 }
 
 .marker-acceptable .marker-value {
   background: #f59e0b;
-  color: white;
+  color: #f1f5f9;
 }
 
 .marker-high .marker-value {
   background: #ef4444;
-  color: white;
+  color: #f1f5f9;
 }
 
 .waste-indicators {
@@ -1122,21 +1122,21 @@ onMounted(() => {
 }
 
 .shift-item {
-  background: white;
+  background: #1e293b;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   transition: all 0.3s ease;
 }
 
 .shift-item:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .shift-badge {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-  color: white;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #f1f5f9;
   padding: 16px 24px;
   font-weight: 700;
   font-size: 1rem;
@@ -1163,13 +1163,13 @@ onMounted(() => {
 .shift-key {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .shift-val {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #e2e8f0;
 }
 
 .shift-val.primary {
@@ -1188,9 +1188,9 @@ onMounted(() => {
 .status-footer {
   margin-top: 40px;
   padding: 20px 32px;
-  background: white;
+  background: #1e293b;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .status-message {
@@ -1203,7 +1203,7 @@ onMounted(() => {
 }
 
 .status-message.loading {
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .status-message.waiting {

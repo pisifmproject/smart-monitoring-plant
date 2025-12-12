@@ -458,10 +458,35 @@ const downloadReport = async (type: "day" | "week" | "month") => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 15;
+
+  // Colors
+  const primaryColor = [30, 58, 138]; // Dark Blue
+  const secondaryColor = [59, 130, 246]; // Blue
+  const accentColor = [245, 158, 11]; // Amber/Orange for warnings
+  const lightBg = [248, 250, 252]; // Slate 50
+  const textColor = [51, 65, 85]; // Slate 700
+
+  // Helper to center text
+  const centerText = (
+    text: string,
+    y: number,
+    size: number,
+    font: string = "helvetica",
+    style: string = "normal",
+    color: number[] = textColor
+  ) => {
+    doc.setFontSize(size);
+    doc.setFont(font, style);
+    doc.setTextColor(color[0], color[1], color[2]);
+    doc.text(text, pageWidth / 2, y, { align: "center" });
+  };
 
   // Load logo
   const logoUrl = "/logo2.png";
   let logoData = "";
+  let logoRatio = 1;
+
   try {
     const response = await fetch(logoUrl);
     const blob = await response.blob();
@@ -470,222 +495,184 @@ const downloadReport = async (type: "day" | "week" | "month") => {
       reader.onloadend = () => resolve(reader.result as string);
       reader.readAsDataURL(blob);
     });
+
+    // Get dimensions to maintain aspect ratio
+    if (logoData) {
+      const img = new Image();
+      img.src = logoData;
+      await new Promise((resolve) => {
+        img.onload = resolve;
+      });
+      logoRatio = img.width / img.height;
+    }
   } catch (e) {
     console.error("Failed to load logo:", e);
   }
 
-  // Helper function to add header to each page
-  const addHeader = (pageNum: number, totalPages: number) => {
-    // White/light header background
-    doc.setFillColor(245, 247, 250); // Light gray
-    doc.rect(0, 0, pageWidth, 50, "F");
+  let yPos = 15;
 
-    // Bottom accent line
-    doc.setFillColor(59, 130, 246); // Blue accent
-    doc.rect(0, 50, pageWidth, 3, "F");
+  // 1. Header Section
+  // Add logo if available
+  if (logoData) {
+    const maxLogoWidth = 140; //60 //90
+    const maxLogoHeight = 60; //30 //40
 
-    // Logo (bigger size)
-    if (logoData) {
-      try {
-        doc.addImage(logoData, "PNG", 15, 10, 30, 30);
-      } catch (e) {
-        console.error("Failed to add logo:", e);
-      }
+    let logoWidth = maxLogoWidth;
+    let logoHeight = logoWidth / logoRatio;
+
+    if (logoHeight > maxLogoHeight) {
+      logoHeight = maxLogoHeight;
+      logoWidth = logoHeight * logoRatio;
     }
 
-    // Company name and title
-    doc.setTextColor(24, 44, 97); // Dark blue text
-    doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.text("Smart Monitoring Plant", 52, 18);
-
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(59, 130, 246);
-    doc.text("Power Distribution Report System", 52, 26);
-
-    doc.setFontSize(9);
-    doc.setTextColor(100, 116, 139);
-    doc.text("Integrated Factory Management", 52, 33);
-
-    // Page number
-    doc.setFontSize(9);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`Page ${pageNum} of ${totalPages}`, pageWidth - 15, 45, {
-      align: "right",
-    });
-  };
-
-  // Helper function to add footer
-  const addFooter = (pageNum: number) => {
-    const footerY = pageHeight - 15;
-
-    // Footer line
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
-    doc.line(15, footerY - 5, pageWidth - 15, footerY - 5);
-
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(
-      "This is a computer-generated report from Smart Monitoring Plant",
-      pageWidth / 2,
-      footerY,
-      { align: "center" }
-    );
-
-    doc.setTextColor(150, 150, 150);
-    doc.text(
-      `Generated: ${new Date().toLocaleString("id-ID")}`,
-      15,
-      footerY + 5
-    );
-  };
-
-  // Date range banner
-  const today = new Date();
-
-  // Calculate total pages first
-  let totalPages = 1; // Executive summary page
-  if (type === "week") totalPages += 7;
-  if (type === "month") {
-    // Only count pages up to today
-    const daysToShow = today.getDate();
-    totalPages += Math.ceil(daysToShow / 7); // ~1-5 pages depending on current date
-  }
-
-  // PAGE 1: EXECUTIVE SUMMARY
-  addHeader(1, totalPages);
-
-  let dateRange = "";
-  if (type === "day") {
-    dateRange = today.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-  } else if (type === "week") {
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - 6);
-    dateRange = `${weekStart.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "short",
-    })} - ${today.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })}`;
+    const logoX = (pageWidth - logoWidth) / 2;
+    doc.addImage(logoData, "PNG", logoX, yPos, logoWidth, logoHeight);
+    yPos += logoHeight + 8;
   } else {
-    dateRange = today.toLocaleDateString("id-ID", {
-      month: "long",
-      year: "numeric",
-    });
+    yPos += 10;
   }
 
-  // Info banner
-  doc.setFillColor(240, 245, 255);
-  doc.roundedRect(15, 60, pageWidth - 30, 18, 3, 3, "F");
-  doc.setDrawColor(59, 130, 246);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(15, 60, pageWidth - 30, 18, 3, 3, "S");
-
-  doc.setTextColor(24, 44, 97);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("Report Period:", 20, 67);
-  doc.setFont("helvetica", "normal");
-  doc.text(dateRange, 50, 67);
-
-  doc.setFont("helvetica", "bold");
-  doc.text("Report Type:", 20, 74);
-  doc.setFont("helvetica", "normal");
-  const reportType =
-    type === "day" ? "Daily" : type === "week" ? "Weekly" : "Monthly";
-  doc.text(reportType, 50, 74);
-
-  // Reset text color for body
-  doc.setTextColor(0, 0, 0);
-
-  // Summary Section
-  let yPos = 86;
-  doc.setFontSize(13);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(24, 44, 97);
-  doc.text("EXECUTIVE SUMMARY", 15, yPos);
-
-  // Underline
-  doc.setDrawColor(59, 130, 246);
-  doc.setLineWidth(2);
-  doc.line(15, yPos + 2, 85, yPos + 2);
-
+  // Title
+  centerText(
+    "POWER DISTRIBUTION DASHBOARD",
+    yPos,
+    16,
+    "helvetica",
+    "bold",
+    primaryColor
+  );
   yPos += 8;
-
-  // Key metrics in boxes
-  const boxWidth = (pageWidth - 45) / 3;
-  const boxHeight = 25;
-  const boxY = yPos;
-
-  // Box 1: Total Load
-  doc.setFillColor(30, 58, 138);
-  doc.roundedRect(15, boxY, boxWidth, boxHeight, 3, 3, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text("Total Load", 15 + boxWidth / 2, boxY + 8, { align: "center" });
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text(
-    `${summaryData.value.totalKVA.toFixed(2)}`,
-    15 + boxWidth / 2,
-    boxY + 16,
-    { align: "center" }
+  centerText(
+    "Executive Summary Report",
+    yPos,
+    12,
+    "helvetica",
+    "normal",
+    secondaryColor
   );
-  doc.setFontSize(10);
-  doc.text("kVA", 15 + boxWidth / 2, boxY + 21, { align: "center" });
+  yPos += 15;
 
-  // Box 2: Load Percentage
-  const loadColor =
-    summaryData.value.loadPercentage >= 85
-      ? [220, 38, 38]
-      : summaryData.value.loadPercentage >= 70
-      ? [245, 158, 11]
-      : [5, 150, 105];
-  doc.setFillColor(loadColor[0], loadColor[1], loadColor[2]);
-  doc.roundedRect(15 + boxWidth + 7.5, boxY, boxWidth, boxHeight, 3, 3, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text("Utilization", 15 + boxWidth + 7.5 + boxWidth / 2, boxY + 8, {
-    align: "center",
+  // 2. Report Info Bar
+  doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
+  doc.setDrawColor(226, 232, 240);
+  doc.roundedRect(margin, yPos, pageWidth - margin * 2, 20, 2, 2, "FD");
+
+  const today = new Date();
+  const reportDate = today.toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
-  doc.setFontSize(16);
+
+  doc.setFontSize(10);
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.setFont("helvetica", "bold");
+  doc.text("Report Generated:", margin + 5, yPos + 8);
+  doc.text("Period:", margin + 5, yPos + 15);
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+  doc.text(reportDate, margin + 45, yPos + 8);
+
+  let periodText = "";
+  if (type === "day") periodText = "Daily Report";
+  else if (type === "week") periodText = "Weekly Report";
+  else periodText = "Monthly Report";
+
+  doc.text(periodText, margin + 45, yPos + 15);
+
+  // Right side of info bar (Summary Stats)
+  const rightColX = pageWidth / 2 + 10;
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  doc.text("Total Load:", rightColX, yPos + 8);
+  doc.text("Status:", rightColX, yPos + 15);
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(textColor[0], textColor[1], textColor[2]);
   doc.text(
-    `${summaryData.value.loadPercentage.toFixed(1)}%`,
-    15 + boxWidth + 7.5 + boxWidth / 2,
-    boxY + 16,
-    { align: "center" }
+    `${summaryData.value.totalKVA.toFixed(2)} kVA`,
+    rightColX + 30,
+    yPos + 8
   );
-  doc.setFontSize(9);
-  const statusText =
+
+  const status =
     summaryData.value.loadPercentage >= 85
       ? "CRITICAL"
       : summaryData.value.loadPercentage >= 70
       ? "WARNING"
       : "NORMAL";
-  doc.text(statusText, 15 + boxWidth + 7.5 + boxWidth / 2, boxY + 21, {
+  const statusColor =
+    summaryData.value.loadPercentage >= 85
+      ? [220, 38, 38]
+      : summaryData.value.loadPercentage >= 70
+      ? [245, 158, 11]
+      : [22, 163, 74];
+
+  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.setFont("helvetica", "bold");
+  doc.text(status, rightColX + 30, yPos + 15);
+
+  yPos += 30;
+
+  // 3. Key Metrics Cards (Visual representation)
+  const cardWidth = (pageWidth - margin * 2 - 10) / 3;
+  const cardHeight = 25;
+
+  // Card 1: Load
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  doc.roundedRect(margin, yPos, cardWidth, cardHeight, 2, 2, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.text("Current Load", margin + cardWidth / 2, yPos + 8, {
     align: "center",
   });
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text(
+    `${summaryData.value.totalKVA.toFixed(2)} kVA`,
+    margin + cardWidth / 2,
+    yPos + 18,
+    { align: "center" }
+  );
 
-  // Box 3: Capacity
-  doc.setFillColor(59, 130, 246);
+  // Card 2: Utilization
+  doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
   doc.roundedRect(
-    15 + (boxWidth + 7.5) * 2,
-    boxY,
-    boxWidth,
-    boxHeight,
-    3,
-    3,
+    margin + cardWidth + 5,
+    yPos,
+    cardWidth,
+    cardHeight,
+    2,
+    2,
+    "F"
+  );
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text("Utilization", margin + cardWidth + 5 + cardWidth / 2, yPos + 8, {
+    align: "center",
+  });
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text(
+    `${summaryData.value.loadPercentage.toFixed(1)}%`,
+    margin + cardWidth + 5 + cardWidth / 2,
+    yPos + 18,
+    { align: "center" }
+  );
+
+  // Card 3: Capacity
+  doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+  doc.roundedRect(
+    margin + (cardWidth + 5) * 2,
+    yPos,
+    cardWidth,
+    cardHeight,
+    2,
+    2,
     "F"
   );
   doc.setTextColor(255, 255, 255);
@@ -693,468 +680,114 @@ const downloadReport = async (type: "day" | "week" | "month") => {
   doc.setFont("helvetica", "normal");
   doc.text(
     "Installed Capacity",
-    15 + (boxWidth + 7.5) * 2 + boxWidth / 2,
-    boxY + 8,
+    margin + (cardWidth + 5) * 2 + cardWidth / 2,
+    yPos + 8,
     { align: "center" }
   );
-  doc.setFontSize(16);
+  doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text(
-    `${summaryData.value.installedCapacity}`,
-    15 + (boxWidth + 7.5) * 2 + boxWidth / 2,
-    boxY + 16,
+    `${summaryData.value.installedCapacity} kVA`,
+    margin + (cardWidth + 5) * 2 + cardWidth / 2,
+    yPos + 18,
     { align: "center" }
   );
-  doc.setFontSize(10);
-  doc.text("kVA", 15 + (boxWidth + 7.5) * 2 + boxWidth / 2, boxY + 21, {
-    align: "center",
-  });
 
-  yPos = boxY + boxHeight + 12;
+  yPos += cardHeight + 15;
 
-  // Additional metrics table
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(11);
+  // 4. Panel Details Table
+  doc.setFontSize(12);
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.setFont("helvetica", "bold");
-  doc.text("Load Statistics", 15, yPos);
+  doc.text("Panel Distribution Details", margin, yPos);
+  doc.setDrawColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+  doc.setLineWidth(0.5);
+  doc.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
+  yPos += 8;
 
-  yPos += 5;
-
-  const statsData = [
-    ["Minimum Load", `${minLoad.value} kVA`],
-    ["Maximum Load", `${maxLoad.value} kVA`],
-    ["Average Load", `${summaryData.value.totalKVA.toFixed(2)} kVA`],
-    [
-      "Available Capacity",
-      `${(
-        summaryData.value.installedCapacity - summaryData.value.totalKVA
-      ).toFixed(2)} kVA`,
-    ],
-  ];
-
-  autoTable(doc, {
-    startY: yPos,
-    head: [["Metric", "Value"]],
-    body: statsData,
-    theme: "grid",
-    headStyles: {
-      fillColor: [59, 130, 246],
-      textColor: [255, 255, 255],
-      fontStyle: "bold",
-      fontSize: 10,
-    },
-    styles: {
-      fontSize: 9,
-      cellPadding: 4,
-    },
-    columnStyles: {
-      0: { fontStyle: "bold", cellWidth: 90 },
-      1: { cellWidth: 90, halign: "right" },
-    },
-    margin: { left: 15, right: 15 },
-  });
-
-  // Panel Details
-  yPos = (doc as any).lastAutoTable.finalY + 12;
-  doc.setFontSize(13);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(24, 44, 97);
-  doc.text("PANEL DETAILS", 15, yPos);
-
-  doc.setDrawColor(30, 58, 138);
-  doc.setLineWidth(2);
-  doc.line(15, yPos + 2, 65, yPos + 2);
-
-  yPos += 5;
-
-  const panelData = summaryData.value.panels.map((panel) => [
+  const tableData = summaryData.value.panels.map((panel) => [
     panel.name,
+    panel.status === "online" ? "Online" : "Offline",
     `${panel.kva.toFixed(2)}`,
     `${panel.realPower.toFixed(2)}`,
     `${panel.voltage.toFixed(2)}`,
     `${panel.current.toFixed(2)}`,
     panel.cosPhi.toFixed(3),
-    panel.status === "online" ? "✓ Online" : "✗ Offline",
   ]);
 
   autoTable(doc, {
     startY: yPos,
     head: [
       [
-        "Panel",
-        "KVA",
-        "Power\n(kW)",
-        "Voltage\n(V)",
-        "Current\n(A)",
-        "Power\nFactor",
+        "Panel Name",
         "Status",
+        "Load (kVA)",
+        "Power (kW)",
+        "Voltage (V)",
+        "Current (A)",
+        "PF",
       ],
     ],
-    body: panelData,
-    theme: "striped",
+    body: tableData,
+    theme: "grid",
     headStyles: {
-      fillColor: [59, 130, 246],
-      textColor: [255, 255, 255],
+      fillColor: primaryColor as [number, number, number],
+      textColor: 255,
       fontStyle: "bold",
-      fontSize: 9,
-      halign: "center",
-    },
-    styles: {
-      fontSize: 8,
-      cellPadding: 3,
       halign: "center",
     },
     columnStyles: {
-      0: { fontStyle: "bold", halign: "left", cellWidth: 35 },
-      1: { cellWidth: 22 },
-      2: { cellWidth: 22 },
-      3: { cellWidth: 22 },
-      4: { cellWidth: 22 },
-      5: { cellWidth: 22 },
-      6: { cellWidth: 25 },
+      0: { halign: "left", fontStyle: "bold" },
+      1: { halign: "center" },
+      2: { halign: "right" },
+      3: { halign: "right" },
+      4: { halign: "right" },
+      5: { halign: "right" },
+      6: { halign: "center" },
     },
-    margin: { left: 15, right: 15 },
+    styles: {
+      fontSize: 9,
+      cellPadding: 4,
+    },
+    alternateRowStyles: {
+      fillColor: [241, 245, 249],
+    },
+    didParseCell: function (data) {
+      if (data.section === "body" && data.column.index === 1) {
+        const status = data.cell.raw;
+        if (status === "Online") {
+          data.cell.styles.textColor = [22, 163, 74]; // Green
+        } else {
+          data.cell.styles.textColor = [220, 38, 38]; // Red
+        }
+      }
+    },
   });
 
-  addFooter(1);
-
-  // ADDITIONAL PAGES FOR WEEK/MONTH
-  if (type === "week") {
-    // Add 7 pages for daily breakdown (last 7 days INCLUDING today)
-    for (let dayOffset = 6; dayOffset >= 0; dayOffset--) {
-      const currentDate = new Date(today);
-      currentDate.setDate(today.getDate() - dayOffset);
-
-      // Skip future dates (should not happen but just in case)
-      if (currentDate > today) continue;
-
-      const pageNum = 8 - dayOffset; // Pages 2-8
-
-      doc.addPage();
-      addHeader(pageNum, totalPages);
-
-      yPos = 63;
-
-      // Date header
-      doc.setFillColor(59, 130, 246);
-      doc.rect(15, yPos, pageWidth - 30, 20, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      const dayName = currentDate.toLocaleDateString("id-ID", {
-        weekday: "long",
-      });
-      const dateStr = currentDate.toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      });
-      doc.text(`${dayName}, ${dateStr}`, pageWidth / 2, yPos + 13, {
-        align: "center",
-      });
-
-      yPos += 28;
-
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text("Daily Load Summary", 15, yPos);
-
-      yPos += 8;
-
-      // Simulated daily data (in real app, fetch from API)
-      const dailyData = [
-        [
-          "06:00 - 12:00",
-          `${(summaryData.value.totalKVA * 0.85).toFixed(2)} kVA`,
-          "Normal",
-        ],
-        [
-          "12:00 - 18:00",
-          `${(summaryData.value.totalKVA * 1.05).toFixed(2)} kVA`,
-          "Normal",
-        ],
-        [
-          "18:00 - 00:00",
-          `${(summaryData.value.totalKVA * 0.75).toFixed(2)} kVA`,
-          "Normal",
-        ],
-        [
-          "00:00 - 06:00",
-          `${(summaryData.value.totalKVA * 0.55).toFixed(2)} kVA`,
-          "Normal",
-        ],
-      ];
-
-      autoTable(doc, {
-        startY: yPos,
-        head: [["Time Period", "Average Load", "Status"]],
-        body: dailyData,
-        theme: "grid",
-        headStyles: {
-          fillColor: [59, 130, 246],
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-          fontSize: 10,
-        },
-        styles: {
-          fontSize: 9,
-          cellPadding: 5,
-        },
-        columnStyles: {
-          0: { fontStyle: "bold", cellWidth: 60 },
-          1: { cellWidth: 60, halign: "right" },
-          2: { cellWidth: 50, halign: "center" },
-        },
-        margin: { left: 15, right: 15 },
-      });
-
-      yPos = (doc as any).lastAutoTable.finalY + 12;
-
-      // Panel-wise breakdown
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text("Panel Breakdown", 15, yPos);
-
-      yPos += 5;
-
-      const dailyPanelData = summaryData.value.panels.map((panel, idx) => [
-        panel.name,
-        `${(panel.kva * (0.9 + Math.random() * 0.2)).toFixed(2)} kVA`,
-        `${(panel.realPower * (0.9 + Math.random() * 0.2)).toFixed(2)} kW`,
-        `${(panel.voltage * (0.98 + Math.random() * 0.04)).toFixed(2)} V`,
-        `${(panel.current * (0.9 + Math.random() * 0.2)).toFixed(2)} A`,
-        (panel.cosPhi * (0.95 + Math.random() * 0.05)).toFixed(3),
-      ]);
-
-      autoTable(doc, {
-        startY: yPos,
-        head: [
-          [
-            "Panel",
-            "Avg KVA",
-            "Avg Power",
-            "Avg Voltage",
-            "Avg Current",
-            "Avg PF",
-          ],
-        ],
-        body: dailyPanelData,
-        theme: "striped",
-        headStyles: {
-          fillColor: [59, 130, 246],
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-          fontSize: 9,
-        },
-        styles: {
-          fontSize: 8,
-          cellPadding: 4,
-        },
-        columnStyles: {
-          0: { fontStyle: "bold", cellWidth: 35 },
-          1: { cellWidth: 28, halign: "right" },
-          2: { cellWidth: 28, halign: "right" },
-          3: { cellWidth: 28, halign: "right" },
-          4: { cellWidth: 28, halign: "right" },
-          5: { cellWidth: 23, halign: "center" },
-        },
-        margin: { left: 15, right: 15 },
-      });
-
-      addFooter(pageNum);
-    }
-  } else if (type === "month") {
-    // Add pages for monthly daily breakdown (grouped by week)
-    const daysInMonth = new Date(
-      today.getFullYear(),
-      today.getMonth() + 1,
-      0
-    ).getDate();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-
-    let currentPage = 2;
-    let currentWeek = [];
-
-    // Only loop until today's date in the current month
-    const lastDayToShow = today.getDate();
-
-    for (let day = 1; day <= lastDayToShow; day++) {
-      const currentDate = new Date(today.getFullYear(), today.getMonth(), day);
-      currentWeek.push(currentDate);
-
-      // Add page every 7 days or at last day
-      if (currentWeek.length === 7 || day === lastDayToShow) {
-        doc.addPage();
-        addHeader(currentPage, totalPages);
-
-        yPos = 63;
-
-        // Week header
-        const weekStart = currentWeek[0];
-        const weekEnd = currentWeek[currentWeek.length - 1];
-
-        doc.setFillColor(59, 130, 246);
-        doc.rect(15, yPos, pageWidth - 30, 18, "F");
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(13);
-        doc.setFont("helvetica", "bold");
-        doc.text(
-          `Week ${Math.ceil(day / 7)}: ${weekStart.toLocaleDateString("id-ID", {
-            day: "2-digit",
-            month: "short",
-          })} - ${weekEnd.toLocaleDateString("id-ID", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })}`,
-          pageWidth / 2,
-          yPos + 11,
-          { align: "center" }
-        );
-
-        yPos += 26;
-
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text("Daily Summary", 15, yPos);
-
-        yPos += 6;
-
-        // Daily data for the week
-        const weekData = currentWeek.map((date) => {
-          const dayName = date.toLocaleDateString("id-ID", {
-            weekday: "short",
-          });
-          const dateStr = date.toLocaleDateString("id-ID", {
-            day: "2-digit",
-            month: "short",
-          });
-          const avgLoad = (
-            summaryData.value.totalKVA *
-            (0.85 + Math.random() * 0.3)
-          ).toFixed(2);
-          const peakLoad = (
-            summaryData.value.totalKVA *
-            (1.0 + Math.random() * 0.2)
-          ).toFixed(2);
-          const minLoad = (
-            summaryData.value.totalKVA *
-            (0.5 + Math.random() * 0.3)
-          ).toFixed(2);
-          const utilization = (
-            (parseFloat(avgLoad) / summaryData.value.installedCapacity) *
-            100
-          ).toFixed(1);
-
-          return [
-            `${dayName}, ${dateStr}`,
-            avgLoad,
-            peakLoad,
-            minLoad,
-            `${utilization}%`,
-          ];
-        });
-
-        autoTable(doc, {
-          startY: yPos,
-          head: [
-            [
-              "Date",
-              "Avg Load (kVA)",
-              "Peak Load (kVA)",
-              "Min Load (kVA)",
-              "Utilization",
-            ],
-          ],
-          body: weekData,
-          theme: "grid",
-          headStyles: {
-            fillColor: [59, 130, 246],
-            textColor: [255, 255, 255],
-            fontStyle: "bold",
-            fontSize: 9,
-          },
-          styles: {
-            fontSize: 8,
-            cellPadding: 4,
-          },
-          columnStyles: {
-            0: { fontStyle: "bold", cellWidth: 45 },
-            1: { cellWidth: 32, halign: "right" },
-            2: { cellWidth: 32, halign: "right" },
-            3: { cellWidth: 32, halign: "right" },
-            4: { cellWidth: 29, halign: "center" },
-          },
-          margin: { left: 15, right: 15 },
-        });
-
-        yPos = (doc as any).lastAutoTable.finalY + 12;
-
-        // Panel averages for the week
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text("Weekly Panel Averages", 15, yPos);
-
-        yPos += 5;
-
-        const weekPanelData = summaryData.value.panels.map((panel) => [
-          panel.name,
-          `${(panel.kva * (0.9 + Math.random() * 0.2)).toFixed(2)}`,
-          `${(panel.realPower * (0.9 + Math.random() * 0.2)).toFixed(2)}`,
-          `${(panel.voltage * (0.98 + Math.random() * 0.04)).toFixed(2)}`,
-          `${(panel.current * (0.9 + Math.random() * 0.2)).toFixed(2)}`,
-          (panel.cosPhi * (0.95 + Math.random() * 0.05)).toFixed(3),
-        ]);
-
-        autoTable(doc, {
-          startY: yPos,
-          head: [
-            [
-              "Panel",
-              "Avg KVA",
-              "Avg Power (kW)",
-              "Avg Voltage (V)",
-              "Avg Current (A)",
-              "Avg PF",
-            ],
-          ],
-          body: weekPanelData,
-          theme: "striped",
-          headStyles: {
-            fillColor: [59, 130, 246],
-            textColor: [255, 255, 255],
-            fontStyle: "bold",
-            fontSize: 9,
-          },
-          styles: {
-            fontSize: 8,
-            cellPadding: 3,
-          },
-          columnStyles: {
-            0: { fontStyle: "bold", cellWidth: 35 },
-            1: { cellWidth: 28, halign: "right" },
-            2: { cellWidth: 28, halign: "right" },
-            3: { cellWidth: 28, halign: "right" },
-            4: { cellWidth: 28, halign: "right" },
-            5: { cellWidth: 23, halign: "center" },
-          },
-          margin: { left: 15, right: 15 },
-        });
-
-        addFooter(currentPage);
-        currentPage++;
-        currentWeek = [];
-      }
-    }
+  // Footer
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Page ${i} of ${totalPages}`,
+      pageWidth - margin,
+      pageHeight - 10,
+      { align: "right" }
+    );
+    doc.text(
+      "Smart Monitoring Plant - Power Distribution System",
+      margin,
+      pageHeight - 10
+    );
   }
 
-  // Save PDF
-  const filename = `Smart_Monitoring_Plant_${reportType}_Report_${
-    today.toISOString().split("T")[0]
-  }.pdf`;
-  doc.save(filename);
+  doc.save(
+    `Power_Distribution_Report_${type}_${new Date()
+      .toISOString()
+      .slice(0, 10)}.pdf`
+  );
 };
 
 onMounted(() => {
@@ -1174,7 +807,7 @@ onUnmounted(() => {
 /* Base */
 .summary-dashboard {
   min-height: calc(100vh - 64px);
-  background: #f5f7fa;
+  background: #0f172a;
   padding: 1.5rem;
 }
 
@@ -1221,14 +854,14 @@ onUnmounted(() => {
 .page-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: white;
+  color: #f1f5f9;
   margin: 0;
   line-height: 1.2;
 }
 
 .page-subtitle {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #94a3b8;
   margin: 0.25rem 0 0 0;
 }
 
@@ -1280,24 +913,26 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #cbd5e1;
 }
 
 /* Loading & Error */
 .loading-state,
 .error-state {
-  background: white;
+  background: #1e293b;
   border-radius: 12px;
   padding: 4rem 2rem;
   text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  border: 1px solid #334155;
+  color: #e2e8f0;
 }
 
 .spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #3b82f6;
+  border: 4px solid #334155;
+  border-top-color: #60a5fa;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
@@ -1335,6 +970,7 @@ onUnmounted(() => {
 .retry-btn:hover {
   background: #2563eb;
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
 }
 
 /* Dashboard Content */
@@ -1346,11 +982,12 @@ onUnmounted(() => {
 
 /* Report Controls */
 .report-controls {
-  background: white;
+  background: #1e293b;
   border-radius: 12px;
   padding: 1.5rem 2rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
   margin-bottom: 1.5rem;
+  border: 1px solid #334155;
 }
 
 .report-header {
@@ -1364,7 +1001,7 @@ onUnmounted(() => {
 .report-header h3 {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #f1f5f9;
   margin: 0;
   display: flex;
   align-items: center;
@@ -1382,7 +1019,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1390,13 +1027,13 @@ onUnmounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
 .report-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  box-shadow: 0 6px 12px rgba(96, 165, 250, 0.4);
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
 }
 
 .report-btn:active {
@@ -1410,10 +1047,11 @@ onUnmounted(() => {
 
 /* Load Bar Card */
 .load-bar-card {
-  background: white;
+  background: #1e293b;
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  border: 1px solid #334155;
 }
 
 .load-bar-header {
@@ -1428,7 +1066,7 @@ onUnmounted(() => {
 .load-bar-header h3 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #f1f5f9;
   margin: 0;
 }
 
@@ -1447,12 +1085,12 @@ onUnmounted(() => {
 }
 
 .stat-minmax .stat-label {
-  color: #6b7280;
+  color: #94a3b8;
   font-weight: 500;
 }
 
 .stat-minmax .stat-value {
-  color: #1f2937;
+  color: #e2e8f0;
   font-weight: 700;
 }
 
@@ -1479,10 +1117,11 @@ onUnmounted(() => {
 
 .load-bar-bg {
   height: 40px;
-  background: #f3f4f6;
+  background: #0f172a;
   border-radius: 20px;
   overflow: hidden;
   position: relative;
+  border: 1px solid #334155;
 }
 
 .load-bar-fill {
@@ -1532,12 +1171,12 @@ onUnmounted(() => {
   align-items: center;
   margin-top: 0.5rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #94a3b8;
 }
 
 .load-current {
   font-weight: 700;
-  color: #1f2937;
+  color: #e2e8f0;
 }
 
 .load-bar-info {
@@ -1545,7 +1184,7 @@ onUnmounted(() => {
   gap: 2rem;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #334155;
 }
 
 .info-item {
@@ -1553,7 +1192,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #94a3b8;
 }
 
 .info-dot {
@@ -1582,18 +1221,18 @@ onUnmounted(() => {
 }
 
 .panel-card {
-  background: white;
+  background: #1e293b;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
   transition: all 0.3s;
   cursor: pointer;
-  border: 2px solid transparent;
+  border: 2px solid #334155;
 }
 
 .panel-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.3);
   border-color: #3b82f6;
 }
 
@@ -1608,9 +1247,9 @@ onUnmounted(() => {
 }
 
 .panel-card-header {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #334155 0%, #475569 100%);
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #475569;
 }
 
 .panel-title-row {
@@ -1623,7 +1262,7 @@ onUnmounted(() => {
 .panel-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #f1f5f9;
   margin: 0;
 }
 
@@ -1640,13 +1279,13 @@ onUnmounted(() => {
 }
 
 .panel-status-badge.online {
-  background: #d1fae5;
-  color: #065f46;
+  background: #064e3b;
+  color: #86efac;
 }
 
 .panel-status-badge.offline {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #7f1d1d;
+  color: #fecaca;
 }
 
 .status-dot {
@@ -1659,9 +1298,10 @@ onUnmounted(() => {
 .panel-kva-display {
   text-align: center;
   padding: 1rem;
-  background: white;
+  background: #0f172a;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid #334155;
 }
 
 .kva-number {
@@ -1673,7 +1313,7 @@ onUnmounted(() => {
 
 .kva-text {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #94a3b8;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1695,13 +1335,15 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.75rem;
   padding: 1rem;
-  background: #f9fafb;
+  background: #0f172a;
   border-radius: 10px;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  border: 1px solid #334155;
 }
 
 .metric-item:hover {
-  background: #f3f4f6;
+  background: #1e293b;
+  border-color: #475569;
 }
 
 .metric-icon-sm {
@@ -1744,7 +1386,7 @@ onUnmounted(() => {
 .metric-label {
   display: block;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #94a3b8;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1754,13 +1396,13 @@ onUnmounted(() => {
 .metric-value {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #f1f5f9;
 }
 
 .metric-value .unit {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #6b7280;
+  color: #94a3b8;
   margin-left: 0.25rem;
 }
 
@@ -1769,9 +1411,9 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: #f9fafb;
-  border-top: 1px solid #e5e7eb;
-  color: #3b82f6;
+  background: #0f172a;
+  border-top: 1px solid #334155;
+  color: #60a5fa;
   font-size: 0.875rem;
   font-weight: 600;
 }

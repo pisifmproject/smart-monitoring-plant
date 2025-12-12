@@ -474,7 +474,7 @@ onUnmounted(() => {
 <style scoped>
 .report-wrapper {
   width: 100%;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #0f172a;
   min-height: 100vh;
   padding: 24px 16px;
 }
@@ -482,17 +482,18 @@ onUnmounted(() => {
 .report-container {
   max-width: 1200px;
   margin: 0 auto;
-  background: white;
+  background: #1e293b;
+  border: 1px solid #334155;
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   overflow: hidden;
 }
 
 /* Header Section */
 .header-section {
-  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   padding: 32px 24px;
-  color: white;
+  color: #f1f5f9;
 }
 
 .header-content {
@@ -609,9 +610,10 @@ onUnmounted(() => {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: white;
+  background: #1e293b;
+  border: 1px solid #334155;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   min-width: 180px;
   z-index: 100;
@@ -635,9 +637,9 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: white;
+  background: #1e293b;
   border: none;
-  color: #374151;
+  color: #e2e8f0;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -645,8 +647,8 @@ onUnmounted(() => {
 }
 
 .dropdown-item:hover {
-  background: #f3f4f6;
-  color: #9333ea;
+  background: #334155;
+  color: #3b82f6;
 }
 
 .dropdown-item .icon {
@@ -663,8 +665,8 @@ onUnmounted(() => {
 /* Tabs */
 .tabs-header {
   display: flex;
-  background: #f8fafc;
-  border-bottom: 2px solid #e2e8f0;
+  background: #1e293b;
+  border-bottom: 2px solid #334155;
   padding: 0 24px;
 }
 
@@ -677,7 +679,7 @@ onUnmounted(() => {
   padding: 16px 24px;
   background: transparent;
   border: none;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 600;
   font-size: 0.9375rem;
   cursor: pointer;
@@ -687,14 +689,14 @@ onUnmounted(() => {
 }
 
 .tab-button:hover {
-  color: #9333ea;
-  background: rgba(147, 51, 234, 0.05);
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .tab-button.active {
-  color: #9333ea;
-  border-bottom-color: #9333ea;
-  background: rgba(147, 51, 234, 0.08);
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
 }
 
 .tab-icon-svg {
@@ -728,7 +730,7 @@ onUnmounted(() => {
 .empty-state {
   text-align: center;
   padding: 48px 24px;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 1rem;
 }
 
@@ -741,7 +743,7 @@ onUnmounted(() => {
 .hourly-table-wrapper {
   overflow-x: auto;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #334155;
 }
 
 .shift-table,
@@ -753,7 +755,7 @@ onUnmounted(() => {
 
 .shift-table thead,
 .hourly-table thead {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
 }
 
 .shift-table th,
@@ -761,31 +763,31 @@ onUnmounted(() => {
   padding: 16px 20px;
   text-align: left;
   font-weight: 600;
-  color: #1e293b;
-  border-bottom: 2px solid #e2e8f0;
+  color: #f1f5f9;
+  border-bottom: 2px solid #334155;
   white-space: nowrap;
 }
 
 .shift-table td,
 .hourly-table td {
   padding: 14px 20px;
-  color: #475569;
-  border-bottom: 1px solid #f1f5f9;
+  color: #e2e8f0;
+  border-bottom: 1px solid #334155;
 }
 
 .shift-row:hover,
 .hourly-row:hover {
-  background: #f8fafc;
+  background: #334155;
 }
 
 .shift-name {
   font-weight: 600;
-  color: #9333ea;
+  color: #3b82f6;
 }
 
 .time {
   font-weight: 500;
-  color: #1e293b;
+  color: #f1f5f9;
 }
 
 .numeric {
@@ -801,8 +803,8 @@ onUnmounted(() => {
 /* Cache Info */
 .cache-info {
   padding: 16px 24px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: #1e293b;
+  border-top: 1px solid #334155;
 }
 
 .cache-text {
@@ -811,7 +813,7 @@ onUnmounted(() => {
   justify-content: center;
   gap: 8px;
   margin: 0;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.875rem;
 }
 

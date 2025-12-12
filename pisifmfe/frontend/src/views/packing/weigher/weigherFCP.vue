@@ -202,7 +202,7 @@ onMounted(() => {
 <style scoped>
 .weigher-wrapper {
   width: 100%;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #0f172a;
   min-height: 100vh;
   padding: 24px 16px;
 }
@@ -210,7 +210,7 @@ onMounted(() => {
 .weigher-container {
   max-width: 1400px;
   margin: 0 auto;
-  background: white;
+  background: #0f172a;
   border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
   overflow: hidden;
@@ -218,7 +218,7 @@ onMounted(() => {
 
 /* Header Section */
 .header-section {
-  background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   padding: 32px 24px;
   color: white;
 }
@@ -235,12 +235,14 @@ onMounted(() => {
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 4px 0;
+  color: #f1f5f9;
 }
 
 .page-subtitle {
   font-size: 0.95rem;
   opacity: 0.9;
   margin: 0;
+  color: #94a3b8;
 }
 
 .header-actions {
@@ -293,9 +295,10 @@ onMounted(() => {
 .report-button-container {
   padding: 24px;
   margin: 20px 24px;
-  background: #f8fafc;
+  background: #1e293b;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #334155;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
 /* Metrics Section */
@@ -307,21 +310,25 @@ onMounted(() => {
 }
 
 .metric-card {
-  background: #f8fafc;
+  background: #1e293b;
   padding: 24px;
   border-radius: 12px;
   text-align: center;
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
+  border: 1px solid #334155;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
 .metric-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-color: #3b82f6;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
 }
 
 .metric-card.highlight {
   background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
   color: white;
+  border-color: #0891b2;
 }
 
 .metric-label {
@@ -329,7 +336,7 @@ onMounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #64748b;
+  color: #94a3b8;
   margin-bottom: 12px;
 }
 
@@ -340,7 +347,7 @@ onMounted(() => {
 .metric-value {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #e2e8f0;
   margin-bottom: 8px;
 }
 
@@ -364,13 +371,13 @@ onMounted(() => {
 /* Weight Section */
 .weight-section {
   padding: 32px 24px;
-  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+  background: #0f172a;
 }
 
 .section-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #f1f5f9;
   margin-bottom: 20px;
 }
 
@@ -381,17 +388,23 @@ onMounted(() => {
 }
 
 .weight-card {
-  background: white;
+  background: #1e293b;
   padding: 24px;
   border-radius: 12px;
   text-align: center;
-  border: 2px solid #06b6d4;
+  border: 1px solid #334155;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.weight-card:hover {
+  border-color: #3b82f6;
 }
 
 .weight-label {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #0369a1;
+  color: #94a3b8;
   margin-bottom: 12px;
   text-transform: uppercase;
 }
@@ -399,7 +412,7 @@ onMounted(() => {
 .weight-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #0c4a6e;
+  color: #e2e8f0;
 }
 
 /* Shift Section */
@@ -414,15 +427,21 @@ onMounted(() => {
 }
 
 .shift-card {
-  background: white;
+  background: #1e293b;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
   overflow: hidden;
+  border: 1px solid #334155;
+  transition: all 0.2s ease;
+}
+
+.shift-card:hover {
+  border-color: #3b82f6;
 }
 
 .shift-header {
-  background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
-  color: white;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #f1f5f9;
   padding: 16px;
   font-weight: 700;
   text-align: center;
@@ -436,7 +455,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   padding: 12px 0;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #334155;
 }
 
 .shift-item:last-child {
@@ -445,12 +464,12 @@ onMounted(() => {
 
 .shift-label {
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .shift-value {
   font-weight: 700;
-  color: #1e293b;
+  color: #e2e8f0;
 }
 
 .shift-value.danger {
@@ -464,14 +483,14 @@ onMounted(() => {
 /* Note Section */
 .note-section {
   padding: 20px 24px;
-  background: #fef3c7;
-  border-top: 1px solid #fde68a;
+  background: #1e293b;
+  border-top: 1px solid #334155;
 }
 
 .note-text {
   margin: 0;
   font-size: 0.9rem;
-  color: #92400e;
+  color: #94a3b8;
   text-align: center;
 }
 

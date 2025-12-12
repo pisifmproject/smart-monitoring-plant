@@ -837,19 +837,19 @@ function calculateDifference(): {
 .utility-wrapper {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0f172a;
   padding: 0;
 }
 
 .utility-container {
   width: 100%;
-  background: #f8fafc;
+  background: #0f172a;
   min-height: 100vh;
 }
 
 /* Header */
 .header-section {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   padding: 32px 48px;
   border-bottom: 3px solid #0ea5e9;
 }
@@ -894,8 +894,9 @@ function calculateDifference(): {
 
 /* Tabs */
 .tabs-container {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-bottom: 1px solid #334155;
   padding: 0 48px;
   overflow-x: auto;
 }
@@ -914,7 +915,7 @@ function calculateDifference(): {
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -923,7 +924,7 @@ function calculateDifference(): {
 }
 
 .tab-button:hover {
-  background: #f8fafc;
+  background: #0f172a;
   color: var(--tab-color);
 }
 
@@ -952,6 +953,7 @@ function calculateDifference(): {
   display: flex;
   flex-direction: column;
   gap: 32px;
+  background: #0f172a;
 }
 
 /* Summary Grid */
@@ -962,24 +964,24 @@ function calculateDifference(): {
 }
 
 .summary-card {
-  background: white;
+  background: #1e293b;
   border-radius: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #334155;
 }
 
 .summary-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
-  border-color: #cbd5e1;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+  border-color: #334155;
 }
 
 .card-header {
   padding: 24px 28px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e8f3fc 100%);
-  border-bottom: 2px solid #e2e8f0;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-bottom: 2px solid #334155;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1006,7 +1008,7 @@ function calculateDifference(): {
 .card-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #f1f5f9;
   margin: 0;
 }
 
@@ -1081,7 +1083,7 @@ function calculateDifference(): {
 }
 
 .today-item {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
   border: 3px solid #3b82f6;
   position: relative;
   overflow: hidden;
@@ -1098,7 +1100,7 @@ function calculateDifference(): {
 }
 
 .yesterday-item {
-  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  background: linear-gradient(135deg, #9a3412 0%, #c2410c 100%);
   border: 3px solid #f97316;
   position: relative;
   overflow: hidden;
@@ -1127,7 +1129,7 @@ function calculateDifference(): {
 
 .comparison-label {
   font-size: 0.95rem;
-  color: #475569;
+  color: #e2e8f0;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1144,19 +1146,19 @@ function calculateDifference(): {
 .value-large {
   font-size: 2.5rem;
   font-weight: 900;
-  color: #0f172a;
+  color: #e2e8f0;
   line-height: 1;
 }
 
 .value-unit {
   font-size: 1.1rem;
-  color: #64748b;
+  color: #cbd5e1;
   font-weight: 700;
 }
 
 .item-footer {
   font-size: 0.85rem;
-  color: #64748b;
+  color: #cbd5e1;
   font-weight: 500;
   font-style: italic;
   margin-top: auto;
@@ -1176,8 +1178,8 @@ function calculateDifference(): {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    #cbd5e1 20%,
-    #cbd5e1 80%,
+    #334155 20%,
+    #334155 80%,
     transparent 100%
   );
   position: relative;
@@ -1191,9 +1193,9 @@ function calculateDifference(): {
   transform: translate(-50%, -50%);
   width: 12px;
   height: 12px;
-  background: #cbd5e1;
+  background: #334155;
   border-radius: 50%;
-  box-shadow: 0 0 0 4px white;
+  box-shadow: 0 0 0 4px #1e293b;
 }
 
 .difference-section {
@@ -1210,13 +1212,13 @@ function calculateDifference(): {
   border-radius: 30px;
   font-weight: 700;
   font-size: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   transition: all 0.3s ease;
 }
 
 .difference-badge:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .difference-badge.increase {
@@ -1266,13 +1268,13 @@ function calculateDifference(): {
 .metric-value {
   font-size: 3rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #e2e8f0;
   line-height: 1;
 }
 
 .metric-unit {
   font-size: 1.25rem;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 600;
 }
 
@@ -1291,28 +1293,29 @@ function calculateDifference(): {
 
 .metric-label {
   font-size: 0.95rem;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 500;
 }
 
 .metric-text {
   font-size: 1rem;
-  color: #1e293b;
+  color: #e2e8f0;
   font-weight: 600;
 }
 
 /* Chart */
 .chart-container {
-  background: white;
+  background: #1e293b;
+  border: 1px solid #334155;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   overflow: hidden;
 }
 
 .chart-header {
   padding: 24px 28px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-bottom: 1px solid #334155;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1321,7 +1324,7 @@ function calculateDifference(): {
 .chart-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #f1f5f9;
   margin: 0;
 }
 
@@ -1332,10 +1335,10 @@ function calculateDifference(): {
 
 .control-button {
   padding: 8px 16px;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: #1e293b;
+  border: 1px solid #334155;
   border-radius: 8px;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -1343,8 +1346,8 @@ function calculateDifference(): {
 }
 
 .control-button:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: #0f172a;
+  border-color: #334155;
 }
 
 .control-button.active {
@@ -1356,11 +1359,11 @@ function calculateDifference(): {
 .chart-body {
   padding: 32px;
   min-height: 450px;
-  background: #f8fafc;
+  background: #0f172a;
 }
 
 #utilityChart {
-  background: white;
+  background: #1e293b;
   border-radius: 12px;
   padding: 16px;
 }
