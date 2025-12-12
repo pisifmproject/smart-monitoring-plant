@@ -1,12 +1,14 @@
 import express, { Request, Response } from 'express';
-import { query } from '../../config/database';
+import { db } from '../../config/database';
+import { machines, alarms, downtimeLogs, packingConfigs, maintenanceRecords } from '../../db/schema';
+import { eq, desc, and } from 'drizzle-orm';
 
 const router = express.Router();
 
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const result = await query('SELECT * FROM machines ORDER BY id');
-        res.json(result.rows);
+        const result = await db.select().from(machines).orderBy(machines.id);
+        res.json(result);
     } catch (err) {
         console.error('DB Error:', err);
         res.status(500).json({ error: 'Database error' });
@@ -16,9 +18,9 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
     try {
         const id = parseInt(req.params.id);
-        const result = await query('SELECT * FROM machines WHERE id = $1', [id]);
-        if (result.rows.length > 0) {
-            res.json(result.rows[0]);
+        const result = await db.select().from(machines).where(eq(machines.id, id));
+        if (result.length > 0) {
+            res.json(result[0]);
         } else {
             res.status(404).json({ message: 'Machine not found' });
         }
@@ -31,11 +33,10 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.get('/:id/alarms', async (req: Request, res: Response) => {
     try {
         const id = parseInt(req.params.id);
-        const result = await query(
-            'SELECT * FROM alarms WHERE machine_id = $1 AND is_active = TRUE ORDER BY raised_at DESC',
-            [id]
-        );
-        res.json(result.rows);
+        const result = await db.select().from(alarms)
+            .where(and(eq(alarms.machineId, id), eq(alarms.isActive, true)))
+            .orderBy(desc(alarms.raisedAt));
+        res.json(result);
     } catch (err) {
         console.error('DB Error:', err);
         res.status(500).json({ error: 'Database error' });
@@ -45,11 +46,11 @@ router.get('/:id/alarms', async (req: Request, res: Response) => {
 router.get('/:id/downtime', async (req: Request, res: Response) => {
     try {
         const id = parseInt(req.params.id);
-        const result = await query(
-            'SELECT * FROM downtime_logs WHERE machine_id = $1 ORDER BY start_time DESC LIMIT 50',
-            [id]
-        );
-        res.json(result.rows);
+        const result = await db.select().from(downtimeLogs)
+            .where(eq(downtimeLogs.machineId, id))
+            .orderBy(desc(downtimeLogs.startTime))
+            .limit(50);
+        res.json(result);
     } catch (err) {
         console.error('DB Error:', err);
         res.status(500).json({ error: 'Database error' });
@@ -59,11 +60,10 @@ router.get('/:id/downtime', async (req: Request, res: Response) => {
 router.get('/:id/packing-config', async (req: Request, res: Response) => {
     try {
         const id = parseInt(req.params.id);
-        const result = await query(
-            'SELECT * FROM packing_configs WHERE machine_id = $1 AND is_active = TRUE LIMIT 1',
-            [id]
-        );
-        if (result.rows.length > 0) res.json(result.rows[0]);
+        const result = await db.select().from(packingConfigs)
+            .where(and(eq(packingConfigs.machineId, id), eq(packingConfigs.isActive, true)))
+            .limit(1);
+        if (result.length > 0) res.json(result[0]);
         else res.json(null);
     } catch (err) {
         console.error('DB Error:', err);
@@ -74,11 +74,10 @@ router.get('/:id/packing-config', async (req: Request, res: Response) => {
 router.get('/:id/maintenance-records', async (req: Request, res: Response) => {
     try {
         const id = parseInt(req.params.id);
-        const result = await query(
-            'SELECT * FROM maintenance_records WHERE machine_id = $1 ORDER BY started_at DESC',
-            [id]
-        );
-        res.json(result.rows);
+        const result = await db.select().from(maintenanceRecords)
+            .where(eq(maintenanceRecords.machineId, id))
+            .orderBy(desc(maintenanceRecords.startedAt));
+        res.json(result);
     } catch (err) {
         console.error('DB Error:', err);
         res.status(500).json({ error: 'Database error' });

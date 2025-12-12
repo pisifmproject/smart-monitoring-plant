@@ -1,18 +1,19 @@
 import express, { Request, Response } from 'express';
-import { query } from '../../config/database';
+import { db } from '../../config/database';
+import { plants, machines, lvmdpPanels } from '../../db/schema';
+import { eq } from 'drizzle-orm';
 
 const router = express.Router();
 
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const result = await query('SELECT * FROM plants ORDER BY id');
-        res.json(result.rows);
+        const result = await db.select().from(plants).orderBy(plants.id);
+        res.json(result);
     } catch (err) {
         console.error('DB Error:', err);
-        // Fallback for demo if DB not available
         res.json([
-             { id: 1, code: 'P01', name: 'Plant Jakarta (Fallback)', location: 'Jakarta', is_active: true },
-             { id: 2, code: 'P02', name: 'Plant Surabaya (Fallback)', location: 'Surabaya', is_active: true }
+             { id: 1, code: 'P01', name: 'Plant Jakarta (Fallback)', location: 'Jakarta', isActive: true },
+             { id: 2, code: 'P02', name: 'Plant Surabaya (Fallback)', location: 'Surabaya', isActive: true }
         ]);
     }
 });
@@ -20,11 +21,8 @@ router.get('/', async (req: Request, res: Response) => {
 router.post('/', async (req: Request, res: Response) => {
     const { code, name, location } = req.body;
     try {
-        const result = await query(
-            'INSERT INTO plants (code, name, location) VALUES ($1, $2, $3) RETURNING *',
-            [code, name, location]
-        );
-        res.status(201).json(result.rows[0]);
+        const result = await db.insert(plants).values({ code, name, location }).returning();
+        res.status(201).json(result[0]);
     } catch (err) {
         console.error('DB Error:', err);
         res.status(500).json({ error: 'Database error' });
@@ -34,9 +32,9 @@ router.post('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
     try {
         const id = parseInt(req.params.id);
-        const result = await query('SELECT * FROM plants WHERE id = $1', [id]);
-        if (result.rows.length > 0) {
-            res.json(result.rows[0]);
+        const result = await db.select().from(plants).where(eq(plants.id, id));
+        if (result.length > 0) {
+            res.json(result[0]);
         } else {
             res.status(404).json({ message: 'Plant not found' });
         }
@@ -49,8 +47,8 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.get('/:id/machines', async (req: Request, res: Response) => {
     try {
         const id = parseInt(req.params.id);
-        const result = await query('SELECT * FROM machines WHERE plant_id = $1', [id]);
-        res.json(result.rows);
+        const result = await db.select().from(machines).where(eq(machines.plantId, id));
+        res.json(result);
     } catch (err) {
          console.error('DB Error:', err);
          res.status(500).json({ error: 'Database error' });
@@ -60,8 +58,8 @@ router.get('/:id/machines', async (req: Request, res: Response) => {
 router.get('/:id/lvmdp-panels', async (req: Request, res: Response) => {
     try {
         const id = parseInt(req.params.id);
-        const result = await query('SELECT * FROM lvmdp_panels WHERE plant_id = $1', [id]);
-        res.json(result.rows);
+        const result = await db.select().from(lvmdpPanels).where(eq(lvmdpPanels.plantId, id));
+        res.json(result);
     } catch (err) {
          console.error('DB Error:', err);
          res.status(500).json({ error: 'Database error' });
