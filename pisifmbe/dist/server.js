@@ -28,6 +28,7 @@ const index_1 = __importDefault(require("./index"));
 const socket_1 = require("./socket");
 const dailyReportScheduler_1 = require("./cron/dailyReportScheduler");
 const hourlyReportScheduler_1 = require("./cron/hourlyReportScheduler");
+const electricalReportScheduler_1 = require("./cron/electricalReportScheduler");
 const lvmdpPoller_1 = require("./lvmdp/lvmdpPoller");
 const lvmdp_1_repository_1 = require("./lvmdp/LVMDP_1/lvmdp_1.repository");
 const lvmdp_2_repository_1 = require("./lvmdp/LVMDP_2/lvmdp_2.repository");
@@ -74,6 +75,14 @@ server.listen(PORT, "0.0.0.0", () => {
     }
     catch (err) {
         console.error("✗ Failed to init daily report scheduler:", err);
+    }
+    // Start electrical report scheduler (aggregate electrical data daily at 00:05)
+    try {
+        (0, electricalReportScheduler_1.initElectricalReportScheduler)();
+        console.log("✓ Electrical report scheduler initialized (ISO 50001 compliant)");
+    }
+    catch (err) {
+        console.error("✗ Failed to init electrical report scheduler:", err);
     }
     // Start LVMDP polling untuk realtime data via Socket.IO
     try {

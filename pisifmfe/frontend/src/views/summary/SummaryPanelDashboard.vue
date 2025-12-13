@@ -93,8 +93,36 @@
       <div class="report-controls">
         <div class="report-header">
           <h3>Download Report</h3>
-          <div class="report-buttons">
-            <button @click="downloadReport('day')" class="report-btn">
+          <div class="report-selector">
+            <div class="selector-group">
+              <label>Report Type:</label>
+              <select v-model="reportType" class="report-type-select">
+                <option value="day">By Date</option>
+                <option value="month">By Month</option>
+              </select>
+            </div>
+
+            <div v-if="reportType === 'day'" class="selector-group">
+              <label>Select Date:</label>
+              <input
+                type="date"
+                v-model="selectedDate"
+                class="date-picker"
+                :max="getTodayDate()"
+              />
+            </div>
+
+            <div v-else class="selector-group">
+              <label>Select Month:</label>
+              <input
+                type="month"
+                v-model="selectedMonth"
+                class="month-picker"
+                :max="getCurrentMonth()"
+              />
+            </div>
+
+            <button @click="downloadSelectedReport" class="download-btn">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="18"
@@ -108,39 +136,7 @@
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              Daily
-            </button>
-            <button @click="downloadReport('week')" class="report-btn">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Weekly
-            </button>
-            <button @click="downloadReport('month')" class="report-btn">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Monthly
+              Download PDF
             </button>
           </div>
         </div>
@@ -337,8 +333,54 @@ import { useRouter } from "vue-router";
 import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+// PROFESSIONAL REPORTING SYSTEM - Import new API client
+import { useElectricalReport } from "@/composables/useElectricalReport";
+import type { ElectricalReportData } from "@/composables/useElectricalReport";
 
 const router = useRouter();
+const {
+  fetchDailyReport,
+  fetchWeeklyReport,
+  fetchMonthlyReport,
+  getCurrentMonday,
+  getTodayDate,
+} = useElectricalReport();
+
+// Report selection state
+const reportType = ref<"day" | "month">("day");
+const selectedDate = ref(getTodayDate());
+const selectedMonth = ref(getCurrentMonth());
+
+// Helper to get current month in YYYY-MM format
+function getCurrentMonth(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
+
+/**
+ * TODO: Integration Steps for Professional Reporting System
+ *
+ * Current: Using real-time data from /api/summary/electrical
+ * Target: Use historical aggregated data from /api/report/electrical
+ *
+ * Step 1: Replace fetchData() with:
+ *   const { fetchDailyReport, getYesterdayDate } = useElectricalReport();
+ *   const report = await fetchDailyReport(getYesterdayDate());
+ *
+ * Step 2: Map report.summary to summaryData for dashboard display
+ * Step 3: Map report.panels to panel cards
+ * Step 4: Update PDF download to use report data directly
+ *
+ * Benefits:
+ * - Energy-based metrics (kWh) instead of instantaneous kVA
+ * - Peak demand tracking with timestamps
+ * - Load factor and utilization calculations
+ * - Data quality metrics (completeness %)
+ * - Comparison with previous periods
+ * - ISO 50001 compliant reporting
+ */
 
 interface PanelData {
   id: number;
@@ -454,7 +496,70 @@ const formatNumber = (value: number): string => {
   });
 };
 
+const downloadSelectedReport = async () => {
+  try {
+    let reportData: ElectricalReportData | null = null;
+
+    if (reportType.value === "day") {
+      // Download daily report for selected date
+      console.log("[Report] Downloading daily report for:", selectedDate.value);
+      reportData = await fetchDailyReport(selectedDate.value);
+    } else {
+      // Download monthly report for selected month
+      const [year, month] = selectedMonth.value.split("-").map(Number);
+      console.log("[Report] Downloading monthly report for:", year, month);
+      reportData = await fetchMonthlyReport(year, month);
+    }
+
+    if (!reportData) {
+      alert(
+        "No data available for the selected period. Please try another date."
+      );
+      return;
+    }
+
+    // Generate PDF using aggregated data
+    generatePDFReport(reportData, reportType.value);
+  } catch (error) {
+    console.error("Error generating report:", error);
+    alert("Failed to generate report. Please try again.");
+  }
+};
+
 const downloadReport = async (type: "day" | "week" | "month") => {
+  try {
+    // Legacy function - kept for compatibility
+    let reportData: ElectricalReportData | null = null;
+
+    if (type === "day") {
+      reportData = await fetchDailyReport(getTodayDate());
+    } else if (type === "week") {
+      reportData = await fetchWeeklyReport(getCurrentMonday());
+    } else {
+      const now = new Date();
+      reportData = await fetchMonthlyReport(
+        now.getFullYear(),
+        now.getMonth() + 1
+      );
+    }
+
+    if (!reportData) {
+      alert("Failed to fetch report data. Please try again.");
+      return;
+    }
+
+    // Generate PDF
+    generatePDFReport(reportData, type);
+  } catch (error) {
+    console.error("Error generating report:", error);
+    alert("Failed to generate report. Please try again.");
+  }
+};
+
+const generatePDFReport = async (
+  reportData: ElectricalReportData,
+  type: "day" | "week" | "month"
+) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -557,8 +662,7 @@ const downloadReport = async (type: "day" | "week" | "month") => {
   doc.setDrawColor(226, 232, 240);
   doc.roundedRect(margin, yPos, pageWidth - margin * 2, 20, 2, 2, "FD");
 
-  const today = new Date();
-  const reportDate = today.toLocaleDateString("id-ID", {
+  const reportDate = new Date().toLocaleDateString("id-ID", {
     day: "2-digit",
     month: "long",
     year: "numeric",
@@ -576,38 +680,31 @@ const downloadReport = async (type: "day" | "week" | "month") => {
   doc.setTextColor(textColor[0], textColor[1], textColor[2]);
   doc.text(reportDate, margin + 45, yPos + 8);
 
-  let periodText = "";
-  if (type === "day") periodText = "Daily Report";
-  else if (type === "week") periodText = "Weekly Report";
-  else periodText = "Monthly Report";
+  // Use report data for period text
+  doc.text(reportData.dateRange.formatted, margin + 45, yPos + 15);
 
-  doc.text(periodText, margin + 45, yPos + 15);
-
-  // Right side of info bar (Summary Stats)
+  // Right side of info bar (Summary Stats from aggregated data)
   const rightColX = pageWidth / 2 + 10;
   doc.setFont("helvetica", "bold");
   doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.text("Total Load:", rightColX, yPos + 8);
+  doc.text("Total Energy:", rightColX, yPos + 8);
   doc.text("Status:", rightColX, yPos + 15);
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(textColor[0], textColor[1], textColor[2]);
   doc.text(
-    `${summaryData.value.totalKVA.toFixed(2)} kVA`,
+    `${reportData.summary.totalEnergy_kWh.toFixed(2)} kWh`,
     rightColX + 30,
     yPos + 8
   );
 
+  const utilization = reportData.summary.utilization_percent;
   const status =
-    summaryData.value.loadPercentage >= 85
-      ? "CRITICAL"
-      : summaryData.value.loadPercentage >= 70
-      ? "WARNING"
-      : "NORMAL";
+    utilization >= 85 ? "CRITICAL" : utilization >= 70 ? "WARNING" : "NORMAL";
   const statusColor =
-    summaryData.value.loadPercentage >= 85
+    utilization >= 85
       ? [220, 38, 38]
-      : summaryData.value.loadPercentage >= 70
+      : utilization >= 70
       ? [245, 158, 11]
       : [22, 163, 74];
 
@@ -617,22 +714,22 @@ const downloadReport = async (type: "day" | "week" | "month") => {
 
   yPos += 30;
 
-  // 3. Key Metrics Cards (Visual representation)
+  // 3. Key Metrics Cards (using aggregated data)
   const cardWidth = (pageWidth - margin * 2 - 10) / 3;
   const cardHeight = 25;
 
-  // Card 1: Load
+  // Card 1: Average Load
   doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.roundedRect(margin, yPos, cardWidth, cardHeight, 2, 2, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9);
-  doc.text("Current Load", margin + cardWidth / 2, yPos + 8, {
+  doc.text("Average Load", margin + cardWidth / 2, yPos + 8, {
     align: "center",
   });
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text(
-    `${summaryData.value.totalKVA.toFixed(2)} kVA`,
+    `${reportData.summary.averageLoad_kVA.toFixed(2)} kVA`,
     margin + cardWidth / 2,
     yPos + 18,
     { align: "center" }
@@ -658,13 +755,13 @@ const downloadReport = async (type: "day" | "week" | "month") => {
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text(
-    `${summaryData.value.loadPercentage.toFixed(1)}%`,
+    `${reportData.summary.utilization_percent.toFixed(1)}%`,
     margin + cardWidth + 5 + cardWidth / 2,
     yPos + 18,
     { align: "center" }
   );
 
-  // Card 3: Capacity
+  // Card 3: Installed Capacity
   doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
   doc.roundedRect(
     margin + (cardWidth + 5) * 2,
@@ -687,7 +784,7 @@ const downloadReport = async (type: "day" | "week" | "month") => {
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text(
-    `${summaryData.value.installedCapacity} kVA`,
+    `${reportData.summary.installedCapacity_kVA.toFixed(0)} kVA`,
     margin + (cardWidth + 5) * 2 + cardWidth / 2,
     yPos + 18,
     { align: "center" }
@@ -695,7 +792,7 @@ const downloadReport = async (type: "day" | "week" | "month") => {
 
   yPos += cardHeight + 15;
 
-  // 4. Panel Details Table
+  // 4. Panel Details Table (using aggregated data)
   doc.setFontSize(12);
   doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.setFont("helvetica", "bold");
@@ -705,14 +802,14 @@ const downloadReport = async (type: "day" | "week" | "month") => {
   doc.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
   yPos += 8;
 
-  const tableData = summaryData.value.panels.map((panel) => [
-    panel.name,
+  const tableData = reportData.panels.map((panel) => [
+    panel.panelName,
     panel.status === "online" ? "Online" : "Offline",
-    `${panel.kva.toFixed(2)}`,
-    `${panel.realPower.toFixed(2)}`,
-    `${panel.voltage.toFixed(2)}`,
-    `${panel.current.toFixed(2)}`,
-    panel.cosPhi.toFixed(3),
+    `${panel.energy_kWh.toFixed(2)}`,
+    `${panel.averageLoad_kVA.toFixed(2)}`,
+    `${panel.averageVoltage.toFixed(2)}`,
+    `${panel.averageCurrent.toFixed(2)}`,
+    panel.averagePowerFactor.toFixed(3),
   ]);
 
   autoTable(doc, {
@@ -721,8 +818,8 @@ const downloadReport = async (type: "day" | "week" | "month") => {
       [
         "Panel Name",
         "Status",
-        "Load (kVA)",
-        "Power (kW)",
+        "Energy (kWh)",
+        "Avg Load (kVA)",
         "Voltage (V)",
         "Current (A)",
         "PF",
@@ -1006,6 +1103,87 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.report-selector {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selector-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.report-type-select,
+.date-picker,
+.month-picker {
+  padding: 0.625rem 1rem;
+  background: #334155;
+  color: #f1f5f9;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 150px;
+}
+
+.report-type-select:hover,
+.date-picker:hover,
+.month-picker:hover {
+  border-color: #60a5fa;
+  background: #3b4a61;
+}
+
+.report-type-select:focus,
+.date-picker:focus,
+.month-picker:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  margin-top: auto;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(96, 165, 250, 0.4);
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+}
+
+.download-btn:active {
+  transform: translateY(0);
+}
+
+.download-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .report-buttons {

@@ -29,6 +29,7 @@ import app from "./index";
 import { initSocket, io } from "./socket";
 import { initDailyReportScheduler } from "./cron/dailyReportScheduler";
 import { initHourlyReportScheduler } from "./cron/hourlyReportScheduler";
+import { initElectricalReportScheduler } from "./cron/electricalReportScheduler";
 import { startLvmdpPolling } from "./lvmdp/lvmdpPoller";
 import { findLatestLVMDP1 } from "./lvmdp/LVMDP_1/lvmdp_1.repository";
 import { findLatestLVMDP2 } from "./lvmdp/LVMDP_2/lvmdp_2.repository";
@@ -80,6 +81,16 @@ server.listen(PORT, "0.0.0.0", () => {
     console.log("✓ Daily report scheduler initialized");
   } catch (err) {
     console.error("✗ Failed to init daily report scheduler:", err);
+  }
+
+  // Start electrical report scheduler (aggregate electrical data daily at 00:05)
+  try {
+    initElectricalReportScheduler();
+    console.log(
+      "✓ Electrical report scheduler initialized (ISO 50001 compliant)"
+    );
+  } catch (err) {
+    console.error("✗ Failed to init electrical report scheduler:", err);
   }
 
   // Start LVMDP polling untuk realtime data via Socket.IO

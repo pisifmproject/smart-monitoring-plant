@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.packingLinePackingPouchBagMaker = exports.packingLineTWS72BagMaker = exports.packingLineTWS56BagMaker = exports.packingLineFCPBagMaker = exports.packingLineTortilaBagMaker = exports.packingLineCassavaCopackBagMaker = exports.packingLineCassavaInhouseBagMaker = exports.packingLinePC39BagMaker = exports.packingLinePackingPouchWeigher = exports.packingLineTWS72Weigher = exports.packingLineTWS56Weigher = exports.packingLineFCPWeigher = exports.packingLineTortilaWeigher = exports.packingLineCassavaCopackWeigher = exports.packingLineCassavaInhouseWeigher = exports.packingLinePC39Weigher = exports.productionLineAIHP = exports.productionLineACOPACK = exports.productionLineATWS72 = exports.productionLineATWS56 = exports.productionLineAFCP = exports.productionLineATS1000 = exports.productionLineAPC14 = exports.packingLineABagMaker = exports.packingLineAWeigher = exports.productionLineAPC39 = exports.hourlyReportLVMDP4 = exports.hourlyReportLVMDP3 = exports.hourlyReportLVMDP2 = exports.hourlyReportLVMDP1 = exports.dailyReportLVMDP4 = exports.dailyReportLVMDP3 = exports.dailyReportLVMDP2 = exports.dailyReportLVMDP1 = exports.user = void 0;
+exports.dailyElectricalReports = exports.packingLinePackingPouchBagMaker = exports.packingLineTWS72BagMaker = exports.packingLineTWS56BagMaker = exports.packingLineFCPBagMaker = exports.packingLineTortilaBagMaker = exports.packingLineCassavaCopackBagMaker = exports.packingLineCassavaInhouseBagMaker = exports.packingLinePC39BagMaker = exports.packingLinePackingPouchWeigher = exports.packingLineTWS72Weigher = exports.packingLineTWS56Weigher = exports.packingLineFCPWeigher = exports.packingLineTortilaWeigher = exports.packingLineCassavaCopackWeigher = exports.packingLineCassavaInhouseWeigher = exports.packingLinePC39Weigher = exports.productionLineAIHP = exports.productionLineACOPACK = exports.productionLineATWS72 = exports.productionLineATWS56 = exports.productionLineAFCP = exports.productionLineATS1000 = exports.productionLineAPC14 = exports.packingLineABagMaker = exports.packingLineAWeigher = exports.productionLineAPC39 = exports.hourlyReportLVMDP4 = exports.hourlyReportLVMDP3 = exports.hourlyReportLVMDP2 = exports.hourlyReportLVMDP1 = exports.dailyReportLVMDP4 = exports.dailyReportLVMDP3 = exports.dailyReportLVMDP2 = exports.dailyReportLVMDP1 = exports.user = void 0;
 // src/db/schema.ts
 const pg_core_1 = require("drizzle-orm/pg-core");
 /* ===========================
@@ -426,3 +426,36 @@ exports.packingLineFCPBagMaker = createPackingBagMakerTable("FCP");
 exports.packingLineTWS56BagMaker = createPackingBagMakerTable("TWS56");
 exports.packingLineTWS72BagMaker = createPackingBagMakerTable("TWS72");
 exports.packingLinePackingPouchBagMaker = createPackingBagMakerTable("PACKING_POUCH");
+/* ===========================
+   ELECTRICAL REPORTING TABLES
+   (Professional energy monitoring - ISO 50001 compliant)
+=========================== */
+/**
+ * Daily Electrical Reports - Aggregated per panel per day
+ * Used for historical reporting (daily, weekly, monthly)
+ */
+exports.dailyElectricalReports = (0, pg_core_1.pgTable)("daily_electrical_reports", {
+    id: (0, pg_core_1.text)("id").primaryKey(),
+    panelId: (0, pg_core_1.text)("panel_id").notNull(), // LVMDP_1, LVMDP_2, etc.
+    reportDate: (0, pg_core_1.date)("report_date").notNull(),
+    // Energy metrics
+    energyKwh: (0, pg_core_1.doublePrecision)("energy_kwh").notNull(),
+    // Power metrics
+    avgLoadKw: (0, pg_core_1.doublePrecision)("avg_load_kw").notNull(),
+    peakDemandKw: (0, pg_core_1.doublePrecision)("peak_demand_kw").notNull(),
+    peakDemandTime: (0, pg_core_1.timestamp)("peak_demand_time"),
+    // Voltage quality
+    avgVoltage: (0, pg_core_1.doublePrecision)("avg_voltage").notNull(),
+    minVoltage: (0, pg_core_1.doublePrecision)("min_voltage").notNull(),
+    maxVoltage: (0, pg_core_1.doublePrecision)("max_voltage").notNull(),
+    // Current
+    avgCurrent: (0, pg_core_1.doublePrecision)("avg_current").notNull(),
+    maxCurrent: (0, pg_core_1.doublePrecision)("max_current").notNull(),
+    // Power factor
+    avgPowerFactor: (0, pg_core_1.doublePrecision)("avg_power_factor").notNull(),
+    // Data quality
+    sampleCount: (0, pg_core_1.integer)("sample_count").notNull(),
+    dataCompletenessPercent: (0, pg_core_1.doublePrecision)("data_completeness_percent").notNull(),
+    createdAt: (0, pg_core_1.timestamp)("created_at").defaultNow(),
+    updatedAt: (0, pg_core_1.timestamp)("updated_at").defaultNow(),
+});

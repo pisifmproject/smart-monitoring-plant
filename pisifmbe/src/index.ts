@@ -23,6 +23,9 @@ app.use(
       "http://localhost:5173",
       "http://localhost:30",
       "http://localhost:31",
+      "http://10.125.48.102",
+      "http://10.125.48.102:30",
+      "http://localhost",
     ],
     credentials: true,
   })
@@ -76,6 +79,10 @@ app.use("/api/hourly-report", hourlyReportRouter);
 // Summary routes
 import summaryRouter from "./routes/summary.router";
 app.use("/api/summary", summaryRouter);
+
+// Electrical Report routes (Professional reporting system)
+import electricalReportRouter from "./routes/electricalReport.router";
+app.use("/api/report", electricalReportRouter);
 
 // app.listen(PORT, () => {
 //   console.log(`Server is running on port ${PORT}`);

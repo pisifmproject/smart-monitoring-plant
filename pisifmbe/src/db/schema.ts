@@ -511,3 +511,46 @@ export const packingLineTWS56BagMaker = createPackingBagMakerTable("TWS56");
 export const packingLineTWS72BagMaker = createPackingBagMakerTable("TWS72");
 export const packingLinePackingPouchBagMaker =
   createPackingBagMakerTable("PACKING_POUCH");
+/* ===========================
+   ELECTRICAL REPORTING TABLES
+   (Professional energy monitoring - ISO 50001 compliant)
+=========================== */
+
+/**
+ * Daily Electrical Reports - Aggregated per panel per day
+ * Used for historical reporting (daily, weekly, monthly)
+ */
+export const dailyElectricalReports = pgTable("daily_electrical_reports", {
+  id: text("id").primaryKey(),
+  panelId: text("panel_id").notNull(), // LVMDP_1, LVMDP_2, etc.
+  reportDate: date("report_date").notNull(),
+
+  // Energy metrics
+  energyKwh: doublePrecision("energy_kwh").notNull(),
+
+  // Power metrics
+  avgLoadKw: doublePrecision("avg_load_kw").notNull(),
+  peakDemandKw: doublePrecision("peak_demand_kw").notNull(),
+  peakDemandTime: timestamp("peak_demand_time"),
+
+  // Voltage quality
+  avgVoltage: doublePrecision("avg_voltage").notNull(),
+  minVoltage: doublePrecision("min_voltage").notNull(),
+  maxVoltage: doublePrecision("max_voltage").notNull(),
+
+  // Current
+  avgCurrent: doublePrecision("avg_current").notNull(),
+  maxCurrent: doublePrecision("max_current").notNull(),
+
+  // Power factor
+  avgPowerFactor: doublePrecision("avg_power_factor").notNull(),
+
+  // Data quality
+  sampleCount: integer("sample_count").notNull(),
+  dataCompletenessPercent: doublePrecision(
+    "data_completeness_percent"
+  ).notNull(),
+
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});

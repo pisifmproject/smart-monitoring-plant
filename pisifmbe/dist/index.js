@@ -26,6 +26,9 @@ app.use((0, cors_1.default)({
         "http://localhost:5173",
         "http://localhost:30",
         "http://localhost:31",
+        "http://10.125.48.102",
+        "http://10.125.48.102:30",
+        "http://localhost",
     ],
     credentials: true,
 }));
@@ -65,6 +68,9 @@ app.use("/api/hourly-report", hourlyReport_router_1.default);
 // Summary routes
 const summary_router_1 = __importDefault(require("./routes/summary.router"));
 app.use("/api/summary", summary_router_1.default);
+// Electrical Report routes (Professional reporting system)
+const electricalReport_router_1 = __importDefault(require("./routes/electricalReport.router"));
+app.use("/api/report", electricalReport_router_1.default);
 // app.listen(PORT, () => {
 //   console.log(`Server is running on port ${PORT}`);
 // });
