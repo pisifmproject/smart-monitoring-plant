@@ -1,4 +1,10 @@
-import React, { useState, useEffect, Suspense, lazy, useMemo, useRef } from 'react';
+
+
+
+
+
+
+import React, { useState, useEffect, Suspense, lazy, useMemo } from 'react';
 import {
   HashRouter,
   Routes,
@@ -27,7 +33,7 @@ import {
   Cpu
 } from 'lucide-react';
 
-import { User, UserRole, Plant, PlantCode } from './types';
+import { User, UserRole, Plant } from './types';
 
 // Lazy load views for better performance
 const Landing = lazy(() => import('./views/Landing'));
@@ -38,15 +44,11 @@ const UtilitySummary = lazy(() => import('./views/UtilitySummary'));
 const SettingsView = lazy(() => import('./views/Settings'));
 const GlobalDashboard = lazy(() => import('./GlobalDashboard'));
 const PlantDashboard = lazy(() => import('./views/PlantDashboard'));
-const UtilitiesOverview = lazy(() => import('./views/UtilitiesOverview'));
-const ProductionLinesOverview = lazy(() => import('./views/ProductionLinesOverview'));
-
 
 // Services
 import { plantService } from './services/plantService';
 import { lvmdpService } from './services/lvmdpService';
 import { utilityService } from './services/utilityService';
-import { login } from './services/auth';
 
 // Fallback component for Suspense
 const SuspenseSpinner: React.FC = () => (
@@ -76,7 +78,7 @@ const SidebarLink: React.FC<{ to: string; label: string; active: boolean; icon?:
   >
     <div className="flex items-center gap-3">
         {Icon && (
-            <Icon size={18} className={`transition-colors shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`} />
+            <Icon size={18} className={`transition-colors shrink-0 ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
         )}
         {!isCollapsed && <span className="truncate">{label}</span>}
     </div>
@@ -90,7 +92,14 @@ const NestedSidebarLink: React.FC<{ to: string; label: string; active: boolean; 
     </Link>
 );
 
-const DropdownMenu: React.FC<{ title: string; to: string; icon: any; isCollapsed: boolean; children: React.ReactNode; isOpen: boolean; onToggle: () => void; }> = ({ title, to, icon: Icon, isCollapsed, children, isOpen, onToggle }) => {
+const DropdownMenu: React.FC<{ title: string; icon: any; isCollapsed: boolean; children: React.ReactNode; defaultOpen?: boolean; }> = ({ title, icon: Icon, isCollapsed, children, defaultOpen = false }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    // Sync open state if defaultOpen prop changes (e.g., on navigation)
+    useEffect(() => {
+        setIsOpen(defaultOpen);
+    }, [defaultOpen]);
+
     if (isCollapsed) {
         return (
             <div className="flex justify-center my-3 mx-2 p-2 bg-slate-800/30 rounded-lg border border-slate-700/50" title={title}>
@@ -101,15 +110,13 @@ const DropdownMenu: React.FC<{ title: string; to: string; icon: any; isCollapsed
 
     return (
         <div className="px-3 my-1">
-            <div className="w-full flex items-center justify-between p-1 rounded-lg hover:bg-slate-800 text-slate-300 transition-colors">
-                <Link to={to} className="flex-1 flex items-center gap-3 p-2 rounded-md">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-800 text-slate-300 transition-colors">
+                <div className="flex items-center gap-3">
                     <Icon size={18} className="text-slate-400" />
                     <span className="text-sm font-bold">{title}</span>
-                </Link>
-                <button onClick={onToggle} className="p-2 rounded-md hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-                    <ChevronRight size={16} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
-                </button>
-            </div>
+                </div>
+                <ChevronRight size={16} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
+            </button>
             <div style={{
                 maxHeight: isOpen ? '1000px' : '0px',
                 transition: 'max-height 0.5s ease-in-out, opacity 0.3s ease-in-out',
@@ -169,32 +176,9 @@ const UserProfileFooter: React.FC<{ user: User; onLogout: () => void; isCollapse
 const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () => void; }) => {
     const location = useLocation();
     const params = useParams();
-    const navigate = useNavigate();
-    
-    // All hooks are now at the top level
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => localStorage.getItem('sidebarOpen') !== 'false');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [expandedPlant, setExpandedPlant] = useState<string | null>(null);
-    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-    const userInteractedRef = useRef(false);
-
-    // --- FIX: CONSOLIDATED REDIRECTION LOGIC ---
-    useEffect(() => {
-        // 1. Redirect to login if user is not authenticated
-        if (!user) {
-            navigate('/login', { replace: true });
-            return;
-        }
-
-        // 2. Redirect non-global roles away from the global dashboard
-        const isTryingGlobal = location.pathname === '/app' || location.pathname === '/app/dashboard/global';
-        const canSeeGlobal = user.role === UserRole.ADMINISTRATOR || [UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role);
-
-        if (!canSeeGlobal && isTryingGlobal && user.plantAccess && user.plantAccess.length > 0) {
-            navigate(`/app/plants/${user.plantAccess[0]}`, { replace: true });
-        }
-    }, [user, location.pathname, navigate]);
-
 
     useEffect(() => {
         localStorage.setItem('sidebarOpen', String(isSidebarOpen));
@@ -204,223 +188,203 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
         setIsMobileMenuOpen(false);
     }, [location.pathname]);
 
-    // This guard prevents the rest of the component from rendering before authentication is confirmed and redirection logic runs.
-    if (!user) {
-        return <SuspenseSpinner />;
-    }
+    if (!user || !user.role) return <Navigate to="/login" replace />;
 
     const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => {
-        const allPlants = plantService.getAllPlants();
-        const utilityTypes = utilityService.getUtilityTypes();
-        
-        const plantsToShow = useMemo(() => {
-            if (user.role === UserRole.ADMINISTRATOR) return allPlants;
-            return allPlants.filter(p => user.plantAccess?.includes(p.id));
-        }, [allPlants, user.role, user.plantAccess]);
-
-        const plantContext = useMemo(() => {
-            const pathSegments = location.pathname.split('/').filter(Boolean);
-            const plantIdFromPath = pathSegments.find(seg => Object.values(PlantCode).includes(seg as PlantCode));
-            
-            if (plantIdFromPath && plantsToShow.some(p => p.id === plantIdFromPath)) {
-                return plantService.getPlantById(plantIdFromPath as PlantCode);
-            }
-
+        // --- CONTEXT & ROLE DETECTION ---
+        const plant = useMemo(() => {
+            if (params.plantId) return plantService.getPlantById(params.plantId);
             if (params.machineId) {
                 const machine = plantService.getMachineById(params.machineId);
-                if (machine && plantsToShow.some(p => p.id === machine.plantId)) {
-                    return plantService.getPlantById(machine.plantId);
-                }
+                return machine ? plantService.getPlantById(machine.plantId) : null;
             }
-             if (params.panelId) { // Check for LVMDP panels as well
-                const panel = lvmdpService.getPanelById(params.panelId);
-                if (panel && plantsToShow.some(p => p.id === panel.plantId)) {
-                    return plantService.getPlantById(panel.plantId);
-                }
+            if (location.pathname.startsWith('/app/utility/')) {
+                 const pathParts = location.pathname.split('/');
+                 const plantId = pathParts[pathParts.length-1];
+                 return plantService.getPlantById(plantId);
             }
             return null;
-        }, [location.pathname, params.machineId, params.panelId, plantsToShow]);
-        
-         useEffect(() => {
-            if (userInteractedRef.current) {
-                return;
-            }
+        }, [params.plantId, params.machineId, location.pathname]);
 
-            const path = location.pathname;
-            const isMachineDetail = path.startsWith('/app/machines/');
-            const isUtilityDetail = path.startsWith('/app/utility/');
-            const isPlantDashboard = path.match(/^\/app\/plants\/[A-Z_]+$/);
-            const isOverview = path.endsWith('/utilities') || path.endsWith('/production-lines');
-    
-            if (isMachineDetail) {
-                setOpenDropdown('production');
-            } else if (isUtilityDetail) {
-                setOpenDropdown('utilities');
-            }
-            
-            if (isMachineDetail || isUtilityDetail) {
-                 if (plantContext) setExpandedPlant(plantContext.id);
-            } else if (isPlantDashboard || isOverview) {
-                 if (plantContext) setExpandedPlant(plantContext.id);
-            }
+        const isPrivilegedRole = [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT].includes(user.role);
+        const isGuestRole = user.role === UserRole.VIEWER;
+        const isOperationalRole = !isPrivilegedRole && !isGuestRole;
 
-        }, [location.pathname, plantContext]);
-        
-        const handleManualDropdownToggle = (dropdown: 'utilities' | 'production') => {
-            userInteractedRef.current = true;
-            setOpenDropdown(prev => (prev === dropdown ? null : dropdown));
-        };
-        
-         const handleManualAccordionToggle = (plantId: string) => {
-            userInteractedRef.current = true;
-            setExpandedPlant(prev => (prev === plantId ? null : plantId));
-        };
+        const allPlants = plantService.getAllPlants();
+        const isAdmin = user.role === UserRole.ADMINISTRATOR;
+        const canViewGlobal = [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role);
 
+        // --- RENDER LOGIC BASED ON ROLE ---
+        if (isGuestRole) {
+            // --- GUEST SIDEBAR (ALWAYS GLOBAL) ---
+            return (
+                <>
+                    <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
+                        <div className="flex flex-col items-center">
+                            <h1 className={`text-sm font-extrabold text-white tracking-tighter whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
+                                PT INDOFOOD FORTUNA MAKMUR
+                            </h1>
+                            <p className={`text-[11px] font-bold text-blue-500 mt-1.5 uppercase tracking-wider flex items-center gap-2 transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                                Smart Monitoring Multi Plant
+                            </p>
+                        </div>
+                    </div>
+                    <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-6">
+                        {canViewGlobal && (
+                            <div>
+                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dashboards</div>}
+                                <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
+                            </div>
+                        )}
+                        <div>
+                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
+                            <div className="space-y-0.5">
+                                {allPlants.map((plantItem) => (
+                                    <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />
+                                ))}
+                            </div>
+                        </div>
+                    </nav>
+                    <UserProfileFooter user={user} onLogout={onLogout} isCollapsed={isCollapsed} />
+                </>
+            );
+        } else if (isOperationalRole) {
+            // --- OPERATIONAL (HYBRID ACCORDION) SIDEBAR ---
+            const [expandedPlant, setExpandedPlant] = useState<string | null>(null);
 
-        const canSeeGlobalDashboard = user.role === UserRole.ADMINISTRATOR || [UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role);
+            useEffect(() => {
+                // If we are on a detail page, expand its parent plant
+                if (plant && (location.pathname.startsWith('/app/machines/') || location.pathname.startsWith('/app/utility/'))) {
+                    setExpandedPlant(plant.id);
+                } else {
+                    // When on a plant dashboard, keep it collapsed by default.
+                    setExpandedPlant(null);
+                }
+            }, [location.pathname, plant]);
 
-        let displayMode: 'GLOBAL' | 'CONTEXTUAL' | 'HYBRID' = 'GLOBAL';
+            const togglePlant = (plantId: string) => {
+                setExpandedPlant(current => current === plantId ? null : plantId);
+            };
 
-        if (plantContext) {
-            if ([UserRole.ADMINISTRATOR, UserRole.MANAGEMENT].includes(user.role)) {
-                displayMode = 'CONTEXTUAL';
-            } else { // All other roles get HYBRID
-                displayMode = 'HYBRID';
-            }
-        }
-        
-        const SidebarHeader = () => (
-             <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-                <div className="flex flex-col items-center">
-                    <h1 className={`text-sm font-extrabold text-white tracking-tighter whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
-                        PT INDOFOOD FORTUNA MAKMUR
-                    </h1>
-                </div>
-            </div>
-        );
+            return (
+                <>
+                    <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
+                         <div className="flex flex-col items-center">
+                            <h1 className={`text-sm font-extrabold text-white tracking-tighter whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>
+                                PT INDOFOOD FORTUNA MAKMUR
+                            </h1>
+                        </div>
+                    </div>
+                    <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-1">
+                        {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
+                        {allPlants.map(plantItem => {
+                            const isCurrentPlantActive = plant?.id === plantItem.id;
+                            const isExpanded = expandedPlant === plantItem.id;
 
-        // --- Render Logic Based on Role & Context ---
-        return (
-            <>
-                <SidebarHeader />
-                 <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-1">
-                    {/* CONTEXTUAL: Admin/Management on a Plant page */}
-                    {displayMode === 'CONTEXTUAL' && plantContext && (
-                        <>
-                           {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Navigation</div>}
-                           <SidebarLink to="/app/dashboard/global" label="Back to Global Overview" active={false} icon={ArrowLeft} isCollapsed={isCollapsed} />
-                           
-                           {!isCollapsed && <div className="px-5 mb-2 mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{plantContext.name}</div>}
-                           <SidebarLink to={`/app/plants/${plantContext.id}`} label="Plant Dashboard" active={location.pathname === `/app/plants/${plantContext.id}`} icon={Factory} isCollapsed={isCollapsed} />
-
-                           <DropdownMenu 
-                                title="Energy & Utilities"
-                                to={`/app/plants/${plantContext.id}/utilities`}
-                                icon={Zap} 
-                                isCollapsed={isCollapsed}
-                                isOpen={openDropdown === 'utilities'}
-                                onToggle={() => handleManualDropdownToggle('utilities')}
-                           >
-                                {utilityTypes.map(util => <NestedSidebarLink key={util.key} to={`/app/utility/${util.key}/${plantContext.id}`} label={util.label} active={location.pathname === `/app/utility/${util.key}/${plantContext.id}`} />)}
-                           </DropdownMenu>
-
-                           <DropdownMenu 
-                                title="Production Lines"
-                                to={`/app/plants/${plantContext.id}/production-lines`}
-                                icon={Cpu} 
-                                isCollapsed={isCollapsed}
-                                isOpen={openDropdown === 'production'}
-                                onToggle={() => handleManualDropdownToggle('production')}
-                           >
-                                {plantContext.machines.map(m => <NestedSidebarLink key={m.id} to={`/app/machines/${m.id}`} label={m.name} active={params.machineId === m.id} />)}
-                           </DropdownMenu>
-                        </>
-                    )}
-
-                    {/* HYBRID: Supervisor/Operator/Guest etc on any page */}
-                    {displayMode === 'HYBRID' && (
-                         <>
-                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Production Plants</div>}
-                            {plantsToShow.map(plantItem => {
-                                const isActivePlant = plantContext?.id === plantItem.id;
-                                const isExpanded = expandedPlant === plantItem.id;
-
-                                return (
-                                     <div key={plantItem.id} className={`mx-2 my-1 rounded-xl transition-all duration-300 ${isActivePlant ? 'bg-slate-800' : ''}`}>
-                                        <SidebarLink 
-                                            to={`/app/plants/${plantItem.id}`} 
-                                            label={plantItem.name} 
-                                            active={location.pathname === `/app/plants/${plantItem.id}`}
-                                            icon={Building2} 
-                                            isCollapsed={isCollapsed}
-                                            onClick={(e) => {
-                                                if (isActivePlant) {
-                                                    e.preventDefault();
-                                                    handleManualAccordionToggle(plantItem.id);
-                                                } else {
-                                                    userInteractedRef.current = false;
-                                                }
-                                            }}
-                                        />
-                                        {isActivePlant && !isCollapsed && (
-                                            <div style={{ maxHeight: isExpanded ? '1000px' : '0px', transition: 'max-height 0.5s ease-in-out', overflow: 'hidden' }}>
-                                                 <div className="border-t border-slate-700/50 mx-4 my-2"></div>
-                                                 <DropdownMenu 
-                                                    title="Energy & Utilities" 
-                                                    to={`/app/plants/${plantItem.id}/utilities`}
-                                                    icon={Zap} 
-                                                    isCollapsed={isCollapsed}
-                                                    isOpen={openDropdown === 'utilities'}
-                                                    onToggle={() => handleManualDropdownToggle('utilities')}
-                                                  >
-                                                    {utilityTypes.map(util => <NestedSidebarLink key={util.key} to={`/app/utility/${util.key}/${plantItem.id}`} label={util.label} active={location.pathname === `/app/utility/${util.key}/${plantItem.id}`} />)}
-                                                </DropdownMenu>
-                                                 <DropdownMenu 
-                                                    title="Production Lines" 
-                                                    to={`/app/plants/${plantItem.id}/production-lines`}
-                                                    icon={Cpu} 
-                                                    isCollapsed={isCollapsed}
-                                                    isOpen={openDropdown === 'production'}
-                                                    onToggle={() => handleManualDropdownToggle('production')}
-                                                 >
-                                                    {plantItem.machines.map(m => <NestedSidebarLink key={m.id} to={`/app/machines/${m.id}`} label={m.name} active={params.machineId === m.id} />)}
-                                                </DropdownMenu>
-                                            </div>
-                                        )}
+                            return (
+                                <div key={plantItem.id} className={`mx-2 my-1 rounded-xl transition-colors ${isCurrentPlantActive ? 'bg-slate-800/30 border border-slate-800' : ''}`}>
+                                    <SidebarLink 
+                                        to={`/app/plants/${plantItem.id}`} 
+                                        onClick={(e) => {
+                                            if (isCurrentPlantActive) {
+                                                e.preventDefault();
+                                                togglePlant(plantItem.id);
+                                            }
+                                        }}
+                                        label={plantItem.name} 
+                                        active={location.pathname === `/app/plants/${plantItem.id}`} 
+                                        icon={Building2} 
+                                        isCollapsed={isCollapsed} 
+                                    />
+                                    <div style={{ maxHeight: isExpanded ? '1000px' : '0px', transition: 'max-height 0.4s ease-out', overflow: 'hidden' }}>
+                                        <div className="pt-2 pb-1 border-t border-slate-800/50 mx-4">
+                                            <DropdownMenu title="Energy & Utilities" icon={Zap} isCollapsed={isCollapsed} defaultOpen={location.pathname.startsWith(`/app/utility/`)}>
+                                                {utilityService.getUtilityTypes().map(util => (
+                                                    <NestedSidebarLink key={util.key} to={`/app/utility/${util.key}/${plantItem.id}`} label={util.label} active={location.pathname === `/app/utility/${util.key}/${plantItem.id}`} />
+                                                ))}
+                                            </DropdownMenu>
+                                            <DropdownMenu title="Production Lines" icon={Cpu} isCollapsed={isCollapsed} defaultOpen={location.pathname.startsWith(`/app/machines/`)}>
+                                                {plantItem.machines.map(machine => (
+                                                    <NestedSidebarLink key={machine.id} to={`/app/machines/${machine.id}`} label={machine.name} active={location.pathname === `/app/machines/${machine.id}`} />
+                                                ))}
+                                            </DropdownMenu>
+                                        </div>
                                     </div>
-                                );
-                            })}
-                         </>
-                    )}
-                    
-                    {/* GLOBAL: Default view for Admins/Mgmt/Guests on non-plant pages */}
-                    {displayMode === 'GLOBAL' && (
-                         <>
-                            {canSeeGlobalDashboard && (
-                                <div className="mb-4">
-                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dashboards</div>}
+                                </div>
+                            );
+                        })}
+                        {isAdmin && (
+                            <div className="pt-4">
+                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administration</div>}
+                                <SidebarLink to="/app/settings" label="System Settings" active={location.pathname.startsWith('/app/settings')} icon={Settings} isCollapsed={isCollapsed} />
+                            </div>
+                        )}
+                    </nav>
+                    <UserProfileFooter user={user} onLogout={onLogout} isCollapsed={isCollapsed} />
+                </>
+            );
+        } else { // Privileged Roles (Admin/Management)
+            if (plant) {
+                // --- PRIVILEGED PLANT-SPECIFIC SIDEBAR ---
+                const utilityTypes = utilityService.getUtilityTypes();
+                const machines = plant.machines;
+                const isUtilityActive = location.pathname.startsWith(`/app/utility/`);
+                const isProductionActive = location.pathname.startsWith(`/app/machines/`);
+                
+                return (
+                    <>
+                        <div className={`px-4 py-6 border-b border-slate-800/50 flex items-center gap-4 ${isCollapsed ? 'justify-center py-8' : ''}`}>
+                            {!isCollapsed && <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700"><Factory size={20} className="text-blue-400" /></div>}
+                            {!isCollapsed && <div className="min-w-0"><p className="text-base font-bold text-white truncate">{plant.name}</p><p className="text-xs text-slate-300 font-medium">{plant.location}</p></div>}
+                            {isCollapsed && <Factory size={24} className="text-blue-400" />}
+                        </div>
+                        <nav className="flex-1 overflow-y-auto py-4 custom-scrollbar">
+                            <SidebarLink to="/app/dashboard/global" label="Back to Global" icon={ArrowLeft} isCollapsed={isCollapsed} active={false} />
+                            <div className="my-4 border-t border-slate-800 mx-4"></div>
+                            <DropdownMenu title="Energy & Utilities" icon={Zap} isCollapsed={isCollapsed} defaultOpen={isUtilityActive}>
+                                {utilityTypes.map(util => <NestedSidebarLink key={util.key} to={`/app/utility/${util.key}/${plant.id}`} label={util.label} active={location.pathname === `/app/utility/${util.key}/${plant.id}`} />)}
+                            </DropdownMenu>
+                            <DropdownMenu title="Production Lines" icon={Cpu} isCollapsed={isCollapsed} defaultOpen={isProductionActive}>
+                                {machines.map(machine => <NestedSidebarLink key={machine.id} to={`/app/machines/${machine.id}`} label={machine.name} active={location.pathname === `/app/machines/${machine.id}`} />)}
+                            </DropdownMenu>
+                        </nav>
+                        <UserProfileFooter user={user} onLogout={onLogout} isCollapsed={isCollapsed} />
+                    </>
+                );
+            } else {
+                // --- PRIVILEGED GLOBAL SIDEBAR ---
+                return (
+                    <>
+                        <div className={`px-6 py-8 border-b border-slate-800/50 bg-[#0b1120] flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
+                            <div className="flex flex-col items-center">
+                                <h1 className={`text-sm font-extrabold text-white tracking-tighter whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}>PT INDOFOOD FORTUNA MAKMUR</h1>
+                                <p className={`text-[11px] font-bold text-blue-500 mt-1.5 uppercase tracking-wider flex items-center gap-2 transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0' : 'opacity-100'}`}><span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>Smart Monitoring Multi Plant</p>
+                            </div>
+                        </div>
+                        <nav className="flex-1 overflow-y-auto px-1 py-6 custom-scrollbar space-y-6">
+                            {canViewGlobal && (
+                                <div>
+                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Dashboards</div>}
                                     <SidebarLink to="/app/dashboard/global" label="Global Overview" active={location.pathname.includes('/app/dashboard/global')} icon={LayoutDashboard} isCollapsed={isCollapsed} />
                                 </div>
                             )}
-                            
-                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Production Plants</div>}
-                            {plantsToShow.map(plantItem => (
-                                <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />
-                            ))}
-                         </>
-                    )}
-
-                    {/* Admin settings link, always available at the bottom */}
-                    {user.role === UserRole.ADMINISTRATOR && (
-                        <div className="pt-4">
-                            {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Administration</div>}
-                            <SidebarLink to="/app/settings" label="System Settings" active={location.pathname.startsWith('/app/settings')} icon={Settings} isCollapsed={isCollapsed} />
-                        </div>
-                    )}
-                </nav>
-                <UserProfileFooter user={user} onLogout={onLogout} isCollapsed={isCollapsed} />
-            </>
-        );
+                            <div>
+                                {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Production Plants</div>}
+                                <div className="space-y-0.5">{allPlants.map((plantItem) => <SidebarLink key={plantItem.id} to={`/app/plants/${plantItem.id}`} label={plantItem.name} active={location.pathname.includes(`/app/plants/${plantItem.id}`)} icon={Building2} isCollapsed={isCollapsed} />)}</div>
+                            </div>
+                            {isAdmin && (
+                                <div>
+                                    {!isCollapsed && <div className="px-5 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administration</div>}
+                                    <SidebarLink to="/app/settings" label="System Settings" active={location.pathname.startsWith('/app/settings')} icon={Settings} isCollapsed={isCollapsed} />
+                                </div>
+                            )}
+                        </nav>
+                        <UserProfileFooter user={user} onLogout={onLogout} isCollapsed={isCollapsed} />
+                    </>
+                );
+            }
+        }
     };
 
     return (
@@ -467,35 +431,18 @@ const ProtectedLayout = ({ user, onLogout }: { user: User | null; onLogout: () =
 // ---------------------------------------
 // ACCESS CONTROL WRAPPERS
 // ---------------------------------------
-
-const PlantDashboardAccessWrapper = ({ user }: { user: User | null }) => {
-    if (!user) return <SuspenseSpinner />;
-    const { plantId } = useParams();
-    const navigate = useNavigate();
-
-    if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(plantId as PlantCode)) {
-        const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
-        useEffect(() => navigate(redirectTo, { replace: true }), []);
-        return <SuspenseSpinner />;
-    }
-    return <PlantDashboard userRole={user.role} />;
-};
-
-
-const MachineDetailWrapper = React.memo(({ user }: { user: User | null }) => {
-  if (!user) return <SuspenseSpinner />;
+const MachineDetailWrapper = React.memo(({ user }: { user: User }) => {
   const { machineId } = useParams();
   const navigate = useNavigate();
+  const restrictedRoles = [UserRole.VIEWER];
+  
+  if (restrictedRoles.includes(user.role)) {
+    return <Navigate to="/app/dashboard/global" replace />;
+  }
 
   const machine = React.useMemo(() => plantService.getMachineById(machineId || ''), [machineId]);
   
   if (!machine) return <div className="p-8 text-slate-500">Machine Not Found</div>;
-
-  if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(machine.plantId)) {
-      const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
-      useEffect(() => navigate(redirectTo, { replace: true }), []);
-      return <SuspenseSpinner />;
-  }
 
   return (
     <MachineDetail
@@ -507,66 +454,51 @@ const MachineDetailWrapper = React.memo(({ user }: { user: User | null }) => {
   );
 });
 
-const LVMDPDetailWrapper = React.memo(({ user }: { user: User | null }) => {
-  if (!user) return <SuspenseSpinner />;
+const LVMDPDetailWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
   const { panelId } = useParams();
   const navigate = useNavigate();
+  const restrictedRoles = [UserRole.OPERATOR, UserRole.QC, UserRole.VIEWER];
+
+  if (restrictedRoles.includes(userRole)) {
+    return <Navigate to="/app/dashboard/global" replace />;
+  }
 
   const panel = React.useMemo(() => lvmdpService.getPanelById(panelId || ''), [panelId]);
 
   if (!panel) return <div className="p-8 text-slate-500">Panel Not Found</div>;
 
-  if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(panel.plantId)) {
-      const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
-      useEffect(() => navigate(redirectTo, { replace: true }), []);
-      return <SuspenseSpinner />;
-  }
-  
   return (
-    <LVMDPDetail lvmdp={panel} onBack={() => navigate(-1)} userRole={user.role} />
+    <LVMDPDetail lvmdp={panel} onBack={() => navigate(-1)} userRole={userRole} />
   );
 });
 
-const UtilitySummaryWrapper = React.memo(({ user }: { user: User | null }) => {
-  if (!user) return <SuspenseSpinner />;
+const UtilitySummaryWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
   const { type, plantId } = useParams();
   const navigate = useNavigate();
+  const restrictedRoles = [UserRole.VIEWER];
+
+  if (restrictedRoles.includes(userRole)) {
+    return <Navigate to="/app/dashboard/global" replace />;
+  }
   
   const plant = React.useMemo(() => plantService.getPlantById(plantId || ''), [plantId]);
 
   if (!plant) return <div className="p-8 text-slate-500">Plant Not Found</div>;
 
-  if (user.role !== UserRole.ADMINISTRATOR && !user.plantAccess?.includes(plant.id)) {
-      const redirectTo = user.plantAccess && user.plantAccess.length > 0 ? `/app/plants/${user.plantAccess[0]}` : '/login';
-      useEffect(() => navigate(redirectTo, { replace: true }), []);
-      return <SuspenseSpinner />;
-  }
-
   return (
     <UtilitySummary
       plant={plant}
       type={type || 'electricity'}
-      onBack={() => navigate(-1)}
-      userRole={user.role}
+      onBack={() => navigate(`/app/plants/${plantId}`)}
+      userRole={userRole}
     />
   );
 });
 
-const UtilitiesOverviewWrapper = React.memo(({ user }: { user: User | null }) => {
-    if (!user) return <SuspenseSpinner />;
-    return <UtilitiesOverview userRole={user.role} />
-});
 
-const ProductionLinesOverviewWrapper = React.memo(({ user }: { user: User | null }) => {
-    if (!user) return <SuspenseSpinner />;
-    return <ProductionLinesOverview userRole={user.role} />
-});
-
-
-const SettingsWrapper = React.memo(({ user }: { user: User | null }) => {
-  if (!user) return <SuspenseSpinner />;
+const SettingsWrapper = React.memo(({ userRole }: { userRole: UserRole }) => {
   return (
-    <SettingsView userRole={user.role} />
+    <SettingsView userRole={userRole} />
   )
 });
 
@@ -577,42 +509,77 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
 
   const handleLogin = (loggedInUser: User) => {
-    setUser(loggedInUser);
-  };
-
-  const handleLogout = () => {
-    setUser(null);
+    if (loggedInUser && Object.values(UserRole).includes(loggedInUser.role)) {
+      setUser(loggedInUser);
+    } else {
+      setUser(null);
+    }
   };
 
   return (
-    <Suspense fallback={<SuspenseSpinner />}>
-      <HashRouter>
+    <HashRouter>
+      <Suspense fallback={<SuspenseSpinner />}>
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/app" replace /> : <Login onLogin={handleLogin} />}
+          />
           <Route
             path="/app"
-            element={<ProtectedLayout user={user} onLogout={handleLogout} />}
+            element={user ? <ProtectedLayout user={user} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />}
           >
-            <Route index element={<Navigate to="dashboard/global" replace />} />
-            <Route path="dashboard/global" element={<GlobalDashboard user={user} />} />
-            
-            <Route path="plants/:plantId" element={<PlantDashboardAccessWrapper user={user} />} />
-            <Route path="plants/:plantId/utilities" element={<UtilitiesOverviewWrapper user={user} />} />
-            <Route path="plants/:plantId/production-lines" element={<ProductionLinesOverviewWrapper user={user} />} />
-            
-            <Route path="machines/:machineId" element={<MachineDetailWrapper user={user} />} />
-            <Route path="lvmdp/:panelId" element={<LVMDPDetailWrapper user={user} />} />
-            <Route path="utility/:type/:plantId" element={<UtilitySummaryWrapper user={user} />} />
-
-            <Route path="settings" element={<SettingsWrapper user={user} />} />
-            
+            <Route index element={
+              user && (
+                [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role) ? (
+                  <Navigate to="dashboard/global" replace />
+                ) : (
+                  <Navigate to="plants/CIKOKOL" replace /> 
+                )
+              )
+            } />
+            <Route
+              path="dashboard/global"
+              element={ user && (
+                [UserRole.ADMINISTRATOR, UserRole.MANAGEMENT, UserRole.VIEWER].includes(user.role) ? (
+                  <GlobalDashboard userRole={user.role} />
+                ) : (
+                  <Navigate to="/app/plants/CIKOKOL" replace />
+                )
+              )}
+            />
+            <Route
+              path="plants/:plantId"
+              element={user && <PlantDashboard userRole={user.role} />}
+            />
+            <Route
+              path="machines/:machineId"
+              element={user && <MachineDetailWrapper user={user} />}
+            />
+            <Route
+              path="lvmdp/:panelId"
+              element={user && <LVMDPDetailWrapper userRole={user.role} />}
+            />
+            <Route
+              path="utility/:type/:plantId"
+              element={user && <UtilitySummaryWrapper userRole={user.role} />}
+            />
+            <Route
+              path="settings"
+              element={ user && (
+                user.role === UserRole.ADMINISTRATOR ? (
+                  <SettingsWrapper userRole={user.role} />
+                ) : (
+                  <Navigate to="/app/dashboard/global" replace />
+                )
+              )}
+            />
           </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </HashRouter>
-    </Suspense>
+      </Suspense>
+    </HashRouter>
   );
 };
-// FIX: Added default export for the App component.
+
 export default App;

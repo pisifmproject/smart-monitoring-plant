@@ -6,27 +6,6 @@ import { User } from '../types';
 import { login as authLogin } from '../services/auth';
 import { Lock, User as UserIcon, ArrowRight, ShieldCheck } from 'lucide-react';
 
-// FIX: Moved AlertTriangleIcon before usage to prevent ReferenceError.
-// Helper Icon for error
-const AlertTriangleIcon = ({ size, className }: { size: number, className?: string }) => (
-    <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        width={size} 
-        height={size} 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round" 
-        className={className}
-    >
-        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-        <path d="M12 9v4"/>
-        <path d="M12 17h.01"/>
-    </svg>
-);
-
 interface LoginProps {
     onLogin: (user: User) => void;
 }
@@ -201,5 +180,25 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </div>
     );
 };
+
+// Helper Icon for error
+const AlertTriangleIcon = ({ size, className }: { size: number, className?: string }) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width={size} 
+        height={size} 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        className={className}
+    >
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+        <path d="M12 9v4"/>
+        <path d="M12 17h.01"/>
+    </svg>
+);
 
 export default Login;

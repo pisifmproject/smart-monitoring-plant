@@ -12,8 +12,7 @@ import {
     DowntimeLog,
     WeigherDetails,
     BagmakerDetails,
-    PackingLineConfig,
-    SeasoningDetails
+    PackingLineConfig
 } from '../types';
 
 // ------------------------------------------------------
@@ -60,6 +59,8 @@ const getMachineType = (name: string): MachineType => {
         return MachineType.EXTRUDER;
     if (n.includes('packing') || n.includes('pouch') || CIKUPA_PACKING_LINES.some(l => l.lineName === name) || CIKOKOL_PACKING_LINES.some(l => l.lineName === name) || SEMARANG_PACKING_LINES.some(l => l.lineName === name))
         return MachineType.PACKING;
+    if (n.includes('season') || n.includes('tws'))
+        return MachineType.SEASONING;
     return MachineType.GENERIC;
 };
 
@@ -125,21 +126,6 @@ export const generateSingleBagmakerDetails = (): BagmakerDetails => {
     };
 };
 
-export const generateSeasoningDetails = (): SeasoningDetails => {
-    return {
-        throughput: 800 + Math.floor(Math.random() * 100),
-        seasoningCoverage: parseFloat((98.5 + Math.random() * 1.4).toFixed(2)),
-        seasoningGiveaway: parseFloat((0.5 + Math.random() * 0.5).toFixed(2)),
-        drumSpeed: 20 + Math.floor(Math.random() * 4),
-        feederRate: parseFloat((150.2 + Math.random() * 5).toFixed(1)),
-        oilSprayRate: parseFloat((2.5 + Math.random() * 0.3).toFixed(2)),
-        inletTemp: 35 + Math.floor(Math.random() * 3),
-        outletTemp: 38 + Math.floor(Math.random() * 3),
-        seasoningUsed: 450 + Math.floor(Math.random() * 50),
-        oilUsed: 80 + Math.floor(Math.random() * 10),
-    };
-};
-
 
 // ------------------------------------------------------
 // MACHINE GENERATOR (REFACTORED FOR DYNAMIC PACKING CONFIG)
@@ -154,7 +140,7 @@ const generateMachines = (plantId: PlantCode, names: string[]): Machine[] => {
         const type = getMachineType(name);
         const outputBase = type === MachineType.PACKING ? 40 : 800;
         
-        const machineBase: Omit<Machine, 'weigher' | 'bagmaker' | 'bagmakerUnits' | 'weigherUnits' | 'seasoning'> = {
+        const machineBase: Omit<Machine, 'weigher' | 'bagmaker' | 'bagmakerUnits' | 'weigherUnits'> = {
             id: `${plantId}-M-${index}`,
             code: name.replace(/\s+/g, '_').toUpperCase(),
             name: name,
@@ -188,7 +174,6 @@ const generateMachines = (plantId: PlantCode, names: string[]): Machine[] => {
                     ...machineBase,
                     bagmakerUnits: Array.from({ length: packingLineConfig.bagmakers }, () => generateSingleBagmakerDetails()),
                     weigherUnits: Array.from({ length: packingLineConfig.weighers }, () => generateSingleWeigherDetails()),
-                    seasoning: generateSeasoningDetails(),
                 };
             }
         }
@@ -201,7 +186,6 @@ const generateMachines = (plantId: PlantCode, names: string[]): Machine[] => {
                     ...machineBase,
                     bagmakerUnits: Array.from({ length: packingLineConfig.bagmakers }, () => generateSingleBagmakerDetails()),
                     weigherUnits: Array.from({ length: packingLineConfig.weighers }, () => generateSingleWeigherDetails()),
-                    seasoning: generateSeasoningDetails(),
                 };
             }
         }
@@ -214,26 +198,16 @@ const generateMachines = (plantId: PlantCode, names: string[]): Machine[] => {
                     ...machineBase,
                     bagmakerUnits: Array.from({ length: packingLineConfig.bagmakers }, () => generateSingleBagmakerDetails()),
                     weigherUnits: Array.from({ length: packingLineConfig.weighers }, () => generateSingleWeigherDetails()),
-                    seasoning: generateSeasoningDetails(),
                 };
             }
         }
 
-        // DEFAULT CASE: Single unit packing data for all other machines of type PACKING
-        if (type === MachineType.PACKING) {
-            return {
-                ...machineBase,
-                weigher: generateSingleWeigherDetails(),
-                bagmaker: generateSingleBagmakerDetails(),
-                seasoning: generateSeasoningDetails(),
-            };
-        }
-        
-        // Return base machine for all other types
+        // DEFAULT CASE: Single unit packing data for all other machines
         return {
             ...machineBase,
-            seasoning: generateSeasoningDetails(),
-        } as Machine;
+            weigher: generateSingleWeigherDetails(),
+            bagmaker: generateSingleBagmakerDetails()
+        };
     });
 };
 

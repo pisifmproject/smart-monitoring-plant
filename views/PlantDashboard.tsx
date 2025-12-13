@@ -36,7 +36,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
 
     if (!plant || !kpis) return <div className="p-8 text-slate-400">Plant not found</div>;
 
-    const canClickDetails = true; // Guests can now navigate to a simplified view
+    const canClickDetails = ![UserRole.VIEWER].includes(userRole);
     const canDownloadReport = [UserRole.ADMINISTRATOR, UserRole.SUPERVISOR, UserRole.MANAGEMENT].includes(userRole);
     const visibilityContext = { plantId: plant.id };
     const showAlarms = ![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole);
@@ -67,7 +67,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     };
 
     const handleAlarmClick = (alarm: Alarm) => {
-        if (!alarm.machineId) return; // Cannot navigate if no machine ID
+        if (!canClickDetails || !alarm.machineId) return;
         const targetTab = userRole === UserRole.MAINTENANCE ? 'Maintenance' : 'Alarms';
         const state = { initialTab: targetTab };
         if (alarm.machineId.includes('LVMDP')) {
@@ -262,7 +262,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                         }
                         const machineContext = { ...visibilityContext, machineId: machine.id };
                         const hasActiveAlarm = maintenanceService.hasActiveAlarm(machine.id);
-                        
+
                         return (
                             <Card 
                                 key={machine.id}

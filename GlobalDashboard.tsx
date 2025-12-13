@@ -1,42 +1,25 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserRole, User } from './types';
+import { UserRole } from './types';
 import { Card, MetricCard, StatusBadge, formatNumber } from './components/SharedComponents';
 import { isDataItemVisible } from './services/visibilityStore';
 import { dashboardService } from './services/dashboardService';
-import { Globe, Activity, Zap, AlertTriangle, Factory, Loader2 } from 'lucide-react';
+import { Globe, Activity, Zap, AlertTriangle, Factory } from 'lucide-react';
 
 interface GlobalDashboardProps {
-    user: User | null;
+    userRole: UserRole;
 }
 
 type Period = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR';
 
-const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ user }) => {
+const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
     const navigate = useNavigate();
     const [period, setPeriod] = useState<Period>('DAY');
 
-    if (!user) {
-        return (
-            <div className="w-full h-full flex items-center justify-center p-20">
-                <Loader2 size={32} className="text-blue-500 animate-spin" />
-            </div>
-        );
-    }
-
-    const { role: userRole } = user;
-
-    const kpis = useMemo(() => dashboardService.getGlobalKPIs(period, user), [period, user]);
+    const kpis = useMemo(() => dashboardService.getGlobalKPIs(period), [period]);
     const plants = useMemo(() => dashboardService.getPlantOverview(period), [period]);
 
-    const plantsToShow = useMemo(() => {
-        if (user.role === UserRole.ADMINISTRATOR || !user.plantAccess || user.plantAccess.length === 0) {
-            return plants;
-        }
-        return plants.filter(p => user.plantAccess?.includes(p.id));
-    }, [plants, user]);
-
-    const canDrillDown = true;
+    const canDrillDown = true; // Always allow drill down
 
     const FilterButton = ({ label }: { label: Period }) => (
         <button 
@@ -121,22 +104,22 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ user }) => {
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
                     <Factory size={20} className="text-slate-300"/> Plant Status Overview
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {plantsToShow.map(plant => {
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-5">
+                    {plants.map(plant => {
                         const visibilityKey = `GLOBAL_PLANT_${plant.id}`;
                         if (!isDataItemVisible(userRole, visibilityKey)) return null;
 
                         const plantStatus = !showAlarms ? 'NORMAL' : plant.computedStatus;
 
                         return (
-                            <Card 
+                            <div 
                                 key={plant.id}
                                 onClick={() => canDrillDown && navigate(`/app/plants/${plant.id}`)}
-                                className={`group transition-all duration-300 flex flex-col ${
+                                className={`bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm transition-all duration-300 group relative overflow-hidden ${
                                     canDrillDown ? 'hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer' : 'opacity-90 cursor-default'
                                 }`}
                             >
-                                <div className="flex justify-between items-start mb-4">
+                                <div className="flex justify-between items-start mb-4 relative z-10">
                                     <div>
                                         <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">{plant.name}</h3>
                                         <p className="text-xs text-slate-300 font-semibold uppercase tracking-wider mt-1">{plant.location}</p>
@@ -144,31 +127,33 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ user }) => {
                                     <StatusBadge status={plantStatus} />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-y-5 gap-x-4 mt-auto pt-4 border-t border-slate-700/50">
+                                <div className="grid grid-cols-2 gap-y-5 gap-x-4 relative z-10 pt-4 mt-4 border-t border-slate-700/50">
                                     <div>
                                         <p className="text-slate-300 text-xs font-bold uppercase tracking-wider">Output</p>
-                                        <p className="text-white font-mono font-bold text-xl">{formatNumber(plant.scaledOutput)} <span className="text-sm font-normal text-slate-400">kg</span></p>
+                                        <p className="text-white font-mono font-bold text-lg">{formatNumber(plant.scaledOutput)} <span className="text-xs font-normal text-slate-400">kg</span></p>
                                     </div>
                                     <div>
                                         <p className="text-slate-300 text-xs font-bold uppercase tracking-wider">OEE</p>
-                                        <p className={`font-mono font-bold text-xl ${plant.scaledOEE >= 80 ? 'text-emerald-400' : plant.scaledOEE >= 60 ? 'text-amber-400' : 'text-rose-400'}`}>
+                                        <p className={`font-mono font-bold text-lg ${plant.scaledOEE >= 80 ? 'text-emerald-400' : plant.scaledOEE >= 60 ? 'text-amber-400' : 'text-rose-400'}`}>
                                             {formatNumber(plant.scaledOEE)}%
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-slate-300 text-xs font-bold uppercase tracking-wider">Energy</p>
-                                        <p className="text-yellow-400 font-mono font-bold text-xl">{formatNumber(plant.scaledEnergy)} <span className="text-sm font-normal text-slate-400">kWh</span></p>
+                                        <p className="text-yellow-400 font-mono font-bold">{formatNumber(plant.scaledEnergy)} <span className="text-xs font-normal text-slate-400">kWh</span></p>
                                     </div>
                                     {showAlarms && (
                                         <div>
                                             <p className="text-slate-300 text-xs font-bold uppercase tracking-wider">Alarms</p>
-                                            <p className={`font-mono font-bold text-xl ${plant.alarmCount > 0 ? 'text-rose-400' : 'text-slate-200'}`}>
+                                            <p className={`font-mono font-bold ${plant.alarmCount > 0 ? 'text-rose-400' : 'text-slate-300'}`}>
                                                 {plant.alarmCount} Active
                                             </p>
                                         </div>
                                     )}
                                 </div>
-                            </Card>
+                                
+                                <div className="absolute -top-8 -right-8 w-36 h-36 bg-slate-700/10 rounded-full pointer-events-none group-hover:scale-125 group-hover:bg-blue-900/20 transition-transform duration-300"></div>
+                            </div>
                         );
                     })}
                 </div>
