@@ -1,3 +1,4 @@
+
 export enum PlantCode {
     CIKOKOL = 'CIKOKOL',
     SEMARANG = 'SEMARANG',
@@ -40,6 +41,7 @@ export interface User {
     username: string;
     name: string;
     role: UserRole;
+    plantAccess?: PlantCode[]; // Array of PlantIDs this user can access
 }
 
 export interface Metric {

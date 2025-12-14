@@ -1,3 +1,4 @@
+
 //dashboardService.ts
 
 import { PLANTS } from './mockData';
@@ -5,7 +6,7 @@ import { maintenanceService } from './maintenanceService';
 import { utilityService } from './utilityService';
 // FIX: Import lvmdpService to resolve reference error in getLVMDPTrend.
 import { lvmdpService } from './lvmdpService';
-import { PlantCode, Plant } from '../types';
+import { PlantCode, Plant, MachineStatus } from '../types';
 import { Zap, Cloud, Droplets, Wind, Box, Flame } from 'lucide-react';
 
 type Period = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR';
@@ -115,6 +116,80 @@ export const dashboardService = {
     },
 
     // --------------------------------------------------
+    // ISO 50001 ENERGY METRICS
+    // --------------------------------------------------
+    getISO50001Metrics: (plantId: string, period: Period) => {
+        const plant = PLANTS[plantId as PlantCode];
+        if (!plant) return null;
+
+        const multiplier = period === 'DAY' ? 1 : period === 'WEEK' ? 6.5 : period === 'MONTH' ? 28 : 340;
+        
+        const totalEnergyKWh = plant.energyTotal * multiplier;
+        const totalProductionKg = plant.outputToday * multiplier;
+        
+        // Specific Energy Consumption (EnPI) = Energy / Production
+        const sec = totalProductionKg > 0 ? totalEnergyKWh / totalProductionKg : 0;
+        
+        // Mock Baseline (EnB) - assuming standard is slightly higher than current for demo "good performance"
+        const secBaseline = sec * 1.05; 
+        
+        // Carbon Footprint (approx 0.85 kg CO2e per kWh for grid electricity in some regions)
+        const co2Emissions = totalEnergyKWh * 0.85;
+
+        // Mock Cost
+        const energyCost = totalEnergyKWh * 1445; // IDR per kWh
+
+        return {
+            totalEnergyKWh,
+            totalProductionKg,
+            sec,
+            secBaseline,
+            co2Emissions, // kg CO2
+            energyCost
+        };
+    },
+
+    // --------------------------------------------------
+    // PRODUCTION LINE AGGREGATES
+    // --------------------------------------------------
+    getProductionAggregateStats: (plantId: string, period: Period) => {
+        const plant = PLANTS[plantId as PlantCode];
+        if (!plant) return null;
+
+        const machines = plant.machines;
+        const totalMachines = machines.length;
+        
+        const statusCounts = {
+            [MachineStatus.RUNNING]: machines.filter(m => m.status === MachineStatus.RUNNING).length,
+            [MachineStatus.IDLE]: machines.filter(m => m.status === MachineStatus.IDLE).length,
+            [MachineStatus.BREAKDOWN]: machines.filter(m => m.status === MachineStatus.BREAKDOWN).length,
+            [MachineStatus.OFFLINE]: machines.filter(m => m.status === MachineStatus.OFFLINE).length,
+        };
+
+        const avgAvailability = machines.reduce((sum, m) => sum + (m.availability || 0), 0) / totalMachines;
+        const avgPerformance = machines.reduce((sum, m) => sum + (m.performance || 0), 0) / totalMachines;
+        const avgQuality = machines.reduce((sum, m) => sum + (m.quality || 0), 0) / totalMachines;
+        const avgOEE = machines.reduce((sum, m) => sum + m.oee, 0) / totalMachines;
+
+        const totalOutput = machines.reduce((sum, m) => {
+             const multiplier = period === 'DAY' ? 24 : period === 'WEEK' ? 168 : period === 'MONTH' ? 720 : 8760;
+             return sum + (m.outputPerHour * multiplier * 0.8); // 0.8 utilization factor approximation
+        }, 0);
+
+        return {
+            totalMachines,
+            statusCounts,
+            oee: {
+                availability: avgAvailability,
+                performance: avgPerformance,
+                quality: avgQuality,
+                overall: avgOEE
+            },
+            totalOutput
+        };
+    },
+
+    // --------------------------------------------------
     // UTILITY SUMMARY FIXED (Electricity, Water, Steam, Air, Gas, Nitrogen)
     // --------------------------------------------------
     getUtilityMetrics: (plantId: string, period: Period) => {
@@ -139,7 +214,10 @@ export const dashboardService = {
                 }),
                 unit: config.unit,
                 icon: config.icon,
-                color: config.color
+                color: config.color,
+                // Add trend for ISO 50001 dashboard
+                trend: config.trend,
+                trendBase: config.trendBase
             };
         });
     },

@@ -1,25 +1,24 @@
+
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserRole } from './types';
+import { User, UserRole, PlantCode } from './types';
 import { Card, MetricCard, StatusBadge, formatNumber } from './components/SharedComponents';
 import { isDataItemVisible } from './services/visibilityStore';
 import { dashboardService } from './services/dashboardService';
 import { Globe, Activity, Zap, AlertTriangle, Factory } from 'lucide-react';
 
 interface GlobalDashboardProps {
-    userRole: UserRole;
+    user: User;
 }
 
 type Period = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR';
 
-const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
+const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ user }) => {
     const navigate = useNavigate();
     const [period, setPeriod] = useState<Period>('DAY');
 
     const kpis = useMemo(() => dashboardService.getGlobalKPIs(period), [period]);
     const plants = useMemo(() => dashboardService.getPlantOverview(period), [period]);
-
-    const canDrillDown = true; // Always allow drill down
 
     const FilterButton = ({ label }: { label: Period }) => (
         <button 
@@ -34,7 +33,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
         </button>
     );
 
-    const showAlarms = ![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole);
+    const showAlarms = ![UserRole.VIEWER, UserRole.MANAGEMENT].includes(user.role);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 w-full">
@@ -56,7 +55,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
 
             <Card title="Global Performance At a Glance">
                 <div className={`grid grid-cols-1 sm:grid-cols-2 ${!showAlarms ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-5`}>
-                    {isDataItemVisible(userRole, 'GLOBAL_OUTPUT_TODAY') && (
+                    {isDataItemVisible(user.role, 'GLOBAL_OUTPUT_TODAY') && (
                         <MetricCard 
                             title={`Total Output (${period})`}
                             value={formatNumber(kpis.totalOutput)} 
@@ -67,7 +66,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                             color="text-blue-400"
                         />
                     )}
-                    {isDataItemVisible(userRole, 'GLOBAL_OEE') && (
+                    {isDataItemVisible(user.role, 'GLOBAL_OEE') && (
                         <MetricCard 
                             title="Global Avg OEE" 
                             value={formatNumber(kpis.avgOEE)} 
@@ -78,7 +77,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                             color="text-emerald-400"
                         />
                     )}
-                    {isDataItemVisible(userRole, 'GLOBAL_TOTAL_ENERGY') && (
+                    {isDataItemVisible(user.role, 'GLOBAL_TOTAL_ENERGY') && (
                         <MetricCard 
                             title={`Total Energy (${period})`} 
                             value={formatNumber(kpis.totalEnergy)} 
@@ -89,7 +88,7 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                             color="text-yellow-400"
                         />
                     )}
-                    {showAlarms && isDataItemVisible(userRole, 'GLOBAL_TOTAL_ALARMS') && (
+                    {showAlarms && isDataItemVisible(user.role, 'GLOBAL_TOTAL_ALARMS') && (
                         <MetricCard 
                             title="Active Alarms" 
                             value={kpis.totalAlarmsValue} 
@@ -107,24 +106,33 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-5">
                     {plants.map(plant => {
                         const visibilityKey = `GLOBAL_PLANT_${plant.id}`;
-                        if (!isDataItemVisible(userRole, visibilityKey)) return null;
+                        if (!isDataItemVisible(user.role, visibilityKey)) return null;
 
                         const plantStatus = !showAlarms ? 'NORMAL' : plant.computedStatus;
+                        
+                        // Check Access Permissions
+                        const hasAccess = user.role === UserRole.ADMINISTRATOR || (user.plantAccess?.includes(plant.id as PlantCode));
 
                         return (
                             <div 
                                 key={plant.id}
-                                onClick={() => canDrillDown && navigate(`/app/plants/${plant.id}`)}
+                                onClick={() => hasAccess && navigate(`/app/plants/${plant.id}`)}
                                 className={`bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm transition-all duration-300 group relative overflow-hidden ${
-                                    canDrillDown ? 'hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer' : 'opacity-90 cursor-default'
+                                    hasAccess 
+                                    ? 'hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer' 
+                                    : 'cursor-default'
                                 }`}
                             >
                                 <div className="flex justify-between items-start mb-4 relative z-10">
                                     <div>
-                                        <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">{plant.name}</h3>
+                                        <h3 className={`text-lg font-bold transition-colors ${hasAccess ? 'text-white group-hover:text-blue-400' : 'text-white'}`}>
+                                            {plant.name}
+                                        </h3>
                                         <p className="text-xs text-slate-300 font-semibold uppercase tracking-wider mt-1">{plant.location}</p>
                                     </div>
-                                    <StatusBadge status={plantStatus} />
+                                    <div className="flex items-center gap-2">
+                                        {user.role !== UserRole.MANAGEMENT && <StatusBadge status={plantStatus} />}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-y-5 gap-x-4 relative z-10 pt-4 mt-4 border-t border-slate-700/50">
@@ -152,7 +160,9 @@ const GlobalDashboard: React.FC<GlobalDashboardProps> = ({ userRole }) => {
                                     )}
                                 </div>
                                 
-                                <div className="absolute -top-8 -right-8 w-36 h-36 bg-slate-700/10 rounded-full pointer-events-none group-hover:scale-125 group-hover:bg-blue-900/20 transition-transform duration-300"></div>
+                                {hasAccess && (
+                                    <div className="absolute -top-8 -right-8 w-36 h-36 bg-slate-700/10 rounded-full pointer-events-none group-hover:scale-125 group-hover:bg-blue-900/20 transition-transform duration-300"></div>
+                                )}
                             </div>
                         );
                     })}

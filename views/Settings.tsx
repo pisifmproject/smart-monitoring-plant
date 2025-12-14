@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { UserRole, VisibilityCategory, VisibilityGroup, DataItem, User, PlantCode, MachineType, Machine, LVMDP, Plant, UtilityConfig, MachineStatus, PackingLineConfig } from '../types';
 import { Card } from '../components/SharedComponents';
@@ -127,7 +124,7 @@ const SettingsView: React.FC<SettingsProps> = ({ userRole }) => {
                     </h1>
                     <p className="text-slate-300 text-sm mt-2 max-w-2xl leading-relaxed">
                         {activeSection === "visibility" ? "Configure system-wide visibility rules and dashboard layout preferences across all plant scopes." :
-                         activeSection === "users" ? "Manage user accounts, assign roles, and set access permissions for the application." :
+                         activeSection === "users" ? "Manage user accounts, assign roles, and set plant-level access permissions." :
                          activeSection === "database" ? "Manage core system data including plants, machines, LVMDP panels, and utility configurations." :
                          "This module is currently under development."}
                     </p>
@@ -410,15 +407,30 @@ const UsersAndRolesSettings = memo(() => {
                     </div>
                 </div>
                 <div className="overflow-x-auto">
-                     <table className="w-full text-left text-slate-300 min-w-[600px]">
+                     <table className="w-full text-left text-slate-300 min-w-[700px]">
                         <thead className="bg-slate-900/50 uppercase tracking-wider text-xs font-bold text-slate-300">
-                            <tr><th className="p-3">Full Name</th><th className="p-3">Corporate ID</th><th className="p-3">Role</th><th className="p-3 text-right">Actions</th></tr>
+                            <tr><th className="p-3">Full Name</th><th className="p-3">Corporate ID</th><th className="p-3">Role</th><th className="p-3">Plant Access</th><th className="p-3 text-right">Actions</th></tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800 text-sm">
                             {filteredUsers.map(user => (
                                 <tr key={user.username} className="hover:bg-slate-800/50">
                                     <td className="p-3 font-bold text-white">{user.name}</td><td className="p-3 font-mono">{user.username}</td>
                                     <td className="p-3"><span className="bg-slate-700 px-2 py-1 rounded-md text-xs font-bold text-blue-300">{user.role}</span></td>
+                                    <td className="p-3">
+                                        {user.role === UserRole.ADMINISTRATOR ? (
+                                             <span className="text-emerald-400 font-bold text-xs uppercase">All Systems</span>
+                                        ) : (
+                                            <div className="flex flex-wrap gap-1">
+                                                {(user.plantAccess || []).length > 0 ? (
+                                                    user.plantAccess?.map(p => (
+                                                        <span key={p} className="bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded text-[10px] text-slate-300">{p}</span>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-rose-500 text-xs italic">No Access</span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </td>
                                     <td className="p-3 text-right"><div className="flex justify-end items-center gap-2"><button onClick={() => openEditModal(user)} className="p-2 text-slate-300 hover:text-blue-400 hover:bg-slate-700 rounded-md transition-colors"><Edit size={16}/></button><button onClick={() => openDeleteConfirm(user.username)} className="p-2 text-slate-300 hover:text-rose-400 hover:bg-slate-700 rounded-md transition-colors"><Trash2 size={16}/></button></div></td>
                                 </tr>
                             ))}
@@ -601,11 +613,15 @@ const ModalHeader: React.FC<{ title: string; icon: React.ElementType; onClose: (
 );
 
 const UserModal: React.FC<{ user: User | null; onClose: () => void; onSave: () => void; }> = ({ user, onClose, onSave }) => {
-    const [formData, setFormData] = useState({ username: '', name: '', role: UserRole.OPERATOR, password: '' });
+    const [formData, setFormData] = useState({ username: '', name: '', role: UserRole.OPERATOR, password: '', plantAccess: [] as PlantCode[] });
     const [formError, setFormError] = useState('');
+    const allPlants = plantService.getAllPlants();
     
     useEffect(() => {
-        setFormData(user ? { username: user.username, name: user.name, role: user.role, password: '' } : { username: '', name: '', role: UserRole.OPERATOR, password: '' });
+        setFormData(user 
+            ? { username: user.username, name: user.name, role: user.role, password: '', plantAccess: user.plantAccess || [] } 
+            : { username: '', name: '', role: UserRole.OPERATOR, password: '', plantAccess: [] }
+        );
         setFormError('');
     }, [user]);
 
@@ -613,25 +629,66 @@ const UserModal: React.FC<{ user: User | null; onClose: () => void; onSave: () =
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const togglePlantAccess = (plantId: PlantCode) => {
+        const current = formData.plantAccess;
+        if (current.includes(plantId)) {
+            setFormData({ ...formData, plantAccess: current.filter(id => id !== plantId) });
+        } else {
+            setFormData({ ...formData, plantAccess: [...current, plantId] });
+        }
+    };
+
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setFormError('');
         if (!formData.name || !formData.username) { setFormError('Username and Full Name are required.'); return; }
         if (!user && !formData.password) { setFormError('Password is required for new users.'); return; }
-        const result = user ? updateUser(user.username, { name: formData.name, role: formData.role, ...(formData.password && { pass: formData.password }) }) : addUser({ username: formData.username, name: formData.name, role: formData.role }, formData.password);
+        
+        const payload = { 
+            name: formData.name, 
+            role: formData.role, 
+            plantAccess: formData.plantAccess,
+            ...(formData.password && { pass: formData.password }) 
+        };
+
+        const result = user 
+            ? updateUser(user.username, payload) 
+            : addUser({ username: formData.username, name: formData.name, role: formData.role, plantAccess: formData.plantAccess }, formData.password);
+        
         if (result.success) onSave(); else setFormError(result.message || 'An unknown error occurred.');
     };
 
     return (
         <ModalWrapper>
             <ModalHeader title={user ? 'Edit User' : 'Add New User'} icon={UserIcon} onClose={onClose} />
-            <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleFormSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
                 {formError && <p className="text-rose-400 bg-rose-900/20 p-3 rounded-md text-sm border border-rose-500/30">{formError}</p>}
                 <div><label className="block text-xs font-bold text-slate-300 uppercase mb-1">Full Name</label><input name="name" value={formData.name} onChange={handleFormChange} required type="text" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none" /></div>
                 <div className="grid grid-cols-2 gap-4">
                     <div><label className="block text-xs font-bold text-slate-300 uppercase mb-1">Corporate ID</label><input name="username" value={formData.username} onChange={handleFormChange} required type="text" disabled={!!user} className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none disabled:opacity-50" /></div>
                     <div><label className="block text-xs font-bold text-slate-300 uppercase mb-1">Role</label><select name="role" value={formData.role} onChange={handleFormChange} className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none h-[42px]">{Object.values(UserRole).filter(r => r !== UserRole.ADMINISTRATOR).map(role => (<option key={role} value={role}>{role}</option>))}</select></div>
                 </div>
+                
+                {formData.role !== UserRole.ADMINISTRATOR && (
+                    <div>
+                        <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Plant Access Permissions</label>
+                        <div className="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                            {allPlants.map(plant => (
+                                <label key={plant.id} className="flex items-center gap-2 cursor-pointer hover:bg-slate-900 p-1.5 rounded transition-colors">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={formData.plantAccess.includes(plant.id)}
+                                        onChange={() => togglePlantAccess(plant.id)}
+                                        className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900"
+                                    />
+                                    <span className="text-sm text-slate-300">{plant.name}</span>
+                                </label>
+                            ))}
+                        </div>
+                         <p className="text-[10px] text-slate-500 mt-1">Select which plant dashboards this user can access.</p>
+                    </div>
+                )}
+
                 <div><label className="block text-xs font-bold text-slate-300 uppercase mb-1">Password</label><input name="password" value={formData.password} onChange={handleFormChange} type="password" placeholder={user ? 'Leave blank to keep unchanged' : 'Required'} className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none" /></div>
                 <div className="pt-2 flex justify-end gap-3"><button type="button" onClick={onClose} className="px-4 py-2 rounded text-slate-300 hover:text-white font-bold transition-colors">Cancel</button><button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2"><Save size={16} /> Save Changes</button></div>
             </form>
