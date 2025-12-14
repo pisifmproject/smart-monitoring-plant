@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserRole, AlarmSeverity, Alarm } from '../types';
@@ -36,7 +37,12 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
 
     if (!plant || !kpis) return <div className="p-8 text-slate-400">Plant not found</div>;
 
-    const canClickDetails = ![UserRole.VIEWER].includes(userRole);
+    // UPDATE: Allow Viewer and Management to navigate to machine detail (which will be restricted to Summary view)
+    const canNavigate = true; 
+    
+    // Actions like clicking specific alarms remain restricted for Viewers
+    const canPerformAction = ![UserRole.VIEWER].includes(userRole);
+    
     const canDownloadReport = [UserRole.ADMINISTRATOR, UserRole.SUPERVISOR, UserRole.MANAGEMENT].includes(userRole);
     const visibilityContext = { plantId: plant.id };
     const showAlarms = ![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole);
@@ -67,7 +73,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
     };
 
     const handleAlarmClick = (alarm: Alarm) => {
-        if (!canClickDetails || !alarm.machineId) return;
+        if (!canPerformAction || !alarm.machineId) return;
         const targetTab = userRole === UserRole.MAINTENANCE ? 'Maintenance' : 'Alarms';
         const state = { initialTab: targetTab };
         if (alarm.machineId.includes('LVMDP')) {
@@ -149,9 +155,9 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                             isDataItemVisible(userRole, metric.key, visibilityContext) && (
                                 <div 
                                     key={metric.key}
-                                    onClick={() => canClickDetails && navigate(`/app/utility/${metric.type}/${plant.id}`)}
+                                    onClick={() => canNavigate && navigate(`/app/utility/${metric.type}/${plant.id}`)}
                                     className={`bg-slate-900/50 border border-slate-700/50 rounded-lg p-3 flex items-center gap-3 transition-all duration-200 group ${
-                                        canClickDetails ? 'hover:border-blue-500 hover:bg-slate-800/50 cursor-pointer' : 'cursor-default'
+                                        canNavigate ? 'hover:border-blue-500 hover:bg-slate-800/50 cursor-pointer' : 'cursor-default'
                                     }`}
                                 >
                                     <div className={`p-2 rounded-lg bg-slate-700/50 ${metric.color}`}>
@@ -231,7 +237,7 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                                             key={alarm.id} 
                                             onClick={() => handleAlarmClick(alarm)}
                                             className={`flex items-center justify-between bg-slate-900/50 p-3 rounded-lg border border-slate-700/50 transition-all duration-200 group ${
-                                                canClickDetails ? 'cursor-pointer hover:border-blue-500 hover:bg-slate-800 hover:shadow-md' : 'hover:border-slate-600'
+                                                canPerformAction ? 'cursor-pointer hover:border-blue-500 hover:bg-slate-800 hover:shadow-md' : 'hover:border-slate-600'
                                             }`}
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
@@ -266,9 +272,9 @@ const PlantDashboard: React.FC<PlantDashboardProps> = ({ userRole }) => {
                         return (
                             <Card 
                                 key={machine.id}
-                                onClick={() => canClickDetails && navigate(`/app/machines/${machine.id}`)}
+                                onClick={() => canNavigate && navigate(`/app/machines/${machine.id}`)}
                                 className={`transition-all duration-200 group ${
-                                    canClickDetails ? 'hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer' : 'opacity-90 cursor-default'
+                                    canNavigate ? 'hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer' : 'opacity-90 cursor-default'
                                 }`}
                             >
                                 <div className="flex justify-between items-start mb-3">

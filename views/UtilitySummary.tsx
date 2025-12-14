@@ -7,7 +7,8 @@ import { utilityService } from '../services/utilityService';
 import { maintenanceService } from '../services/maintenanceService';
 import { 
     ArrowLeft, Zap, TrendingUp, Clock, ChevronsUp, ChevronsDown, 
-    AlertTriangle, FileText, Loader2, CheckCircle2, Battery, Activity, ArrowRight, Gauge, LayoutGrid
+    AlertTriangle, FileText, Loader2, CheckCircle2, Battery, Activity, ArrowRight, Gauge, LayoutGrid,
+    Thermometer, Wind, Droplets, Cloud, Flame, Box
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Bar, Legend, Pie, PieChart, BarChart as RechartsBarChart, AreaChart, Area } from 'recharts';
 import { useNavigate } from 'react-router-dom';
@@ -225,18 +226,25 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                         const maxPanelCurrent = Math.max(panel.currentR, panel.currentS, panel.currentT);
                         const minPanelCurrent = Math.min(panel.currentR, panel.currentS, panel.currentT);
                         const hasAlarm = maintenanceService.hasActiveAlarm(panel.id);
+                        
+                        // PERMISSION CHECK
+                        const canNavigate = ![UserRole.MANAGEMENT, UserRole.VIEWER].includes(userRole);
 
                         return (
                             <div 
                                 key={panel.id}
-                                onClick={() => navigate(`/app/lvmdp/${panel.id}`)}
-                                className={`bg-slate-800 border border-slate-700 hover:border-blue-500 rounded-xl p-5 cursor-pointer transition-all duration-300 group hover:-translate-y-1 hover:shadow-lg relative overflow-hidden`}
+                                onClick={() => canNavigate && navigate(`/app/lvmdp/${panel.id}`)}
+                                className={`bg-slate-800 border border-slate-700 rounded-xl p-5 transition-all duration-300 relative overflow-hidden ${
+                                    canNavigate 
+                                    ? 'hover:border-blue-500 cursor-pointer group hover:-translate-y-1 hover:shadow-lg' 
+                                    : 'cursor-default'
+                                }`}
                             >
                                 {hasAlarm && <div className="absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-bl-lg animate-pulse"></div>}
                                 
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
-                                        <h4 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">{panel.name}</h4>
+                                        <h4 className={`text-lg font-bold text-white transition-colors ${canNavigate ? 'group-hover:text-blue-400' : ''}`}>{panel.name}</h4>
                                         <p className="text-xs text-slate-400 font-mono">{panel.code}</p>
                                     </div>
                                     <div className={`p-2 rounded-lg ${hasAlarm ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-700 text-slate-300'}`}>
@@ -270,8 +278,14 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                                     </div>
                                     
                                     <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-700/30">
-                                        <span className="text-xs font-bold text-blue-400 group-hover:text-blue-300 transition-colors">View Detailed Analytics</span>
-                                        <ArrowRight size={14} className="text-blue-400 group-hover:translate-x-1 transition-transform" />
+                                        {canNavigate ? (
+                                            <>
+                                                <span className="text-xs font-bold text-blue-400 group-hover:text-blue-300 transition-colors">View Detailed Analytics</span>
+                                                <ArrowRight size={14} className="text-blue-400 group-hover:translate-x-1 transition-transform" />
+                                            </>
+                                        ) : (
+                                            <span className="text-xs font-bold text-slate-500 flex items-center gap-1">Detail View Restricted</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -293,16 +307,32 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
     }
 
     // ----------------------------------------------------------------------
-    // GENERIC UTILITY DASHBOARD (Water, Gas, Air, etc.)
+    // CORPORATE UTILITY DASHBOARD (Water, Gas, Air, etc.)
     // ----------------------------------------------------------------------
+    
+    // Calculate consumption status color
+    const getStatusColor = (val: number, target: number) => {
+        if (val > target * 1.1) return 'text-rose-400';
+        if (val > target) return 'text-amber-400';
+        return 'text-emerald-400';
+    };
+
+    const getProgressColor = (val: number, target: number) => {
+        if (val > target * 1.1) return 'bg-rose-500';
+        if (val > target) return 'bg-amber-500';
+        return 'bg-blue-500'; // Default blue, similar to corporate electricity
+    };
+
+    const consumptionPercentage = (config.value / config.target) * 100;
+
     return (
-        <div className="space-y-6 animate-in fade-in duration-300 w-full relative">
+        <div className="space-y-6 animate-in fade-in duration-300 w-full relative pb-12">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white"><ArrowLeft size={24} /></button>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2"><config.icon className={config.color} size={28} />{config.label} Detail</h1>
-                        <p className="text-slate-300 text-sm font-medium">{plant.name}</p>
+                        <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2"><config.icon className={config.color} size={28} />{config.label} Dashboard</h1>
+                        <p className="text-slate-300 text-sm font-medium">{plant.name} • Utility Monitoring System</p>
                     </div>
                 </div>
                 
@@ -332,99 +362,93 @@ const UtilitySummary: React.FC<UtilitySummaryProps> = ({ plant, type, onBack, us
                 </div>
             </div>
 
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
-                {isDataItemVisible(userRole, visibilityKeys.KPI_TOTAL, visibilityContext) && (
-                    <MetricCard 
-                        title={`Total ${config.label} (${period})`}
-                        value={config.value.toLocaleString('id-ID', { maximumFractionDigits: 1 })} 
-                        unit={config.unit} 
-                        icon={config.icon} 
-                        trend={Math.abs(config.trend) + '%'} 
-                        trendUp={config.trend > 0}
-                        color={config.color}
-                    />
-                )}
-            </div>
-            
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {isDataItemVisible(userRole, visibilityKeys.CHART_TREND, visibilityContext) && (
-                    <Card title={`${config.label} Usage Trend (${period})`} className="xl:col-span-2 min-h-[350px]">
-                         <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={trendData} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
-                                <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickFormatter={(val) => formatNumber(val, 0)} label={{ value: `Usage (${config.unit})`, angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
-                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
-                                <Line type="monotone" dataKey="value" stroke={config.hexColor} strokeWidth={2} name={`Usage (${config.unit})`} dot={false} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </Card>
-                )}
-                {isDataItemVisible(userRole, visibilityKeys.KPI_STATS, visibilityContext) && (
-                    <Card title="Quick Stats">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-rose-500/10 text-rose-400 rounded-lg"><ChevronsUp size={20}/></div>
-                                <div>
-                                    <p className="text-sm text-slate-300">Peak Usage</p>
-                                    <p className="text-lg font-bold text-white">{quickStats.peak.value} {quickStats.peak.unit}</p>
-                                    <p className="text-xs text-slate-400">at {quickStats.peak.time}</p>
+            {/* Hero Section: Consumption & Process Params */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* 1. Resource Efficiency Card (Similar to Capacity Card) */}
+                <Card className="lg:col-span-2 relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute top-0 right-0 p-4 opacity-10"><config.icon size={120} className={config.color} /></div>
+                    
+                    <div>
+                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2"><TrendingUp size={20} className="text-blue-400"/> Resource Efficiency</h3>
+                        
+                        <div className="relative pt-2 px-2 mb-6">
+                            <div className="flex justify-between text-sm font-bold text-slate-400 mb-2 uppercase tracking-wider">
+                                <span>Current Consumption</span>
+                                <span>Target ({formatNumber(config.target)} {config.unit})</span>
+                            </div>
+                            <div className="h-8 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                                <div 
+                                    className={`h-full rounded-full transition-all duration-1000 ease-out relative ${getProgressColor(config.value, config.target)}`} 
+                                    style={{ width: `${Math.min(100, consumptionPercentage)}%` }}
+                                >
+                                    <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress-bar-stripes_1s_linear_infinite]"></div>
                                 </div>
                             </div>
-                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg"><Clock size={20}/></div>
+                            <div className="flex justify-between mt-3 items-end">
                                 <div>
-                                    <p className="text-sm text-slate-300">Average Usage</p>
-                                    <p className="text-lg font-bold text-white">{quickStats.average.value} {quickStats.average.unit}</p>
+                                    <span className={`text-4xl font-bold font-mono ${getStatusColor(config.value, config.target)}`}>{formatNumber(config.value)}</span>
+                                    <span className="text-sm font-medium text-slate-400 ml-2">{config.unit} (Actual)</span>
                                 </div>
-                            </div>
-                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg"><ChevronsDown size={20}/></div>
-                                <div>
-                                    <p className="text-sm text-slate-300">Lowest Usage</p>
-                                    <p className="text-lg font-bold text-white">{quickStats.low.value} {quickStats.low.unit}</p>
-                                    <p className="text-xs text-slate-400">at {quickStats.low.time}</p>
+                                <div className="text-right">
+                                    <span className={`text-2xl font-bold font-mono ${getStatusColor(config.value, config.target)}`}>{formatNumber(consumptionPercentage)}%</span>
+                                    <span className="block text-xs text-slate-500 uppercase font-bold">vs Target</span>
                                 </div>
                             </div>
                         </div>
-                    </Card>
-                )}
-            </div>
+                    </div>
 
-            {![UserRole.VIEWER, UserRole.MANAGEMENT].includes(userRole) && (
-                <>
-                    <h3 className="text-xl font-bold text-slate-200 mt-2 mb-4 flex items-center gap-2">
-                        <TrendingUp size={22} /> {config.breakdownTitle}
-                    </h3>
-                    
-                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {isDataItemVisible(userRole, visibilityKeys.CONSUMPTION_BAR, visibilityContext) && (
-                            <Card title="Consumption by Area (Bar)" className="min-h-[350px]">
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <RechartsBarChart data={genericBreakdownData} layout="vertical" margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                        <XAxis type="number" stroke="#94a3b8" tick={{fontSize: 12}} label={{ value: 'Consumption (%)', position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
-                                        <YAxis type="category" dataKey="name" stroke="#94a3b8" tick={{fontSize: 12}} width={100} label={{ value: 'Area', angle: -90, position: 'insideLeft', dx: -25, fill: '#94a3b8', fontSize: 12 }} />
-                                        <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
-                                        <Bar dataKey="value" fill={config.hexColor} name="Consumption (%)" radius={[0, 4, 4, 0]} />
-                                    </RechartsBarChart>
-                                </ResponsiveContainer>
-                            </Card>
+                    {/* Process Parameters Footer */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-700/50">
+                        {config.pressure && (
+                            <div>
+                                <p className="text-slate-400 text-xs font-bold uppercase flex items-center gap-1"><Gauge size={12}/> Pressure</p>
+                                <p className="text-xl font-bold text-white font-mono">{formatNumber(config.pressure, 2)} <span className="text-xs text-slate-500">bar</span></p>
+                            </div>
                         )}
-                        {isDataItemVisible(userRole, visibilityKeys.CONSUMPTION_PIE, visibilityContext) && (
-                            <Card title="Consumption by Area (Pie)" className="min-h-[350px]">
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <PieChart>
-                                        <Pie data={genericBreakdownData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label />
-                                        <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }}/>
-                                        <Legend />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </Card>
+                        {config.flow && (
+                            <div>
+                                <p className="text-slate-400 text-xs font-bold uppercase flex items-center gap-1"><Wind size={12}/> Flow Rate</p>
+                                <p className="text-xl font-bold text-white font-mono">{formatNumber(config.flow, 1)} <span className="text-xs text-slate-500">{config.unit}/h</span></p>
+                            </div>
                         )}
-                     </div>
-                </>
-            )}
+                        {config.temp && (
+                            <div>
+                                <p className="text-slate-400 text-xs font-bold uppercase flex items-center gap-1"><Thermometer size={12}/> Temp</p>
+                                <p className="text-xl font-bold text-white font-mono">{formatNumber(config.temp, 1)} <span className="text-xs text-slate-500">°C</span></p>
+                            </div>
+                        )}
+                        {config.purity && (
+                            <div>
+                                <p className="text-slate-400 text-xs font-bold uppercase flex items-center gap-1"><CheckCircle2 size={12}/> Purity</p>
+                                <p className="text-xl font-bold text-emerald-400 font-mono">{formatNumber(config.purity, 2)} <span className="text-xs text-slate-500">%</span></p>
+                            </div>
+                        )}
+                    </div>
+                </Card>
+
+                {/* 2. Usage Trend */}
+                <Card title={`Usage Trend (${period})`}>
+                    <div className="h-[220px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={trendData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                                <defs><linearGradient id="colorUtil" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={config.hexColor} stopOpacity={0.3}/><stop offset="95%" stopColor={config.hexColor} stopOpacity={0}/></linearGradient></defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 10}} />
+                                <YAxis stroke="#94a3b8" tick={{fontSize: 10}} tickFormatter={(val) => formatNumber(val, 0)} />
+                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', fontSize: '12px' }} />
+                                <Area type="monotone" dataKey="value" stroke={config.hexColor} fill="url(#colorUtil)" strokeWidth={2} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-700/30 text-xs font-medium text-slate-400">
+                        <span>Total: {formatNumber(config.value)} {config.unit}</span>
+                        <span className={config.trend > 0 ? 'text-rose-400' : 'text-emerald-400'}>
+                            {config.trend > 0 ? '▲' : '▼'} {Math.abs(config.trend)}% vs prev
+                        </span>
+                    </div>
+                </Card>
+            </div>
 
             {/* Download Success Toast */}
             {showDownloadToast && (

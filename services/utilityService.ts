@@ -1,3 +1,4 @@
+
 //utilityService.ts
 
 import { Plant, PlantCode, UtilityConfig } from '../types';
@@ -56,6 +57,7 @@ export const utilityService = {
 
         const t = type.toLowerCase();
         const baseConfig = plant.utilityBaseValues[t] || { baseConsumption: 0, costPerUnit: 0 };
+        const target = baseConfig.baseConsumption * periodMult;
 
         switch (t) {
             case 'electricity':
@@ -84,6 +86,7 @@ export const utilityService = {
                     color: 'text-yellow-400',
                     hexColor: '#facc15',
                     value: totalElec,
+                    target: target,
                     trend: 12,
                     trendBase: elecTrendBase,
                     variance: elecVariance,
@@ -97,11 +100,16 @@ export const utilityService = {
                     icon: Droplets,
                     color: 'text-blue-400',
                     hexColor: '#60a5fa',
-                    value: baseConfig.baseConsumption * periodMult * (1 + (Math.random() - 0.5) * 0.1),
+                    value: target * (1 + (Math.random() * 0.15 - 0.05)),
+                    target: target,
                     trend: -5,
-                    trendBase: baseConfig.baseConsumption / 24,
-                    variance: baseConfig.baseConsumption * 0.1,
-                    breakdownTitle: 'Area Consumption'
+                    trendBase: target / (period === 'Day' ? 24 : 1),
+                    variance: target * 0.1,
+                    breakdownTitle: 'Area Consumption',
+                    // Process Params
+                    pressure: 4.2 + Math.random() * 0.2, // bar
+                    flow: (target / 24) * (1 + Math.random() * 0.1), // m3/h
+                    temp: 28 + Math.random() * 2 // C
                 };
 
             case 'gas':
@@ -111,11 +119,16 @@ export const utilityService = {
                     icon: Flame,
                     color: 'text-rose-400',
                     hexColor: '#fb7185',
-                    value: baseConfig.baseConsumption * periodMult * (1 + (Math.random() - 0.5) * 0.1),
+                    value: target * (1 + (Math.random() * 0.1 - 0.02)),
+                    target: target,
                     trend: 2,
-                    trendBase: baseConfig.baseConsumption / 24,
-                    variance: baseConfig.baseConsumption * 0.1,
-                    breakdownTitle: 'Area Consumption'
+                    trendBase: target / (period === 'Day' ? 24 : 1),
+                    variance: target * 0.1,
+                    breakdownTitle: 'Area Consumption',
+                    // Process Params
+                    pressure: 150 + Math.random() * 10, // mbar
+                    flow: (target / 24) * (1 + Math.random() * 0.1), // Nm3/h
+                    temp: 30 + Math.random() * 2 // C
                 };
 
             case 'steam':
@@ -125,11 +138,16 @@ export const utilityService = {
                     icon: Cloud,
                     color: 'text-slate-200',
                     hexColor: '#e2e8f0',
-                    value: baseConfig.baseConsumption * periodMult * (1 + (Math.random() - 0.5) * 0.1),
+                    value: target * (1 + (Math.random() * 0.2 - 0.05)),
+                    target: target,
                     trend: 8,
-                    trendBase: baseConfig.baseConsumption / 24,
-                    variance: baseConfig.baseConsumption * 0.05,
-                    breakdownTitle: 'Line Consumption'
+                    trendBase: target / (period === 'Day' ? 24 : 1),
+                    variance: target * 0.05,
+                    breakdownTitle: 'Line Consumption',
+                    // Process Params
+                    pressure: 10.5 + Math.random() * 0.5, // bar
+                    flow: (target / 24) * (1 + Math.random() * 0.1), // Ton/h
+                    temp: 184 + Math.random() * 3 // C
                 };
 
             case 'air':
@@ -139,11 +157,16 @@ export const utilityService = {
                     icon: Wind,
                     color: 'text-cyan-400',
                     hexColor: '#22d3ee',
-                    value: baseConfig.baseConsumption * periodMult * (1 + (Math.random() - 0.5) * 0.1),
+                    value: target * (1 + (Math.random() * 0.1 - 0.05)),
+                    target: target,
                     trend: 0,
-                    trendBase: baseConfig.baseConsumption / 24,
-                    variance: baseConfig.baseConsumption * 0.08,
-                    breakdownTitle: 'Line Consumption'
+                    trendBase: target / (period === 'Day' ? 24 : 1),
+                    variance: target * 0.08,
+                    breakdownTitle: 'Line Consumption',
+                    // Process Params
+                    pressure: 6.8 + Math.random() * 0.3, // bar
+                    flow: (target / 24) * (1 + Math.random() * 0.1), // Nm3/h
+                    temp: 35 + Math.random() * 5 // C
                 };
 
             case 'nitrogen':
@@ -153,11 +176,16 @@ export const utilityService = {
                     icon: Box,
                     color: 'text-emerald-400',
                     hexColor: '#34d399',
-                    value: baseConfig.baseConsumption * periodMult * (1 + (Math.random() - 0.5) * 0.1),
+                    value: target * (1 + (Math.random() * 0.05 - 0.02)),
+                    target: target,
                     trend: 15,
-                    trendBase: baseConfig.baseConsumption / 24,
-                    variance: baseConfig.baseConsumption * 0.05,
-                    breakdownTitle: 'Line Consumption'
+                    trendBase: target / (period === 'Day' ? 24 : 1),
+                    variance: target * 0.05,
+                    breakdownTitle: 'Line Consumption',
+                    // Process Params
+                    pressure: 5.5 + Math.random() * 0.2, // bar
+                    flow: (target / 24) * (1 + Math.random() * 0.1), // Nm3/h
+                    purity: 99.9 // %
                 };
 
             default:
@@ -168,6 +196,7 @@ export const utilityService = {
                     color: 'text-slate-400',
                     hexColor: '#94a3b8',
                     value: 0,
+                    target: 100,
                     trend: 0,
                     trendBase: 100,
                     variance: 10,
@@ -226,10 +255,11 @@ export const utilityService = {
     // GENERIC PIE (BREAKDOWN)
     // ----------------------------------------------
     getGenericBreakdown: () => [
-        { name: 'Production A', value: 40 },
-        { name: 'Production B', value: 30 },
-        { name: 'Utility', value: 15 },
-        { name: 'General', value: 15 }
+        { name: 'Production Line A', value: 35, status: 'NORMAL' },
+        { name: 'Production Line B', value: 25, status: 'WARNING' },
+        { name: 'Utility Room', value: 15, status: 'NORMAL' },
+        { name: 'Packaging Area', value: 15, status: 'NORMAL' },
+        { name: 'Warehouse', value: 10, status: 'NORMAL' }
     ],
 
     // ----------------------------------------------
