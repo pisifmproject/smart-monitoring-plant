@@ -78,14 +78,44 @@ export interface ElectricalReportResponse {
 
 /**
  * Generate daily electrical report
+ * Auto-generates aggregated data if not available
  */
 export async function generateDailyReport(
   date: string
 ): Promise<ElectricalReportResponse> {
-  const reports = await getDailyReports(date, date);
+  let reports = await getDailyReports(date, date);
 
+  // If no reports exist, try to aggregate on-demand
   if (reports.length === 0) {
-    throw new Error(`No data available for date: ${date}`);
+    console.log(
+      `[generateDailyReport] No aggregated data found for ${date}, generating now...`
+    );
+
+    try {
+      await aggregateAllPanelsForDate(date);
+      // Fetch again after aggregation
+      reports = await getDailyReports(date, date);
+
+      if (reports.length === 0) {
+        throw new Error(
+          `No raw data available for date: ${date}. The date may be too far in the past or future.`
+        );
+      }
+
+      console.log(
+        `[generateDailyReport] ✓ Successfully generated data for ${date}`
+      );
+    } catch (error) {
+      console.error(
+        `[generateDailyReport] Failed to generate data for ${date}:`,
+        error
+      );
+      throw new Error(
+        `Unable to generate report for ${date}. ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
   }
 
   // Calculate summary metrics
@@ -190,6 +220,7 @@ export async function generateDailyReport(
 
 /**
  * Generate weekly electrical report
+ * Auto-generates missing daily data if needed
  */
 export async function generateWeeklyReport(
   weekStart: string
@@ -200,10 +231,44 @@ export async function generateWeeklyReport(
   endDate.setDate(endDate.getDate() + 6);
   const endDateStr = endDate.toISOString().split("T")[0];
 
-  const reports = await getDailyReports(weekStart, endDateStr);
+  let reports = await getDailyReports(weekStart, endDateStr);
+
+  // If incomplete, try to generate missing days
+  const expectedDays = 7;
+  if (reports.length < expectedDays) {
+    console.log(
+      `[generateWeeklyReport] Only ${reports.length}/${expectedDays} days available, generating missing days...`
+    );
+
+    // Generate all days in range
+    const current = new Date(startDate);
+    while (current <= endDate) {
+      const dateStr = current.toISOString().split("T")[0];
+      const dayReports = reports.filter((r) => r.reportDate === dateStr);
+
+      if (dayReports.length === 0) {
+        try {
+          console.log(`[generateWeeklyReport] Generating data for ${dateStr}`);
+          await aggregateAllPanelsForDate(dateStr);
+        } catch (error) {
+          console.warn(
+            `[generateWeeklyReport] Could not generate ${dateStr}:`,
+            error
+          );
+        }
+      }
+
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Re-fetch after generation
+    reports = await getDailyReports(weekStart, endDateStr);
+  }
 
   if (reports.length === 0) {
-    throw new Error(`No data available for week starting: ${weekStart}`);
+    throw new Error(
+      `No data available for week starting: ${weekStart}. Raw data may not exist for this period.`
+    );
   }
 
   // Group by panel
@@ -337,6 +402,7 @@ export async function generateWeeklyReport(
 
 /**
  * Generate monthly electrical report
+ * Auto-generates missing daily data if needed
  */
 export async function generateMonthlyReport(
   year: number,
@@ -349,10 +415,44 @@ export async function generateMonthlyReport(
   const startDateStr = startDate.toISOString().split("T")[0];
   const endDateStr = endDate.toISOString().split("T")[0];
 
-  const reports = await getDailyReports(startDateStr, endDateStr);
+  let reports = await getDailyReports(startDateStr, endDateStr);
+
+  // If incomplete, try to generate missing days
+  const expectedDays = endDate.getDate(); // Number of days in month
+  if (reports.length < expectedDays) {
+    console.log(
+      `[generateMonthlyReport] Only ${reports.length}/${expectedDays} days available for ${year}-${month}, generating missing days...`
+    );
+
+    // Generate all days in range
+    const current = new Date(startDate);
+    while (current <= endDate) {
+      const dateStr = current.toISOString().split("T")[0];
+      const dayReports = reports.filter((r) => r.reportDate === dateStr);
+
+      if (dayReports.length === 0) {
+        try {
+          console.log(`[generateMonthlyReport] Generating data for ${dateStr}`);
+          await aggregateAllPanelsForDate(dateStr);
+        } catch (error) {
+          console.warn(
+            `[generateMonthlyReport] Could not generate ${dateStr}:`,
+            error
+          );
+        }
+      }
+
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Re-fetch after generation
+    reports = await getDailyReports(startDateStr, endDateStr);
+  }
 
   if (reports.length === 0) {
-    throw new Error(`No data available for ${year}-${month}`);
+    throw new Error(
+      `No data available for ${year}-${month}. Raw data may not exist for this period.`
+    );
   }
 
   // Similar logic to weekly but aggregated monthly
