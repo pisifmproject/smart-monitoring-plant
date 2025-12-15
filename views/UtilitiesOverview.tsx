@@ -32,15 +32,19 @@ const UtilitiesOverview: React.FC<UtilitiesOverviewProps> = ({ userRole }) => {
 
     if (!plant || !isoMetrics) return <div className="p-8 text-slate-400">Plant not found</div>;
 
+    // Conversion: kWh/kg -> kWh/ton (Multiply by 1000)
+    const secPerTon = isoMetrics.sec * 1000;
+    const secBaselinePerTon = isoMetrics.secBaseline * 1000;
+
     // Mock trend data for SEC chart
     const secTrendData = useMemo(() => {
         const points = 12;
         return Array.from({length: points}, (_, i) => ({
             time: period === 'DAY' ? `${i*2}:00` : `Pt ${i+1}`,
-            actual: isoMetrics.sec * (1 + (Math.random() * 0.1 - 0.05)),
-            target: isoMetrics.secBaseline,
+            actual: secPerTon * (1 + (Math.random() * 0.1 - 0.05)),
+            target: secBaselinePerTon,
         }));
-    }, [isoMetrics, period]);
+    }, [secPerTon, secBaselinePerTon, period]);
 
     const FilterButton = ({ label }: { label: Period }) => (
         <button 
@@ -87,14 +91,14 @@ const UtilitiesOverview: React.FC<UtilitiesOverviewProps> = ({ userRole }) => {
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Efficiency Metric</p>
                             <h3 className="text-white text-lg font-bold">Specific Energy Cons.</h3>
                             <div className="mt-3 flex items-baseline gap-2">
-                                <span className="text-3xl font-bold text-blue-400 font-mono">{formatNumber(isoMetrics.sec, 3)}</span>
-                                <span className="text-xs text-slate-400">kWh/kg</span>
+                                <span className="text-3xl font-bold text-blue-400 font-mono">{formatNumber(secPerTon, 2)}</span>
+                                <span className="text-xs text-slate-400">kWh/ton</span>
                             </div>
                         </div>
                         <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400"><Gauge size={24}/></div>
                     </div>
                     <div className="mt-4 pt-3 border-t border-slate-700/50 flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Baseline: <span className="text-slate-200">{formatNumber(isoMetrics.secBaseline, 3)}</span></span>
+                        <span className="text-slate-400">Baseline: <span className="text-slate-200">{formatNumber(secBaselinePerTon, 2)}</span></span>
                         <span className={`font-bold ${isoMetrics.sec <= isoMetrics.secBaseline ? 'text-emerald-400' : 'text-rose-400'}`}>
                             {isoMetrics.sec <= isoMetrics.secBaseline ? 'Efficient' : 'Over Limit'}
                         </span>
@@ -145,9 +149,9 @@ const UtilitiesOverview: React.FC<UtilitiesOverviewProps> = ({ userRole }) => {
                             <ComposedChart data={secTrendData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                 <XAxis dataKey="time" stroke="#94a3b8" tick={{fontSize: 12}} />
-                                <YAxis stroke="#94a3b8" tick={{fontSize: 12}} label={{ value: 'SEC (kWh/kg)', angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
+                                <YAxis stroke="#94a3b8" tick={{fontSize: 12}} label={{ value: 'SEC (kWh/ton)', angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
                                 <Tooltip 
-                                    formatter={(val: number) => formatNumber(val, 4)} 
+                                    formatter={(val: number) => formatNumber(val, 2)} 
                                     contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9' }}
                                     itemStyle={{ fontSize: '12px' }}
                                 />
