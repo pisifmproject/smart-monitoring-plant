@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watchEffect, computed } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
-import { Cog, Zap, Factory, CircleSmall } from "lucide-vue-next";
+import { Cog, Zap, Factory, CircleSmall, Globe2 } from "lucide-vue-next";
 import { useAuth } from "@/stores/auth";
 
 const route = useRoute();
@@ -317,6 +317,13 @@ const getProductionChildren = () => {
 
 const mainMenus = computed(() => [
   {
+    id: "global",
+    name: "Global Dashboard",
+    icon: Globe2,
+    routeName: "global",
+    children: null, // Single link tanpa children
+  },
+  {
     id: "utility",
     name: "Utility",
     icon: Cog,
@@ -434,6 +441,23 @@ function isItemActive(routeName: string): boolean {
     <nav class="menu">
       <!-- Menu utama dengan nested structure -->
       <template v-for="mainMenu in mainMenus" :key="mainMenu.id">
+        <!-- Level 1: Direct Menu Item (tanpa children) -->
+        <router-link
+          v-if="!mainMenu.children && mainMenu.routeName"
+          :to="{ name: mainMenu.routeName }"
+          class="group-trigger direct-link"
+          active-class="active"
+        >
+          <span class="flex items-center gap-2">
+            <component
+              v-if="mainMenu.icon"
+              :is="mainMenu.icon"
+              class="w-4 h-4"
+            />
+            <span>{{ mainMenu.name }}</span>
+          </span>
+        </router-link>
+
         <!-- Level 1: Main Menu (dengan children) -->
         <button
           v-if="mainMenu.children"
@@ -647,6 +671,22 @@ function isItemActive(routeName: string): boolean {
   background-color: rgba(255, 255, 255, 0.1);
   color: #fff;
   border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Direct Link (Global Dashboard, dll) */
+.group-trigger.direct-link {
+  text-decoration: none;
+}
+
+.group-trigger.direct-link.active {
+  background-color: rgba(14, 165, 233, 0.2);
+  color: #0ea5e9;
+  border-color: rgba(14, 165, 233, 0.3);
+}
+
+.group-trigger.direct-link:hover {
+  background-color: rgba(14, 165, 233, 0.15);
+  color: #0ea5e9;
 }
 
 /* Level 2: Submenu trigger (LVMDP, Settings, etc inside Utility) */

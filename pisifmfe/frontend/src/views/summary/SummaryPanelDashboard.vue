@@ -20,8 +20,20 @@
             </svg>
           </div>
           <div>
-            <h1 class="page-title">Power Distribution Dashboard</h1>
-            <p class="page-subtitle">Real-time electrical monitoring system</p>
+            <h1 class="page-title">
+              {{
+                isPlantContext && plantId
+                  ? `${plantNames[plantId.toUpperCase()] || plantId} - `
+                  : ""
+              }}Power Distribution Dashboard
+            </h1>
+            <p class="page-subtitle">
+              {{
+                isPlantContext && plantId?.toUpperCase() !== "CIKUPA"
+                  ? "Simulated electrical monitoring system"
+                  : "Real-time electrical monitoring system"
+              }}
+            </p>
           </div>
         </div>
         <div class="header-right">
@@ -329,7 +341,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -338,6 +350,7 @@ import { useElectricalReport } from "@/composables/useElectricalReport";
 import type { ElectricalReportData } from "@/composables/useElectricalReport";
 
 const router = useRouter();
+const route = useRoute();
 const {
   fetchDailyReport,
   fetchWeeklyReport,
@@ -345,6 +358,18 @@ const {
   getCurrentMonday,
   getTodayDate,
 } = useElectricalReport();
+
+// Get plantId from route (if in plant context)
+const plantId = computed(() => route.params.plantId as string | undefined);
+const isPlantContext = computed(() => !!plantId.value);
+
+// Plant names for display
+const plantNames: Record<string, string> = {
+  CIKOKOL: "Plant Cikokol",
+  SEMARANG: "Plant Semarang",
+  CIKUPA: "Plant Cikupa",
+  AGRO: "Plant Agro",
+};
 
 // Report selection state
 const reportType = ref<"day" | "month">("day");
@@ -457,6 +482,22 @@ const fetchData = async () => {
     error.value = "";
 
     const baseURL = window.location.origin.replace(":30", ":2000");
+
+    // If in plant context and NOT Cikupa, use dummy data
+    if (isPlantContext.value && plantId.value?.toUpperCase() !== "CIKUPA") {
+      // Generate dummy data for non-Cikupa plants
+      const dummyData = generateDummyPanelData(
+        plantId.value?.toUpperCase() || ""
+      );
+      summaryData.value = dummyData;
+      loadHistory.value.push(summaryData.value.totalKVA);
+      if (loadHistory.value.length > 100) {
+        loadHistory.value.shift();
+      }
+      return;
+    }
+
+    // For Cikupa or global context, fetch real data
     const response = await axios.get(`${baseURL}/api/summary/electrical`);
 
     if (response.data.success) {
@@ -484,8 +525,108 @@ const fetchData = async () => {
   }
 };
 
+// Generate dummy panel data for non-Cikupa plants
+const generateDummyPanelData = (plant: string): SummaryData => {
+  const baseValues: Record<string, { kva: number; capacity: number }> = {
+    CIKOKOL: { kva: 2800, capacity: 4500 },
+    SEMARANG: { kva: 3200, capacity: 5000 },
+    AGRO: { kva: 800, capacity: 1500 },
+  };
+
+  const base = baseValues[plant] || { kva: 2000, capacity: 3500 };
+  const totalKVA = base.kva + (Math.random() * 200 - 100);
+  const installedCapacity = base.capacity;
+
+  return {
+    totalKVA,
+    installedCapacity,
+    loadPercentage: (totalKVA / installedCapacity) * 100,
+    lastUpdated: new Date().toISOString(),
+    panels: [
+      {
+        id: 1,
+        name: `${plant} - Panel 1`,
+        kva: totalKVA * 0.28 + (Math.random() * 50 - 25),
+        kwh: totalKVA * 0.28 * 0.85 * 24,
+        current: [
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+        ],
+        voltage: [
+          Math.random() * 10 + 385,
+          Math.random() * 10 + 385,
+          Math.random() * 10 + 385,
+        ],
+        pf: Math.random() * 0.1 + 0.85,
+        frequency: Math.random() * 0.2 + 49.9,
+      },
+      {
+        id: 2,
+        name: `${plant} - Panel 2`,
+        kva: totalKVA * 0.26 + (Math.random() * 50 - 25),
+        kwh: totalKVA * 0.26 * 0.85 * 24,
+        current: [
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+        ],
+        voltage: [
+          Math.random() * 10 + 385,
+          Math.random() * 10 + 385,
+          Math.random() * 10 + 385,
+        ],
+        pf: Math.random() * 0.1 + 0.85,
+        frequency: Math.random() * 0.2 + 49.9,
+      },
+      {
+        id: 3,
+        name: `${plant} - Panel 3`,
+        kva: totalKVA * 0.24 + (Math.random() * 50 - 25),
+        kwh: totalKVA * 0.24 * 0.85 * 24,
+        current: [
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+        ],
+        voltage: [
+          Math.random() * 10 + 385,
+          Math.random() * 10 + 385,
+          Math.random() * 10 + 385,
+        ],
+        pf: Math.random() * 0.1 + 0.85,
+        frequency: Math.random() * 0.2 + 49.9,
+      },
+      {
+        id: 4,
+        name: `${plant} - Panel 4`,
+        kva: totalKVA * 0.22 + (Math.random() * 50 - 25),
+        kwh: totalKVA * 0.22 * 0.85 * 24,
+        current: [
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+        ],
+        voltage: [
+          Math.random() * 10 + 385,
+          Math.random() * 10 + 385,
+          Math.random() * 10 + 385,
+        ],
+        pf: Math.random() * 0.1 + 0.85,
+        frequency: Math.random() * 0.2 + 49.9,
+      },
+    ],
+  };
+};
+
 const navigateToPanel = (panelId: number) => {
-  router.push(`/app/lvmdp${panelId}`);
+  // If in plant context, navigate to plant-specific panel route
+  if (isPlantContext.value && plantId.value) {
+    router.push(`/app/plant/${plantId.value}/electrical/panel${panelId}`);
+  } else {
+    // Global context - navigate to original LVMDP route
+    router.push(`/app/lvmdp${panelId}`);
+  }
 };
 
 const formatNumber = (value: number): string => {

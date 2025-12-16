@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watchEffect, computed } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import SideBar from "@/components/sideBar.vue";
+import SideBarSimple from "@/components/sideBarSimple.vue";
 import { useAuth } from "@/stores/auth";
 
 const route = useRoute();
@@ -51,8 +51,8 @@ const toggleSidebar = () => {
 
 <template>
   <div class="layout">
-    <!-- SIDEBAR: gunakan komponen SideBar dengan class binding -->
-    <SideBar
+    <!-- SIDEBAR: gunakan komponen SideBarSimple dengan class binding -->
+    <SideBarSimple
       :class="{
         'sidebar-visible': isSidebarOpen,
         'sidebar-hidden': !isSidebarOpen,
@@ -128,7 +128,7 @@ const toggleSidebar = () => {
   width: 100%;
   display: flex;
   position: relative;
-  background: #f8fafc;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
 /* ======================
@@ -283,21 +283,21 @@ const toggleSidebar = () => {
   display: flex;
   align-items: center;
   padding: 0 24px;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(to right, #ffffff, #f8fafc);
+  border-bottom: 1px solid #1e293b;
+  background: linear-gradient(to right, #0f172a, #1e293b);
   position: sticky;
   top: 0;
   z-index: 20;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .hamb {
   margin-right: 12px;
   padding: 8px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #f1f5f9;
-  color: #0f172a;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
   cursor: pointer;
   display: inline-flex !important;
   align-items: center;
@@ -307,8 +307,8 @@ const toggleSidebar = () => {
 }
 
 .hamb:hover {
-  background: #e2e8f0;
-  border-color: #cbd5e1;
+  background: #334155;
+  border-color: #475569;
   transform: translateY(-1px);
 }
 
@@ -326,23 +326,23 @@ const toggleSidebar = () => {
 }
 
 .breadcrumb-item {
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 500;
 }
 
 .breadcrumb-item.active {
-  color: #0ea5e9;
+  color: #60a5fa;
   font-weight: 600;
 }
 
 .breadcrumb-sep {
-  color: #cbd5e1;
+  color: #475569;
 }
 
 .topbar-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #e2e8f0;
   letter-spacing: -0.5px;
   flex: 1;
   text-align: center;

@@ -3,6 +3,10 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useAuth } from "../stores/auth";
 import Landing from "../views/landing.vue";
 import Login from "../views/login.vue";
+import GlobalDashboard from "../views/GlobalDashboard.vue";
+import PlantDashboard from "../views/PlantDashboard.vue";
+import ProductionLinesOverview from "../views/ProductionLinesOverview.vue";
+import UtilityDashboard from "../views/UtilityDashboard.vue";
 import DashboardLayout from "../layouts/dashboardLayout.vue";
 import UtilityConsumption from "../views/utility/utilityConsumption.vue";
 import Lvmdp1 from "../views/lvmdp/lvmdp1.vue";
@@ -133,10 +137,55 @@ const router = createRouter({
       component: DashboardLayout,
       meta: { requiresAuth: true },
       children: [
-        // Summary Dashboard - Default route
+        // Global Dashboard - Default route
         {
           path: "",
-          redirect: "summary",
+          redirect: "global",
+        },
+        {
+          path: "global",
+          name: "global",
+          component: GlobalDashboard,
+        },
+        {
+          path: "plant/:plantId",
+          name: "plantDashboard",
+          component: PlantDashboard,
+        },
+        {
+          path: "plant/:plantId/utilities",
+          name: "plantUtilities",
+          component: UtilityDashboard,
+        },
+        {
+          path: "plant/:plantId/electrical/panels",
+          name: "plantElectricalPanels",
+          component: SummaryPanelDashboard,
+        },
+        {
+          path: "plant/:plantId/electrical/panel1",
+          name: "plantPanel1",
+          component: Lvmdp1,
+        },
+        {
+          path: "plant/:plantId/electrical/panel2",
+          name: "plantPanel2",
+          component: Lvmdp2,
+        },
+        {
+          path: "plant/:plantId/electrical/panel3",
+          name: "plantPanel3",
+          component: Lvmdp3,
+        },
+        {
+          path: "plant/:plantId/electrical/panel4",
+          name: "plantPanel4",
+          component: Lvmdp4,
+        },
+        {
+          path: "plant/:plantId/production",
+          name: "plantProduction",
+          component: ProductionLinesOverview,
         },
         {
           path: "summary",

@@ -32,8 +32,8 @@ const handleSubmit = async () => {
   const result = await login(username.value, password.value);
 
   if (result.success) {
-    // Redirect to dashboard panel distribution (summary)
-    router.push("/app/summary");
+    // Redirect to global dashboard
+    router.push("/app/global");
   } else {
     error.value = result.message;
     isLoading.value = false;
@@ -233,20 +233,13 @@ const handleSubmit = async () => {
         <div class="pt-8 mt-8 text-center">
           <button
             @click="router.push('/')"
-            class="!bg-transparent !border-0 !shadow-none
-                  !text-cyan-400 text-xs uppercase tracking-[0.25em]
-                  hover:!text-cyan-300
-                  focus:!outline-none focus:!ring-0
-                  px-0 py-0"
+            class="!bg-transparent !border-0 !shadow-none !text-cyan-400 text-xs uppercase tracking-[0.25em] hover:!text-cyan-300 focus:!outline-none focus:!ring-0 px-0 py-0"
           >
             ← Return to Landing Page
           </button>
 
           <p
-            class="
-            text-[10px] 
-            text-slate-300 mt-4 leading-relaxed 
-            max-w-xs mx-auto"
+            class="text-[10px] text-slate-300 mt-4 leading-relaxed max-w-xs mx-auto"
           >
             By signing in, you agree to comply with the company's IT security
             policies and procedures.
