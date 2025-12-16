@@ -6,7 +6,7 @@ import { useAuth } from "@/stores/auth";
 
 const route = useRoute();
 const router = useRouter();
-const { canAccessDailyReport } = useAuth();
+const { userRole } = useAuth();
 
 // State untuk setiap menu utama
 const openMenus = ref<Record<string, boolean>>({
@@ -177,7 +177,8 @@ watchEffect(() => {
 // Menu struktur (nested, mudah di-extend)
 // Filter submenu based on user role
 const getProductionChildren = () => {
-  const isGuest = !canAccessDailyReport();
+  // All authenticated users can access daily reports now
+  const isGuest = false;
 
   const machines = [
     {

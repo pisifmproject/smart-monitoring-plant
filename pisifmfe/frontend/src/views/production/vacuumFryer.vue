@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useAuth } from "@/stores/auth";
 import ReportButton from "@/components/reportButton.vue";
 
-const { canAccessDailyReport } = useAuth();
+const { isAuthenticated } = useAuth();
 const machineName = "Vacuum Fryer 1";
 
 // Mock data - replace with real API
@@ -40,7 +40,7 @@ const status = "running";
               <span class="status-dot"></span>
               {{ status.toUpperCase() }}
             </div>
-            <div v-if="canAccessDailyReport()" class="report-btn-wrapper">
+            <div v-if="isAuthenticated" class="report-btn-wrapper">
               <ReportButton
                 routeName="dailyReportVacuumFryer"
                 :label="`Daily Report`"

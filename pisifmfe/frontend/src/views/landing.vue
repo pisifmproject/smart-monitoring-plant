@@ -1,365 +1,112 @@
-<!-- frontend/src/views/landing.vue -->
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useAuth } from "@/stores/auth";
+import { useRouter } from "vue-router"
+import { ArrowRight } from "lucide-vue-next"
 
-const router = useRouter();
-const { login } = useAuth();
-
-const showLoginModal = ref(false);
-const username = ref("");
-const password = ref("");
-const errorMsg = ref("");
-
-function openLoginModal() {
-  showLoginModal.value = true;
-  username.value = "";
-  password.value = "";
-  errorMsg.value = "";
-}
-
-function closeLoginModal() {
-  showLoginModal.value = false;
-  username.value = "";
-  password.value = "";
-  errorMsg.value = "";
-}
-
-function submitLogin() {
-  errorMsg.value = "";
-
-  if (login(username.value, password.value)) {
-    // Redirect to summary dashboard
-    window.location.href = "/app/summary";
-  } else {
-    errorMsg.value = "Username atau password salah!";
-    password.value = "";
-  }
-}
+const router = useRouter()
 </script>
 
 <template>
   <div
-    class="min-h-screen relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900 text-white"
+    class="min-h-screen bg-slate-950 text-white flex flex-col relative overflow-hidden selection:bg-blue-500/30"
   >
-    <!-- Animated background gradients -->
-    <div class="pointer-events-none absolute inset-0">
-      <div
-        class="absolute -top-40 -left-40 h-[36rem] w-[36rem] rounded-full bg-gradient-to-tr from-cyan-500/40 to-sky-400/40 blur-3xl animate-float-slow"
-      />
-      <div
-        class="absolute -bottom-40 -right-40 h-[36rem] w-[36rem] rounded-full bg-gradient-to-tr from-indigo-500/30 to-fuchsia-400/30 blur-3xl animate-float-rev"
-      />
-      <div
-        class="absolute top-1/2 left-1/2 h-[30rem] w-[30rem] rounded-full bg-gradient-to-br from-cyan-400/20 to-transparent blur-3xl animate-pulse"
-      />
-    </div>
-
-    <!-- Grid overlay -->
+    <!-- Background Effects -->
     <div
-      class="pointer-events-none absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] [background-size:24px_24px]"
-    />
+      class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20 pointer-events-none"
+    ></div>
 
-    <!-- Main Content -->
-    <div class="relative z-10 flex flex-col min-h-screen">
-      <!-- Hero Section -->
-      <div class="flex-1 flex items-center justify-center px-4 py-20 md:py-0">
-        <div class="max-w-4xl w-full text-center">
-          <div class="mb-8 flex justify-center animate-fade-in">
-            <div class="relative">
-              <div
-                class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl blur-xl opacity-20"
-              />
-            </div>
-          </div>
+    <div
+      class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none opacity-40"
+    ></div>
 
-          <h1
-            class="text-5xl md:text-7xl font-bold leading-tight mb-4 animate-fade-in-delayed-1"
-          >
-            <span class="block mb-2">Project</span>
+    <div
+      class="absolute bottom-0 right-0 w-[800px] h-[600px] bg-emerald-600/10 rounded-full blur-[100px] pointer-events-none opacity-30"
+    ></div>
+
+    <!-- Header -->
+    <header
+      class="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center relative z-20"
+    >
+      <h1 class="text-lg font-bold tracking-tight text-white">
+        PT Indofood Fortuna Makmur
+      </h1>
+    </header>
+
+    <!-- Hero -->
+    <main
+      class="flex-1 flex flex-col items-center justify-center text-center px-4 relative z-20 pb-20"
+    >
+      <div
+        class="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-10 max-w-5xl mx-auto"
+      >
+        <!-- Badge -->
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-700/50 backdrop-blur-sm shadow-sm mb-4"
+        >
+          <span class="relative flex h-2 w-2">
             <span
-              class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-500"
-              >Information System</span
-            ><br />
-            <span class="text-lg md:text-2xl font-medium text-slate-300 mt-4">
-              for Indofood Fortuna Makmur
-            </span>
-          </h1>
+              class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
+            ></span>
+            <span
+              class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"
+            ></span>
+          </span>
+          <span
+            class="text-xs font-semibold text-slate-300 tracking-wide uppercase"
+          >
+            System Operational
+          </span>
+        </div>
+
+        <!-- Headline -->
+        <h2
+          class="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-tight"
+        >
+          <span class="text-white">Smart Monitoring</span>
+          <span
+            class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-emerald-400 to-cyan-400 pb-2"
+          >
+            Multi Plant
+          </span>
+        </h2>
+
+        <!-- Subheadline -->
+        <p
+          class="text-blue-100 text-lg md:text-2xl max-w-3xl mx-auto font-light leading-relaxed"
+        >
+          Real-time multi-plant performance & energy monitoring in a unified
+          platform.
+        </p>
+
+        <!-- CTA -->
+        <div class="pt-8">
+          <button
+            @click="router.push('/login')"
+            class="group relative px-10 py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_60px_-15px_rgba(37,99,235,0.6)] border border-blue-500/50 flex items-center gap-3 mx-auto overflow-hidden"
+          >
+            <span class="relative z-10">Access Dashboard</span>
+            <ArrowRight
+              class="relative z-10 group-hover:translate-x-1 transition-transform"
+              :size="20"
+            />
+            <div
+              class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-0"
+            ></div>
+          </button>
 
           <p
-            class="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl mx-auto animate-fade-in-delayed-2"
-          ></p>
-
-          <!-- CTA Button -->
-          <div
-            class="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-in-delayed-3"
+            class="mt-6 text-xs text-blue-300 font-semibold tracking-wide uppercase"
           >
-            <button
-              @click="openLoginModal"
-              class="group inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 font-semibold text-slate-950 shadow-lg shadow-cyan-500/40 transition-all hover:shadow-xl hover:shadow-cyan-500/60 hover:scale-105"
-            >
-              <span>🚀 MASUK</span>
-              <svg
-                class="size-5 transition group-hover:translate-x-1"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="m9 5 7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="relative z-10 border-t border-slate-700/50 py-12 text-center">
-        <p class="text-sm text-slate-400 mb-2">
-          © 2025 • Indofood Fortuna Makmur - Cikupa
-        </p>
-        <p class="text-xs text-slate-500">
-          Built with ♥ by <strong class="text-slate-300">@sptianbgus</strong>
-        </p>
-      </div>
-    </div>
-
-    <!-- Login Modal -->
-    <div v-if="showLoginModal" class="login-backdrop" @click="closeLoginModal">
-      <div class="login-modal" @click.stop>
-        <h3 class="login-title">Login PISIFM</h3>
-
-        <div class="input-group">
-          <label class="input-label">Username</label>
-          <input
-            v-model="username"
-            type="text"
-            class="login-input"
-            placeholder="Masukkan username"
-            @keyup.enter="submitLogin"
-          />
-        </div>
-
-        <div class="input-group">
-          <label class="input-label">Password</label>
-          <input
-            v-model="password"
-            type="password"
-            class="login-input"
-            placeholder="Masukkan password"
-            @keyup.enter="submitLogin"
-          />
-        </div>
-
-        <p v-if="errorMsg" class="login-error">
-          {{ errorMsg }}
-        </p>
-
-        <div class="login-actions">
-          <button
-            class="login-btn login-btn-secondary"
-            @click="closeLoginModal"
-          >
-            Batal
-          </button>
-          <button class="login-btn login-btn-primary" @click="submitLogin">
-            Login
-          </button>
-        </div>
-
-        <div class="login-hint">
-          <p class="text-xs text-slate-400">
-            <strong> © 2025 • Indofood Fortuna Makmur - Cikupa </strong>
+            Authorized Personnel Only
           </p>
         </div>
       </div>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="w-full py-8 mb-24 flex justify-center items-center text-xs text-slate-400 font-medium relative z-20"
+    >
+      © 2025 PT Indofood Fortuna Makmur. All rights reserved.
+    </footer>
   </div>
 </template>
-
-<style scoped>
-/* === Animations === */
-@keyframes float-slow {
-  0% {
-    transform: translateY(0px) translateX(0);
-  }
-  50% {
-    transform: translateY(12px) translateX(6px);
-  }
-  100% {
-    transform: translateY(0px) translateX(0);
-  }
-}
-
-@keyframes float-rev {
-  0% {
-    transform: translateY(0px) translateX(0);
-  }
-  50% {
-    transform: translateY(-10px) translateX(-6px);
-  }
-  100% {
-    transform: translateY(0px) translateX(0);
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-float-slow {
-  animation: float-slow 10s ease-in-out infinite;
-}
-
-.animate-float-rev {
-  animation: float-rev 12s ease-in-out infinite;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.8s ease-out;
-}
-
-.animate-fade-in-delayed-1 {
-  animation: fade-in 0.8s ease-out 0.2s backwards;
-}
-
-.animate-fade-in-delayed-2 {
-  animation: fade-in 0.8s ease-out 0.4s backwards;
-}
-
-.animate-fade-in-delayed-3 {
-  animation: fade-in 0.8s ease-out 0.6s backwards;
-}
-
-/* === Login Modal === */
-.login-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.login-modal {
-  background: #0f172a;
-  color: #e5e7eb;
-  padding: 32px 28px;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-}
-
-.login-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 24px;
-  text-align: center;
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.input-group {
-  margin-bottom: 16px;
-}
-
-.input-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #cbd5e1;
-}
-
-.login-input {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid #475569;
-  background: #020617;
-  color: #e5e7eb;
-  font-size: 0.95rem;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.login-input:focus {
-  border-color: #0ea5e9;
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
-}
-
-.login-error {
-  margin-top: 12px;
-  margin-bottom: 12px;
-  padding: 10px 14px;
-  font-size: 0.875rem;
-  color: #fecaca;
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  text-align: center;
-}
-
-.login-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.login-btn {
-  flex: 1;
-  padding: 12px 20px;
-  font-size: 0.95rem;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.login-btn-primary {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  color: white;
-}
-
-.login-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
-}
-
-.login-btn-secondary {
-  background: transparent;
-  color: #e5e7eb;
-  border: 1px solid #64748b;
-}
-
-.login-btn-secondary:hover {
-  background: rgba(148, 163, 184, 0.12);
-  border-color: #94a3b8;
-}
-
-.login-hint {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
-  text-align: center;
-}
-</style>

@@ -9,7 +9,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
-const { canAccessDailyReport } = useAuth();
+const { isAuthenticated } = useAuth();
 
 function openReport() {
   if (props.routeName) {
@@ -24,11 +24,7 @@ function openReport() {
 </script>
 
 <template>
-  <button
-    v-if="canAccessDailyReport()"
-    class="report-button"
-    @click="openReport"
-  >
+  <button v-if="isAuthenticated" class="report-button" @click="openReport">
     <span class="report-icon">📄</span>
     <span class="report-text">{{ label || "Daily Report" }}</span>
   </button>

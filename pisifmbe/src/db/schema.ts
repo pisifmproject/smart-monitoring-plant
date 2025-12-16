@@ -6,15 +6,24 @@ import {
   doublePrecision,
   date,
   integer,
+  varchar,
+  serial,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 /* ===========================
    USER TABLE
 =========================== */
-export const user = pgTable("User", {
-  id: text("id").primaryKey().notNull(),
-  email: text("email").notNull(),
-  name: text("name"),
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 50 }).notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  role: varchar("role", { length: 50 }).notNull().default("Viewer"),
+  plantAccess: text("plant_access").array().notNull().default([]), // Array of plant codes
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 /* ===========================

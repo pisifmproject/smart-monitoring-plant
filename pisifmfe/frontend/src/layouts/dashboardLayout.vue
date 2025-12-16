@@ -105,19 +105,10 @@ const toggleSidebar = () => {
         </div>
 
         <div class="ml-auto flex items-center gap-3">
-          <span
-            class="badge"
-            :class="
-              userRole === 'user'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-blue-100 text-blue-800'
-            "
-          >
-            {{ userRole === "user" ? "User" : "Guest" }}
-          </span>
+          <span class="text-sm text-slate-600 font-medium">{{ userRole }}</span>
           <button
             @click="handleLogout"
-            class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+            class="px-3 py-1 text-sm text-red-500 hover:text-red-600 font-medium transition-colors"
           >
             Logout
           </button>

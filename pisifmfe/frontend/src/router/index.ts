@@ -544,7 +544,7 @@ const router = createRouter({
 
 // Navigation guard
 router.beforeEach((to, from, next) => {
-  const { isAuthenticated, canAccessDailyReport, initAuth } = useAuth();
+  const { isAuthenticated, initAuth, userRole } = useAuth();
 
   // Initialize auth from localStorage
   initAuth();
@@ -559,32 +559,17 @@ router.beforeEach((to, from, next) => {
   }
 
   // Check if route requires user role (for daily reports, weigher, bagmaker)
+  // Note: All authenticated users from database have access to features
+  // The userRole is checked but currently all users can access daily reports
   if (to.matched.some((record) => record.meta.requiresUser)) {
     if (!isAuthenticated.value) {
       next({ name: "login", query: { redirect: to.fullPath } });
       return;
     }
 
-    if (!canAccessDailyReport()) {
-      // Guest cannot access restricted features
-      const routePath = to.path;
-      let message = "⚠️ Akses Ditolak\n\n";
-
-      if (routePath.includes("daily-report")) {
-        message += "Silakan login sebagai User untuk akses penuh.";
-      } else if (
-        routePath.includes("weigher") ||
-        routePath.includes("bagmaker")
-      ) {
-        message += "Silakan login sebagai User untuk akses penuh.";
-      } else {
-        message += "Silakan login sebagai User untuk akses penuh.";
-      }
-
-      alert(message);
-      next({ name: "lvmdp1" });
-      return;
-    }
+    // Optional: Add role-based restrictions here if needed
+    // For now, all authenticated users can access restricted features
+    // Example: if (userRole.value === 'Viewer') { ... }
   }
 
   next();

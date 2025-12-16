@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from "vue";
 import ReportButton from "@/components/reportButton.vue";
 import { useAuth } from "@/stores/auth";
 
-const { canAccessDailyReport } = useAuth();
+const { isAuthenticated } = useAuth();
 const machineName = "Tortila";
 const loading = ref(false);
 const hasData = ref(true); // Default to true for mock data
@@ -81,7 +81,7 @@ onMounted(() => {
               <span class="status-dot"></span>
               {{ status.toUpperCase() }}
             </div>
-            <div v-if="canAccessDailyReport()" class="report-btn-wrapper">
+            <div v-if="isAuthenticated" class="report-btn-wrapper">
               <ReportButton
                 routeName="dailyReportTortila"
                 :label="`Daily Report`"

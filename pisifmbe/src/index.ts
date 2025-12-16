@@ -2,6 +2,7 @@ import express from "express";
 import "dotenv/config";
 import cors from "cors";
 import userController from "./user/user.controller";
+import authController from "./auth/auth.controller";
 import lvmdp1Controller from "./lvmdp/LVMDP_1/lvmdp_1.controller";
 import lvmdp2Controller from "./lvmdp/LVMDP_2/lvmdp_2.controller";
 import lvmdp3Controller from "./lvmdp/LVMDP_3/lvmdp_3.controller";
@@ -48,6 +49,9 @@ app.use((req, res, next) => {
 app.get("/api", (_req, res) => {
   res.send("Sukses landing ke endpoint api");
 });
+
+// Authentication routes
+app.use("/api/auth", authController);
 
 app.use("/api/lvmdp", require("./routes/lvmdp.router").default);
 

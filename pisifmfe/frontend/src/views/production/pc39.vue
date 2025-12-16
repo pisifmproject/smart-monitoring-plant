@@ -14,7 +14,7 @@ import {
   Gauge,
 } from "lucide-vue-next";
 
-const { canAccessDailyReport } = useAuth();
+const { isAuthenticated } = useAuth();
 const lineId = "LINE_A_PC39";
 
 // Active utility tab
@@ -238,7 +238,7 @@ onMounted(() => {
               <span class="status-dot"></span>
               {{ status.toUpperCase() }}
             </div>
-            <div v-if="canAccessDailyReport()" class="report-btn-wrapper">
+            <div v-if="isAuthenticated" class="report-btn-wrapper">
               <ReportButton routeName="dailyReportPC39" label="Daily Report" />
             </div>
           </div>
@@ -246,7 +246,7 @@ onMounted(() => {
       </div>
 
       <!-- Utility Tabs (User only) -->
-      <div v-if="canAccessDailyReport()" class="tabs-section">
+      <div v-if="isAuthenticated" class="tabs-section">
         <div class="tabs-scroll-container">
           <button
             v-for="tab in utilityTabs"
@@ -463,7 +463,7 @@ onMounted(() => {
 
       <!-- Utility Content -->
       <div
-        v-if="canAccessDailyReport() && activeUtilityTab !== 'dashboard'"
+        v-if="isAuthenticated && activeUtilityTab !== 'dashboard'"
         class="content-wrapper"
       >
         <div class="utility-panel">
