@@ -53,6 +53,10 @@ app.get("/api", (_req, res) => {
 // Authentication routes
 app.use("/api/auth", authController);
 
+// Dashboard routes
+import dashboardController from "./dashboard/dashboard.controller";
+app.use("/api/dashboard", dashboardController);
+
 app.use("/api/lvmdp", require("./routes/lvmdp.router").default);
 
 app.use("/api/user", userController);
