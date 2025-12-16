@@ -58,51 +58,14 @@ const globalMenuItems = computed(() => [
   })),
 ]);
 
-// Plant Dashboard menu with nested structure
+// Plant Dashboard menu with Energy & Utilities dropdown
 const plantMenuItems = computed(() => {
-  const isCikupa = currentPlantId.value?.toUpperCase() === "CIKUPA";
-
-  const electricalChildren = [
-    {
-      id: "panelDistribution",
-      name: "Panel Distribution",
-      route: `/app/plant/${currentPlantId.value}/electrical/panels`,
-    },
-  ];
-
-  // Only add individual panels for Cikupa (real data)
-  if (isCikupa) {
-    electricalChildren.push(
-      {
-        id: "panel1",
-        name: "Panel 1",
-        route: `/app/plant/${currentPlantId.value}/electrical/panel1`,
-      },
-      {
-        id: "panel2",
-        name: "Panel 2",
-        route: `/app/plant/${currentPlantId.value}/electrical/panel2`,
-      },
-      {
-        id: "panel3",
-        name: "Panel 3",
-        route: `/app/plant/${currentPlantId.value}/electrical/panel3`,
-      },
-      {
-        id: "panel4",
-        name: "Panel 4",
-        route: `/app/plant/${currentPlantId.value}/electrical/panel4`,
-      }
-    );
-  }
-
   return [
     {
       id: "plantDashboard",
       name: "Plant Dashboard",
       icon: LayoutDashboard,
       route: `/app/plant/${currentPlantId.value}`,
-      active: route.name === "plantDashboard",
     },
     {
       id: "energyUtilities",
@@ -113,7 +76,7 @@ const plantMenuItems = computed(() => {
         {
           id: "electrical",
           name: "Electrical",
-          children: electricalChildren,
+          route: `/app/plant/${currentPlantId.value}/electrical/panels`,
         },
       ],
     },
@@ -122,7 +85,6 @@ const plantMenuItems = computed(() => {
       name: "Production Lines",
       icon: Factory,
       route: `/app/plant/${currentPlantId.value}/production`,
-      active: false,
     },
   ];
 });
@@ -226,25 +188,18 @@ const isMenuItemActive = (item: any) => {
           </router-link>
         </div>
 
-        <div
-          class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-2"
-        >
-          NAVIGATION
-        </div>
         <template v-for="item in plantMenuItems" :key="item.id">
           <!-- Menu with children (expandable) -->
           <div v-if="item.children">
-            <!-- If item has route, make it clickable to navigate -->
             <router-link
-              v-if="item.route"
               :to="item.route"
               @click.prevent="
                 $router.push(item.route);
                 toggleMenu(item.id);
               "
               :class="[
-                'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
-                route.path === item.route
+                'flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
+                route.path === item.route || route.path.startsWith(item.route)
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white',
               ]"
@@ -271,87 +226,21 @@ const isMenuItemActive = (item: any) => {
                 />
               </svg>
             </router-link>
-            <!-- Otherwise just a toggle button -->
-            <button
-              v-else
-              @click="toggleMenu(item.id)"
-              :class="[
-                'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
-                'text-slate-300 hover:bg-slate-800 hover:text-white',
-              ]"
-            >
-              <div class="flex items-center gap-3">
-                <component :is="item.icon" :size="18" />
-                <span>{{ item.name }}</span>
-              </div>
-              <svg
-                :class="[
-                  'w-4 h-4 transition-transform',
-                  isMenuExpanded(item.id) ? 'rotate-90' : '',
-                ]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-            <!-- Nested children -->
+            <!-- Submenu -->
             <div v-show="isMenuExpanded(item.id)" class="ml-4 mt-1 space-y-1">
-              <template v-for="child in item.children" :key="child.id">
-                <!-- Sub-menu with children -->
-                <template v-if="child.children">
-                  <button
-                    @click="toggleMenu(child.id)"
-                    :class="[
-                      'w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                      'text-slate-400 hover:bg-slate-800 hover:text-white',
-                    ]"
-                  >
-                    <span>{{ child.name }}</span>
-                    <svg
-                      :class="[
-                        'w-4 h-4 transition-transform',
-                        isMenuExpanded(child.id) ? 'rotate-90' : '',
-                      ]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
-                  <!-- Third level items -->
-                  <div
-                    v-show="isMenuExpanded(child.id)"
-                    class="ml-4 mt-1 space-y-1"
-                  >
-                    <router-link
-                      v-for="subItem in child.children"
-                      :key="subItem.id"
-                      :to="subItem.route"
-                      :class="[
-                        'block px-3 py-2 rounded-lg text-sm transition-all',
-                        route.path === subItem.route
-                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-white',
-                      ]"
-                    >
-                      {{ subItem.name }}
-                    </router-link>
-                  </div>
-                </template>
-              </template>
+              <router-link
+                v-for="child in item.children"
+                :key="child.id"
+                :to="child.route"
+                :class="[
+                  'block px-3 py-2 rounded-lg text-sm transition-all',
+                  route.path === child.route
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white',
+                ]"
+              >
+                {{ child.name }}
+              </router-link>
             </div>
           </div>
           <!-- Simple menu item (no children) -->
@@ -360,7 +249,7 @@ const isMenuItemActive = (item: any) => {
             :to="item.route"
             :class="[
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
-              item.active || route.path === item.route
+              route.path === item.route || route.path.startsWith(item.route)
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
                 : 'text-slate-300 hover:bg-slate-800 hover:text-white',
             ]"

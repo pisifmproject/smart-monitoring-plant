@@ -167,15 +167,16 @@ export const getPlantOverview = async (period: Period) => {
     else if (alarmCount > 0 || plant.oeeAvg < 0.7) status = "WARNING";
 
     return {
-      ...plant,
-      scaledOutput: plant.outputToday * multiplier,
-      scaledEnergy: plant.energyTotal * multiplier,
-      scaledOEE: Math.min(
-        100,
-        plant.oeeAvg * 100 * (1 + (Math.random() * 0.02 - 0.01))
+      id: plant.id,
+      name: plant.name,
+      location: plant.location,
+      output: Math.round(plant.outputToday * multiplier),
+      energy: Math.round(plant.energyTotal * multiplier),
+      oee: parseFloat(
+        (plant.oeeAvg * 100 * (1 + (Math.random() * 0.02 - 0.01))).toFixed(2)
       ),
-      alarmCount,
-      computedStatus: status,
+      alarms: alarmCount,
+      status: status,
     };
   });
 };
@@ -323,6 +324,80 @@ export const getPlantDashboard = async (plantId: string, period: Period) => {
     },
   ];
 
+  // Get LVMDP panel data for Cikupa (real), dummy for others
+  let lvmdpPanels = [];
+  if (plantId.toUpperCase() === "CIKUPA") {
+    try {
+      // Fetch latest reading from each LVMDP panel
+      const panel1 = await db.execute(sql`
+        SELECT voltage_r, current_r, power, kwh 
+        FROM lvmdp_1 
+        WHERE DATE(waktu) = CURRENT_DATE 
+        ORDER BY waktu DESC 
+        LIMIT 1
+      `);
+      const panel2 = await db.execute(sql`
+        SELECT voltage_r, current_r, power, kwh 
+        FROM lvmdp_2 
+        WHERE DATE(waktu) = CURRENT_DATE 
+        ORDER BY waktu DESC 
+        LIMIT 1
+      `);
+      const panel3 = await db.execute(sql`
+        SELECT voltage_r, current_r, power, kwh 
+        FROM lvmdp_3 
+        WHERE DATE(waktu) = CURRENT_DATE 
+        ORDER BY waktu DESC 
+        LIMIT 1
+      `);
+      const panel4 = await db.execute(sql`
+        SELECT voltage_r, current_r, power, kwh 
+        FROM lvmdp_4 
+        WHERE DATE(waktu) = CURRENT_DATE 
+        ORDER BY waktu DESC 
+        LIMIT 1
+      `);
+
+      lvmdpPanels = [
+        {
+          panelName: "LVMDP 1",
+          voltage: parseFloat(panel1.rows[0]?.voltage_r || "0"),
+          current: parseFloat(panel1.rows[0]?.current_r || "0"),
+          power: parseFloat(panel1.rows[0]?.power || "0"),
+          totalKwh: parseFloat(panel1.rows[0]?.kwh || "0"),
+        },
+        {
+          panelName: "LVMDP 2",
+          voltage: parseFloat(panel2.rows[0]?.voltage_r || "0"),
+          current: parseFloat(panel2.rows[0]?.current_r || "0"),
+          power: parseFloat(panel2.rows[0]?.power || "0"),
+          totalKwh: parseFloat(panel2.rows[0]?.kwh || "0"),
+        },
+        {
+          panelName: "LVMDP 3",
+          voltage: parseFloat(panel3.rows[0]?.voltage_r || "0"),
+          current: parseFloat(panel3.rows[0]?.current_r || "0"),
+          power: parseFloat(panel3.rows[0]?.power || "0"),
+          totalKwh: parseFloat(panel3.rows[0]?.kwh || "0"),
+        },
+        {
+          panelName: "LVMDP 4",
+          voltage: parseFloat(panel4.rows[0]?.voltage_r || "0"),
+          current: parseFloat(panel4.rows[0]?.current_r || "0"),
+          power: parseFloat(panel4.rows[0]?.power || "0"),
+          totalKwh: parseFloat(panel4.rows[0]?.kwh || "0"),
+        },
+      ];
+    } catch (error) {
+      console.error("Error fetching LVMDP panel data:", error);
+      // Fallback to dummy if query fails
+      lvmdpPanels = generateDummyLVMDPPanels();
+    }
+  } else {
+    // Dummy data for other plants
+    lvmdpPanels = generateDummyLVMDPPanels();
+  }
+
   return {
     plant,
     kpis,
@@ -330,5 +405,40 @@ export const getPlantDashboard = async (plantId: string, period: Period) => {
     shifts,
     activeAlarms,
     productionLines,
+    lvmdpPanels,
   };
+};
+
+// Helper function to generate dummy LVMDP panel data
+const generateDummyLVMDPPanels = () => {
+  return [
+    {
+      panelName: "LVMDP 1",
+      voltage: 385 + Math.random() * 10,
+      current: 120 + Math.random() * 20,
+      power: 78 + Math.random() * 15,
+      totalKwh: 2800 + Math.random() * 400,
+    },
+    {
+      panelName: "LVMDP 2",
+      voltage: 380 + Math.random() * 10,
+      current: 110 + Math.random() * 20,
+      power: 72 + Math.random() * 15,
+      totalKwh: 2600 + Math.random() * 400,
+    },
+    {
+      panelName: "LVMDP 3",
+      voltage: 390 + Math.random() * 10,
+      current: 130 + Math.random() * 20,
+      power: 85 + Math.random() * 15,
+      totalKwh: 3100 + Math.random() * 400,
+    },
+    {
+      panelName: "LVMDP 4",
+      voltage: 383 + Math.random() * 10,
+      current: 115 + Math.random() * 20,
+      power: 75 + Math.random() * 15,
+      totalKwh: 2700 + Math.random() * 400,
+    },
+  ];
 };

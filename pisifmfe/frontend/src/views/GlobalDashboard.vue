@@ -5,7 +5,7 @@ import { useAuth } from "@/stores/auth";
 import { Globe, Activity, Zap, AlertTriangle, Factory } from "lucide-vue-next";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:2000/api";
+const API_URL = "http://localhost:2000/api";
 
 const router = useRouter();
 const { currentUser } = useAuth();
@@ -47,35 +47,82 @@ const showAlarms = computed(() => {
 });
 
 const formatNumber = (value: number, decimals = 0) => {
-  return value.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const maxDecimals = Math.min(decimals, 2); // Global rule: max 2 decimals
+  return value.toFixed(maxDecimals).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
 const fetchData = async () => {
   try {
     loading.value = true;
-    const response = await axios.get(
-      `${API_URL}/dashboard/global?period=${period.value}`
-    );
+    const response = await axios.get(`${API_URL}/dashboard/global`, {
+      params: { period: period.value },
+    });
     kpis.value = response.data.kpis;
     plants.value = response.data.plants;
   } catch (error) {
     console.error("Error fetching global dashboard data:", error);
+    // Fallback to dummy data if API fails
+    const multiplier =
+      period.value === "DAY"
+        ? 1
+        : period.value === "WEEK"
+        ? 7
+        : period.value === "MONTH"
+        ? 30
+        : 365;
+
+    kpis.value = {
+      totalOutput: 48600 * multiplier,
+      totalEnergy: 11600 * multiplier,
+      avgOEE: 78.8,
+      totalAlarmsValue: 5,
+    };
+
+    plants.value = [
+      {
+        id: "CIKOKOL",
+        name: "Plant Cikokol",
+        location: "TANGERANG",
+        status: "WARNING",
+        output: 15000,
+        oee: 81.8,
+        energy: 3200,
+        alarms: 2,
+      },
+      {
+        id: "SEMARANG",
+        name: "Plant Semarang",
+        location: "CENTRAL JAVA",
+        status: "WARNING",
+        output: 18000,
+        oee: 78.26,
+        energy: 4100,
+        alarms: 3,
+      },
+      {
+        id: "CIKUPA",
+        name: "Plant Cikupa",
+        location: "TANGERANG",
+        status: "WARNING",
+        output: 15600,
+        oee: 85.38,
+        energy: 3800,
+        alarms: 3,
+      },
+      {
+        id: "AGRO",
+        name: "Plant Agro",
+        location: "DEVELOPMENT",
+        status: "WARNING",
+        output: 0,
+        oee: 69.7,
+        energy: 500,
+        alarms: 1,
+      },
+    ];
   } finally {
     loading.value = false;
   }
-};
-
-const navigateToPlant = (plantId: string, hasAccess: boolean) => {
-  if (hasAccess) {
-    router.push(`/app/plant/${plantId}`);
-  }
-};
-
-const hasPlantAccess = (plantId: string) => {
-  if (!currentUser.value) return false;
-  const role = currentUser.value.role;
-  if (role === "Administrator") return true;
-  return currentUser.value.plantAccess?.includes(plantId) || false;
 };
 
 onMounted(() => {
@@ -84,8 +131,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-8 animate-in fade-in duration-500 w-full">
-    <!-- Header -->
+  <div class="space-y-8 animate-in fade-in duration-500 p-6">
+    <!-- Header with Period Filter -->
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
     >
@@ -119,272 +166,215 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Global KPIs -->
-    <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-sm">
-      <h3 class="text-sm font-bold text-slate-300 mb-4 uppercase tracking-wide">
+    <!-- Global KPIs Card -->
+    <div
+      class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-6"
+    >
+      <h2
+        class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4"
+      >
         Global Performance At a Glance
-      </h3>
+      </h2>
       <div
         :class="[
           'grid grid-cols-1 sm:grid-cols-2 gap-5',
-          !showAlarms ? 'lg:grid-cols-3' : 'lg:grid-cols-4',
+          showAlarms ? 'lg:grid-cols-4' : 'lg:grid-cols-3',
         ]"
       >
         <!-- Total Output -->
-        <div class="bg-slate-900 border border-slate-700 rounded-lg p-5">
-          <div class="flex items-start justify-between mb-3">
+        <div class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50">
+          <div class="flex justify-between items-start mb-3">
             <div>
-              <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-wider"
-              >
+              <p class="text-slate-400 text-xs font-medium uppercase mb-1">
                 Total Output ({{ period }})
               </p>
+              <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-bold text-white">{{
+                  formatNumber(kpis.totalOutput)
+                }}</span>
+                <span class="text-xs text-slate-400">kg</span>
+              </div>
             </div>
-            <Factory :size="20" class="text-blue-400" />
+            <div class="p-2 bg-blue-500/10 rounded-lg">
+              <Factory class="text-blue-400" :size="20" />
+            </div>
           </div>
-          <div class="flex items-baseline gap-2">
-            <span class="text-3xl font-bold text-white font-mono">{{
-              formatNumber(kpis.totalOutput)
-            }}</span>
-            <span class="text-sm text-slate-400">kg</span>
-          </div>
-          <div class="mt-2 flex items-center gap-1 text-emerald-400 text-xs">
-            <span>▲</span>
-            <span>2.5% vs yesterday</span>
+          <div class="flex items-center gap-1 text-xs">
+            <span class="text-emerald-400 font-semibold">↑ 2.5%</span>
+            <span class="text-slate-500">vs yesterday</span>
           </div>
         </div>
 
-        <!-- Global Avg OEE -->
-        <div class="bg-slate-900 border border-slate-700 rounded-lg p-5">
-          <div class="flex items-start justify-between mb-3">
+        <!-- Global OEE -->
+        <div class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50">
+          <div class="flex justify-between items-start mb-3">
             <div>
-              <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-wider"
-              >
+              <p class="text-slate-400 text-xs font-medium uppercase mb-1">
                 Global Avg OEE
               </p>
+              <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-bold text-white">{{
+                  formatNumber(kpis.avgOEE, 1)
+                }}</span>
+                <span class="text-xs text-slate-400">%</span>
+              </div>
             </div>
-            <Activity :size="20" class="text-emerald-400" />
+            <div class="p-2 bg-emerald-500/10 rounded-lg">
+              <Activity class="text-emerald-400" :size="20" />
+            </div>
           </div>
-          <div class="flex items-baseline gap-2">
-            <span class="text-3xl font-bold text-white font-mono">{{
-              formatNumber(kpis.avgOEE, 1)
-            }}</span>
-            <span class="text-sm text-slate-400">%</span>
-          </div>
-          <div class="mt-2 flex items-center gap-1 text-emerald-400 text-xs">
-            <span>▲</span>
-            <span>1.2% vs yesterday</span>
+          <div class="flex items-center gap-1 text-xs">
+            <span class="text-emerald-400 font-semibold">↑ 1.2%</span>
+            <span class="text-slate-500">vs yesterday</span>
           </div>
         </div>
 
         <!-- Total Energy -->
-        <div class="bg-slate-900 border border-slate-700 rounded-lg p-5">
-          <div class="flex items-start justify-between mb-3">
+        <div class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50">
+          <div class="flex justify-between items-start mb-3">
             <div>
-              <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-wider"
-              >
+              <p class="text-slate-400 text-xs font-medium uppercase mb-1">
                 Total Energy ({{ period }})
               </p>
+              <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-bold text-white">{{
+                  formatNumber(kpis.totalEnergy)
+                }}</span>
+                <span class="text-xs text-slate-400">kWh</span>
+              </div>
             </div>
-            <Zap :size="20" class="text-yellow-400" />
+            <div class="p-2 bg-yellow-500/10 rounded-lg">
+              <Zap class="text-yellow-400" :size="20" />
+            </div>
           </div>
-          <div class="flex items-baseline gap-2">
-            <span class="text-3xl font-bold text-white font-mono">{{
-              formatNumber(kpis.totalEnergy)
-            }}</span>
-            <span class="text-sm text-slate-400">kWh</span>
-          </div>
-          <div class="mt-2 flex items-center gap-1 text-rose-400 text-xs">
-            <span>▼</span>
-            <span>0.8% vs yesterday</span>
+          <div class="flex items-center gap-1 text-xs">
+            <span class="text-rose-400 font-semibold">↓ 0.8%</span>
+            <span class="text-slate-500">vs yesterday</span>
           </div>
         </div>
 
         <!-- Active Alarms -->
         <div
           v-if="showAlarms"
-          class="bg-slate-900 border border-slate-700 rounded-lg p-5"
+          class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50"
         >
-          <div class="flex items-start justify-between mb-3">
+          <div class="flex justify-between items-start mb-3">
             <div>
-              <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-wider"
-              >
+              <p class="text-slate-400 text-xs font-medium uppercase mb-1">
                 Active Alarms
               </p>
+              <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-bold text-white">{{
+                  kpis.totalAlarmsValue
+                }}</span>
+              </div>
             </div>
-            <AlertTriangle :size="20" class="text-rose-400" />
+            <div class="p-2 bg-rose-500/10 rounded-lg">
+              <AlertTriangle class="text-rose-400" :size="20" />
+            </div>
           </div>
-          <div class="flex items-baseline gap-2">
-            <span class="text-3xl font-bold text-white font-mono">{{
-              kpis.totalAlarmsValue
-            }}</span>
+          <div class="flex items-center gap-1 text-xs">
+            <span class="text-slate-400">Across all plants</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Plant Status Overview -->
-    <div class="space-y-4">
-      <h2 class="text-lg font-bold text-white flex items-center gap-2">
-        <Factory :size="20" class="text-slate-300" />
+    <div>
+      <h2
+        class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"
+      >
+        <Factory :size="16" />
         Plant Status Overview
       </h2>
-      <div
-        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-5"
-      >
+      <div v-if="loading" class="text-center py-12 text-slate-400">
+        Loading plants data...
+      </div>
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <div
           v-for="plant in plants"
           :key="plant.id"
-          @click="navigateToPlant(plant.id, hasPlantAccess(plant.id))"
-          :class="[
-            'bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm transition-all duration-300 group relative overflow-hidden',
-            hasPlantAccess(plant.id)
-              ? 'hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 cursor-pointer'
-              : 'cursor-default',
-          ]"
+          @click="router.push(`/app/plant/${plant.id}`)"
+          class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 hover:border-blue-500 transition-all cursor-pointer group"
         >
-          <div class="flex justify-between items-start mb-4 relative z-10">
+          <!-- Plant Header -->
+          <div class="flex justify-between items-start mb-4">
             <div>
               <h3
-                :class="[
-                  'text-lg font-bold transition-colors',
-                  hasPlantAccess(plant.id)
-                    ? 'text-white group-hover:text-blue-400'
-                    : 'text-white',
-                ]"
+                class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors"
               >
                 {{ plant.name }}
               </h3>
-              <p
-                class="text-xs text-slate-300 font-semibold uppercase tracking-wider mt-1"
-              >
+              <p class="text-xs text-slate-400 uppercase tracking-wide">
                 {{ plant.location }}
               </p>
             </div>
-            <div class="flex items-center gap-2">
+            <span
+              :class="[
+                'px-2 py-1 rounded text-[10px] font-bold uppercase',
+                plant.status === 'NORMAL'
+                  ? 'bg-emerald-500/10 text-emerald-400'
+                  : 'bg-yellow-500/10 text-yellow-400',
+              ]"
+            >
+              {{ plant.status }}
+            </span>
+          </div>
+
+          <!-- Metrics -->
+          <div class="space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase">Output</span>
+              <div class="flex items-baseline gap-1">
+                <span class="text-sm font-bold text-white">{{
+                  formatNumber(plant.output)
+                }}</span>
+                <span class="text-[10px] text-slate-500">kg</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase">OEE</span>
+              <div class="flex items-baseline gap-1">
+                <span
+                  :class="[
+                    'text-sm font-bold',
+                    plant.oee >= 85
+                      ? 'text-emerald-400'
+                      : plant.oee >= 70
+                      ? 'text-yellow-400'
+                      : 'text-rose-400',
+                  ]"
+                  >{{ formatNumber(plant.oee, 2) }}</span
+                >
+                <span class="text-[10px] text-slate-500">%</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase">Energy</span>
+              <div class="flex items-baseline gap-1">
+                <span class="text-sm font-bold text-white">{{
+                  formatNumber(plant.energy)
+                }}</span>
+                <span class="text-[10px] text-slate-500">kWh</span>
+              </div>
+            </div>
+            <div
+              v-if="showAlarms"
+              class="flex justify-between items-center pt-2 border-t border-slate-700/50"
+            >
+              <span class="text-xs text-slate-400 uppercase">Alarms</span>
               <span
-                v-if="
-                  currentUser?.role !== 'Management' &&
-                  plant.computedStatus !== 'NORMAL'
-                "
                 :class="[
-                  'px-2 py-1 text-xs font-bold rounded uppercase',
-                  plant.computedStatus === 'WARNING'
-                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                    : plant.computedStatus === 'CRITICAL'
-                    ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                    : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+                  'text-sm font-bold',
+                  plant.alarms > 0 ? 'text-rose-400' : 'text-slate-400',
                 ]"
+                >{{ plant.alarms }} Active</span
               >
-                {{ plant.computedStatus }}
-              </span>
             </div>
           </div>
-
-          <div
-            class="grid grid-cols-2 gap-y-5 gap-x-4 relative z-10 pt-4 mt-4 border-t border-slate-700/50"
-          >
-            <div>
-              <p
-                class="text-slate-300 text-xs font-bold uppercase tracking-wider"
-              >
-                Output
-              </p>
-              <p class="text-white font-mono font-bold text-lg">
-                {{ formatNumber(plant.scaledOutput) }}
-                <span class="text-xs font-normal text-slate-400">kg</span>
-              </p>
-            </div>
-            <div>
-              <p
-                class="text-slate-300 text-xs font-bold uppercase tracking-wider"
-              >
-                OEE
-              </p>
-              <p
-                :class="[
-                  'font-mono font-bold text-lg',
-                  plant.scaledOEE >= 80
-                    ? 'text-emerald-400'
-                    : plant.scaledOEE >= 60
-                    ? 'text-amber-400'
-                    : 'text-rose-400',
-                ]"
-              >
-                {{ formatNumber(plant.scaledOEE, 1) }}%
-              </p>
-            </div>
-            <div>
-              <p
-                class="text-slate-300 text-xs font-bold uppercase tracking-wider"
-              >
-                Energy
-              </p>
-              <p class="text-yellow-400 font-mono font-bold">
-                {{ formatNumber(plant.scaledEnergy) }}
-                <span class="text-xs font-normal text-slate-400">kWh</span>
-              </p>
-            </div>
-            <div v-if="showAlarms">
-              <p
-                class="text-slate-300 text-xs font-bold uppercase tracking-wider"
-              >
-                Alarms
-              </p>
-              <p
-                :class="[
-                  'font-mono font-bold',
-                  plant.alarmCount > 0 ? 'text-rose-400' : 'text-slate-300',
-                ]"
-              >
-                {{ plant.alarmCount }} Active
-              </p>
-            </div>
-          </div>
-
-          <div
-            v-if="hasPlantAccess(plant.id)"
-            class="absolute -top-8 -right-8 w-36 h-36 bg-slate-700/10 rounded-full pointer-events-none group-hover:scale-125 group-hover:bg-blue-900/20 transition-transform duration-300"
-          ></div>
         </div>
       </div>
     </div>
-
-    <!-- Loading State -->
-    <div
-      v-if="loading"
-      class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center z-50"
-    >
-      <div class="text-white">Loading...</div>
-    </div>
   </div>
 </template>
-
-<style scoped>
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.animate-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style>
