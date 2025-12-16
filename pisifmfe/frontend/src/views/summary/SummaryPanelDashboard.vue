@@ -1045,8 +1045,26 @@ onUnmounted(() => {
 /* Base */
 .summary-dashboard {
   min-height: calc(100vh - 64px);
-  background: #0f172a;
-  padding: 1.5rem;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  padding: 32px;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1280px) {
+  .summary-dashboard {
+    padding: 24px;
+    max-width: 1200px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .summary-dashboard {
+    max-width: 1800px;
+    padding: 40px;
+  }
 }
 
 /* Header */

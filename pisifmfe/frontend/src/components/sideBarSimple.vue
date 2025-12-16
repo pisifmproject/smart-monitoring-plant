@@ -49,13 +49,6 @@ const globalMenuItems = computed(() => [
     routeName: "global",
     children: null,
   },
-  ...accessiblePlants.value.map((plantId) => ({
-    id: plantId.toLowerCase(),
-    name: plantNames[plantId] || plantId,
-    icon: Building2,
-    route: `/app/plant/${plantId}`,
-    children: null,
-  })),
 ]);
 
 // Plant Dashboard menu with Energy & Utilities dropdown
@@ -78,13 +71,32 @@ const plantMenuItems = computed(() => {
           name: "Electrical",
           route: `/app/plant/${currentPlantId.value}/electrical/panels`,
         },
+        {
+          id: "steam",
+          name: "Steam",
+          route: `/app/plant/${currentPlantId.value}/utilities/steam`,
+        },
+        {
+          id: "water",
+          name: "Water",
+          route: `/app/plant/${currentPlantId.value}/utilities/water`,
+        },
+        {
+          id: "compressedAir",
+          name: "Compressed Air",
+          route: `/app/plant/${currentPlantId.value}/utilities/compressed-air`,
+        },
+        {
+          id: "nitrogen",
+          name: "Nitrogen",
+          route: `/app/plant/${currentPlantId.value}/utilities/nitrogen`,
+        },
+        {
+          id: "naturalGas",
+          name: "Natural Gas",
+          route: `/app/plant/${currentPlantId.value}/utilities/natural-gas`,
+        },
       ],
-    },
-    {
-      id: "productionLines",
-      name: "Production Lines",
-      icon: Factory,
-      route: `/app/plant/${currentPlantId.value}/production`,
     },
   ];
 });

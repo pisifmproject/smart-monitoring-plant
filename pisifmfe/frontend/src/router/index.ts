@@ -7,6 +7,12 @@ import GlobalDashboard from "../views/GlobalDashboard.vue";
 import PlantDashboard from "../views/PlantDashboard.vue";
 import ProductionLinesOverview from "../views/ProductionLinesOverview.vue";
 import UtilityDashboard from "../views/UtilityDashboard.vue";
+import ElectricalDummyDashboard from "../views/electrical/ElectricalDummyDashboard.vue";
+import SteamDashboard from "../views/utilities/SteamDashboard.vue";
+import WaterDashboard from "../views/utilities/WaterDashboard.vue";
+import CompressedAirDashboard from "../views/utilities/CompressedAirDashboard.vue";
+import NitrogenDashboard from "../views/utilities/NitrogenDashboard.vue";
+import NaturalGasDashboard from "../views/utilities/NaturalGasDashboard.vue";
 import DashboardLayout from "../layouts/dashboardLayout.vue";
 import UtilityConsumption from "../views/utility/utilityConsumption.vue";
 import Lvmdp1 from "../views/lvmdp/lvmdp1.vue";
@@ -161,25 +167,64 @@ const router = createRouter({
           path: "plant/:plantId/electrical/panels",
           name: "plantElectricalPanels",
           component: SummaryPanelDashboard,
+          beforeEnter: (to, from, next) => {
+            const plantId = to.params.plantId as string;
+            if (plantId?.toUpperCase() === "CIKUPA") {
+              next(); // Real LVMDP data for Cikupa
+            } else {
+              // Redirect to dummy dashboard for other plants
+              next({ name: "plantElectricalDummy", params: { plantId } });
+            }
+          },
         },
         {
-          path: "plant/:plantId/electrical/panel1",
-          name: "plantPanel1",
+          path: "plant/:plantId/electrical/dummy",
+          name: "plantElectricalDummy",
+          component: ElectricalDummyDashboard,
+        },
+        {
+          path: "plant/:plantId/utilities/steam",
+          name: "plantSteam",
+          component: SteamDashboard,
+        },
+        {
+          path: "plant/:plantId/utilities/water",
+          name: "plantWater",
+          component: WaterDashboard,
+        },
+        {
+          path: "plant/:plantId/utilities/compressed-air",
+          name: "plantCompressedAir",
+          component: CompressedAirDashboard,
+        },
+        {
+          path: "plant/:plantId/utilities/nitrogen",
+          name: "plantNitrogen",
+          component: NitrogenDashboard,
+        },
+        {
+          path: "plant/:plantId/utilities/natural-gas",
+          name: "plantNaturalGas",
+          component: NaturalGasDashboard,
+        },
+        {
+          path: "plant/CIKUPA/electrical/panel1",
+          name: "cikupaPanel1",
           component: Lvmdp1,
         },
         {
-          path: "plant/:plantId/electrical/panel2",
-          name: "plantPanel2",
+          path: "plant/CIKUPA/electrical/panel2",
+          name: "cikupaPanel2",
           component: Lvmdp2,
         },
         {
-          path: "plant/:plantId/electrical/panel3",
-          name: "plantPanel3",
+          path: "plant/CIKUPA/electrical/panel3",
+          name: "cikupaPanel3",
           component: Lvmdp3,
         },
         {
-          path: "plant/:plantId/electrical/panel4",
-          name: "plantPanel4",
+          path: "plant/CIKUPA/electrical/panel4",
+          name: "cikupaPanel4",
           component: Lvmdp4,
         },
         {

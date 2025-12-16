@@ -202,7 +202,7 @@ const formatNumber = (num: number) => {
           :class="[
             'px-3 py-1.5 text-xs font-bold rounded-md transition-all',
             period === p
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+              ? 'bg-yellow-500 text-slate-900 shadow-lg shadow-yellow-900/20'
               : 'text-slate-300 hover:text-white hover:bg-slate-800',
           ]"
         >
