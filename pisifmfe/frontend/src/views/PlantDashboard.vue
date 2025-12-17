@@ -162,6 +162,40 @@ const goBackToGlobal = () => {
   router.push("/app/global");
 };
 
+const navigateToUtility = (utilityType: string) => {
+  const isCikupa = plantId.value?.toUpperCase() === "CIKUPA";
+  let route = "";
+
+  switch (utilityType.toLowerCase()) {
+    case "electricity":
+    case "electric":
+      // For Cikupa, link to real panel dashboard, for others go to electrical dummy
+      route = isCikupa ? "electrical/panels" : "electrical/panels";
+      break;
+    case "steam":
+      route = "utilities/steam";
+      break;
+    case "water":
+      route = "utilities/water";
+      break;
+    case "air":
+    case "compressed air":
+      route = "utilities/compressed-air";
+      break;
+    case "nitrogen":
+      route = "utilities/nitrogen";
+      break;
+    case "gas":
+    case "natural gas":
+      route = "utilities/natural-gas";
+      break;
+    default:
+      route = "utilities";
+  }
+
+  router.push(`/app/plant/${plantId.value}/${route}`);
+};
+
 const formatNumber = (num: number) => {
   return new Intl.NumberFormat("en-US").format(Math.round(num));
 };
@@ -319,12 +353,13 @@ const formatNumber = (num: number) => {
         <div
           v-for="utility in utilityMetrics"
           :key="utility.type"
-          class="bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:border-blue-500/30 transition-all"
+          @click="navigateToUtility(utility.type)"
+          class="bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:border-blue-500/50 transition-all cursor-pointer group"
         >
           <component
             :is="getUtilityIcon(utility.type)"
             :size="24"
-            class="text-blue-400 mb-2"
+            class="text-blue-400 mb-2 group-hover:scale-110 transition-transform"
           />
           <div class="text-xs text-slate-400 mb-1">{{ utility.type }}</div>
           <div class="text-lg font-bold text-white">
@@ -497,3 +532,80 @@ const formatNumber = (num: number) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.plant-dashboard {
+  padding: 32px;
+  max-width: 1600px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+@media (max-width: 1280px) {
+  .plant-dashboard {
+    padding: 24px;
+    max-width: 1200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .plant-dashboard {
+    padding: 16px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .plant-dashboard {
+    max-width: 1800px;
+    padding: 40px;
+  }
+}
+</style>
+
+<style scoped>
+.plant-dashboard {
+  padding: 32px;
+  max-width: 1600px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.space-y-8 > * + * {
+  margin-top: 2rem;
+}
+
+.animate-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 1280px) {
+  .plant-dashboard {
+    padding: 24px;
+    max-width: 1200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .plant-dashboard {
+    padding: 16px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .plant-dashboard {
+    max-width: 1800px;
+    padding: 40px;
+  }
+}
+</style>

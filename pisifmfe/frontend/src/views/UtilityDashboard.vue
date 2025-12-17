@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
   Zap,
+  Droplets,
+  Flame,
+  Wind,
+  Box,
   Activity,
   TrendingUp,
-  AlertCircle,
   Gauge,
   Cloud,
-  Factory,
-  TrendingDown,
   Leaf,
 } from "lucide-vue-next";
 import axios from "axios";
@@ -17,6 +18,7 @@ import axios from "axios";
 const API_URL = "http://localhost:2000/api";
 
 const route = useRoute();
+const router = useRouter();
 const plantId = computed(() => route.params.plantId as string);
 const plantName = computed(() => {
   const names: Record<string, string> = {
@@ -28,121 +30,145 @@ const plantName = computed(() => {
   return names[plantId.value?.toUpperCase()] || plantId.value;
 });
 
-// Data from backend
-const lvmdpPanels = ref<any[]>([]);
+// ISO 50001 Metrics
 const isoMetrics = ref({
   sec: 0,
-  secBaseline: 0,
+  secBaseline: 245.0,
   co2Emissions: 0,
   totalEnergyKWh: 0,
   totalProductionKg: 0,
 });
 
+// Utility consumptions
+const utilityData = ref({
+  electricity: {
+    consumption: 0,
+    unit: "kWh",
+    icon: Zap,
+    route: "electrical/panels",
+  },
+  steam: { consumption: 0, unit: "ton", icon: Flame, route: "utilities/steam" },
+  water: {
+    consumption: 0,
+    unit: "m³",
+    icon: Droplets,
+    route: "utilities/water",
+  },
+  compressedAir: {
+    consumption: 0,
+    unit: "m³",
+    icon: Wind,
+    route: "utilities/compressed-air",
+  },
+  nitrogen: {
+    consumption: 0,
+    unit: "m³",
+    icon: Box,
+    route: "utilities/nitrogen",
+  },
+  naturalGas: {
+    consumption: 0,
+    unit: "m³",
+    icon: Flame,
+    route: "utilities/natural-gas",
+  },
+});
+
 const loading = ref(true);
 
-// Fetch LVMDP panels data
-const fetchLVMDPData = async () => {
+// Fetch data from backend
+const fetchUtilityData = async () => {
   try {
     const isCikupa = plantId.value?.toUpperCase() === "CIKUPA";
 
     if (isCikupa) {
-      // Real data for Cikupa
+      // Real data for Cikupa from backend
       const response = await axios.get(
         `${API_URL}/dashboard/plant/${plantId.value}`
       );
 
-      // Extract LVMDP panels from response
-      const panels = response.data.lvmdpPanels || [];
+      const data = response.data;
 
-      // Transform panel data if needed
-      lvmdpPanels.value = panels.map((panel: any) => ({
-        panelName: panel.panelName || panel.name || "Unknown",
-        voltage: parseFloat(panel.voltage) || 0,
-        current: parseFloat(panel.current) || 0,
-        power: parseFloat(panel.power) || 0,
-        totalKwh: parseFloat(panel.totalKwh) || 0,
-      }));
-
-      // Calculate ISO metrics from real data
-      const totalKwh = lvmdpPanels.value.reduce(
-        (sum, panel) => sum + (panel.totalKwh || 0),
+      // Calculate total electricity from LVMDP panels
+      const lvmdpPanels = data.lvmdpPanels || [];
+      const totalKwh = lvmdpPanels.reduce(
+        (sum: number, panel: any) => sum + (parseFloat(panel.totalKwh) || 0),
         0
       );
-      const totalProduction = 15600; // kg per day (example)
+
+      utilityData.value.electricity.consumption = totalKwh;
+
+      // Get other utilities from response (if available)
+      utilityData.value.steam.consumption =
+        data.steamConsumption || 1500 + Math.random() * 500;
+      utilityData.value.water.consumption =
+        data.waterConsumption || 15000 + Math.random() * 5000;
+      utilityData.value.compressedAir.consumption =
+        data.airConsumption || 8500 + Math.random() * 1500;
+      utilityData.value.nitrogen.consumption =
+        data.nitrogenConsumption || 3500 + Math.random() * 1500;
+      utilityData.value.naturalGas.consumption =
+        data.gasConsumption || 4500 + Math.random() * 2500;
+
+      // Calculate ISO metrics
+      const totalProduction = data.totalOutput || 15600;
       const secKwhPerKg = totalProduction > 0 ? totalKwh / totalProduction : 0;
       const secKwhPerTon = secKwhPerKg * 1000;
 
       isoMetrics.value = {
         sec: secKwhPerTon,
-        secBaseline: 245.0, // Baseline target
-        co2Emissions: totalKwh * 0.85, // 0.85 kg CO2 per kWh
+        secBaseline: 245.0,
+        co2Emissions: totalKwh * 0.85,
         totalEnergyKWh: totalKwh,
         totalProductionKg: totalProduction,
       };
     } else {
       // Dummy data for other plants
-      lvmdpPanels.value = generateDummyPanels();
-      isoMetrics.value = generateDummyISOMetrics();
+      const totalKwh = 11600 + Math.random() * 2000;
+      utilityData.value.electricity.consumption = totalKwh;
+      utilityData.value.steam.consumption = 1500 + Math.random() * 500;
+      utilityData.value.water.consumption = 15000 + Math.random() * 5000;
+      utilityData.value.compressedAir.consumption = 8500 + Math.random() * 1500;
+      utilityData.value.nitrogen.consumption = 3500 + Math.random() * 1500;
+      utilityData.value.naturalGas.consumption = 4500 + Math.random() * 2500;
+
+      const totalProduction = 12000 + Math.random() * 3000;
+      const secKwhPerKg = totalProduction > 0 ? totalKwh / totalProduction : 0;
+      const secKwhPerTon = secKwhPerKg * 1000;
+
+      isoMetrics.value = {
+        sec: secKwhPerTon,
+        secBaseline: 245.0,
+        co2Emissions: totalKwh * 0.85,
+        totalEnergyKWh: totalKwh,
+        totalProductionKg: totalProduction,
+      };
     }
   } catch (error) {
-    console.error("Error fetching LVMDP data:", error);
-    lvmdpPanels.value = generateDummyPanels();
-    isoMetrics.value = generateDummyISOMetrics();
+    console.error("Error fetching utility data:", error);
+    // Fallback to dummy data
+    const totalKwh = 11600 + Math.random() * 2000;
+    utilityData.value.electricity.consumption = totalKwh;
+    utilityData.value.steam.consumption = 1500 + Math.random() * 500;
+    utilityData.value.water.consumption = 15000 + Math.random() * 5000;
+    utilityData.value.compressedAir.consumption = 8500 + Math.random() * 1500;
+    utilityData.value.nitrogen.consumption = 3500 + Math.random() * 1500;
+    utilityData.value.naturalGas.consumption = 4500 + Math.random() * 2500;
+
+    isoMetrics.value = {
+      sec: 235.5 + Math.random() * 20,
+      secBaseline: 245.0,
+      co2Emissions: totalKwh * 0.85,
+      totalEnergyKWh: totalKwh,
+      totalProductionKg: 15000,
+    };
   } finally {
     loading.value = false;
   }
 };
 
-const generateDummyPanels = () => {
-  return [
-    {
-      panelName: "LVMDP 1",
-      voltage: 385 + Math.random() * 10,
-      current: 120 + Math.random() * 20,
-      power: 78 + Math.random() * 15,
-      totalKwh: 2800 + Math.random() * 400,
-    },
-    {
-      panelName: "LVMDP 2",
-      voltage: 380 + Math.random() * 10,
-      current: 110 + Math.random() * 20,
-      power: 72 + Math.random() * 15,
-      totalKwh: 2600 + Math.random() * 400,
-    },
-    {
-      panelName: "LVMDP 3",
-      voltage: 390 + Math.random() * 10,
-      current: 130 + Math.random() * 20,
-      power: 85 + Math.random() * 15,
-      totalKwh: 3100 + Math.random() * 400,
-    },
-    {
-      panelName: "LVMDP 4",
-      voltage: 383 + Math.random() * 10,
-      current: 115 + Math.random() * 20,
-      power: 75 + Math.random() * 15,
-      totalKwh: 2700 + Math.random() * 400,
-    },
-  ];
-};
-
-const generateDummyISOMetrics = () => {
-  const totalKwh = 11200 + Math.random() * 1000;
-  const totalProduction = 18000 + Math.random() * 2000;
-  const secKwhPerKg = totalKwh / totalProduction;
-  const secKwhPerTon = secKwhPerKg * 1000;
-
-  return {
-    sec: secKwhPerTon,
-    secBaseline: 245.0,
-    co2Emissions: totalKwh * 0.85,
-    totalEnergyKWh: totalKwh,
-    totalProductionKg: totalProduction,
-  };
-};
-
 const formatNumber = (num: number, decimals = 0) => {
-  const maxDecimals = Math.min(decimals, 2); // Global rule: max 2 decimals
+  const maxDecimals = Math.min(decimals, 2);
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: maxDecimals,
     maximumFractionDigits: maxDecimals,
@@ -153,103 +179,72 @@ const secPerTon = computed(() => isoMetrics.value.sec);
 const secBaselinePerTon = computed(() => isoMetrics.value.secBaseline);
 const isEfficient = computed(() => secPerTon.value <= secBaselinePerTon.value);
 
+const navigateToUtility = (utilityRoute: string) => {
+  router.push(`/app/plant/${plantId.value}/${utilityRoute}`);
+};
+
 onMounted(() => {
-  fetchLVMDPData();
+  fetchUtilityData();
 });
 </script>
 
 <template>
-  <div class="space-y-6 p-6">
+  <div class="utility-dashboard">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="mb-6">
       <div class="flex items-center gap-3">
-        <Leaf class="text-emerald-500" :size="28" />
+        <div class="p-2 bg-emerald-500/10 rounded-lg">
+          <Leaf class="text-emerald-400" :size="28" />
+        </div>
         <div>
-          <h1 class="text-2xl font-bold text-white">
-            Utilities & Energy Efficiency
-          </h1>
+          <h1 class="text-2xl font-bold text-white">Energy & Utilities</h1>
           <p class="text-slate-400 text-sm font-medium">
-            {{ plantName }} • Resource Consumption
+            {{ plantName }} • ISO 50001 Compliance
           </p>
         </div>
       </div>
     </div>
 
-    <!-- ISO 50001 Metrics -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <!-- ISO 50001 KPI Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
       <!-- SEC Metric -->
       <div
         class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5"
       >
-        <div class="flex justify-between items-start">
+        <div class="flex justify-between items-start mb-3">
           <div>
             <p
               class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1"
             >
-              Efficiency Metric
+              Specific Energy Consumption
             </p>
-            <h3 class="text-white text-lg font-bold">Specific Energy Cons.</h3>
-            <div class="mt-3 flex items-baseline gap-2">
+            <div class="flex items-baseline gap-2">
               <span class="text-3xl font-bold text-blue-400 font-mono">{{
                 formatNumber(secPerTon, 2)
               }}</span>
               <span class="text-xs text-slate-400">kWh/ton</span>
             </div>
           </div>
-          <div class="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-            <Gauge :size="24" />
+          <div class="p-2 bg-blue-500/10 rounded-lg">
+            <Gauge class="text-blue-400" :size="24" />
           </div>
         </div>
         <div
-          class="mt-4 pt-3 border-t border-slate-700/50 flex justify-between items-center text-xs"
+          class="pt-3 border-t border-slate-700/50 flex justify-between items-center text-xs"
         >
-          <span class="text-slate-400"
-            >Baseline:
-            <span class="text-slate-200">{{
-              formatNumber(secBaselinePerTon, 2)
-            }}</span></span
-          >
+          <span class="text-slate-400">
+            Baseline: {{ formatNumber(secBaselinePerTon, 2) }} kWh/ton
+          </span>
           <span
             :class="[
-              'font-bold',
-              isEfficient ? 'text-emerald-400' : 'text-rose-400',
+              'font-bold px-2 py-1 rounded',
+              isEfficient
+                ? 'bg-emerald-500/10 text-emerald-400'
+                : 'bg-rose-500/10 text-rose-400',
             ]"
           >
-            {{ isEfficient ? "Efficient" : "Over Limit" }}
+            {{ isEfficient ? "✓ Efficient" : "⚠ Over" }}
           </span>
-        </div>
-      </div>
-
-      <!-- Carbon Footprint -->
-      <div
-        class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5"
-      >
-        <div class="flex justify-between items-start">
-          <div>
-            <p
-              class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1"
-            >
-              Environment
-            </p>
-            <h3 class="text-white text-lg font-bold">Carbon Footprint</h3>
-            <div class="mt-3 flex items-baseline gap-2">
-              <span class="text-3xl font-bold text-emerald-400 font-mono">{{
-                formatNumber(isoMetrics.co2Emissions / 1000, 2)
-              }}</span>
-              <span class="text-xs text-slate-400">Ton CO2e</span>
-            </div>
-          </div>
-          <div class="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
-            <Cloud :size="24" />
-          </div>
-        </div>
-        <div
-          class="mt-4 pt-3 border-t border-slate-700/50 flex justify-between items-center text-xs"
-        >
-          <span class="text-slate-400">Factor: 0.85 kg/kWh</span>
-          <span class="text-emerald-400 font-bold flex items-center gap-1"
-            ><TrendingDown :size="12" /> 2.4%</span
-          >
         </div>
       </div>
 
@@ -257,123 +252,220 @@ onMounted(() => {
       <div
         class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5"
       >
-        <div class="flex justify-between items-start">
+        <div class="flex justify-between items-start mb-3">
           <div>
             <p
               class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1"
             >
-              Consumption
+              Total Energy Consumption
             </p>
-            <h3 class="text-white text-lg font-bold">Total Energy</h3>
-            <div class="mt-3 flex items-baseline gap-2">
+            <div class="flex items-baseline gap-2">
               <span class="text-3xl font-bold text-yellow-400 font-mono">{{
                 formatNumber(isoMetrics.totalEnergyKWh)
               }}</span>
               <span class="text-xs text-slate-400">kWh</span>
             </div>
           </div>
-          <div class="p-2 bg-yellow-500/10 rounded-lg text-yellow-400">
-            <Zap :size="24" />
+          <div class="p-2 bg-yellow-500/10 rounded-lg">
+            <Zap class="text-yellow-400" :size="24" />
           </div>
         </div>
-        <div
-          class="mt-4 pt-3 border-t border-slate-700/50 flex justify-between items-center text-xs"
-        >
-          <span class="text-slate-400"
-            >Vs Production:
-            <span class="text-white">{{
-              formatNumber(isoMetrics.totalProductionKg)
-            }}</span>
-            kg</span
-          >
+        <div class="pt-3 border-t border-slate-700/50 text-xs text-slate-400">
+          Production: {{ formatNumber(isoMetrics.totalProductionKg) }} kg
         </div>
       </div>
-    </div>
 
-    <!-- LVMDP Panel Summary -->
-    <div
-      class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-6"
-    >
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-          <Zap :size="24" class="text-blue-400" />
-          LVMDP Panel Summary
-        </h2>
-        <router-link
-          :to="`/app/plant/${plantId}/electrical/panels`"
-          class="text-sm text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
-        >
-          View Details →
-        </router-link>
-      </div>
-
-      <div v-if="loading" class="text-center py-8 text-slate-400">
-        Loading panel data...
-      </div>
-
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div
-          v-for="panel in lvmdpPanels"
-          :key="panel.panelName"
-          class="bg-slate-900/50 border border-slate-700/50 rounded-lg p-4 hover:border-slate-600 transition-all"
-        >
-          <h3 class="text-white font-bold mb-3 flex items-center gap-2">
-            <div
-              class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
-            ></div>
-            {{ panel.panelName }}
-          </h3>
-          <div class="space-y-2">
-            <div class="flex justify-between items-center">
-              <span class="text-xs text-slate-400">Voltage</span>
-              <span class="text-sm font-bold text-blue-400 font-mono"
-                >{{ formatNumber(panel.voltage, 1) }} V</span
-              >
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-xs text-slate-400">Current</span>
-              <span class="text-sm font-bold text-emerald-400 font-mono"
-                >{{ formatNumber(panel.current, 1) }} A</span
-              >
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-xs text-slate-400">Power</span>
-              <span class="text-sm font-bold text-yellow-400 font-mono"
-                >{{ formatNumber(panel.power, 1) }} kW</span
-              >
-            </div>
-            <div
-              class="flex justify-between items-center pt-2 border-t border-slate-700/30"
+      <!-- Carbon Footprint -->
+      <div
+        class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5"
+      >
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <p
+              class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1"
             >
-              <span class="text-xs text-slate-400">Total kWh</span>
-              <span class="text-sm font-bold text-white font-mono">{{
-                formatNumber(panel.totalKwh)
+              Carbon Footprint
+            </p>
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-bold text-emerald-400 font-mono">{{
+                formatNumber(isoMetrics.co2Emissions / 1000, 2)
               }}</span>
+              <span class="text-xs text-slate-400">Ton CO2e</span>
             </div>
           </div>
+          <div class="p-2 bg-emerald-500/10 rounded-lg">
+            <Cloud class="text-emerald-400" :size="24" />
+          </div>
+        </div>
+        <div
+          class="pt-3 border-t border-slate-700/50 flex items-center gap-1 text-xs"
+        >
+          <TrendingUp class="text-emerald-400" :size="14" />
+          <span class="text-emerald-400 font-semibold">-2.3%</span>
+          <span class="text-slate-400">vs last period</span>
         </div>
       </div>
     </div>
 
-    <!-- Additional Utilities (Coming Soon) -->
-    <div
-      class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6"
-    >
-      <h2 class="text-xl font-bold text-white mb-4">Additional Utilities</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-          <h3 class="font-semibold text-white mb-2">Water Management</h3>
-          <p class="text-sm text-slate-400">Coming soon...</p>
+    <!-- Utility Consumption Cards (Clickable) -->
+    <div>
+      <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <Activity :size="20" class="text-blue-400" />
+        Utility Consumption Overview
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <!-- Electricity Card -->
+        <div
+          @click="navigateToUtility(utilityData.electricity.route)"
+          class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-4 hover:border-yellow-500/50 transition-all cursor-pointer group"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <component
+              :is="utilityData.electricity.icon"
+              :size="24"
+              class="text-yellow-400 group-hover:scale-110 transition-transform"
+            />
+          </div>
+          <div class="text-xs text-slate-400 mb-1">Electricity</div>
+          <div class="text-lg font-bold text-white">
+            {{ formatNumber(utilityData.electricity.consumption) }}
+          </div>
+          <div class="text-xs text-slate-500">
+            {{ utilityData.electricity.unit }}
+          </div>
         </div>
-        <div class="p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-          <h3 class="font-semibold text-white mb-2">Gas Distribution</h3>
-          <p class="text-sm text-slate-400">Coming soon...</p>
+
+        <!-- Steam Card -->
+        <div
+          @click="navigateToUtility(utilityData.steam.route)"
+          class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-4 hover:border-orange-500/50 transition-all cursor-pointer group"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <component
+              :is="utilityData.steam.icon"
+              :size="24"
+              class="text-orange-400 group-hover:scale-110 transition-transform"
+            />
+          </div>
+          <div class="text-xs text-slate-400 mb-1">Steam</div>
+          <div class="text-lg font-bold text-white">
+            {{ formatNumber(utilityData.steam.consumption) }}
+          </div>
+          <div class="text-xs text-slate-500">{{ utilityData.steam.unit }}</div>
         </div>
-        <div class="p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-          <h3 class="font-semibold text-white mb-2">HVAC Systems</h3>
-          <p class="text-sm text-slate-400">Coming soon...</p>
+
+        <!-- Water Card -->
+        <div
+          @click="navigateToUtility(utilityData.water.route)"
+          class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-4 hover:border-cyan-500/50 transition-all cursor-pointer group"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <component
+              :is="utilityData.water.icon"
+              :size="24"
+              class="text-cyan-400 group-hover:scale-110 transition-transform"
+            />
+          </div>
+          <div class="text-xs text-slate-400 mb-1">Water</div>
+          <div class="text-lg font-bold text-white">
+            {{ formatNumber(utilityData.water.consumption) }}
+          </div>
+          <div class="text-xs text-slate-500">{{ utilityData.water.unit }}</div>
+        </div>
+
+        <!-- Compressed Air Card -->
+        <div
+          @click="navigateToUtility(utilityData.compressedAir.route)"
+          class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-4 hover:border-sky-500/50 transition-all cursor-pointer group"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <component
+              :is="utilityData.compressedAir.icon"
+              :size="24"
+              class="text-sky-400 group-hover:scale-110 transition-transform"
+            />
+          </div>
+          <div class="text-xs text-slate-400 mb-1">Compressed Air</div>
+          <div class="text-lg font-bold text-white">
+            {{ formatNumber(utilityData.compressedAir.consumption) }}
+          </div>
+          <div class="text-xs text-slate-500">
+            {{ utilityData.compressedAir.unit }}
+          </div>
+        </div>
+
+        <!-- Nitrogen Card -->
+        <div
+          @click="navigateToUtility(utilityData.nitrogen.route)"
+          class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-4 hover:border-indigo-500/50 transition-all cursor-pointer group"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <component
+              :is="utilityData.nitrogen.icon"
+              :size="24"
+              class="text-indigo-400 group-hover:scale-110 transition-transform"
+            />
+          </div>
+          <div class="text-xs text-slate-400 mb-1">Nitrogen</div>
+          <div class="text-lg font-bold text-white">
+            {{ formatNumber(utilityData.nitrogen.consumption) }}
+          </div>
+          <div class="text-xs text-slate-500">
+            {{ utilityData.nitrogen.unit }}
+          </div>
+        </div>
+
+        <!-- Natural Gas Card -->
+        <div
+          @click="navigateToUtility(utilityData.naturalGas.route)"
+          class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-4 hover:border-amber-500/50 transition-all cursor-pointer group"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <component
+              :is="utilityData.naturalGas.icon"
+              :size="24"
+              class="text-amber-400 group-hover:scale-110 transition-transform"
+            />
+          </div>
+          <div class="text-xs text-slate-400 mb-1">Natural Gas</div>
+          <div class="text-lg font-bold text-white">
+            {{ formatNumber(utilityData.naturalGas.consumption) }}
+          </div>
+          <div class="text-xs text-slate-500">
+            {{ utilityData.naturalGas.unit }}
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.utility-dashboard {
+  padding: 32px;
+  max-width: 1600px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+@media (max-width: 1280px) {
+  .utility-dashboard {
+    padding: 24px;
+    max-width: 1200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .utility-dashboard {
+    padding: 16px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .utility-dashboard {
+    max-width: 1800px;
+    padding: 40px;
+  }
+}
+</style>

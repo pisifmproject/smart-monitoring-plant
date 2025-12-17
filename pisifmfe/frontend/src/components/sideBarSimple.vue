@@ -98,8 +98,72 @@ const plantMenuItems = computed(() => {
         },
       ],
     },
+    {
+      id: "productionLines",
+      name: "Production Lines",
+      icon: Factory,
+      route: `/app/plant/${currentPlantId.value}/production`,
+      children: getProductionLinesByPlant(currentPlantId.value),
+    },
   ];
 });
+
+// Get production lines by plant
+const getProductionLinesByPlant = (plantId: string) => {
+  const machinesByPlant: Record<string, { id: string; name: string }[]> = {
+    CIKUPA: [
+      { id: "pc39", name: "PC39" },
+      { id: "pc14", name: "PC14" },
+      { id: "tortilla", name: "Tortilla" },
+      { id: "tws56", name: "TWS 5.6" },
+      { id: "fcp", name: "FCP" },
+      { id: "tws72", name: "TWS 7.2" },
+      { id: "cassavaCopack", name: "Cassava Copack" },
+      { id: "cassavaInhouse", name: "Cassava Inhouse" },
+      { id: "packingPouch", name: "Packing Pouch" },
+      { id: "vacuumFryer1", name: "Vacuum Fryer 1" },
+    ],
+    CIKOKOL: [
+      { id: "pc39", name: "PC39" },
+      { id: "tortilla", name: "Tortilla" },
+      { id: "tws56", name: "TWS 5.6" },
+      { id: "tws72", name: "TWS 7.2" },
+      { id: "pc14", name: "Potato Chips PC14" },
+      { id: "cassavaInhouse", name: "Cassava Inhouse" },
+      { id: "cassavaCopack", name: "Cassava Copack" },
+      { id: "tempeLine", name: "Tempe Line" },
+      { id: "batchFryer", name: "Batch Fryer" },
+      { id: "continuousFryer", name: "Continuous Fryer" },
+    ],
+    SEMARANG: [
+      { id: "pc14", name: "PC14" },
+      { id: "pc32", name: "PC32" },
+      { id: "cassavaInhouse", name: "Cassava Inhouse" },
+      { id: "cassavaCopack", name: "Cassava Copack" },
+      { id: "tempe", name: "Tempe" },
+      { id: "tortilla", name: "Tortilla" },
+      { id: "fcp", name: "FCP" },
+      { id: "extrudePellet", name: "Extrude Pellet" },
+      { id: "sheetedPelletE250", name: "Sheeted Pellet E250" },
+      { id: "sheetedPelletE500-1", name: "Sheeted Pellet E500-1" },
+      { id: "sheetedPelletE500-2", name: "Sheeted Pellet E500-2" },
+      { id: "batchFryer", name: "Batch Fryer" },
+      { id: "continuousFryer", name: "Continuous Fryer" },
+    ],
+    AGRO: [
+      { id: "futureLine1", name: "Future Line 1" },
+      { id: "futureLine2", name: "Future Line 2" },
+    ],
+  };
+
+  return (
+    machinesByPlant[plantId]?.map((machine) => ({
+      id: machine.id,
+      name: machine.name,
+      route: `/app/plant/${plantId}/machine/${machine.id}`,
+    })) || []
+  );
+};
 
 const expandedMenus = ref<Record<string, boolean>>({});
 
