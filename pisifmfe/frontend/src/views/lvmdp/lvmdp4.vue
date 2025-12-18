@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ShiftCard from "@/components/shiftCard.vue";
 import Gauge from "@/components/gaugeSimple.vue";
 import ReportButton from "@/components/reportButton.vue";
 import { useLvmdpLive } from "@/composables/useLvmdpLive";
@@ -13,11 +12,10 @@ const { s1, s2, s3 } = useShiftAverages(4);
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
 const yesterdayStr = yesterday.toISOString().split("T")[0];
-const {
-  s1: s1Yesterday,
-  s2: s2Yesterday,
-  s3: s3Yesterday,
-} = useShiftAverages(4, yesterdayStr);
+const { s1: s1Yesterday, s2: s2Yesterday, s3: s3Yesterday } = useShiftAverages(
+  4,
+  yesterdayStr
+);
 
 // Live data with kVA and kVAR
 const { isConnected, power, apparentPower, cosPhi, voltage } = useLvmdpLive(4);
@@ -27,8 +25,7 @@ const reactiveCalc = computed(() => {
   const kva = apparentPower.value ?? 0;
   const kw = power.value ?? 0;
   if (kva === 0 || kw === 0) return 0;
-  const kvar = Math.sqrt(Math.max(0, kva * kva - kw * kw));
-  return kvar;
+  return Math.sqrt(Math.max(0, kva * kva - kw * kw));
 });
 
 // Get color class based on load percentage
@@ -56,13 +53,11 @@ function getLoadClass(loadRatio: number): string {
               <p class="page-subtitle">Low Voltage Main Distribution Panel</p>
             </div>
           </div>
+
           <div class="header-actions">
-            <!-- Connection Indicator -->
             <div class="connection-status" :class="{ connected: isConnected }">
               <div class="status-dot"></div>
-              <span class="status-text">{{
-                isConnected ? "LIVE" : "OFFLINE"
-              }}</span>
+              <span class="status-text">{{ isConnected ? "LIVE" : "OFFLINE" }}</span>
             </div>
             <ReportButton :panelId="4" />
           </div>
@@ -76,9 +71,7 @@ function getLoadClass(loadRatio: number): string {
           <div class="section-header">
             <div class="section-title-wrapper">
               <h2 class="section-title">Shift Performance</h2>
-              <p class="section-subtitle">
-                Daily energy consumption comparison
-              </p>
+              <p class="section-subtitle">Daily energy consumption comparison</p>
             </div>
           </div>
 
@@ -97,12 +90,10 @@ function getLoadClass(loadRatio: number): string {
                 <div class="metric-group">
                   <span class="metric-label">Today</span>
                   <div class="metric-values">
-                    <span class="value-primary"
-                      >{{ s1.avgPower.toFixed(1) }} <small>kW</small></span
-                    >
-                    <span class="value-secondary"
-                      >{{ s1.avgCurrent.toFixed(1) }} A</span
-                    >
+                    <span class="value-primary">
+                      {{ s1.avgPower.toFixed(1) }} <small>kW</small>
+                    </span>
+                    <span class="value-secondary">{{ s1.avgCurrent.toFixed(1) }} A</span>
                   </div>
                 </div>
 
@@ -111,32 +102,28 @@ function getLoadClass(loadRatio: number): string {
                 <div class="metric-group">
                   <span class="metric-label">Yesterday</span>
                   <div class="metric-values">
-                    <span class="value-primary muted"
-                      >{{ s1Yesterday.avgPower.toFixed(1) }}
-                      <small>kW</small></span
-                    >
-                    <span class="value-secondary muted"
-                      >{{ s1Yesterday.avgCurrent.toFixed(1) }} A</span
-                    >
+                    <span class="value-primary muted">
+                      {{ s1Yesterday.avgPower.toFixed(1) }} <small>kW</small>
+                    </span>
+                    <span class="value-secondary muted">
+                      {{ s1Yesterday.avgCurrent.toFixed(1) }} A
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <!-- Current Load Section -->
               <div class="current-section">
                 <div class="current-header">
                   <span class="section-title">Current Load</span>
-                  <span class="load-value"
-                    >{{ ((s1.avgCurrent / 2500) * 100).toFixed(1) }}%</span
-                  >
+                  <span class="load-value">
+                    {{ ((s1.avgCurrent / 2500) * 100).toFixed(1) }}%
+                  </span>
                 </div>
 
                 <div class="load-bar-container">
                   <div
                     class="load-bar"
-                    :style="{
-                      width: `${Math.min((s1.avgCurrent / 2500) * 100, 100)}%`,
-                    }"
+                    :style="{ width: `${Math.min((s1.avgCurrent / 2500) * 100, 100)}%` }"
                     :class="getLoadClass(s1.avgCurrent / 2500)"
                   ></div>
                 </div>
@@ -144,21 +131,15 @@ function getLoadClass(loadRatio: number): string {
                 <div class="current-details">
                   <div class="current-stat">
                     <span class="stat-label">Average</span>
-                    <span class="stat-value"
-                      >{{ s1.avgCurrent.toFixed(1) }} A</span
-                    >
+                    <span class="stat-value">{{ s1.avgCurrent.toFixed(1) }} A</span>
                   </div>
                   <div class="current-stat">
                     <span class="stat-label">Min</span>
-                    <span class="stat-value"
-                      >{{ s1.minCurrent.toFixed(1) }} A</span
-                    >
+                    <span class="stat-value">{{ s1.minCurrent.toFixed(1) }} A</span>
                   </div>
                   <div class="current-stat">
                     <span class="stat-label">Max</span>
-                    <span class="stat-value"
-                      >{{ s1.maxCurrent.toFixed(1) }} A</span
-                    >
+                    <span class="stat-value">{{ s1.maxCurrent.toFixed(1) }} A</span>
                   </div>
                   <div class="current-stat">
                     <span class="stat-label">Capacity</span>
@@ -172,15 +153,12 @@ function getLoadClass(loadRatio: number): string {
                   class="trend-indicator"
                   :class="s1.avgPower >= s1Yesterday.avgPower ? 'up' : 'down'"
                 >
-                  <span class="trend-icon">{{
-                    s1.avgPower >= s1Yesterday.avgPower ? "▲" : "▼"
-                  }}</span>
-                  <span class="trend-diff"
-                    >{{
-                      Math.abs(s1.avgPower - s1Yesterday.avgPower).toFixed(1)
-                    }}
-                    kW</span
-                  >
+                  <span class="trend-icon">
+                    {{ s1.avgPower >= s1Yesterday.avgPower ? "▲" : "▼" }}
+                  </span>
+                  <span class="trend-diff">
+                    {{ Math.abs(s1.avgPower - s1Yesterday.avgPower).toFixed(1) }} kW
+                  </span>
                   <span class="trend-percent">
                     ({{
                       (
@@ -190,19 +168,104 @@ function getLoadClass(loadRatio: number): string {
                       ).toFixed(1)
                     }}%)
                   </span>
-                            v-bind="$attrs"
-                          />
-                        </template>
+                </div>
+              </div>
+            </div>
 
-                        <script lang="ts">
-                        import { defineAsyncComponent } from 'vue';
-                        export default {
-                          components: {
-                            RealLvmdp4Panel: defineAsyncComponent(() => import('./lvmdp4.real.vue')),
-                            ElectricalDummyDashboard,
-                          },
-                        };
-                        </script>
+            <!-- Shift 2 -->
+            <div class="shift-card">
+              <div class="shift-header">
+                <div class="shift-badge">2</div>
+                <div class="shift-details">
+                  <h3>Afternoon Shift</h3>
+                  <span>14:31 - 22:00</span>
+                </div>
+              </div>
+
+              <div class="shift-body">
+                <div class="metric-group">
+                  <span class="metric-label">Today</span>
+                  <div class="metric-values">
+                    <span class="value-primary">
+                      {{ s2.avgPower.toFixed(1) }} <small>kW</small>
+                    </span>
+                    <span class="value-secondary">{{ s2.avgCurrent.toFixed(1) }} A</span>
+                  </div>
+                </div>
+
+                <div class="metric-divider"></div>
+
+                <div class="metric-group">
+                  <span class="metric-label">Yesterday</span>
+                  <div class="metric-values">
+                    <span class="value-primary muted">
+                      {{ s2Yesterday.avgPower.toFixed(1) }} <small>kW</small>
+                    </span>
+                    <span class="value-secondary muted">
+                      {{ s2Yesterday.avgCurrent.toFixed(1) }} A
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="current-section">
+                <div class="current-header">
+                  <span class="section-title">Current Load</span>
+                  <span class="load-value">
+                    {{ ((s2.avgCurrent / 2500) * 100).toFixed(1) }}%
+                  </span>
+                </div>
+
+                <div class="load-bar-container">
+                  <div
+                    class="load-bar"
+                    :style="{ width: `${Math.min((s2.avgCurrent / 2500) * 100, 100)}%` }"
+                    :class="getLoadClass(s2.avgCurrent / 2500)"
+                  ></div>
+                </div>
+
+                <div class="current-details">
+                  <div class="current-stat">
+                    <span class="stat-label">Average</span>
+                    <span class="stat-value">{{ s2.avgCurrent.toFixed(1) }} A</span>
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Min</span>
+                    <span class="stat-value">{{ s2.minCurrent.toFixed(1) }} A</span>
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Max</span>
+                    <span class="stat-value">{{ s2.maxCurrent.toFixed(1) }} A</span>
+                  </div>
+                  <div class="current-stat">
+                    <span class="stat-label">Capacity</span>
+                    <span class="stat-value">2500 A</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="shift-footer">
+                <div
+                  class="trend-indicator"
+                  :class="s2.avgPower >= s2Yesterday.avgPower ? 'up' : 'down'"
+                >
+                  <span class="trend-icon">
+                    {{ s2.avgPower >= s2Yesterday.avgPower ? "▲" : "▼" }}
+                  </span>
+                  <span class="trend-diff">
+                    {{ Math.abs(s2.avgPower - s2Yesterday.avgPower).toFixed(1) }} kW
+                  </span>
+                  <span class="trend-percent">
+                    ({{
+                      (
+                        (Math.abs(s2.avgPower - s2Yesterday.avgPower) /
+                          (s2Yesterday.avgPower || 1)) *
+                        100
+                      ).toFixed(1)
+                    }}%)
+                  </span>
+                </div>
+              </div>
             </div>
 
             <!-- Shift 3 -->
@@ -219,12 +282,10 @@ function getLoadClass(loadRatio: number): string {
                 <div class="metric-group">
                   <span class="metric-label">Today</span>
                   <div class="metric-values">
-                    <span class="value-primary"
-                      >{{ s3.avgPower.toFixed(1) }} <small>kW</small></span
-                    >
-                    <span class="value-secondary"
-                      >{{ s3.avgCurrent.toFixed(1) }} A</span
-                    >
+                    <span class="value-primary">
+                      {{ s3.avgPower.toFixed(1) }} <small>kW</small>
+                    </span>
+                    <span class="value-secondary">{{ s3.avgCurrent.toFixed(1) }} A</span>
                   </div>
                 </div>
 
@@ -233,32 +294,28 @@ function getLoadClass(loadRatio: number): string {
                 <div class="metric-group">
                   <span class="metric-label">Yesterday</span>
                   <div class="metric-values">
-                    <span class="value-primary muted"
-                      >{{ s3Yesterday.avgPower.toFixed(1) }}
-                      <small>kW</small></span
-                    >
-                    <span class="value-secondary muted"
-                      >{{ s3Yesterday.avgCurrent.toFixed(1) }} A</span
-                    >
+                    <span class="value-primary muted">
+                      {{ s3Yesterday.avgPower.toFixed(1) }} <small>kW</small>
+                    </span>
+                    <span class="value-secondary muted">
+                      {{ s3Yesterday.avgCurrent.toFixed(1) }} A
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <!-- Current Load Section -->
               <div class="current-section">
                 <div class="current-header">
                   <span class="section-title">Current Load</span>
-                  <span class="load-value"
-                    >{{ ((s3.avgCurrent / 2500) * 100).toFixed(1) }}%</span
-                  >
+                  <span class="load-value">
+                    {{ ((s3.avgCurrent / 2500) * 100).toFixed(1) }}%
+                  </span>
                 </div>
 
                 <div class="load-bar-container">
                   <div
                     class="load-bar"
-                    :style="{
-                      width: `${Math.min((s3.avgCurrent / 2500) * 100, 100)}%`,
-                    }"
+                    :style="{ width: `${Math.min((s3.avgCurrent / 2500) * 100, 100)}%` }"
                     :class="getLoadClass(s3.avgCurrent / 2500)"
                   ></div>
                 </div>
@@ -266,21 +323,15 @@ function getLoadClass(loadRatio: number): string {
                 <div class="current-details">
                   <div class="current-stat">
                     <span class="stat-label">Average</span>
-                    <span class="stat-value"
-                      >{{ s3.avgCurrent.toFixed(1) }} A</span
-                    >
+                    <span class="stat-value">{{ s3.avgCurrent.toFixed(1) }} A</span>
                   </div>
                   <div class="current-stat">
                     <span class="stat-label">Min</span>
-                    <span class="stat-value"
-                      >{{ s3.minCurrent.toFixed(1) }} A</span
-                    >
+                    <span class="stat-value">{{ s3.minCurrent.toFixed(1) }} A</span>
                   </div>
                   <div class="current-stat">
                     <span class="stat-label">Max</span>
-                    <span class="stat-value"
-                      >{{ s3.maxCurrent.toFixed(1) }} A</span
-                    >
+                    <span class="stat-value">{{ s3.maxCurrent.toFixed(1) }} A</span>
                   </div>
                   <div class="current-stat">
                     <span class="stat-label">Capacity</span>
@@ -294,24 +345,21 @@ function getLoadClass(loadRatio: number): string {
                   class="trend-indicator"
                   :class="s3.avgPower >= s3Yesterday.avgPower ? 'up' : 'down'"
                 >
-                  <span class="trend-icon">{{
-                    s3.avgPower >= s3Yesterday.avgPower ? "▲" : "▼"
-                  }}</span>
-                  <span class="trend-diff"
-                    >{{
-                      Math.abs(s3.avgPower - s3Yesterday.avgPower).toFixed(1)
-                    }}
-                    kW</span
-                  >
-                  <span class="trend-percent"
-                    >({{
+                  <span class="trend-icon">
+                    {{ s3.avgPower >= s3Yesterday.avgPower ? "▲" : "▼" }}
+                  </span>
+                  <span class="trend-diff">
+                    {{ Math.abs(s3.avgPower - s3Yesterday.avgPower).toFixed(1) }} kW
+                  </span>
+                  <span class="trend-percent">
+                    ({{
                       (
                         (Math.abs(s3.avgPower - s3Yesterday.avgPower) /
                           (s3Yesterday.avgPower || 1)) *
                         100
                       ).toFixed(1)
-                    }}%)</span
-                  >
+                    }}%)
+                  </span>
                 </div>
               </div>
             </div>
@@ -328,29 +376,14 @@ function getLoadClass(loadRatio: number): string {
           </div>
 
           <div class="gauges-grid">
-            <!-- Active Power (kW) -->
             <div class="gauge-card">
-              <Gauge
-                title="Active Power"
-                :value="power ?? 0"
-                :min="0"
-                :max="2000"
-                unit="kW"
-              />
+              <Gauge title="Active Power" :value="power ?? 0" :min="0" :max="2000" unit="kW" />
             </div>
 
-            <!-- Voltage Average -->
             <div class="gauge-card">
-              <Gauge
-                title="Voltage"
-                :value="voltage ?? 0"
-                :min="0"
-                :max="500"
-                unit="V"
-              />
+              <Gauge title="Voltage" :value="voltage ?? 0" :min="0" :max="500" unit="V" />
             </div>
 
-            <!-- Apparent Power (kVA) -->
             <div class="gauge-card">
               <Gauge
                 title="Apparent Power"
@@ -361,32 +394,21 @@ function getLoadClass(loadRatio: number): string {
               />
             </div>
 
-            <!-- Reactive Power (kVAR) -->
             <div class="gauge-card">
-              <Gauge
-                title="Reactive Power"
-                :value="reactiveCalc"
-                :min="0"
-                :max="2000"
-                unit="kVAR"
-              />
+              <Gauge title="Reactive Power" :value="reactiveCalc" :min="0" :max="2000" unit="kVAR" />
             </div>
 
-            <!-- Power Factor -->
             <div class="gauge-card">
-              <Gauge
-                title="Power Factor"
-                :value="cosPhi ?? 0"
-                :min="0"
-                :max="1"
-                unit=""
-              />
+              <Gauge title="Power Factor" :value="cosPhi ?? 0" :min="0" :max="1" unit="" />
             </div>
           </div>
         </section>
       </div>
+      <!-- end content-wrapper -->
     </div>
+    <!-- end lvmdp-container -->
   </div>
+  <!-- end lvmdp-wrapper -->
 </template>
 
 <style scoped>
@@ -791,10 +813,7 @@ function getLoadClass(loadRatio: number): string {
 .load-bar::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,

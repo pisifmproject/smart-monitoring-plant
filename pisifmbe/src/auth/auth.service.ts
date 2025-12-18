@@ -1,10 +1,9 @@
 // src/auth/auth.service.ts
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { findUserByUsername, User } from "./auth.repository";
+import { findUserByUsername } from "./auth.repository";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_SECRET = process.env.JWT_SECRET || "change-me-in-production";
 const JWT_EXPIRES_IN = "7d";
 
 export interface LoginResponse {
@@ -25,7 +24,9 @@ export const loginUser = async (
   password: string
 ): Promise<LoginResponse> => {
   try {
-    // Find user in database
+    username = String(username ?? "").trim();
+    password = String(password ?? "").trim();
+
     const user = await findUserByUsername(username);
 
     if (!user) {
@@ -36,7 +37,6 @@ export const loginUser = async (
       };
     }
 
-    // Check if user is active
     if (!user.isActive) {
       return {
         success: false,
@@ -45,7 +45,15 @@ export const loginUser = async (
       };
     }
 
-    // Verify password
+    // Guard: if hash missing, treat as invalid (avoid weird true/false)
+    if (!user.passwordHash) {
+      return {
+        success: false,
+        message:
+          "Invalid credentials provided. Please contact your system administrator.",
+      };
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
     if (!isPasswordValid) {
@@ -56,18 +64,12 @@ export const loginUser = async (
       };
     }
 
-    // Generate JWT token
     const token = jwt.sign(
-      {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-      },
+      { id: user.id, username: user.username, role: user.role },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
 
-    // Return success with user data (without password hash)
     return {
       success: true,
       message: "Login successful",
@@ -92,7 +94,7 @@ export const loginUser = async (
 export const verifyToken = (token: string) => {
   try {
     return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
+  } catch {
     return null;
   }
 };

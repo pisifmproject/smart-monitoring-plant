@@ -15,6 +15,23 @@ export interface User {
   updatedAt: Date | null;
 }
 
+// IMPORTANT:
+// Drizzle returns keys based on schema property names (camelCase),
+// NOT the DB column names (snake_case).
+function mapUser(u: any): User {
+  return {
+    id: u.id,
+    username: u.username,
+    passwordHash: u.passwordHash,     // ✅ correct (from schema key)
+    name: u.name,
+    role: u.role,
+    plantAccess: u.plantAccess ?? [], // ✅ correct
+    isActive: u.isActive ?? true,     // ✅ correct
+    createdAt: u.createdAt ?? null,
+    updatedAt: u.updatedAt ?? null,
+  };
+}
+
 export const findUserByUsername = async (
   username: string
 ): Promise<User | undefined> => {
@@ -24,14 +41,19 @@ export const findUserByUsername = async (
     .where(eq(users.username, username))
     .limit(1);
 
-  return result[0];
+  const u = result[0];
+  if (!u) return undefined;
+  return mapUser(u);
 };
 
 export const getAllUsers = async (): Promise<User[]> => {
-  return await db.select().from(users);
+  const result = await db.select().from(users);
+  return result.map(mapUser);
 };
 
 export const getUserById = async (id: number): Promise<User | undefined> => {
   const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-  return result[0];
+  const u = result[0];
+  if (!u) return undefined;
+  return mapUser(u);
 };

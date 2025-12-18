@@ -92,7 +92,6 @@ function getLoadClass(loadRatio: number): string {
                   <span>07:01 - 14:30</span>
                 </div>
               </div>
-
               <div class="shift-body">
                 <div class="metric-group">
                   <span class="metric-label">Today</span>
@@ -105,9 +104,7 @@ function getLoadClass(loadRatio: number): string {
                     >
                   </div>
                 </div>
-
                 <div class="metric-divider"></div>
-
                 <div class="metric-group">
                   <span class="metric-label">Yesterday</span>
                   <div class="metric-values">
@@ -121,7 +118,6 @@ function getLoadClass(loadRatio: number): string {
                   </div>
                 </div>
               </div>
-
               <!-- Current Load Section -->
               <div class="current-section">
                 <div class="current-header">
@@ -130,7 +126,6 @@ function getLoadClass(loadRatio: number): string {
                     >{{ ((s1.avgCurrent / 2500) * 100).toFixed(1) }}%</span
                   >
                 </div>
-
                 <div class="load-bar-container">
                   <div
                     class="load-bar"
@@ -140,7 +135,6 @@ function getLoadClass(loadRatio: number): string {
                     :class="getLoadClass(s1.avgCurrent / 2500)"
                   ></div>
                 </div>
-
                 <div class="current-details">
                   <div class="current-stat">
                     <span class="stat-label">Average</span>
@@ -166,7 +160,6 @@ function getLoadClass(loadRatio: number): string {
                   </div>
                 </div>
               </div>
-
               <div class="shift-footer">
                 <div
                   class="trend-indicator"
@@ -181,39 +174,20 @@ function getLoadClass(loadRatio: number): string {
                     }}
                     kW</span
                   >
-                  <span class="trend-percent">
-                    ({{
+                  <span class="trend-percent"
+                    >({{
                       (
                         (Math.abs(s1.avgPower - s1Yesterday.avgPower) /
                           (s1Yesterday.avgPower || 1)) *
                         100
                       ).toFixed(1)
-                    }}%)
-                  </span>
-                        import ElectricalDummyDashboard from '@/views/summary/ElectricalDummyDashboard.vue';
-                        // ...existing code...
-
-                        const route = useRoute();
-                        const plantId = computed(() => route.params.plantId);
-                        </script>
-
-                        <template>
-                          <component
-                            :is="plantId === 'cikupa' ? 'RealLvmdp2Panel' : ElectricalDummyDashboard"
-                            v-bind="$attrs"
-                          />
-                        </template>
-
-                        <script lang="ts">
-                        import { defineAsyncComponent } from 'vue';
-                        export default {
-                          components: {
-                            RealLvmdp2Panel: defineAsyncComponent(() => import('./lvmdp2.real.vue')),
-                            ElectricalDummyDashboard,
-                          },
-                        };
-                        </script>
+                    }}%)</span
+                  >
+                </div>
+              </div>
+              <!-- close shift-footer -->
             </div>
+            <!-- close shift-card -->
 
             <!-- Shift 3 -->
             <div class="shift-card">
