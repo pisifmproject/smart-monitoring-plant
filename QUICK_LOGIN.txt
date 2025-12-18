@@ -1,0 +1,57 @@
+╔══════════════════════════════════════════════════════════╗
+║              PISIFM LOGIN CREDENTIALS                    ║
+╚══════════════════════════════════════════════════════════╝
+
+📍 URL LOGIN:
+   http://10.125.48.102:30/login
+
+🔐 CREDENTIALS (dari Database):
+
+   Username: admin
+   Password: admifm
+
+   ✅ Sudah TESTED - API Response: SUCCESS
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📌 CARA LOGIN:
+
+   1. Buka: http://10.125.48.102:30/login
+   2. Masukkan: admin / admifm  
+   3. Klik: Sign In to Dashboard
+   4. Done! ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ STATUS:
+
+   Backend:  ✅ RUNNING (port 2000)
+   Frontend: ✅ RUNNING (port 30) 
+   Database: ✅ CONNECTED
+   API Test: ✅ SUCCESS
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 TROUBLESHOOT:
+
+   Masih gagal? Buka DevTools (F12)
+   Lihat Console & Network tab
+   Harus ada log "Login successful"
+
+   Test manual: Buka test-login.html
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  PENTING:
+
+   - Username lowercase: admin (bukan Admin)
+   - Password lowercase: admifm (bukan Admifm)
+   - Port 30 (bukan 31)
+   - Hard reload browser: Ctrl+Shift+R
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📞 Masih error? Screenshot:
+   - Browser Console (F12)
+   - Network tab request/response
+   - Kirim ke developer

@@ -31,11 +31,11 @@ export default defineConfig({
     port: 30,
     proxy: {
       "/api": {
-        target: "http://localhost:2000", // sesuaikan dengan PORT backend
+        target: "http://10.125.48.102:2000", // Updated to production IP
         changeOrigin: true,
       },
       "/socket.io": {
-        target: "http://localhost:2000", // sesuaikan dengan PORT backend
+        target: "http://10.125.48.102:2000", // Updated to production IP
         ws: true,
       },
     },

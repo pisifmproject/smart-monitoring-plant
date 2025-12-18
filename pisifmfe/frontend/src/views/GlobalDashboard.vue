@@ -1,3 +1,4 @@
+console.log("🔥 GlobalDashboard mounted");
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
@@ -5,7 +6,7 @@ import { useAuth } from "@/stores/auth";
 import { Globe, Activity, Zap, AlertTriangle, Factory } from "lucide-vue-next";
 import axios from "axios";
 
-const API_URL = "http://localhost:2000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:2000/api";
 
 const router = useRouter();
 const { currentUser } = useAuth();

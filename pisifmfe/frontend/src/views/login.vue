@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import {
   Lock,
@@ -10,6 +10,10 @@ import {
 } from "lucide-vue-next";
 import { useAuth } from "@/stores/auth";
 
+// Force reload check - v2
+const AUTH_VERSION = "v2.1";
+console.log("🔄 Login component version:", AUTH_VERSION);
+
 const router = useRouter();
 const { login } = useAuth();
 
@@ -18,24 +22,50 @@ const password = ref("");
 const error = ref("");
 const isLoading = ref(false);
 
+onMounted(() => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:2000/api";
+  console.log("🌐 Login page loaded");
+  console.log("🔗 API URL:", apiUrl);
+  console.log("📍 Current URL:", window.location.href);
+
+  // Force check - show alert if localhost still detected
+  if (apiUrl.includes("localhost")) {
+    console.error("⚠️ WARNING: Still using localhost! Browser cache issue!");
+  }
+});
+
 const handleSubmit = async () => {
+  console.log("🚀 Form submitted");
   error.value = "";
   isLoading.value = true;
 
   if (!username.value || !password.value) {
+    console.warn("⚠️ Empty credentials");
     error.value = "Please enter your credentials.";
     isLoading.value = false;
     return;
   }
 
-  // Call the database authentication
-  const result = await login(username.value, password.value);
+  try {
+    console.log("📝 Calling login with:", username.value);
+    // Call the database authentication
+    const result = await login(username.value, password.value);
+    console.log("📊 Login result:", result);
 
-  if (result.success) {
-    // Redirect to global dashboard
-    router.push("/app/global");
-  } else {
-    error.value = result.message;
+    if (result.success) {
+      console.log("✅ Login successful, redirecting to /app/global");
+      // Redirect to global dashboard
+      await router.push("/app/global");
+      console.log("✅ Navigation complete");
+      // Don't set isLoading to false here, let the page transition happen
+    } else {
+      console.error("❌ Login failed:", result.message);
+      error.value = result.message || "Login failed. Please try again.";
+      isLoading.value = false;
+    }
+  } catch (err) {
+    console.error("❌ Unexpected error in handleSubmit:", err);
+    error.value = "An unexpected error occurred. Please try again.";
     isLoading.value = false;
   }
 };

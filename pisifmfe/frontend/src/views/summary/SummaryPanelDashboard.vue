@@ -268,10 +268,18 @@
                 </div>
                 <div class="metric-data">
                   <span class="metric-label">Voltage</span>
-                  <span class="metric-value"
-                    >{{ formatNumber(panel.voltage) }}
-                    <span class="unit">V</span></span
-                  >
+                  <span class="metric-value">
+                    <template v-if="Array.isArray(panel.voltage)">
+                      <span v-for="(v, idx) in panel.voltage" :key="idx">
+                        {{ formatNumber(v)
+                        }}<span v-if="idx < panel.voltage.length - 1"> / </span>
+                      </span>
+                    </template>
+                    <template v-else>
+                      {{ formatNumber(panel.voltage) }}
+                    </template>
+                    <span class="unit">V</span>
+                  </span>
                 </div>
               </div>
 
@@ -289,10 +297,18 @@
                 </div>
                 <div class="metric-data">
                   <span class="metric-label">Current</span>
-                  <span class="metric-value"
-                    >{{ formatNumber(panel.current) }}
-                    <span class="unit">A</span></span
-                  >
+                  <span class="metric-value">
+                    <template v-if="Array.isArray(panel.current)">
+                      <span v-for="(c, idx) in panel.current" :key="idx">
+                        {{ formatNumber(c)
+                        }}<span v-if="idx < panel.current.length - 1"> / </span>
+                      </span>
+                    </template>
+                    <template v-else>
+                      {{ formatNumber(panel.current) }}
+                    </template>
+                    <span class="unit">A</span>
+                  </span>
                 </div>
               </div>
 
@@ -411,8 +427,8 @@ interface PanelData {
   id: number;
   name: string;
   realPower: number;
-  voltage: number;
-  current: number;
+  voltage: number | number[];
+  current: number | number[];
   cosPhi: number;
   kva: number;
   status: string;
@@ -547,73 +563,77 @@ const generateDummyPanelData = (plant: string): SummaryData => {
         id: 1,
         name: `${plant} - Panel 1`,
         kva: totalKVA * 0.28 + (Math.random() * 50 - 25),
-        kwh: totalKVA * 0.28 * 0.85 * 24,
-        current: [
-          Math.random() * 200 + 100,
-          Math.random() * 200 + 100,
-          Math.random() * 200 + 100,
-        ],
+        realPower: (totalKVA * 0.28 + (Math.random() * 50 - 25)) * 0.85,
         voltage: [
           Math.random() * 10 + 385,
           Math.random() * 10 + 385,
           Math.random() * 10 + 385,
         ],
-        pf: Math.random() * 0.1 + 0.85,
-        frequency: Math.random() * 0.2 + 49.9,
+        current: [
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+        ],
+        cosPhi: Math.random() * 0.1 + 0.85,
+        status: "online",
+        waktu: new Date().toISOString(),
       },
       {
         id: 2,
         name: `${plant} - Panel 2`,
         kva: totalKVA * 0.26 + (Math.random() * 50 - 25),
-        kwh: totalKVA * 0.26 * 0.85 * 24,
-        current: [
-          Math.random() * 200 + 100,
-          Math.random() * 200 + 100,
-          Math.random() * 200 + 100,
-        ],
+        realPower: (totalKVA * 0.26 + (Math.random() * 50 - 25)) * 0.85,
         voltage: [
           Math.random() * 10 + 385,
           Math.random() * 10 + 385,
           Math.random() * 10 + 385,
         ],
-        pf: Math.random() * 0.1 + 0.85,
-        frequency: Math.random() * 0.2 + 49.9,
+        current: [
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+        ],
+        cosPhi: Math.random() * 0.1 + 0.85,
+        status: "online",
+        waktu: new Date().toISOString(),
       },
       {
         id: 3,
         name: `${plant} - Panel 3`,
         kva: totalKVA * 0.24 + (Math.random() * 50 - 25),
-        kwh: totalKVA * 0.24 * 0.85 * 24,
-        current: [
-          Math.random() * 200 + 100,
-          Math.random() * 200 + 100,
-          Math.random() * 200 + 100,
-        ],
+        realPower: (totalKVA * 0.24 + (Math.random() * 50 - 25)) * 0.85,
         voltage: [
           Math.random() * 10 + 385,
           Math.random() * 10 + 385,
           Math.random() * 10 + 385,
         ],
-        pf: Math.random() * 0.1 + 0.85,
-        frequency: Math.random() * 0.2 + 49.9,
+        current: [
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+        ],
+        cosPhi: Math.random() * 0.1 + 0.85,
+        status: "online",
+        waktu: new Date().toISOString(),
       },
       {
         id: 4,
         name: `${plant} - Panel 4`,
         kva: totalKVA * 0.22 + (Math.random() * 50 - 25),
-        kwh: totalKVA * 0.22 * 0.85 * 24,
-        current: [
-          Math.random() * 200 + 100,
-          Math.random() * 200 + 100,
-          Math.random() * 200 + 100,
-        ],
+        realPower: (totalKVA * 0.22 + (Math.random() * 50 - 25)) * 0.85,
         voltage: [
           Math.random() * 10 + 385,
           Math.random() * 10 + 385,
           Math.random() * 10 + 385,
         ],
-        pf: Math.random() * 0.1 + 0.85,
-        frequency: Math.random() * 0.2 + 49.9,
+        current: [
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+          Math.random() * 200 + 100,
+        ],
+        cosPhi: Math.random() * 0.1 + 0.85,
+        status: "online",
+        waktu: new Date().toISOString(),
       },
     ],
   };

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "noEmit": true,
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -7,11 +8,12 @@
     "jsx": "preserve",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM"],
+    "types": ["vite/client"],
     "baseUrl": ".",
-    "paths": { "@/*": ["src_unused.txt/*"] },
-    "types": ["vite/client"]
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["src_unused.txt/**/*", "env.d.ts"]
+  "include": ["src/**/*.ts", "src/**/*.vue", "env.d.ts"]
 }

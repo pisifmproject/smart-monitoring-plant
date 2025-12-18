@@ -204,24 +204,10 @@ const isMenuItemActive = (item: any) => {
         </div>
         <template v-for="item in globalMenuItems" :key="item.id">
           <router-link
-            v-if="item.routeName"
             :to="{ name: item.routeName }"
             :class="[
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
               isMenuItemActive(item)
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
-                : 'text-slate-300 hover:bg-slate-800 hover:text-white',
-            ]"
-          >
-            <component :is="item.icon" :size="18" />
-            <span>{{ item.name }}</span>
-          </router-link>
-          <router-link
-            v-else-if="item.route"
-            :to="item.route"
-            :class="[
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
-              route.path === item.route
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
                 : 'text-slate-300 hover:bg-slate-800 hover:text-white',
             ]"
@@ -256,7 +242,7 @@ const isMenuItemActive = (item: any) => {
       <div v-else class="space-y-1">
         <div class="mb-4">
           <router-link
-            to="/app/global"
+            :to="{ name: 'global' }"
             class="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-blue-400 transition-colors"
           >
             <span>←</span>

@@ -154,6 +154,10 @@ const router = createRouter({
           component: GlobalDashboard,
         },
         {
+          path: "global/",
+          redirect: { name: "global" },
+        },
+        {
           path: "plant/:plantId",
           name: "plantDashboard",
           component: PlantDashboard,

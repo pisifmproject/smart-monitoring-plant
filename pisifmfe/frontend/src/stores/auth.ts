@@ -1,8 +1,9 @@
-// src/stores/auth.ts
+// src/stores/auth.ts - Updated 2025-12-17 16:25
 import { ref, computed } from "vue";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:2000/api";
+console.log("🔧 Auth store loaded - API_URL:", API_URL);
 
 export interface User {
   id: number;
@@ -31,45 +32,79 @@ export function useAuth() {
     username: string,
     password: string
   ): Promise<{ success: boolean; message: string }> {
+    console.log("🟢 LOGIN FUNCTION CALLED!");
+    console.log("🟢 Username:", username);
+    console.log("🟢 Password length:", password?.length);
+    console.log("🟢 API_URL:", API_URL);
+
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        username,
-        password,
+      console.log("🔐 Login attempt:", { username, API_URL });
+      console.log("📡 Sending request to:", `${API_URL}/auth/login`);
+      console.log("📦 Request body:", { username, password: "***" });
+
+      // Use native fetch instead of axios for better reliability
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
       });
 
-      if (response.data.success && response.data.user && response.data.token) {
-        currentUser.value = response.data.user;
-        authToken.value = response.data.token;
+      console.log("📥 Response received!");
+      console.log("📥 Response status:", response.status);
+
+      const data = await response.json();
+      console.log("📥 Response data:", data);
+
+      console.log("✅ Response keys:", Object.keys(data));
+      console.log("✅ Response success:", data.success);
+      console.log("✅ Response user:", data.user);
+      console.log(
+        "✅ Response token:",
+        data.token ? "Token exists" : "No token"
+      );
+
+      if (data.success && data.user && data.token) {
+        console.log("✅ Setting currentUser:", data.user);
+        currentUser.value = data.user;
+        authToken.value = data.token;
 
         // Save to localStorage
         const authState: AuthState = {
-          user: response.data.user,
-          token: response.data.token,
+          user: data.user,
+          token: data.token,
         };
         localStorage.setItem("auth_state", JSON.stringify(authState));
+        console.log("💾 Auth state saved to localStorage");
 
         // Set axios default header for future requests
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${response.data.token}`;
+        axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+        console.log("🔑 Authorization header set");
+
+        console.log("💾 Auth state saved, user:", currentUser.value?.username);
+        console.log("✅ isAuthenticated:", currentUser.value !== null);
 
         return {
           success: true,
-          message: response.data.message,
+          message: data.message || "Login successful",
         };
       } else {
+        console.error("❌ Invalid response structure:", data);
         return {
           success: false,
-          message: response.data.message || "Login failed",
+          message: data.message || "Login failed - Invalid response",
         };
       }
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("❌ Login error caught!");
+      console.error("Error type:", error?.constructor?.name);
+      console.error("Error message:", error?.message);
+      console.error("Full error:", error);
+
       return {
         success: false,
-        message:
-          error.response?.data?.message ||
-          "An error occurred during login. Please try again.",
+        message: error?.message || "Network error. Cannot connect to server.",
       };
     }
   }
