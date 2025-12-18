@@ -181,128 +181,38 @@ function getLoadClass(loadRatio: number): string {
                     }}
                     kW</span
                   >
-                  <span class="trend-percent"
-                    >({{
+                  <span class="trend-percent">
+                    ({{
                       (
                         (Math.abs(s1.avgPower - s1Yesterday.avgPower) /
                           (s1Yesterday.avgPower || 1)) *
                         100
                       ).toFixed(1)
-                    }}%)</span
-                  >
-                </div>
-              </div>
-            </div>
+                    }}%)
+                  </span>
+                        import ElectricalDummyDashboard from '@/views/summary/ElectricalDummyDashboard.vue';
+                        // ...existing code...
 
-            <!-- Shift 2 -->
-            <div class="shift-card">
-              <div class="shift-header">
-                <div class="shift-badge">2</div>
-                <div class="shift-details">
-                  <h3>Afternoon Shift</h3>
-                  <span>14:31 - 22:00</span>
-                </div>
-              </div>
+                        const route = useRoute();
+                        const plantId = computed(() => route.params.plantId);
+                        </script>
 
-              <div class="shift-body">
-                <div class="metric-group">
-                  <span class="metric-label">Today</span>
-                  <div class="metric-values">
-                    <span class="value-primary"
-                      >{{ s2.avgPower.toFixed(1) }} <small>kW</small></span
-                    >
-                    <span class="value-secondary"
-                      >{{ s2.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                </div>
+                        <template>
+                          <component
+                            :is="plantId === 'cikupa' ? 'RealLvmdp2Panel' : ElectricalDummyDashboard"
+                            v-bind="$attrs"
+                          />
+                        </template>
 
-                <div class="metric-divider"></div>
-
-                <div class="metric-group">
-                  <span class="metric-label">Yesterday</span>
-                  <div class="metric-values">
-                    <span class="value-primary muted"
-                      >{{ s2Yesterday.avgPower.toFixed(1) }}
-                      <small>kW</small></span
-                    >
-                    <span class="value-secondary muted"
-                      >{{ s2Yesterday.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Current Load Section -->
-              <div class="current-section">
-                <div class="current-header">
-                  <span class="section-title">Current Load</span>
-                  <span class="load-value"
-                    >{{ ((s2.avgCurrent / 2500) * 100).toFixed(1) }}%</span
-                  >
-                </div>
-
-                <div class="load-bar-container">
-                  <div
-                    class="load-bar"
-                    :style="{
-                      width: `${Math.min((s2.avgCurrent / 2500) * 100, 100)}%`,
-                    }"
-                    :class="getLoadClass(s2.avgCurrent / 2500)"
-                  ></div>
-                </div>
-
-                <div class="current-details">
-                  <div class="current-stat">
-                    <span class="stat-label">Average</span>
-                    <span class="stat-value"
-                      >{{ s2.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Min</span>
-                    <span class="stat-value"
-                      >{{ s2.minCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Max</span>
-                    <span class="stat-value"
-                      >{{ s2.maxCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Capacity</span>
-                    <span class="stat-value">2500 A</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="shift-footer">
-                <div
-                  class="trend-indicator"
-                  :class="s2.avgPower >= s2Yesterday.avgPower ? 'up' : 'down'"
-                >
-                  <span class="trend-icon">{{
-                    s2.avgPower >= s2Yesterday.avgPower ? "▲" : "▼"
-                  }}</span>
-                  <span class="trend-diff"
-                    >{{
-                      Math.abs(s2.avgPower - s2Yesterday.avgPower).toFixed(1)
-                    }}
-                    kW</span
-                  >
-                  <span class="trend-percent"
-                    >({{
-                      (
-                        (Math.abs(s2.avgPower - s2Yesterday.avgPower) /
-                          (s2Yesterday.avgPower || 1)) *
-                        100
-                      ).toFixed(1)
-                    }}%)</span
-                  >
-                </div>
-              </div>
+                        <script lang="ts">
+                        import { defineAsyncComponent } from 'vue';
+                        export default {
+                          components: {
+                            RealLvmdp2Panel: defineAsyncComponent(() => import('./lvmdp2.real.vue')),
+                            ElectricalDummyDashboard,
+                          },
+                        };
+                        </script>
             </div>
 
             <!-- Shift 3 -->

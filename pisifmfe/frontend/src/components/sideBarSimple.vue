@@ -70,6 +70,31 @@ const plantMenuItems = computed(() => {
           id: "electrical",
           name: "Electrical",
           route: `/app/plant/${currentPlantId.value}/electrical/panels`,
+          children:
+            currentPlantId.value === "CIKUPA"
+              ? [
+                  {
+                    id: "panel1",
+                    name: "Panel 1",
+                    route: `/app/plant/CIKUPA/electrical/panel1`,
+                  },
+                  {
+                    id: "panel2",
+                    name: "Panel 2",
+                    route: `/app/plant/CIKUPA/electrical/panel2`,
+                  },
+                  {
+                    id: "panel3",
+                    name: "Panel 3",
+                    route: `/app/plant/CIKUPA/electrical/panel3`,
+                  },
+                  {
+                    id: "panel4",
+                    name: "Panel 4",
+                    route: `/app/plant/CIKUPA/electrical/panel4`,
+                  },
+                ]
+              : undefined,
         },
         {
           id: "steam",

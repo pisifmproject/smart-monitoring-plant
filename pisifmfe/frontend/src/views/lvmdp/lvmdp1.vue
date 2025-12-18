@@ -1,43 +1,55 @@
 ﻿<script setup lang="ts">
-import ShiftCard from "@/components/shiftCard.vue";
-import Gauge from "@/components/gaugeSimple.vue";
-import ReportButton from "@/components/reportButton.vue";
+import { useRoute } from "vue-router";
+const route = useRoute();
+const plantId = route.params.plantId
+  ? String(route.params.plantId).toUpperCase()
+  : undefined;
+
+// Logic real hanya untuk plant CIKUPA
+import { ref, computed as vueComputed } from "vue";
 import { useLvmdpLive } from "@/composables/useLvmdpLive";
 import { useShiftAverages } from "@/composables/useShiftAverage";
-import { computed } from "vue";
 
-// Today's shift data
-const { s1, s2, s3 } = useShiftAverages(1);
+let s1: any = {},
+  s2: any = {},
+  s3: any = {},
+  s1Yesterday: any = {},
+  s2Yesterday: any = {},
+  s3Yesterday: any = {};
+import type { Ref } from "vue";
+let isConnected: Ref<boolean> = ref(false);
+let power: Ref<number | null> = ref(null);
+let apparentPower: Ref<number | null> = ref(null);
+let cosPhi: Ref<number | null> = ref(null);
+let voltage: Ref<number | null> = ref(null);
+let reactiveCalc = vueComputed(() => 0);
+let getLoadClass = (loadRatio: number) => "load-normal";
 
-// Yesterday's shift data for comparison
-const yesterday = new Date();
-yesterday.setDate(yesterday.getDate() - 1);
-const yesterdayStr = yesterday.toISOString().split("T")[0];
-const {
-  s1: s1Yesterday,
-  s2: s2Yesterday,
-  s3: s3Yesterday,
-} = useShiftAverages(1, yesterdayStr);
-
-// Live data with kVA and kVAR
-const { isConnected, power, apparentPower, cosPhi, voltage } = useLvmdpLive(1);
-
-// Calculate kVAR from kVA and kW: kVAR = sqrt(kVA² - kW²)
-const reactiveCalc = computed(() => {
-  const kva = apparentPower.value ?? 0;
-  const kw = power.value ?? 0;
-  if (kva === 0 || kw === 0) return 0;
-  const kvar = Math.sqrt(Math.max(0, kva * kva - kw * kw));
-  return kvar;
-});
-
-// Get color class based on load percentage
-function getLoadClass(loadRatio: number): string {
-  const percentage = loadRatio * 100;
-  if (percentage >= 90) return "load-critical";
-  if (percentage >= 75) return "load-high";
-  if (percentage >= 50) return "load-medium";
-  return "load-normal";
+if (plantId === "CIKUPA") {
+  ({ s1, s2, s3 } = useShiftAverages(1));
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
+  ({
+    s1: s1Yesterday,
+    s2: s2Yesterday,
+    s3: s3Yesterday,
+  } = useShiftAverages(1, yesterdayStr));
+  ({ isConnected, power, apparentPower, cosPhi, voltage } = useLvmdpLive(1));
+  reactiveCalc = vueComputed(() => {
+    const kva = apparentPower.value ?? 0;
+    const kw = power.value ?? 0;
+    if (kva === 0 || kw === 0) return 0;
+    const kvar = Math.sqrt(Math.max(0, kva * kva - kw * kw));
+    return kvar;
+  });
+  getLoadClass = (loadRatio: number) => {
+    const percentage = loadRatio * 100;
+    if (percentage >= 90) return "load-critical";
+    if (percentage >= 75) return "load-high";
+    if (percentage >= 50) return "load-medium";
+    return "load-normal";
+  };
 }
 </script>
 
@@ -52,372 +64,307 @@ function getLoadClass(loadRatio: number): string {
               <span class="icon-text">⚡</span>
             </div>
             <div class="header-text">
-              <h1 class="page-title">LVMDP 1</h1>
-              <p class="page-subtitle">Low Voltage Main Distribution Panel</p>
+              <template>
+                <div>
+                  <template v-if="plantId === 'CIKUPA'">
+                    <!-- Template real dari PISIFM-editprog (sudah diambil di atas) -->
+                    <div class="lvmdp-wrapper">
+                      <!-- ...paste seluruh isi template real di sini... -->
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div class="lvmdp-wrapper">
+                      <p>LVMDP1 Dummy Panel (Plant selain Cikupa)</p>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <div class="current-details">
+                <div class="current-stat">
+                  <span class="stat-label">Average</span>
+                  <span class="stat-value"
+                    >{{ (s1?.avgCurrent ?? 0).toFixed(1) }} A</span
+                  >
+                </div>
+                <div class="current-stat">
+                  <span class="stat-label">Min</span>
+                  <span class="stat-value"
+                    >{{ (s1?.minCurrent ?? 0).toFixed(1) }} A</span
+                  >
+                </div>
+                <div class="current-stat">
+                  <span class="stat-label">Max</span>
+                  <span class="stat-value"
+                    >{{ (s1?.maxCurrent ?? 0).toFixed(1) }} A</span
+                  >
+                </div>
+                <div class="current-stat">
+                  <span class="stat-label">Capacity</span>
+                  <span class="stat-value">2500 A</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="shift-footer">
+              <div
+                class="trend-indicator"
+                :class="
+                  (s1?.avgPower ?? 0) >= (s1Yesterday?.avgPower ?? 0)
+                    ? 'up'
+                    : 'down'
+                "
+              >
+                <span class="trend-icon">{{
+                  (s1?.avgPower ?? 0) >= (s1Yesterday?.avgPower ?? 0)
+                    ? "▲"
+                    : "▼"
+                }}</span>
+                <span class="trend-diff"
+                  >{{
+                    Math.abs(
+                      (s1?.avgPower ?? 0) - (s1Yesterday?.avgPower ?? 0)
+                    ).toFixed(1)
+                  }}
+                  kW</span
+                >
+                <span class="trend-percent"
+                  >({{
+                    (
+                      (Math.abs(
+                        (s1?.avgPower ?? 0) - (s1Yesterday?.avgPower ?? 0)
+                      ) /
+                        (s1Yesterday?.avgPower ?? 1)) *
+                      100
+                    ).toFixed(1)
+                  }}%)</span
+                >
+              </div>
             </div>
           </div>
-          <div class="header-actions">
-            <!-- Connection Indicator -->
-            <div class="connection-status" :class="{ connected: isConnected }">
-              <div class="status-dot"></div>
-              <span class="status-text">{{
-                isConnected ? "LIVE" : "OFFLINE"
-              }}</span>
+
+          <!-- Shift 2 -->
+          <div class="shift-card">
+            <div class="shift-header">
+              <div class="shift-badge">2</div>
+              <div class="shift-details">
+                <h3>Afternoon Shift</h3>
+                <span>14:31 - 22:00</span>
+              </div>
             </div>
-            <ReportButton :panelId="1" />
+
+            <div class="shift-body">
+              <div class="metric-group">
+                <span class="metric-label">Today</span>
+                <div class="metric-values">
+                  <span class="value-primary"
+                    >{{ s2.avgPower.toFixed(1) }} <small>kW</small></span
+                  >
+                  <span class="value-secondary"
+                    >{{ s2.avgCurrent.toFixed(1) }} A</span
+                  >
+                </div>
+              </div>
+
+              <div class="metric-divider"></div>
+
+              <div class="metric-group">
+                <span class="metric-label">Yesterday</span>
+                <div class="metric-values">
+                  <span class="value-primary muted"
+                    >{{ s2Yesterday.avgPower.toFixed(1) }}
+                    <small>kW</small></span
+                  >
+                  <span class="value-secondary muted"
+                    >{{ s2Yesterday.avgCurrent.toFixed(1) }} A</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Current Load Section -->
+            <div class="current-section">
+              <div class="current-header">
+                <span class="section-title">Current Load</span>
+                <span class="load-value"
+                  >{{ ((s2.avgCurrent / 2500) * 100).toFixed(1) }}%</span
+                >
+              </div>
+
+              <div class="load-bar-container">
+                <div
+                  class="load-bar"
+                  :style="{
+                    width: `${Math.min((s2.avgCurrent / 2500) * 100, 100)}%`,
+                  }"
+                  :class="getLoadClass(s2.avgCurrent / 2500)"
+                ></div>
+              </div>
+
+              <div class="current-details">
+                <div class="current-stat">
+                  <span class="stat-label">Average</span>
+                  <span class="stat-value"
+                    >{{ s2.avgCurrent.toFixed(1) }} A</span
+                  >
+                </div>
+                <div class="current-stat">
+                  <span class="stat-label">Min</span>
+                  <span class="stat-value"
+                    >{{ s2.minCurrent.toFixed(1) }} A</span
+                  >
+                </div>
+                <div class="current-stat">
+                  <span class="stat-label">Max</span>
+                  <span class="stat-value"
+                    >{{ s2.maxCurrent.toFixed(1) }} A</span
+                  >
+                </div>
+                <div class="current-stat">
+                  <span class="stat-label">Capacity</span>
+                  <span class="stat-value">2500 A</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="shift-footer">
+              <div
+                class="trend-indicator"
+                :class="s2.avgPower >= s2Yesterday.avgPower ? 'up' : 'down'"
+              >
+                <span class="trend-icon">{{
+                  s2.avgPower >= s2Yesterday.avgPower ? "▲" : "▼"
+                }}</span>
+                <span class="trend-diff"
+                  >{{
+                    Math.abs(s2.avgPower - s2Yesterday.avgPower).toFixed(1)
+                  }}
+                  kW</span
+                >
+                <span class="trend-percent"
+                  >({{
+                    (
+                      (Math.abs(s2.avgPower - s2Yesterday.avgPower) /
+                        (s2Yesterday.avgPower || 1)) *
+                      100
+                    ).toFixed(1)
+                  }}%)</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Shift 3 -->
+          <div class="shift-card">
+            <div class="shift-header">
+              <div class="shift-badge">3</div>
+              <div class="shift-details">
+                <h3>Night Shift</h3>
+                <span>22:01 - 07:00</span>
+              </div>
+            </div>
+
+            <div class="shift-body">
+              <div class="metric-group">
+                <span class="metric-label">Today</span>
+                <div class="metric-values">
+                  <span class="value-primary"
+                    >{{ s3.avgPower.toFixed(1) }} <small>kW</small></span
+                  >
+                  <span class="value-secondary"
+                    >{{ s3.avgCurrent.toFixed(1) }} A</span
+                  >
+                </div>
+              </div>
+
+              <div class="metric-divider"></div>
+
+              <div class="metric-group">
+                <span class="metric-label">Yesterday</span>
+                <div class="metric-values">
+                  <span class="value-primary muted"
+                    >{{ s3Yesterday.avgPower.toFixed(1) }}
+                    <small>kW</small></span
+                  >
+                  <span class="value-secondary muted"
+                    >{{ s3Yesterday.avgCurrent.toFixed(1) }} A</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Current Load Section -->
+            <div class="current-section">
+              <div class="current-header">
+                <span class="section-title">Current Load</span>
+                <span class="load-value"
+                  >{{ ((s3.avgCurrent / 2500) * 100).toFixed(1) }}%</span
+                >
+              </div>
+
+              <div class="load-bar-container">
+                <div
+                  class="load-bar"
+                  :style="{
+                    width: `${Math.min((s3.avgCurrent / 2500) * 100, 100)}%`,
+                  }"
+                  :class="getLoadClass(s3.avgCurrent / 2500)"
+                ></div>
+              </div>
+
+              <div class="current-details">
+                <div class="current-stat">
+                  <span class="stat-label">Average</span>
+                  <span class="stat-value"
+                    >{{ s3.avgCurrent.toFixed(1) }} A</span
+                  >
+                </div>
+                <div class="current-stat">
+                  <span class="stat-label">Min</span>
+                  <span class="stat-value"
+                    >{{ s3.minCurrent.toFixed(1) }} A</span
+                  >
+                </div>
+                <div class="current-stat">
+                  <span class="stat-label">Max</span>
+                  <span class="stat-value"
+                    >{{ s3.maxCurrent.toFixed(1) }} A</span
+                  >
+                </div>
+                <div class="current-stat">
+                  <span class="stat-label">Capacity</span>
+                  <span class="stat-value">2500 A</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="shift-footer">
+              <div
+                class="trend-indicator"
+                :class="s3.avgPower >= s3Yesterday.avgPower ? 'up' : 'down'"
+              >
+                <span class="trend-icon">{{
+                  s3.avgPower >= s3Yesterday.avgPower ? "▲" : "▼"
+                }}</span>
+                <span class="trend-diff"
+                  >{{
+                    Math.abs(s3.avgPower - s3Yesterday.avgPower).toFixed(1)
+                  }}
+                  kW</span
+                >
+                <span class="trend-percent"
+                  >({{
+                    (
+                      (Math.abs(s3.avgPower - s3Yesterday.avgPower) /
+                        (s3Yesterday.avgPower || 1)) *
+                      100
+                    ).toFixed(1)
+                  }}%)</span
+                >
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- Main Content -->
-      <div class="content-wrapper">
-        <!-- Shift Performance Section -->
-        <section class="dashboard-section">
-          <div class="section-header">
-            <div class="section-title-wrapper">
-              <h2 class="section-title">Shift Performance</h2>
-              <p class="section-subtitle">
-                Daily energy consumption comparison
-              </p>
-            </div>
-          </div>
-
-          <div class="shift-grid">
-            <!-- Shift 1 -->
-            <div class="shift-card">
-              <div class="shift-header">
-                <div class="shift-badge">1</div>
-                <div class="shift-details">
-                  <h3>Morning Shift</h3>
-                  <span>07:01 - 14:30</span>
-                </div>
-              </div>
-
-              <div class="shift-body">
-                <div class="metric-group">
-                  <span class="metric-label">Today</span>
-                  <div class="metric-values">
-                    <span class="value-primary"
-                      >{{ s1.avgPower.toFixed(1) }} <small>kW</small></span
-                    >
-                    <span class="value-secondary"
-                      >{{ s1.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                </div>
-
-                <div class="metric-divider"></div>
-
-                <div class="metric-group">
-                  <span class="metric-label">Yesterday</span>
-                  <div class="metric-values">
-                    <span class="value-primary muted"
-                      >{{ s1Yesterday.avgPower.toFixed(1) }}
-                      <small>kW</small></span
-                    >
-                    <span class="value-secondary muted"
-                      >{{ s1Yesterday.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Current Load Section -->
-              <div class="current-section">
-                <div class="current-header">
-                  <span class="section-title">Current Load</span>
-                  <span class="load-value"
-                    >{{ ((s1.avgCurrent / 2500) * 100).toFixed(1) }}%</span
-                  >
-                </div>
-
-                <div class="load-bar-container">
-                  <div
-                    class="load-bar"
-                    :style="{
-                      width: `${Math.min((s1.avgCurrent / 2500) * 100, 100)}%`,
-                    }"
-                    :class="getLoadClass(s1.avgCurrent / 2500)"
-                  ></div>
-                </div>
-
-                <div class="current-details">
-                  <div class="current-stat">
-                    <span class="stat-label">Average</span>
-                    <span class="stat-value"
-                      >{{ s1.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Min</span>
-                    <span class="stat-value"
-                      >{{ s1.minCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Max</span>
-                    <span class="stat-value"
-                      >{{ s1.maxCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Capacity</span>
-                    <span class="stat-value">2500 A</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="shift-footer">
-                <div
-                  class="trend-indicator"
-                  :class="s1.avgPower >= s1Yesterday.avgPower ? 'up' : 'down'"
-                >
-                  <span class="trend-icon">{{
-                    s1.avgPower >= s1Yesterday.avgPower ? "▲" : "▼"
-                  }}</span>
-                  <span class="trend-diff"
-                    >{{
-                      Math.abs(s1.avgPower - s1Yesterday.avgPower).toFixed(1)
-                    }}
-                    kW</span
-                  >
-                  <span class="trend-percent"
-                    >({{
-                      (
-                        (Math.abs(s1.avgPower - s1Yesterday.avgPower) /
-                          (s1Yesterday.avgPower || 1)) *
-                        100
-                      ).toFixed(1)
-                    }}%)</span
-                  >
-                </div>
-              </div>
-            </div>
-
-            <!-- Shift 2 -->
-            <div class="shift-card">
-              <div class="shift-header">
-                <div class="shift-badge">2</div>
-                <div class="shift-details">
-                  <h3>Afternoon Shift</h3>
-                  <span>14:31 - 22:00</span>
-                </div>
-              </div>
-
-              <div class="shift-body">
-                <div class="metric-group">
-                  <span class="metric-label">Today</span>
-                  <div class="metric-values">
-                    <span class="value-primary"
-                      >{{ s2.avgPower.toFixed(1) }} <small>kW</small></span
-                    >
-                    <span class="value-secondary"
-                      >{{ s2.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                </div>
-
-                <div class="metric-divider"></div>
-
-                <div class="metric-group">
-                  <span class="metric-label">Yesterday</span>
-                  <div class="metric-values">
-                    <span class="value-primary muted"
-                      >{{ s2Yesterday.avgPower.toFixed(1) }}
-                      <small>kW</small></span
-                    >
-                    <span class="value-secondary muted"
-                      >{{ s2Yesterday.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Current Load Section -->
-              <div class="current-section">
-                <div class="current-header">
-                  <span class="section-title">Current Load</span>
-                  <span class="load-value"
-                    >{{ ((s2.avgCurrent / 2500) * 100).toFixed(1) }}%</span
-                  >
-                </div>
-
-                <div class="load-bar-container">
-                  <div
-                    class="load-bar"
-                    :style="{
-                      width: `${Math.min((s2.avgCurrent / 2500) * 100, 100)}%`,
-                    }"
-                    :class="getLoadClass(s2.avgCurrent / 2500)"
-                  ></div>
-                </div>
-
-                <div class="current-details">
-                  <div class="current-stat">
-                    <span class="stat-label">Average</span>
-                    <span class="stat-value"
-                      >{{ s2.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Min</span>
-                    <span class="stat-value"
-                      >{{ s2.minCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Max</span>
-                    <span class="stat-value"
-                      >{{ s2.maxCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Capacity</span>
-                    <span class="stat-value">2500 A</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="shift-footer">
-                <div
-                  class="trend-indicator"
-                  :class="s2.avgPower >= s2Yesterday.avgPower ? 'up' : 'down'"
-                >
-                  <span class="trend-icon">{{
-                    s2.avgPower >= s2Yesterday.avgPower ? "▲" : "▼"
-                  }}</span>
-                  <span class="trend-diff"
-                    >{{
-                      Math.abs(s2.avgPower - s2Yesterday.avgPower).toFixed(1)
-                    }}
-                    kW</span
-                  >
-                  <span class="trend-percent"
-                    >({{
-                      (
-                        (Math.abs(s2.avgPower - s2Yesterday.avgPower) /
-                          (s2Yesterday.avgPower || 1)) *
-                        100
-                      ).toFixed(1)
-                    }}%)</span
-                  >
-                </div>
-              </div>
-            </div>
-
-            <!-- Shift 3 -->
-            <div class="shift-card">
-              <div class="shift-header">
-                <div class="shift-badge">3</div>
-                <div class="shift-details">
-                  <h3>Night Shift</h3>
-                  <span>22:01 - 07:00</span>
-                </div>
-              </div>
-
-              <div class="shift-body">
-                <div class="metric-group">
-                  <span class="metric-label">Today</span>
-                  <div class="metric-values">
-                    <span class="value-primary"
-                      >{{ s3.avgPower.toFixed(1) }} <small>kW</small></span
-                    >
-                    <span class="value-secondary"
-                      >{{ s3.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                </div>
-
-                <div class="metric-divider"></div>
-
-                <div class="metric-group">
-                  <span class="metric-label">Yesterday</span>
-                  <div class="metric-values">
-                    <span class="value-primary muted"
-                      >{{ s3Yesterday.avgPower.toFixed(1) }}
-                      <small>kW</small></span
-                    >
-                    <span class="value-secondary muted"
-                      >{{ s3Yesterday.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Current Load Section -->
-              <div class="current-section">
-                <div class="current-header">
-                  <span class="section-title">Current Load</span>
-                  <span class="load-value"
-                    >{{ ((s3.avgCurrent / 2500) * 100).toFixed(1) }}%</span
-                  >
-                </div>
-
-                <div class="load-bar-container">
-                  <div
-                    class="load-bar"
-                    :style="{
-                      width: `${Math.min((s3.avgCurrent / 2500) * 100, 100)}%`,
-                    }"
-                    :class="getLoadClass(s3.avgCurrent / 2500)"
-                  ></div>
-                </div>
-
-                <div class="current-details">
-                  <div class="current-stat">
-                    <span class="stat-label">Average</span>
-                    <span class="stat-value"
-                      >{{ s3.avgCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Min</span>
-                    <span class="stat-value"
-                      >{{ s3.minCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Max</span>
-                    <span class="stat-value"
-                      >{{ s3.maxCurrent.toFixed(1) }} A</span
-                    >
-                  </div>
-                  <div class="current-stat">
-                    <span class="stat-label">Capacity</span>
-                    <span class="stat-value">2500 A</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="shift-footer">
-                <div
-                  class="trend-indicator"
-                  :class="s3.avgPower >= s3Yesterday.avgPower ? 'up' : 'down'"
-                >
-                  <span class="trend-icon">{{
-                    s3.avgPower >= s3Yesterday.avgPower ? "▲" : "▼"
-                  }}</span>
-                  <span class="trend-diff"
-                    >{{
-                      Math.abs(s3.avgPower - s3Yesterday.avgPower).toFixed(1)
-                    }}
-                    kW</span
-                  >
-                  <span class="trend-percent"
-                    >({{
-                      (
-                        (Math.abs(s3.avgPower - s3Yesterday.avgPower) /
-                          (s3Yesterday.avgPower || 1)) *
-                        100
-                      ).toFixed(1)
-                    }}%)</span
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <!-- Real-Time Metrics Section -->
         <section class="dashboard-section">
           <div class="section-header">
