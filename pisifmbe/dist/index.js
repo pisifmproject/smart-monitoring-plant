@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 require("dotenv/config");
 const cors_1 = __importDefault(require("cors"));
 const user_controller_1 = __importDefault(require("./user/user.controller"));
+const auth_controller_1 = __importDefault(require("./auth/auth.controller"));
 const lvmdp_1_controller_1 = __importDefault(require("./lvmdp/LVMDP_1/lvmdp_1.controller"));
 const lvmdp_2_controller_1 = __importDefault(require("./lvmdp/LVMDP_2/lvmdp_2.controller"));
 const lvmdp_3_controller_1 = __importDefault(require("./lvmdp/LVMDP_3/lvmdp_3.controller"));
@@ -44,6 +45,11 @@ app.use((req, res, next) => {
 app.get("/api", (_req, res) => {
     res.send("Sukses landing ke endpoint api");
 });
+// Authentication routes
+app.use("/api/auth", auth_controller_1.default);
+// Dashboard routes
+const dashboard_controller_1 = __importDefault(require("./dashboard/dashboard.controller"));
+app.use("/api/dashboard", dashboard_controller_1.default);
 app.use("/api/lvmdp", require("./routes/lvmdp.router").default);
 app.use("/api/user", user_controller_1.default);
 app.use("/api/lvmdp1", lvmdp_1_controller_1.default);

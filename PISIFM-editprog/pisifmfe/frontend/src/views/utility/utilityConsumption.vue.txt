@@ -1,3 +1,0 @@
--- File ini di-rename menjadi .txt agar tidak mengganggu program lain. --
-
-// Konten asli utilityConsumption.vue dipindahkan/di-nonaktifkan sementara.

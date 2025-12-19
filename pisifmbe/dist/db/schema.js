@@ -1,15 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dailyElectricalReports = exports.packingLinePackingPouchBagMaker = exports.packingLineTWS72BagMaker = exports.packingLineTWS56BagMaker = exports.packingLineFCPBagMaker = exports.packingLineTortilaBagMaker = exports.packingLineCassavaCopackBagMaker = exports.packingLineCassavaInhouseBagMaker = exports.packingLinePC39BagMaker = exports.packingLinePackingPouchWeigher = exports.packingLineTWS72Weigher = exports.packingLineTWS56Weigher = exports.packingLineFCPWeigher = exports.packingLineTortilaWeigher = exports.packingLineCassavaCopackWeigher = exports.packingLineCassavaInhouseWeigher = exports.packingLinePC39Weigher = exports.productionLineAIHP = exports.productionLineACOPACK = exports.productionLineATWS72 = exports.productionLineATWS56 = exports.productionLineAFCP = exports.productionLineATS1000 = exports.productionLineAPC14 = exports.packingLineABagMaker = exports.packingLineAWeigher = exports.productionLineAPC39 = exports.hourlyReportLVMDP4 = exports.hourlyReportLVMDP3 = exports.hourlyReportLVMDP2 = exports.hourlyReportLVMDP1 = exports.dailyReportLVMDP4 = exports.dailyReportLVMDP3 = exports.dailyReportLVMDP2 = exports.dailyReportLVMDP1 = exports.user = void 0;
+exports.dailyElectricalReports = exports.packingLinePackingPouchBagMaker = exports.packingLineTWS72BagMaker = exports.packingLineTWS56BagMaker = exports.packingLineFCPBagMaker = exports.packingLineTortilaBagMaker = exports.packingLineCassavaCopackBagMaker = exports.packingLineCassavaInhouseBagMaker = exports.packingLinePC39BagMaker = exports.packingLinePackingPouchWeigher = exports.packingLineTWS72Weigher = exports.packingLineTWS56Weigher = exports.packingLineFCPWeigher = exports.packingLineTortilaWeigher = exports.packingLineCassavaCopackWeigher = exports.packingLineCassavaInhouseWeigher = exports.packingLinePC39Weigher = exports.productionLineAIHP = exports.productionLineACOPACK = exports.productionLineATWS72 = exports.productionLineATWS56 = exports.productionLineAFCP = exports.productionLineATS1000 = exports.productionLineAPC14 = exports.packingLineABagMaker = exports.packingLineAWeigher = exports.productionLineAPC39 = exports.hourlyReportLVMDP4 = exports.hourlyReportLVMDP3 = exports.hourlyReportLVMDP2 = exports.hourlyReportLVMDP1 = exports.dailyReportLVMDP4 = exports.dailyReportLVMDP3 = exports.dailyReportLVMDP2 = exports.dailyReportLVMDP1 = exports.users = void 0;
 // src/db/schema.ts
 const pg_core_1 = require("drizzle-orm/pg-core");
 /* ===========================
    USER TABLE
 =========================== */
-exports.user = (0, pg_core_1.pgTable)("User", {
-    id: (0, pg_core_1.text)("id").primaryKey().notNull(),
-    email: (0, pg_core_1.text)("email").notNull(),
-    name: (0, pg_core_1.text)("name"),
+exports.users = (0, pg_core_1.pgTable)("users", {
+    id: (0, pg_core_1.serial)("id").primaryKey(),
+    username: (0, pg_core_1.varchar)("username", { length: 50 }).notNull().unique(),
+    passwordHash: (0, pg_core_1.text)("password_hash").notNull(),
+    name: (0, pg_core_1.varchar)("name", { length: 100 }).notNull(),
+    role: (0, pg_core_1.varchar)("role", { length: 50 }).notNull().default("Viewer"),
+    plantAccess: (0, pg_core_1.text)("plant_access").array().notNull().default([]), // Array of plant codes
+    isActive: (0, pg_core_1.boolean)("is_active").default(true),
+    createdAt: (0, pg_core_1.timestamp)("created_at").defaultNow(),
+    updatedAt: (0, pg_core_1.timestamp)("updated_at").defaultNow(),
 });
 /* ===========================
       VIEW LVMDP_1..4
