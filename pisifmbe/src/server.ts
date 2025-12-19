@@ -63,7 +63,7 @@ const step = (v: number) => {
 //   }
 // }, 1000);
 
-const PORT = Number(process.env.PORT) || 2000;
+const PORT = Number(process.env.PORT) || 2002;
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`API & WS running on http://localhost:${PORT}`);
 

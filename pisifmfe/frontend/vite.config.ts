@@ -31,11 +31,11 @@ export default defineConfig({
     port: 30,
     proxy: {
       "/api": {
-        target: "http://10.125.48.102:2000", // Updated to production IP
+        target: "http://10.125.48.102:2002", // Updated to production IP
         changeOrigin: true,
       },
       "/socket.io": {
-        target: "http://10.125.48.102:2000", // Updated to production IP
+        target: "http://10.125.48.102:2002", // Updated to production IP
         ws: true,
       },
     },
