@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import {
   Lock,
@@ -23,7 +23,7 @@ const error = ref("");
 const isLoading = ref(false);
 
 onMounted(() => {
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:2000/api";
+  const apiUrl = import.meta.env.VITE_API_URL || "/api";
   console.log("🌐 Login page loaded");
   console.log("🔗 API URL:", apiUrl);
   console.log("📍 Current URL:", window.location.href);
@@ -36,6 +36,8 @@ onMounted(() => {
 
 const handleSubmit = async () => {
   console.log("🚀 Form submitted");
+  console.log("Username:", username.value);
+  console.log("Password length:", password.value.length);
   error.value = "";
   isLoading.value = true;
 
@@ -48,19 +50,58 @@ const handleSubmit = async () => {
 
   try {
     console.log("📝 Calling login with:", username.value);
+    console.log("   login function type:", typeof login);
+    console.log("   login function:", login);
+
     // Call the database authentication
     const result = await login(username.value, password.value);
     console.log("📊 Login result:", result);
+    console.log("   - result type:", typeof result);
+    console.log("   - success:", result.success);
+    console.log("   - message:", result.message);
+    console.log("   - message type:", typeof result.message);
+    console.log("   - message length:", result.message?.length);
 
     if (result.success) {
-      console.log("✅ Login successful, redirecting to /app/global");
-      // Redirect to global dashboard
-      await router.push("/app/global");
-      console.log("✅ Navigation complete");
-      // Don't set isLoading to false here, let the page transition happen
+      console.log("✅ Login successful, processing navigation");
+      try {
+        // Wait for next tick to ensure router is fully ready
+        await nextTick();
+
+        // Ensure router is fully initialized
+        await router.isReady();
+        console.log("🔄 Router is ready, waiting 100ms before navigation");
+
+        // Add small delay to ensure all transitions complete
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        console.log("📍 Navigating to global dashboard");
+        console.log(
+          "   Available routes:",
+          router
+            .getRoutes()
+            .map((r) => r.path)
+            .join(", ")
+        );
+
+        await router.push({ name: "global" });
+        console.log("✅ Navigation complete");
+      } catch (navErr) {
+        console.error("❌ Navigation error:", navErr);
+        console.error("   Error details:", (navErr as any).message);
+        // Log all available routes for debugging
+        console.log(
+          "   Available routes:",
+          router.getRoutes().map((r) => ({ path: r.path, name: r.name }))
+        );
+        // Fallback to direct navigation
+        console.log("   Falling back to direct href");
+        window.location.href = "/app/global";
+      }
     } else {
-      console.error("❌ Login failed:", result.message);
-      error.value = result.message || "Login failed. Please try again.";
+      const errorMsg = result.message || "Login failed. Please try again.";
+      console.error("❌ Login failed:", errorMsg);
+      error.value = errorMsg;
       isLoading.value = false;
     }
   } catch (err) {
@@ -112,9 +153,8 @@ const handleSubmit = async () => {
         <p
           class="text-slate-300 text-lg max-w-lg leading-relaxed border-l-2 border-blue-500/50 pl-6"
         >
-          Enterprise-grade monitoring solution for multi-plant industrial
-          operations. Track performance, utilities, and machine health in one
-          unified platform.
+          Enterprise-grade monitoring solution for industrial operations. Track
+          performance, utilities, and machine health in one unified platform.
         </p>
       </div>
 

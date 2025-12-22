@@ -7,7 +7,9 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL as string;
 
 if (!API_URL) {
-  throw new Error("VITE_API_URL is not defined. Please set it in your .env file.");
+  throw new Error(
+    "VITE_API_URL is not defined. Please set it in your .env file."
+  );
 }
 
 export interface User {
@@ -45,18 +47,49 @@ export function useAuth() {
     username = String(username ?? "").trim();
     password = String(password ?? "").trim();
 
+    console.log("[AUTH] ===== LOGIN FUNCTION CALLED =====");
+    console.log(`[AUTH] Username: ${username}`);
+    console.log(`[AUTH] Password length: ${password.length}`);
+    console.log(`[AUTH] API_URL: ${API_URL}`);
+
     try {
+      console.log(`[AUTH] Attempting login for user: ${username}`);
+      console.log(`[AUTH] Making fetch to: ${API_URL}/auth/login`);
+
       const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
 
+      console.log(`[AUTH] Response received!`);
+      console.log(`[AUTH] Response status: ${response.status}`);
+      console.log(`[AUTH] Response statusText: ${response.statusText}`);
+      console.log(`[AUTH] Response.ok: ${response.ok}`);
+
       // Always parse body (even 401)
-      const data = await response.json().catch(() => ({}));
+      let data;
+      try {
+        data = await response.json();
+        console.log(`[AUTH] JSON parsed successfully`);
+      } catch (parseErr) {
+        console.error(`[AUTH] Failed to parse JSON response:`, parseErr);
+        data = {};
+      }
+
+      console.log(`[AUTH] Response data:`, JSON.stringify(data));
+      console.log(`[AUTH] Data type:`, typeof data);
+      console.log(`[AUTH] Data.success:`, data?.success);
+      console.log(`[AUTH] Data.message:`, data?.message);
+      console.log(`[AUTH] Data.user:`, data?.user ? "present" : "missing");
+      console.log(
+        `[AUTH] Data.token:`,
+        data?.token ? "present (first 20 chars)" : "missing"
+      );
 
       // Strictly trust backend success flag only
       if (data?.success === true && data?.user && data?.token) {
+        console.log(`[AUTH] ✅ LOGIN SUCCESS! User: ${data.user.username}`);
         currentUser.value = data.user;
         authToken.value = data.token;
 
@@ -68,16 +101,28 @@ export function useAuth() {
         return { success: true, message: data.message || "Login successful" };
       }
 
+      const message = data?.message || "Login failed. Invalid credentials.";
+      console.error(`[AUTH] ❌ Login FAILED: ${message}`);
       return {
         success: false,
-        message: data?.message || "Login failed. Invalid credentials.",
+        message: message,
       };
     } catch (error: any) {
+      console.error(`[AUTH] 💥 LOGIN ERROR:`, error);
+      console.error(`[AUTH] Error message:`, error?.message);
+      console.error(`[AUTH] Error stack:`, error?.stack);
       return {
         success: false,
         message: error?.message || "Network error. Cannot connect to server.",
       };
     }
+
+    // Explicit fallback return (should never reach here)
+    console.error("[AUTH] UNEXPECTED: No return statement reached!");
+    return {
+      success: false,
+      message: "Unexpected error occurred",
+    };
   }
 
   function logout() {

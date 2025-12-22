@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router"
-import { ArrowRight } from "lucide-vue-next"
+import { useRouter } from "vue-router";
+import { ArrowRight } from "lucide-vue-next";
 
-const router = useRouter()
+const router = useRouter();
 </script>
 
 <template>
@@ -61,11 +61,10 @@ const router = useRouter()
         <h2
           class="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-tight"
         >
-          <span class="text-white">Smart Monitoring</span>
           <span
-            class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-emerald-400 to-cyan-400 pb-2"
+            class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-emerald-400 to-cyan-400 pb-2"
           >
-            Multi Plant
+            Smart Monitoring Plant
           </span>
         </h2>
 
@@ -73,7 +72,7 @@ const router = useRouter()
         <p
           class="text-blue-100 text-lg md:text-2xl max-w-3xl mx-auto font-light leading-relaxed"
         >
-          Real-time multi-plant performance & energy monitoring in a unified
+          Real-time plant performance & energy monitoring in a unified
           platform.
         </p>
 

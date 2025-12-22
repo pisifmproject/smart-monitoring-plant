@@ -146,7 +146,7 @@ const router = createRouter({
         // Global Dashboard - Default route
         {
           path: "",
-          redirect: "global",
+          redirect: "/app/global",
         },
         {
           path: "global",
