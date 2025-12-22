@@ -1,122 +1,8 @@
-<script setup lang="ts">
-import { ref, onMounted, nextTick } from "vue";
-import { useRouter } from "vue-router";
-import {
-  Lock,
-  User as UserIcon,
-  ArrowRight,
-  ShieldCheck,
-  AlertTriangle,
-} from "lucide-vue-next";
-import { useAuth } from "@/stores/auth";
-
-// Force reload check - v2
-const AUTH_VERSION = "v2.1";
-console.log("🔄 Login component version:", AUTH_VERSION);
-
-const router = useRouter();
-const { login } = useAuth();
-
-const username = ref("");
-const password = ref("");
-const error = ref("");
-const isLoading = ref(false);
-
-onMounted(() => {
-  const apiUrl = import.meta.env.VITE_API_URL || "/api";
-  console.log("🌐 Login page loaded");
-  console.log("🔗 API URL:", apiUrl);
-  console.log("📍 Current URL:", window.location.href);
-
-  // Force check - show alert if localhost still detected
-  if (apiUrl.includes("localhost")) {
-    console.error("⚠️ WARNING: Still using localhost! Browser cache issue!");
-  }
-});
-
-const handleSubmit = async () => {
-  console.log("🚀 Form submitted");
-  console.log("Username:", username.value);
-  console.log("Password length:", password.value.length);
-  error.value = "";
-  isLoading.value = true;
-
-  if (!username.value || !password.value) {
-    console.warn("⚠️ Empty credentials");
-    error.value = "Please enter your credentials.";
-    isLoading.value = false;
-    return;
-  }
-
-  try {
-    console.log("📝 Calling login with:", username.value);
-    console.log("   login function type:", typeof login);
-    console.log("   login function:", login);
-
-    // Call the database authentication
-    const result = await login(username.value, password.value);
-    console.log("📊 Login result:", result);
-    console.log("   - result type:", typeof result);
-    console.log("   - success:", result.success);
-    console.log("   - message:", result.message);
-    console.log("   - message type:", typeof result.message);
-    console.log("   - message length:", result.message?.length);
-
-    if (result.success) {
-      console.log("✅ Login successful, processing navigation");
-      try {
-        // Wait for next tick to ensure router is fully ready
-        await nextTick();
-
-        // Ensure router is fully initialized
-        await router.isReady();
-        console.log("🔄 Router is ready, waiting 100ms before navigation");
-
-        // Add small delay to ensure all transitions complete
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        console.log("📍 Navigating to global dashboard");
-        console.log(
-          "   Available routes:",
-          router
-            .getRoutes()
-            .map((r) => r.path)
-            .join(", ")
-        );
-
-        await router.push({ name: "global" });
-        console.log("✅ Navigation complete");
-      } catch (navErr) {
-        console.error("❌ Navigation error:", navErr);
-        console.error("   Error details:", (navErr as any).message);
-        // Log all available routes for debugging
-        console.log(
-          "   Available routes:",
-          router.getRoutes().map((r) => ({ path: r.path, name: r.name }))
-        );
-        // Fallback to direct navigation
-        console.log("   Falling back to direct href");
-        window.location.href = "/app/global";
-      }
-    } else {
-      const errorMsg = result.message || "Login failed. Please try again.";
-      console.error("❌ Login failed:", errorMsg);
-      error.value = errorMsg;
-      isLoading.value = false;
-    }
-  } catch (err) {
-    console.error("❌ Unexpected error in handleSubmit:", err);
-    error.value = "An unexpected error occurred. Please try again.";
-    isLoading.value = false;
-  }
-};
-</script>
-
 <template>
   <div
     class="flex h-screen w-full bg-slate-950 overflow-hidden font-sans selection:bg-blue-500/30"
   >
-    <!-- Left Side - Visual / Branding -->
+    <!-- Left Side - Visual / Branding (Visible on Large Screens) -->
     <div
       class="hidden lg:flex w-1/2 relative flex-col justify-between p-12 bg-slate-900 border-r border-slate-800 overflow-hidden"
     >
@@ -135,15 +21,15 @@ const handleSubmit = async () => {
         class="relative z-10 animate-in fade-in slide-in-from-left-8 duration-700"
       >
         <div class="flex items-center gap-3 mb-8">
-          <span class="text-xl font-bold text-white tracking-tight">
-            PT Indofood Fortuna Makmur
-          </span>
+          <span class="text-xl font-bold text-white tracking-tight"
+            >PT Indofood Fortuna Makmur</span
+          >
         </div>
 
         <h1
           class="text-5xl font-extrabold text-white leading-tight tracking-tight mb-6"
         >
-          Operational Excellence <br />
+          Operational<br />Excellence
           <span
             class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400"
           >
@@ -153,8 +39,9 @@ const handleSubmit = async () => {
         <p
           class="text-slate-300 text-lg max-w-lg leading-relaxed border-l-2 border-blue-500/50 pl-6"
         >
-          Enterprise-grade monitoring solution for industrial operations. Track
-          performance, utilities, and machine health in one unified platform.
+          Enterprise-grade monitoring solution for multi-plant industrial
+          operations. Track performance, utilities, and machine health in one
+          unified platform.
         </p>
       </div>
 
@@ -168,9 +55,9 @@ const handleSubmit = async () => {
 
     <!-- Right Side - Login Form -->
     <div
-      class="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 bg-slate-950 relative"
+      class="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 relative"
     >
-      <!-- Mobile Header -->
+      <!-- Mobile Header (Visible on Small Screens) -->
       <div class="absolute top-8 left-8 lg:hidden flex items-center gap-3">
         <span class="text-sm font-bold text-white tracking-tight">PT IFM</span>
       </div>
@@ -187,6 +74,7 @@ const handleSubmit = async () => {
           </p>
         </div>
 
+        <!-- Error Message -->
         <div
           v-if="error"
           class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm px-4 py-3 rounded-lg flex items-start gap-3 animate-in fade-in zoom-in-95"
@@ -195,38 +83,39 @@ const handleSubmit = async () => {
           <span>{{ error }}</span>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="space-y-6">
+        <!-- Login Form -->
+        <form @submit.prevent="handleLogin" class="space-y-6">
           <div class="space-y-4">
+            <!-- Username -->
             <div>
               <label
                 class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2"
+                >Corporate ID / Username</label
               >
-                Corporate ID / Username
-              </label>
               <div class="relative group">
                 <div
                   class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                 >
-                  <UserIcon
+                  <User
                     class="h-5 w-5 text-slate-600 group-focus-within:text-blue-500 transition-colors"
                   />
                 </div>
                 <input
+                  v-model="username"
                   type="text"
                   class="block w-full pl-10 pr-3 py-3 border border-slate-800 rounded-lg leading-5 bg-slate-900/50 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-slate-900 transition-all shadow-sm text-sm font-medium"
                   placeholder="Enter your username"
-                  v-model="username"
                   :disabled="isLoading"
                 />
               </div>
             </div>
 
+            <!-- Password -->
             <div>
               <label
                 class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2"
+                >Password</label
               >
-                Password
-              </label>
               <div class="relative group">
                 <div
                   class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
@@ -236,20 +125,21 @@ const handleSubmit = async () => {
                   />
                 </div>
                 <input
+                  v-model="password"
                   type="password"
                   class="block w-full pl-10 pr-3 py-3 border border-slate-800 rounded-lg leading-5 bg-slate-900/50 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-slate-900 transition-all shadow-sm text-sm font-medium"
                   placeholder="Enter your password"
-                  v-model="password"
                   :disabled="isLoading"
                 />
               </div>
             </div>
           </div>
 
+          <!-- Remember Me -->
           <div class="flex items-center">
             <input
               id="remember-me"
-              name="remember-me"
+              v-model="rememberMe"
               type="checkbox"
               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-700 bg-slate-800 rounded cursor-pointer"
             />
@@ -261,6 +151,7 @@ const handleSubmit = async () => {
             </label>
           </div>
 
+          <!-- Submit Button -->
           <div>
             <button
               type="submit"
@@ -290,20 +181,26 @@ const handleSubmit = async () => {
                 </svg>
                 Authenticating...
               </span>
-              <span v-else class="flex items-center gap-2">
-                <ArrowRight
-                  class="h-5 w-5 text-blue-400 group-hover:text-blue-200 transition-colors"
-                />
+              <span v-else>
+                <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                  <ArrowRight
+                    class="h-5 w-5 text-blue-400 group-hover:text-blue-200 transition-colors"
+                  />
+                </span>
                 Sign In to Dashboard
               </span>
             </button>
           </div>
         </form>
 
-        <div class="pt-8 mt-8 text-center">
+        <!-- Footer -->
+        <div class="pt-8 mt-8 border-t border-slate-900 text-center">
           <button
-            @click="router.push('/')"
-            class="!bg-transparent !border-0 !shadow-none !text-cyan-400 text-xs uppercase tracking-[0.25em] hover:!text-cyan-300 focus:!outline-none focus:!ring-0 px-0 py-0"
+            @click="navigateLanding"
+            type="button"
+            class="bg-transparent border-none p-0 text-xs font-medium uppercase tracking-widest
+                  text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-0
+                  active:bg-transparent"
           >
             ← Return to Landing Page
           </button>
@@ -323,3 +220,75 @@ const handleSubmit = async () => {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, nextTick } from "vue";
+import { useRouter } from "vue-router";
+import { useAuth } from "@/stores/auth";
+import {
+  User,
+  Lock,
+  ArrowRight,
+  ShieldCheck,
+  AlertTriangle,
+} from "lucide-vue-next";
+
+const router = useRouter();
+const { login } = useAuth();
+
+const username = ref("");
+const password = ref("");
+const error = ref("");
+const isLoading = ref(false);
+const rememberMe = ref(false);
+
+async function handleLogin() {
+  error.value = "";
+  isLoading.value = true;
+
+  if (!username.value || !password.value) {
+    error.value = "Username and password are required.";
+    isLoading.value = false;
+    return;
+  }
+
+  try {
+    const result = await login(username.value, password.value);
+
+    if (result.success) {
+      // Save credentials if remember me is checked
+      if (rememberMe.value) {
+        localStorage.setItem("remembered_username", username.value);
+      } else {
+        localStorage.removeItem("remembered_username");
+      }
+
+      // Wait for auth state to be fully updated
+      await nextTick();
+      await router.isReady();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      console.log("🔄 Navigating to global dashboard");
+      await router.push({ name: "global" });
+    } else {
+      error.value = result.message || "Login failed. Please try again.";
+      password.value = "";
+      isLoading.value = false;
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    error.value = "An error occurred. Please try again.";
+    isLoading.value = false;
+  }
+}
+
+function navigateLanding() {
+  router.push("/");
+}
+
+// Load remembered username on mount
+if (localStorage.getItem("remembered_username")) {
+  username.value = localStorage.getItem("remembered_username") || "";
+  rememberMe.value = true;
+}
+</script>
