@@ -116,7 +116,9 @@ const toggleSidebar = () => {
       </header>
 
       <section class="page" :class="{ 'sidebar-closed-state': !isSidebarOpen }">
-        <RouterView />
+        <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+          <RouterView />
+        </div>
       </section>
     </main>
   </div>
@@ -370,7 +372,7 @@ const toggleSidebar = () => {
 
 .page > * {
   width: 100%;
-  max-width: 100%; /* Full width tanpa batasan */
+  max-width: 100%;
 }
 
 /* Adjust main area when sidebar is hidden */

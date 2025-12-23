@@ -651,7 +651,8 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!isAuthenticated.value) {
       // Redirect to login if not authenticated
-      next({ name: "login", query: { redirect: to.fullPath } });
+      // Use replace: true to prevent browser forward button from accessing protected routes
+      next({ name: "login", query: { redirect: to.fullPath }, replace: true });
       return;
     }
   }
@@ -661,7 +662,7 @@ router.beforeEach((to, from, next) => {
   // The userRole is checked but currently all users can access daily reports
   if (to.matched.some((record) => record.meta.requiresUser)) {
     if (!isAuthenticated.value) {
-      next({ name: "login", query: { redirect: to.fullPath } });
+      next({ name: "login", query: { redirect: to.fullPath }, replace: true });
       return;
     }
 

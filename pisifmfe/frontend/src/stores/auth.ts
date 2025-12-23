@@ -1,15 +1,11 @@
-// src/stores/auth.ts
+// src/stores/auth.ts - Backend Authentication
 import { ref, computed } from "vue";
 import axios from "axios";
 
-// Hard-lock API URL: no silent localhost fallback.
-// If you want dev proxy, set VITE_API_URL=/api in .env.local
 const API_URL = import.meta.env.VITE_API_URL as string;
 
 if (!API_URL) {
-  throw new Error(
-    "VITE_API_URL is not defined. Please set it in your .env file."
-  );
+  throw new Error("VITE_API_URL is not defined in .env");
 }
 
 export interface User {

@@ -183,7 +183,9 @@ onMounted(() => {
         ]"
       >
         <!-- Total Output -->
-        <div class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50">
+        <div
+          class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50 hover:scale-105 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+        >
           <div class="flex justify-between items-start mb-3">
             <div>
               <p class="text-slate-400 text-xs font-medium uppercase mb-1">
@@ -207,7 +209,9 @@ onMounted(() => {
         </div>
 
         <!-- Global OEE -->
-        <div class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50">
+        <div
+          class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50 hover:scale-105 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+        >
           <div class="flex justify-between items-start mb-3">
             <div>
               <p class="text-slate-400 text-xs font-medium uppercase mb-1">
@@ -231,7 +235,9 @@ onMounted(() => {
         </div>
 
         <!-- Total Energy -->
-        <div class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50">
+        <div
+          class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50 hover:scale-105 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+        >
           <div class="flex justify-between items-start mb-3">
             <div>
               <p class="text-slate-400 text-xs font-medium uppercase mb-1">
@@ -257,7 +263,7 @@ onMounted(() => {
         <!-- Active Alarms -->
         <div
           v-if="showAlarms"
-          class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50"
+          class="bg-slate-900/50 rounded-lg p-5 border border-slate-700/50 hover:scale-105 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer"
         >
           <div class="flex justify-between items-start mb-3">
             <div>
@@ -297,7 +303,7 @@ onMounted(() => {
           v-for="plant in plants"
           :key="plant.id"
           @click="router.push(`/app/plant/${plant.id}`)"
-          class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 hover:border-blue-500 transition-all cursor-pointer group"
+          class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 hover:border-blue-500 hover:scale-105 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer group"
         >
           <!-- Plant Header -->
           <div class="flex justify-between items-start mb-4">

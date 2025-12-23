@@ -1,0 +1,14 @@
+import { createApp } from "vue";
+import App from "./App.vue";
+import router from "./router";
+
+import "./assets/tailwind.css";
+import "./style.css"; // kalau memang ada
+
+const app = createApp(App);
+app.use(router);
+
+// Wait for router to be ready before mounting
+router.isReady().then(() => {
+  app.mount("#app");
+});

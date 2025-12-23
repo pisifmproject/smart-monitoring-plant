@@ -29,7 +29,7 @@
         <h1
           class="text-5xl font-extrabold text-white leading-tight tracking-tight mb-6"
         >
-          Operational<br />Excellence
+          Operational Excellence<br />
           <span
             class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400"
           >
