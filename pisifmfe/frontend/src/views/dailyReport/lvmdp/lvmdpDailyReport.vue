@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { getDailyReportAll, getDailyHourly } from "@/lib/api";
 import { useExcelExport } from "@/composables/useExcelExport";
 import {
@@ -9,6 +9,7 @@ import {
   HardDriveUpload,
   ClockFading,
   FileChartColumn,
+  ArrowLeft,
 } from "lucide-vue-next";
 
 const {
@@ -18,6 +19,7 @@ const {
 } = useExcelExport();
 
 const route = useRoute();
+const router = useRouter();
 const panelId = (parseInt(String(route.query.panel || 1)) || 1) as
   | 1
   | 2
@@ -61,6 +63,11 @@ const handleWindowClick = () => {
 };
 function toggleDownloadMenu() {
   showDownloadMenu.value = !showDownloadMenu.value;
+}
+
+// Navigation back to LVMDP panel
+function goBack() {
+  router.push(`/app/plant/CIKUPA/electrical/panel${panelId}`);
 }
 
 // Local storage cache with TTL
@@ -517,9 +524,20 @@ onUnmounted(() => {
       <!-- Header -->
       <div class="header-section">
         <div class="header-content">
-          <div>
-            <h1 class="page-title">Daily Report</h1>
-            <p class="page-subtitle">LVMDP {{ panelId }}</p>
+          <div class="flex items-center gap-4">
+            <!-- Back Button -->
+            <button
+              @click="goBack"
+              class="back-button"
+              title="Back to LVMDP Panel"
+            >
+              <ArrowLeft class="w-5 h-5" />
+            </button>
+
+            <div>
+              <h1 class="page-title">Daily Report</h1>
+              <p class="page-subtitle">LVMDP {{ panelId }}</p>
+            </div>
           </div>
 
           <div class="header-controls">
@@ -739,6 +757,30 @@ onUnmounted(() => {
   align-items: flex-end;
   gap: 24px;
   flex-wrap: wrap;
+}
+
+/* Back Button */
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  color: #ffffff;
+  background: rgba(100, 116, 139, 0.1);
+}
+
+.back-button:active {
+  transform: scale(0.95);
 }
 
 .page-title {
