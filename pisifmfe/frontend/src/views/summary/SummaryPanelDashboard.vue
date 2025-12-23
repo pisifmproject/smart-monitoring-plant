@@ -173,20 +173,18 @@
           </div>
         </div>
         <div class="load-bar-container">
-          <div class="load-bar-wrapper">
-            <div class="load-bar-bg">
-              <div
-                class="load-bar-fill"
-                :class="getLoadColorClass"
-                :style="{ width: summaryData.loadPercentage + '%' }"
-              >
-                <div class="load-bar-shimmer"></div>
-              </div>
+          <div class="load-bar-bg">
+            <div
+              class="load-bar-fill"
+              :class="getLoadColorClass"
+              :style="{ width: summaryData.loadPercentage + '%' }"
+            >
+              <div class="load-bar-shimmer"></div>
             </div>
-            <div class="load-current-label">{{ summaryData.totalKVA }} kVA</div>
           </div>
           <div class="load-bar-labels">
             <span>0 kVA</span>
+            <span class="load-current">{{ summaryData.totalKVA }} kVA</span>
             <span>{{ summaryData.installedCapacity }} kVA</span>
           </div>
         </div>
@@ -1474,22 +1472,6 @@ onUnmounted(() => {
   margin-bottom: 1rem;
 }
 
-.load-bar-wrapper {
-  position: relative;
-  margin-bottom: 0.5rem;
-}
-
-.load-current-label {
-  position: absolute;
-  top: -1.8rem;
-  left: 50%;
-  transform: translateX(-50%);
-  font-weight: 700;
-  color: #60a5fa;
-  font-size: 0.875rem;
-  white-space: nowrap;
-}
-
 .load-bar-bg {
   height: 32px;
   background: #0f172a;
@@ -1497,6 +1479,7 @@ onUnmounted(() => {
   overflow: hidden;
   position: relative;
   border: 1px solid #334155;
+  margin-bottom: 0.5rem;
 }
 
 .load-bar-fill {
@@ -1544,7 +1527,6 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 0.5rem;
   font-size: 0.875rem;
   color: #94a3b8;
 }

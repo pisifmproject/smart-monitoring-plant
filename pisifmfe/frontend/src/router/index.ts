@@ -187,6 +187,58 @@ const router = createRouter({
           component: ElectricalDummyDashboard,
         },
         {
+          path: "plant/:plantId/electrical/lvmdp/1",
+          name: "plantLvmdp1",
+          component: Lvmdp1,
+          beforeEnter: (to, from, next) => {
+            const plantId = to.params.plantId as string;
+            if (!plantId || plantId === "undefined") {
+              next({ name: "plantDashboard", params: { plantId: "CIKUPA" } });
+            } else {
+              next();
+            }
+          },
+        },
+        {
+          path: "plant/:plantId/electrical/lvmdp/2",
+          name: "plantLvmdp2",
+          component: Lvmdp2,
+          beforeEnter: (to, from, next) => {
+            const plantId = to.params.plantId as string;
+            if (!plantId || plantId === "undefined") {
+              next({ name: "plantDashboard", params: { plantId: "CIKUPA" } });
+            } else {
+              next();
+            }
+          },
+        },
+        {
+          path: "plant/:plantId/electrical/lvmdp/3",
+          name: "plantLvmdp3",
+          component: Lvmdp3,
+          beforeEnter: (to, from, next) => {
+            const plantId = to.params.plantId as string;
+            if (!plantId || plantId === "undefined") {
+              next({ name: "plantDashboard", params: { plantId: "CIKUPA" } });
+            } else {
+              next();
+            }
+          },
+        },
+        {
+          path: "plant/:plantId/electrical/lvmdp/4",
+          name: "plantLvmdp4",
+          component: Lvmdp4,
+          beforeEnter: (to, from, next) => {
+            const plantId = to.params.plantId as string;
+            if (!plantId || plantId === "undefined") {
+              next({ name: "plantDashboard", params: { plantId: "CIKUPA" } });
+            } else {
+              next();
+            }
+          },
+        },
+        {
           path: "plant/:plantId/utilities/steam",
           name: "plantSteam",
           component: SteamDashboard,
