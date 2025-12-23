@@ -10,6 +10,7 @@ import {
   ClockFading,
   FileChartColumn,
   ArrowLeft,
+  Clock,
 } from "lucide-vue-next";
 
 const {
@@ -519,12 +520,208 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="report-wrapper">
-    <div class="report-container">
-      <!-- Header -->
-      <div class="header-section">
-        <div class="header-content">
-          <div class="flex items-center gap-4">
+  <div class="space-y-6 animate-in fade-in duration-300 w-full">
+    <!-- Header with Back Button -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <!-- Back Button -->
+        <button
+          @click="goBack"
+          class="p-2 rounded-full transition-all text-slate-400 hover:text-white hover:scale-110 duration-200 flex-shrink-0"
+          title="Back to LVMDP Panel"
+        >
+          <ArrowLeft size="24" />
+        </button>
+        <div>
+          <h1 class="text-2xl font-bold text-white flex items-center gap-3 tracking-tight">
+            Daily Report
+          </h1>
+          <p class="text-slate-400 text-sm font-medium mt-0.5">
+            LVMDP {{ panelId }}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 self-start sm:self-auto">
+        <!-- Date Picker -->
+        <div class="flex items-center gap-2">
+          <label class="text-slate-400 text-sm font-medium">Date:</label>
+          <input
+            ref="dateInput"
+            v-model="selectedDate"
+            type="date"
+            :min="minDate"
+            :max="maxDate"
+            class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none transition-colors"
+          />
+        </div>
+
+        <!-- Download Button -->
+        <div class="relative" @click.stop>
+          <button
+            type="button"
+            @click="toggleDownloadMenu"
+            class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-500 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm hover:shadow-md"
+          >
+            <Download size="16" />
+            Download
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div v-if="showDownloadMenu" class="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50">
+            <button
+              class="block w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+              @click="downloadByDate"
+            >
+              <HardDriveUpload class="inline-block w-4 h-4 mr-2" />
+              By Date
+            </button>
+            <button
+              class="block w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border-t border-slate-700"
+              @click="downloadByMonth"
+            >
+              <FileChartColumn class="inline-block w-4 h-4 mr-2" />
+              By Month
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="bg-slate-900 border border-slate-700 rounded-lg shadow-lg overflow-hidden">
+      <!-- Tabs -->
+      <div class="border-b border-slate-700 bg-slate-800/50">
+        <div class="flex">
+          <button
+            @click="activeTab = 'shift'"
+            :class="[
+              'px-6 py-3 text-sm font-bold flex items-center gap-2 transition-all border-b-2',
+              activeTab === 'shift'
+                ? 'border-blue-500 text-blue-400 bg-slate-800'
+                : 'border-transparent text-slate-400 hover:text-white'
+            ]"
+          >
+            <ClockFading class="w-4 h-4" />
+            Shift Reports
+          </button>
+
+          <button
+            @click="activeTab = 'hourly'"
+            :class="[
+              'px-6 py-3 text-sm font-bold flex items-center gap-2 transition-all border-b-2',
+              activeTab === 'hourly'
+                ? 'border-blue-500 text-blue-400 bg-slate-800'
+                : 'border-transparent text-slate-400 hover:text-white'
+            ]"
+          >
+            <Clock class="w-4 h-4" />
+            Hourly Reports
+          </button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6">
+        <!-- Shift Reports Tab -->
+        <div v-if="activeTab === 'shift'">
+          <div v-if="loadingShift" class="text-center py-8 text-slate-400">
+            Loading shift data...
+          </div>
+          <div v-else-if="errorShift" class="text-center py-8 text-red-400">
+            {{ errorShift }}
+          </div>
+          <div v-else-if="shiftReports.length === 0" class="text-center py-8 text-slate-400">
+            No shift data available for this date
+          </div>
+          <div v-else>
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <ClockFading class="w-5 h-5" />
+              Detailed Shift Data
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="bg-blue-600 text-white">
+                    <th class="px-4 py-3 text-left font-bold">SHIFT</th>
+                    <th class="px-4 py-3 text-left font-bold">TOTAL KWH</th>
+                    <th class="px-4 py-3 text-left font-bold">AVG POWER (KW)</th>
+                    <th class="px-4 py-3 text-left font-bold">AVG CURRENT (A)</th>
+                    <th class="px-4 py-3 text-left font-bold">MIN CURRENT (A)</th>
+                    <th class="px-4 py-3 text-left font-bold">MAX CURRENT (A)</th>
+                    <th class="px-4 py-3 text-left font-bold">LOAD (%)</th>
+                    <th class="px-4 py-3 text-left font-bold">POWER FACTOR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(report, idx) in shiftReports" :key="idx" class="border-t border-slate-700 hover:bg-slate-800 transition-colors">
+                    <td class="px-4 py-3 font-bold text-white">SHIFT {{ report.shift }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.totalKwh) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.avgKwh) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.iavg) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.imin) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.imax) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber((report.iavg / 2500) * 100) }}%</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.cosPhi) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hourly Reports Tab -->
+        <div v-if="activeTab === 'hourly'">
+          <div v-if="loadingHourly" class="text-center py-8 text-slate-400">
+            Loading hourly data...
+          </div>
+          <div v-else-if="errorHourly" class="text-center py-8 text-red-400">
+            {{ errorHourly }}
+          </div>
+          <div v-else-if="hourlyReports.length === 0" class="text-center py-8 text-slate-400">
+            No hourly data available for this date
+          </div>
+          <div v-else>
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Clock class="w-5 h-5" />
+              Hourly Data
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="bg-blue-600 text-white">
+                    <th class="px-4 py-3 text-left font-bold">WAKTU</th>
+                    <th class="px-4 py-3 text-left font-bold">TOTAL KWH</th>
+                    <th class="px-4 py-3 text-left font-bold">AVG POWER (KW)</th>
+                    <th class="px-4 py-3 text-left font-bold">POWER FACTOR</th>
+                    <th class="px-4 py-3 text-left font-bold">AVG CURRENT (A)</th>
+                    <th class="px-4 py-3 text-left font-bold">MIN CURRENT (A)</th>
+                    <th class="px-4 py-3 text-left font-bold">MAX CURRENT (A)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(report, idx) in hourlyReports" :key="idx" class="border-t border-slate-700 hover:bg-slate-800 transition-colors">
+                    <td class="px-4 py-3 font-bold text-white">{{ formatTime(report.hour) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.totalKwh) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.avgKwh) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.cosPhi) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.avgCurrent) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.minCurrent || 0) }}</td>
+                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.maxCurrent || 0) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* All styles handled by Tailwind CSS */
+</style>
             <!-- Back Button -->
             <button
               @click="goBack"
