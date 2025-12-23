@@ -158,8 +158,8 @@ onMounted(() => {
           :class="[
             'px-3 py-1.5 text-xs font-bold rounded-md transition-all',
             btn.isActive
-              ? 'bg-yellow-500 text-slate-900 shadow-lg shadow-yellow-900/20'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800',
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+              : 'bg-slate-700/50 text-white hover:bg-slate-700 hover:text-blue-400',
           ]"
         >
           {{ btn.label }}

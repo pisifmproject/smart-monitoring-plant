@@ -68,10 +68,30 @@ const plantMenuItems = computed(() => {
       children: [
         {
           id: "electrical",
-          name: "Electrical",
+          name: "Electrical (LVMDP)",
           route: `/app/plant/${currentPlantId.value}/electrical/panels`,
-          children:
-            currentPlantId.value === "CIKUPA"
+          children: [
+            {
+              id: "lvmdp1",
+              name: "LVMDP 1",
+              route: `/app/lvmdp1`,
+            },
+            {
+              id: "lvmdp2",
+              name: "LVMDP 2",
+              route: `/app/lvmdp2`,
+            },
+            {
+              id: "lvmdp3",
+              name: "LVMDP 3",
+              route: `/app/lvmdp3`,
+            },
+            {
+              id: "lvmdp4",
+              name: "LVMDP 4",
+              route: `/app/lvmdp4`,
+            },
+            ...(currentPlantId.value === "CIKUPA"
               ? [
                   {
                     id: "panel1",
@@ -94,7 +114,8 @@ const plantMenuItems = computed(() => {
                     route: `/app/plant/CIKUPA/electrical/panel4`,
                   },
                 ]
-              : undefined,
+              : []),
+          ],
         },
         {
           id: "steam",

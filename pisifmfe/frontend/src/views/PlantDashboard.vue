@@ -75,52 +75,61 @@ const mockKPIs = {
   alarms: 3,
 };
 
-// Mock utility metrics
+// Mock utility metrics - sesuai dengan image2
 const utilityMetrics = [
+  {
+    key: "ELECTRICITY_USAGE",
+    label: "Electricity",
+    value: 8643,
+    unit: "kWh",
+    icon: Zap,
+    color: "text-blue-400",
+    type: "electricity",
+  },
   {
     key: "STEAM_USAGE",
     label: "Steam",
-    value: 350,
-    unit: "kg/h",
+    value: 226,
+    unit: "Ton",
     icon: Zap,
-    color: "text-yellow-400",
+    color: "text-orange-400",
     type: "steam",
   },
   {
     key: "WATER_USAGE",
     label: "Water",
-    value: 2800,
-    unit: "L/h",
+    value: 53923,
+    unit: "m³",
     icon: Activity,
-    color: "text-blue-400",
+    color: "text-cyan-400",
     type: "water",
   },
   {
     key: "AIR_USAGE",
     label: "Compressed Air",
-    value: 450,
-    unit: "m³/h",
+    value: 21569,
+    unit: "m³",
     icon: Activity,
-    color: "text-cyan-400",
+    color: "text-purple-400",
     type: "air",
-  },
-  {
-    key: "GAS_USAGE",
-    label: "Natural Gas",
-    value: 280,
-    unit: "m³/h",
-    icon: Zap,
-    color: "text-orange-400",
-    type: "gas",
   },
   {
     key: "NITROGEN_USAGE",
     label: "Nitrogen",
-    value: 120,
-    unit: "m³/h",
+    value: 54055,
+    unit: "m³",
     icon: Activity,
-    color: "text-purple-400",
+    color: "text-pink-400",
     type: "nitrogen",
+  },
+  {
+    key: "GAS_USAGE",
+    label: "Natural Gas",
+    value: 14413,
+    unit: "m³",
+    icon: Zap,
+    color: "text-orange-500",
+    type: "gas",
   },
 ];
 
@@ -319,7 +328,7 @@ const handleMachineClick = (machineId: string) => {
         <!-- Back Button with proper spacing -->
         <button
           @click="router.push('/app/dashboard/global')"
-          class="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white hover:scale-110 duration-200 flex-shrink-0"
+          class="p-2 rounded-full transition-all text-slate-400 hover:text-white hover:scale-110 duration-200 flex-shrink-0"
         >
           <ArrowLeft size="24" />
         </button>
@@ -350,7 +359,7 @@ const handleMachineClick = (machineId: string) => {
               'px-3 py-1.5 text-xs font-bold rounded-md transition-all',
               period === p
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800',
+                : 'bg-slate-700/50 text-white hover:bg-slate-700 hover:text-blue-400',
             ]"
           >
             {{ p }}

@@ -12,6 +12,7 @@ import {
   Gauge,
   Cloud,
   Leaf,
+  ArrowLeft,
 } from "lucide-vue-next";
 import axios from "axios";
 
@@ -190,18 +191,33 @@ onMounted(() => {
 
 <template>
   <div class="utility-dashboard">
-    <!-- Header -->
-    <div class="mb-6">
-      <div class="flex items-center gap-3">
-        <div class="p-2 bg-emerald-500/10 rounded-lg">
-          <Leaf class="text-emerald-400" :size="28" />
-        </div>
-        <div>
-          <h1 class="text-2xl font-bold text-white">Energy & Utilities</h1>
-          <p class="text-slate-400 text-sm font-medium">
-            {{ plantName }} • ISO 50001 Compliance
-          </p>
-        </div>
+    <!-- Header with Back Button -->
+    <div class="mb-8 flex items-center gap-4">
+      <button
+        @click="router.push(`/app/plant/${plantId}`)"
+        class="p-2 rounded-full transition-all text-slate-400 hover:text-white hover:scale-110 duration-200 flex-shrink-0"
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <div class="p-2 bg-emerald-500/10 rounded-lg">
+        <Leaf class="text-emerald-400" :size="28" />
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-white">
+          Utilities & Energy Efficiency
+        </h1>
+        <p class="text-slate-400 text-sm font-medium">
+          {{ plantName }} • Resource Consumption
+        </p>
       </div>
     </div>
 
