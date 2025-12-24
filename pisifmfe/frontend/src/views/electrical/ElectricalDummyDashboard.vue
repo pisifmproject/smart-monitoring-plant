@@ -92,14 +92,16 @@ onMounted(() => {
 <template>
   <div class="electrical-dashboard">
     <!-- Header -->
-    <div class="dashboard-header">
-      <div class="header-left">
+    <div class="page-header">
+      <div class="header-content">
         <div class="header-icon">
           <Zap :size="32" />
         </div>
-        <div>
-          <h1 class="page-title">{{ plantName }} - Electrical Monitoring</h1>
-          <p class="page-subtitle">Simulated electrical monitoring system</p>
+        <div class="header-text">
+          <h1 class="page-title">Electrical Monitoring</h1>
+          <p class="page-subtitle">
+            {{ plantName }} • Distribution Panel Status
+          </p>
         </div>
       </div>
       <div class="header-right">
@@ -110,121 +112,116 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Alert Notice -->
-    <div class="alert-notice">
-      <AlertCircle :size="20" />
-      <div>
-        <strong>Simulation Mode</strong>
-        <p>
-          This plant uses simulated data. Real-time monitoring is only available
-          for Plant Cikupa.
-        </p>
-      </div>
-    </div>
-
     <!-- Summary Metrics -->
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <div
-          class="metric-icon"
-          style="background: rgba(59, 130, 246, 0.1); color: #3b82f6"
-        >
-          <Zap :size="24" />
-        </div>
-        <div class="metric-content">
-          <div class="metric-label">Total Power</div>
-          <div class="metric-value">
-            {{ formatNumber(summaryMetrics.totalPower, 2) }}
-            <span class="unit">kW</span>
+    <div class="metrics-container">
+      <div class="metric-card total-power">
+        <div class="metric-header">
+          <span class="metric-label">Total Power</span>
+          <div
+            class="metric-icon"
+            style="background: rgba(59, 130, 246, 0.1); color: #3b82f6"
+          >
+            <Zap :size="20" />
           </div>
+        </div>
+        <div class="metric-value">
+          <span class="value">{{
+            formatNumber(summaryMetrics.totalPower, 2)
+          }}</span>
+          <span class="unit">kW</span>
         </div>
       </div>
 
-      <div class="metric-card">
-        <div
-          class="metric-icon"
-          style="background: rgba(34, 197, 94, 0.1); color: #22c55e"
-        >
-          <Activity :size="24" />
-        </div>
-        <div class="metric-content">
-          <div class="metric-label">Total Energy</div>
-          <div class="metric-value">
-            {{ formatNumber(summaryMetrics.totalEnergy, 2) }}
-            <span class="unit">kWh</span>
+      <div class="metric-card total-energy">
+        <div class="metric-header">
+          <span class="metric-label">Total Energy</span>
+          <div
+            class="metric-icon"
+            style="background: rgba(34, 197, 94, 0.1); color: #22c55e"
+          >
+            <Activity :size="20" />
           </div>
+        </div>
+        <div class="metric-value">
+          <span class="value">{{
+            formatNumber(summaryMetrics.totalEnergy, 2)
+          }}</span>
+          <span class="unit">kWh</span>
         </div>
       </div>
 
-      <div class="metric-card">
-        <div
-          class="metric-icon"
-          style="background: rgba(234, 179, 8, 0.1); color: #eab308"
-        >
-          <TrendingUp :size="24" />
-        </div>
-        <div class="metric-content">
-          <div class="metric-label">Avg Voltage</div>
-          <div class="metric-value">
-            {{ formatNumber(summaryMetrics.avgVoltage, 2) }}
-            <span class="unit">V</span>
+      <div class="metric-card avg-voltage">
+        <div class="metric-header">
+          <span class="metric-label">Avg Voltage</span>
+          <div
+            class="metric-icon"
+            style="background: rgba(234, 179, 8, 0.1); color: #eab308"
+          >
+            <TrendingUp :size="20" />
           </div>
+        </div>
+        <div class="metric-value">
+          <span class="value">{{
+            formatNumber(summaryMetrics.avgVoltage, 2)
+          }}</span>
+          <span class="unit">V</span>
         </div>
       </div>
 
-      <div class="metric-card">
-        <div
-          class="metric-icon"
-          style="background: rgba(168, 85, 247, 0.1); color: #a855f7"
-        >
-          <Activity :size="24" />
-        </div>
-        <div class="metric-content">
-          <div class="metric-label">Load Factor</div>
-          <div class="metric-value">
-            {{ formatNumber(summaryMetrics.loadPercentage, 2) }}
-            <span class="unit">%</span>
+      <div class="metric-card load-factor">
+        <div class="metric-header">
+          <span class="metric-label">Load Factor</span>
+          <div
+            class="metric-icon"
+            style="background: rgba(168, 85, 247, 0.1); color: #a855f7"
+          >
+            <Activity :size="20" />
           </div>
+        </div>
+        <div class="metric-value">
+          <span class="value">{{
+            formatNumber(summaryMetrics.loadPercentage, 2)
+          }}</span>
+          <span class="unit">%</span>
         </div>
       </div>
     </div>
 
-    <!-- Panel Grid -->
-    <div class="section-header">
-      <h2>Distribution Panels</h2>
-    </div>
+    <!-- Distribution Panels Section -->
+    <div class="panels-section">
+      <h2 class="section-title">Distribution Panels</h2>
+      <div class="panels-grid">
+        <div v-for="panel in panels" :key="panel.name" class="panel-card">
+          <div class="panel-header">
+            <h3>{{ panel.name }}</h3>
+            <span class="status-badge online">{{ panel.status }}</span>
+          </div>
 
-    <div class="panels-grid">
-      <div v-for="panel in panels" :key="panel.name" class="panel-card">
-        <div class="panel-header">
-          <h3>{{ panel.name }}</h3>
-          <span class="status-badge online">{{ panel.status }}</span>
-        </div>
-
-        <div class="panel-metrics">
-          <div class="panel-metric">
-            <span class="metric-label">Voltage</span>
-            <span class="metric-value"
-              >{{ formatNumber(panel.voltage, 2) }} V</span
-            >
-          </div>
-          <div class="panel-metric">
-            <span class="metric-label">Current</span>
-            <span class="metric-value"
-              >{{ formatNumber(panel.current, 2) }} A</span
-            >
-          </div>
-          <div class="panel-metric">
-            <span class="metric-label">Power</span>
-            <span class="metric-value"
-              >{{ formatNumber(panel.power, 2) }} kW</span
-            >
-          </div>
-          <div class="panel-metric">
-            <span class="metric-label">Energy</span>
-            <span class="metric-value"
-              >{{ formatNumber(panel.totalKwh, 2) }} kWh</span
-            >
+          <div class="panel-metrics">
+            <div class="panel-metric">
+              <span class="metric-label">Voltage</span>
+              <span class="metric-value"
+                >{{ formatNumber(panel.voltage, 2) }} V</span
+              >
+            </div>
+            <div class="panel-metric">
+              <span class="metric-label">Current</span>
+              <span class="metric-value"
+                >{{ formatNumber(panel.current, 2) }} A</span
+              >
+            </div>
+            <div class="panel-metric">
+              <span class="metric-label">Power</span>
+              <span class="metric-value"
+                >{{ formatNumber(panel.power, 2) }} kW</span
+              >
+            </div>
+            <div class="panel-metric">
+              <span class="metric-label">Energy</span>
+              <span class="metric-value"
+                >{{ formatNumber(panel.totalKwh, 2) }} kWh</span
+              >
+            </div>
           </div>
         </div>
       </div>
@@ -236,65 +233,59 @@ onMounted(() => {
 .electrical-dashboard {
   padding: 32px;
   min-height: 100vh;
-  max-width: 1600px;
+  max-width: 1400px;
   margin: 0 auto;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
-@media (max-width: 1280px) {
-  .electrical-dashboard {
-    padding: 24px;
-    max-width: 1200px;
-  }
-}
-
-@media (min-width: 1920px) {
-  .electrical-dashboard {
-    max-width: 1800px;
-    padding: 40px;
-  }
-}
-
-.dashboard-header {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 24px;
+/* PAGE HEADER */
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.1);
   flex-wrap: wrap;
   gap: 16px;
 }
 
-.header-left {
+.header-content {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex: 1;
 }
 
 .header-icon {
-  width: 56px;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.15);
+  width: 48px;
+  height: 48px;
+  background: rgba(59, 130, 246, 0.1);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #3b82f6;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .page-title {
-  font-size: 1.5rem;
+  font-size: 28px;
   font-weight: 700;
   color: white;
   margin: 0;
+  letter-spacing: -0.5px;
 }
 
 .page-subtitle {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 4px 0 0 0;
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
 }
 
 .header-right {
@@ -307,12 +298,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
   padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.875rem;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
-  color: white;
+  color: #cbd5e1;
+  border: 1px solid rgba(226, 232, 240, 0.1);
 }
 
 .pulse-dot {
@@ -333,106 +325,118 @@ onMounted(() => {
   }
 }
 
-.alert-notice {
-  background: rgba(234, 179, 8, 0.1);
-  border: 1px solid rgba(234, 179, 8, 0.3);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 24px;
-  display: flex;
-  align-items: start;
-  gap: 12px;
-  color: #fbbf24;
-}
-
-.alert-notice strong {
-  display: block;
-  margin-bottom: 4px;
-  color: #fbbf24;
-}
-
-.alert-notice p {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #cbd5e1;
-}
-
-.metrics-grid {
+/* METRICS CONTAINER */
+.metrics-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
   margin-bottom: 32px;
 }
 
 .metric-card {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  border: 1px solid #334155;
-  border-radius: 12px;
   padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.8),
+    rgba(30, 41, 59, 0.8)
+  );
+  border: 1px solid rgba(226, 232, 240, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 
-.metric-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.metric-card:hover {
+  border-color: rgba(226, 232, 240, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.9),
+    rgba(30, 41, 59, 0.9)
+  );
 }
 
-.metric-content {
-  flex: 1;
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .metric-label {
-  font-size: 0.875rem;
+  font-size: 12px;
+  font-weight: 600;
   color: #94a3b8;
-  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .metric-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
-.unit {
-  font-size: 0.875rem;
+.metric-value .value {
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-value .unit {
+  font-size: 12px;
   color: #94a3b8;
   font-weight: 500;
 }
 
-.section-header {
-  margin-bottom: 20px;
+/* PANELS SECTION */
+.panels-section {
+  margin-top: 32px;
 }
 
-.section-header h2 {
-  font-size: 1.25rem;
+.section-title {
+  font-size: 18px;
   font-weight: 700;
   color: white;
-  margin: 0;
+  margin: 0 0 16px 0;
+  text-transform: capitalize;
 }
 
 .panels-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
 }
 
 .panel-card {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  border: 1px solid #334155;
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.7),
+    rgba(30, 41, 59, 0.7)
+  );
+  border: 1px solid rgba(226, 232, 240, 0.1);
   border-radius: 12px;
   padding: 20px;
   transition: all 0.3s ease;
 }
 
 .panel-card:hover {
-  border-color: #3b82f6;
-  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.3);
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.85),
+    rgba(30, 41, 59, 0.85)
+  );
+  transform: translateY(-4px);
 }
 
 .panel-header {
@@ -441,26 +445,27 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.1);
 }
 
 .panel-header h3 {
-  font-size: 1.125rem;
+  font-size: 16px;
   font-weight: 700;
   color: white;
   margin: 0;
 }
 
 .status-badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .status-badge.online {
-  background: rgba(34, 197, 94, 0.1);
+  background: rgba(34, 197, 94, 0.15);
   color: #22c55e;
 }
 
@@ -474,18 +479,43 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
 }
 
 .panel-metric .metric-label {
-  font-size: 0.75rem;
+  font-size: 11px;
   color: #94a3b8;
   text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .panel-metric .metric-value {
-  font-size: 1rem;
+  font-size: 14px;
   font-weight: 700;
   color: white;
+  font-variant-numeric: tabular-nums;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1280px) {
+  .electrical-dashboard {
+    padding: 24px;
+    max-width: 1200px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .metrics-container {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .panels-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
@@ -493,16 +523,50 @@ onMounted(() => {
     padding: 16px;
   }
 
-  .dashboard-header {
-    padding: 16px;
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  .metrics-grid {
-    grid-template-columns: 1fr;
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-subtitle {
+    font-size: 12px;
+  }
+
+  .metrics-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .metric-value .value {
+    font-size: 20px;
   }
 
   .panels-grid {
     grid-template-columns: 1fr;
+  }
+
+  .panel-metrics {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .electrical-dashboard {
+    max-width: 1600px;
+    padding: 40px;
+  }
+
+  .metrics-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .panels-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 </style>

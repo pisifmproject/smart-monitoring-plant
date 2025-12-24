@@ -327,7 +327,7 @@ const handleMachineClick = (machineId: string) => {
       <div class="flex items-center gap-4">
         <!-- Back Button with proper spacing -->
         <button
-          @click="router.push('/app/dashboard/global')"
+          @click="router.push('/app/global')"
           class="p-2 rounded-full transition-all text-slate-400 hover:text-white hover:scale-110 duration-200 flex-shrink-0"
         >
           <ArrowLeft size="24" />

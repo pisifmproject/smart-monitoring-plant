@@ -334,10 +334,10 @@ const mainMenus = computed(() => [
         icon: Zap,
         summaryRoute: "summary", // Add summary route
         children: [
-          { id: "lvmdp1", name: "Panel 1", routeName: "lvmdp1" },
-          { id: "lvmdp2", name: "Panel 2", routeName: "lvmdp2" },
-          { id: "lvmdp3", name: "Panel 3", routeName: "lvmdp3" },
-          { id: "lvmdp4", name: "Panel 4", routeName: "lvmdp4" },
+          { id: "lvmdp1", name: "LVMDP 1", routeName: "lvmdp1" },
+          { id: "lvmdp2", name: "LVMDP 2", routeName: "lvmdp2" },
+          { id: "lvmdp3", name: "LVMDP 3", routeName: "lvmdp3" },
+          { id: "lvmdp4", name: "LVMDP 4", routeName: "lvmdp4" },
         ],
       },
     ],
@@ -486,24 +486,31 @@ function isItemActive(routeName: string): boolean {
                 v-if="(subMenu as any).children && (subMenu as any).summaryRoute"
               >
                 <!-- Summary Route - ditampilkan saat klik parent -->
-                <RouterLink
-                  :to="{ name: (subMenu as any).summaryRoute }"
-                  class="group-trigger level-2 summary-link"
-                  active-class="active-summary"
-                  @click="toggleMenu(subMenu.id)"
-                >
-                  <span class="flex items-center gap-2">
-                    <component
-                      v-if="subMenu.icon"
-                      :is="subMenu.icon"
-                      class="w-4 h-4"
-                    />
-                    <span>{{ subMenu.name }}</span>
-                  </span>
-                  <span class="chev" :class="{ rot: isMenuOpen(subMenu.id) }"
-                    >▾</span
+                <div class="submenu-with-toggle">
+                  <RouterLink
+                    :to="{ name: (subMenu as any).summaryRoute }"
+                    class="group-trigger level-2 summary-link"
+                    active-class="active-summary"
                   >
-                </RouterLink>
+                    <span class="flex items-center gap-2">
+                      <component
+                        v-if="subMenu.icon"
+                        :is="subMenu.icon"
+                        class="w-4 h-4"
+                      />
+                      <span>{{ subMenu.name }}</span>
+                    </span>
+                  </RouterLink>
+                  <button
+                    class="toggle-arrow-btn"
+                    @click.stop="toggleMenu(subMenu.id)"
+                    :aria-expanded="isMenuOpen(subMenu.id) ? 'true' : 'false'"
+                  >
+                    <span class="arrow" :class="{ rot: isMenuOpen(subMenu.id) }"
+                      >▾</span
+                    >
+                  </button>
+                </div>
 
                 <!-- Toggle untuk show/hide children -->
                 <!-- Children hanya muncul ketika arrow diklik -->
@@ -855,5 +862,51 @@ function isItemActive(routeName: string): boolean {
     padding: 6px 8px;
     font-size: 0.9rem;
   }
+}
+
+/* Submenu with toggle arrow */
+.submenu-with-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-left: 12px;
+}
+
+.submenu-with-toggle .summary-link {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px 0 0 8px;
+}
+
+.toggle-arrow-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #64748b;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+}
+
+.toggle-arrow-btn:hover {
+  background-color: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
+  border-color: rgba(14, 165, 233, 0.2);
+}
+
+.toggle-arrow-btn .arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.toggle-arrow-btn .arrow.rot {
+  transform: rotate(180deg);
 }
 </style>

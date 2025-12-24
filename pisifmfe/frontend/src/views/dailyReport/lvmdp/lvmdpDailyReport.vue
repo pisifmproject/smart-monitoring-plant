@@ -1,1473 +1,178 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getDailyReportAll, getDailyHourly } from "@/lib/api";
 import { useExcelExport } from "@/composables/useExcelExport";
-import {
-  Download,
-  CalendarSearch,
-  HardDriveUpload,
-  ClockFading,
-  FileChartColumn,
-  ArrowLeft,
-  Clock,
-} from "lucide-vue-next";
-
-const {
-  exportShiftReportByDate,
-  exportHourlyReportByDate,
-  exportMonthlyReport,
-} = useExcelExport();
+import { ArrowLeft, Download, Clock, ClockFading } from "lucide-vue-next";
 
 const route = useRoute();
 const router = useRouter();
-const panelId = (parseInt(String(route.query.panel || 1)) || 1) as
-  | 1
-  | 2
-  | 3
-  | 4;
+const panelId = Number(route.query.panel || 1);
 
-// Date picker
-const selectedDate = ref<string>(new Date().toISOString().split("T")[0]);
-const minDate = ref<string>("2024-01-01");
-const maxDate = computed(() => new Date().toISOString().split("T")[0]);
+const { exportShiftReportByDate, exportHourlyReportByDate } = useExcelExport();
 
-const dateInput = ref<HTMLInputElement | null>(null);
-function openDatePicker() {
-  const el = dateInput.value as HTMLInputElement & { showPicker?: () => void };
-  if (el?.showPicker) el.showPicker();
-  else if (el) el.focus();
-}
+// date
+const selectedDate = ref(new Date().toISOString().slice(0, 10));
 
-// Tab state
+// tab
 const activeTab = ref<"shift" | "hourly">("shift");
 
-// Data states
+// data
 const shiftReports = ref<any[]>([]);
 const hourlyReports = ref<any[]>([]);
-const loadingShift = ref(false);
-const loadingHourly = ref(false);
-const errorShift = ref<string | null>(null);
-const errorHourly = ref<string | null>(null);
+const loading = ref(false);
 
-// Debounce timer for date changes
-let dateChangeTimer: ReturnType<typeof setTimeout> | null = null;
+// format
+const nf = new Intl.NumberFormat("id-ID", { minimumFractionDigits: 2 });
 
-// Request tracking to prevent race conditions
-let currentShiftRequest = 0;
-let currentHourlyRequest = 0;
+const format = (v: any) =>
+  v === null || v === undefined || isNaN(Number(v)) ? "-" : nf.format(v);
 
-// Download dropdown state
-const showDownloadMenu = ref(false);
-const handleWindowClick = () => {
-  showDownloadMenu.value = false;
-};
-function toggleDownloadMenu() {
-  showDownloadMenu.value = !showDownloadMenu.value;
-}
-
-// Navigation back to LVMDP panel
+// back
 function goBack() {
   router.push(`/app/plant/CIKUPA/electrical/panel${panelId}`);
 }
 
-// Local storage cache with TTL
-// v11: Add cache expiration to prevent stale data
-const cacheKey = (date: string) => `lvmdp_${panelId}_hourly_v11_${date}`;
-const CACHE_TTL = 30000; // 30 seconds cache TTL
+// load shift
+async function loadShift() {
+  loading.value = true;
+  const all = await getDailyReportAll(panelId);
+  const row = all.find(
+    (r: any) => (r.date || r.reportDate) === selectedDate.value
+  );
 
-// Helper to check if cache is still valid
-function isCacheValid(cachedData: any): boolean {
-  if (!cachedData || !cachedData.timestamp) return false;
-  const now = Date.now();
-  return now - cachedData.timestamp < CACHE_TTL;
+  shiftReports.value = row
+    ? [
+        {
+          shift: 1,
+          total: row.shift1TotalKwh,
+          power: row.shift1AvgKwh,
+          avgI: row.shift1AvgCurrent,
+          minI: row.shift1MinCurrent,
+          maxI: row.shift1MaxCurrent,
+          pf: row.shift1CosPhi,
+        },
+        {
+          shift: 2,
+          total: row.shift2TotalKwh,
+          power: row.shift2AvgKwh,
+          avgI: row.shift2AvgCurrent,
+          minI: row.shift2MinCurrent,
+          maxI: row.shift2MaxCurrent,
+          pf: row.shift2CosPhi,
+        },
+        {
+          shift: 3,
+          total: row.shift3TotalKwh,
+          power: row.shift3AvgKwh,
+          avgI: row.shift3AvgCurrent,
+          minI: row.shift3MinCurrent,
+          maxI: row.shift3MaxCurrent,
+          pf: row.shift3CosPhi,
+        },
+      ]
+    : [];
+
+  loading.value = false;
 }
 
-const numberFormatter = new Intl.NumberFormat("id-ID", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-function formatNumber(v: any) {
-  if (v === null || v === undefined || v === "-") return "-";
-  const n = Number(v);
-  if (Number.isNaN(n)) return "-";
-  return numberFormatter.format(n);
+// load hourly
+async function loadHourly() {
+  loading.value = true;
+  hourlyReports.value = await getDailyHourly(panelId, selectedDate.value);
+  loading.value = false;
 }
 
-function formatTime(dateStr: string) {
-  try {
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return dateStr;
-  }
-}
-
-function formatDate(dateStr: string) {
-  try {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("id-ID", {
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
-}
-
-// Get color class based on load percentage
-function getLoadClass(loadRatio: number): string {
-  const percentage = loadRatio * 100;
-  if (percentage >= 90) return "load-critical";
-  if (percentage >= 75) return "load-high";
-  if (percentage >= 50) return "load-medium";
-  return "load-normal";
-}
-
-// Cache for shift reports to avoid repeated API calls
-const shiftReportsCache = new Map<string, any[]>();
-
-// Fetch all daily reports for shift summaries
-async function loadShiftReports() {
-  loadingShift.value = true;
-  errorShift.value = null;
-
-  // Increment request counter to track this specific request
-  const requestId = ++currentShiftRequest;
-  const targetDate = selectedDate.value;
-
-  try {
-    // Check cache first
-    const cacheKey = `shift_${panelId}_${targetDate}`;
-    if (shiftReportsCache.has(cacheKey)) {
-      // Still check if this is the latest request
-      if (requestId !== currentShiftRequest) return;
-      shiftReports.value = shiftReportsCache.get(cacheKey)!;
-      loadingShift.value = false;
-      return;
-    }
-
-    const data = await getDailyReportAll(panelId);
-
-    // Check if this request is still valid (user hasn't changed date)
-    if (
-      requestId !== currentShiftRequest ||
-      targetDate !== selectedDate.value
-    ) {
-      return; // Discard stale response
-    }
-    if (Array.isArray(data)) {
-      // Use find instead of filter for single result
-      const report = data.find((row) => {
-        const rowDate = row.date || row.reportDate;
-        return rowDate === targetDate;
-      });
-
-      if (report) {
-        const result = [
-          {
-            shift: 1,
-            totalKwh: report.shift1TotalKwh || 0,
-            avgKwh: report.shift1AvgKwh || 0,
-            iavg: report.shift1AvgCurrent || 0,
-            imin: report.shift1MinCurrent || 0,
-            imax: report.shift1MaxCurrent || 0,
-            cosPhi: report.shift1CosPhi || 0,
-          },
-          {
-            shift: 2,
-            totalKwh: report.shift2TotalKwh || 0,
-            avgKwh: report.shift2AvgKwh || 0,
-            iavg: report.shift2AvgCurrent || 0,
-            imin: report.shift2MinCurrent || 0,
-            imax: report.shift2MaxCurrent || 0,
-            cosPhi: report.shift2CosPhi || 0,
-          },
-          {
-            shift: 3,
-            totalKwh: report.shift3TotalKwh || 0,
-            avgKwh: report.shift3AvgKwh || 0,
-            iavg: report.shift3AvgCurrent || 0,
-            imin: report.shift3MinCurrent || 0,
-            imax: report.shift3MaxCurrent || 0,
-            cosPhi: report.shift3CosPhi || 0,
-          },
-        ];
-
-        // Final check before updating - prevent race condition
-        if (
-          requestId !== currentShiftRequest ||
-          targetDate !== selectedDate.value
-        ) {
-          return;
-        }
-
-        shiftReports.value = result;
-        shiftReportsCache.set(cacheKey, result);
-      } else {
-        const emptyResult = [
-          {
-            shift: 1,
-            totalKwh: 0,
-            avgKwh: 0,
-            iavg: 0,
-            imin: 0,
-            imax: 0,
-            cosPhi: 0,
-          },
-          {
-            shift: 2,
-            totalKwh: 0,
-            avgKwh: 0,
-            iavg: 0,
-            imin: 0,
-            imax: 0,
-            cosPhi: 0,
-          },
-          {
-            shift: 3,
-            totalKwh: 0,
-            avgKwh: 0,
-            iavg: 0,
-            imin: 0,
-            imax: 0,
-            cosPhi: 0,
-          },
-        ];
-
-        // Final check before updating
-        if (
-          requestId !== currentShiftRequest ||
-          targetDate !== selectedDate.value
-        ) {
-          return;
-        }
-
-        shiftReports.value = emptyResult;
-        shiftReportsCache.set(cacheKey, emptyResult);
-      }
-    }
-  } catch (err) {
-    // Only set error if this is still the current request
-    if (
-      requestId === currentShiftRequest &&
-      targetDate === selectedDate.value
-    ) {
-      errorShift.value = String(err);
-    }
-  } finally {
-    // Only clear loading if this is still the current request
-    if (
-      requestId === currentShiftRequest &&
-      targetDate === selectedDate.value
-    ) {
-      loadingShift.value = false;
-    }
-  }
-}
-
-// Fetch and cache hourly reports
-async function loadHourlyReports() {
-  loadingHourly.value = true;
-  errorHourly.value = null;
-
-  // Increment request counter to track this specific request
-  const requestId = ++currentHourlyRequest;
-  const targetDate = selectedDate.value;
-
-  try {
-    // Check cache with TTL validation
-    const cached = localStorage.getItem(cacheKey(targetDate));
-    if (cached) {
-      try {
-        const parsedCache = JSON.parse(cached);
-        if (isCacheValid(parsedCache)) {
-          // Still check if this is the latest request
-          if (requestId !== currentHourlyRequest) return;
-          hourlyReports.value = parsedCache.data;
-          loadingHourly.value = false;
-          return;
-        } else {
-          // Cache expired, remove it
-          localStorage.removeItem(cacheKey(targetDate));
-        }
-      } catch (e) {
-        // Invalid cache format, remove it
-        localStorage.removeItem(cacheKey(targetDate));
-      }
-    }
-
-    const data = await getDailyHourly(panelId, targetDate);
-
-    // Check if this request is still valid (user hasn't changed date)
-    if (
-      requestId !== currentHourlyRequest ||
-      targetDate !== selectedDate.value
-    ) {
-      return; // Discard stale response
-    }
-    if (Array.isArray(data)) {
-      const normalized = data.map((row: any) => ({
-        hour: row.hour,
-        totalKwh: row.totalKwh ?? row.avg_total_kwh ?? row.total_kwh ?? 0,
-        avgKwh: row.avgKwh ?? row.avg_kwh ?? 0,
-        cosPhi: row.cosPhi ?? row.avg_cos_phi ?? row.cos_phi ?? 0,
-        avgCurrent:
-          row.avgCurrent ?? row.avg_avg_current ?? row.avg_current ?? 0,
-        minCurrent: row.minCurrent ?? row.min_current ?? 0,
-        maxCurrent: row.maxCurrent ?? row.max_current ?? 0,
-      }));
-
-      // Final check before updating - prevent race condition
-      if (
-        requestId !== currentHourlyRequest ||
-        targetDate !== selectedDate.value
-      ) {
-        return;
-      }
-
-      hourlyReports.value = normalized;
-
-      // Store in cache with timestamp
-      const cacheData = {
-        data: normalized,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(cacheKey(targetDate), JSON.stringify(cacheData));
-    }
-  } catch (err) {
-    // Only set error if this is still the current request
-    if (
-      requestId === currentHourlyRequest &&
-      targetDate === selectedDate.value
-    ) {
-      errorHourly.value = String(err);
-    }
-  } finally {
-    // Only clear loading if this is still the current request
-    if (
-      requestId === currentHourlyRequest &&
-      targetDate === selectedDate.value
-    ) {
-      loadingHourly.value = false;
-    }
-  }
-}
-
-// Debounced data loading to prevent rapid API calls
 watch(selectedDate, () => {
-  if (dateChangeTimer) {
-    clearTimeout(dateChangeTimer);
-  }
-
-  // Immediately clear old data to prevent showing stale data
-  shiftReports.value = [];
-  hourlyReports.value = [];
-  errorShift.value = null;
-  errorHourly.value = null;
-
-  dateChangeTimer = setTimeout(() => {
-    loadShiftReports();
-    if (activeTab.value === "hourly") {
-      loadHourlyReports();
-    }
-  }, 150); // 150ms debounce
+  loadShift();
+  if (activeTab.value === "hourly") loadHourly();
 });
 
-// Load hourly data only when tab is switched
-watch(activeTab, (newTab) => {
-  if (newTab === "hourly" && hourlyReports.value.length === 0) {
-    loadHourlyReports();
-  }
+watch(activeTab, (v) => {
+  if (v === "hourly" && hourlyReports.value.length === 0) loadHourly();
 });
 
-// CSV Export
-function escapeCSV(value: any): string {
-  if (value === null || value === undefined) return "";
-  const str = String(value);
-  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-    return `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
-}
-
-function generateShiftCSV(): string {
-  const headers = [
-    "LVMDP",
-    "Tanggal",
-    "Shift",
-    "Total kWh",
-    "Avg Power (kW)",
-    "Avg Current (A)",
-    "Power Factor",
-  ];
-
-  const rows = shiftReports.value.map((row) => [
-    `LVMDP ${panelId}`,
-    formatDate(selectedDate.value),
-    `Shift ${row.shift}`,
-    row.totalKwh,
-    row.avgKwh,
-    row.iavg,
-    row.cosPhi,
-  ]);
-
-  return [
-    headers.map(escapeCSV).join(","),
-    ...rows.map((row) => row.map(escapeCSV).join(",")),
-  ].join("\n");
-}
-
-function generateHourlyCSV(): string {
-  const headers = [
-    "LVMDP",
-    "Tanggal",
-    "Waktu",
-    "Total kWh",
-    "Avg Power (kW)",
-    "Power Factor",
-    "Avg Current (A)",
-  ];
-
-  const rows = hourlyReports.value.map((row) => [
-    `LVMDP ${panelId}`,
-    formatDate(selectedDate.value),
-    formatTime(row.hour),
-    row.totalKwh,
-    row.avgKwh,
-    row.cosPhi,
-    row.avgCurrent,
-  ]);
-
-  return [
-    headers.map(escapeCSV).join(","),
-    ...rows.map((row) => row.map(escapeCSV).join(",")),
-  ].join("\n");
-}
-
-function downloadCSV(content: string, filename: string) {
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", filename);
-  link.style.visibility = "hidden";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-async function downloadByDate() {
-  // Ensure both shift and hourly data are loaded
-  await Promise.all([
-    shiftReports.value.length === 0 ? loadShiftReports() : Promise.resolve(),
-    hourlyReports.value.length === 0 ? loadHourlyReports() : Promise.resolve(),
-  ]);
-
-  // Export shift report first
-  exportShiftReportByDate(panelId, selectedDate.value, shiftReports.value);
-
-  // Then export hourly report with a small delay to prevent browser blocking multiple downloads
-  setTimeout(() => {
-    exportHourlyReportByDate(panelId, selectedDate.value, hourlyReports.value);
-  }, 300);
-
-  showDownloadMenu.value = false;
-}
-
-async function downloadByMonth() {
-  const [year, month] = selectedDate.value.split("-");
-  const monthFormatted = `${year}-${month}`;
-
-  try {
-    const allData = await getDailyReportAll(panelId);
-    if (!Array.isArray(allData)) return;
-
-    const monthData = allData.filter((row) => {
-      const rowDate = row.date || row.reportDate;
-      if (!rowDate) return false;
-      return rowDate.startsWith(monthFormatted);
-    });
-
-    if (monthData.length === 0) return;
-
-    exportMonthlyReport(panelId, monthData, monthFormatted);
-  } catch (err) {
-    console.error("Error downloading month data:", err);
-  } finally {
-    showDownloadMenu.value = false;
-  }
-}
-
-onMounted(() => {
-  loadShiftReports();
-  // Only load hourly if tab is active (lazy loading)
-  if (activeTab.value === "hourly") {
-    loadHourlyReports();
-  }
-  window.addEventListener("click", handleWindowClick);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("click", handleWindowClick);
-});
+onMounted(loadShift);
 </script>
 
 <template>
-  <div class="space-y-6 animate-in fade-in duration-300 w-full">
-    <!-- Header with Back Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div class="w-full min-h-screen px-6 py-6 text-slate-200">
+    <!-- HEADER -->
+    <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-4">
-        <!-- Back Button -->
-        <button
-          @click="goBack"
-          class="p-2 rounded-full transition-all text-slate-400 hover:text-white hover:scale-110 duration-200 flex-shrink-0"
-          title="Back to LVMDP Panel"
-        >
-          <ArrowLeft size="24" />
+        <button @click="goBack" class="text-slate-400 hover:text-white">
+          <ArrowLeft />
         </button>
         <div>
-          <h1 class="text-2xl font-bold text-white flex items-center gap-3 tracking-tight">
-            Daily Report
-          </h1>
-          <p class="text-slate-400 text-sm font-medium mt-0.5">
-            LVMDP {{ panelId }}
-          </p>
+          <h1 class="text-xl font-bold">Daily Report</h1>
+          <p class="text-sm text-slate-400">LVMDP {{ panelId }}</p>
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3 self-start sm:self-auto">
-        <!-- Date Picker -->
-        <div class="flex items-center gap-2">
-          <label class="text-slate-400 text-sm font-medium">Date:</label>
-          <input
-            ref="dateInput"
-            v-model="selectedDate"
-            type="date"
-            :min="minDate"
-            :max="maxDate"
-            class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none transition-colors"
-          />
-        </div>
-
-        <!-- Download Button -->
-        <div class="relative" @click.stop>
-          <button
-            type="button"
-            @click="toggleDownloadMenu"
-            class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-500 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm hover:shadow-md"
-          >
-            <Download size="16" />
-            Download
-          </button>
-
-          <!-- Dropdown Menu -->
-          <div v-if="showDownloadMenu" class="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50">
-            <button
-              class="block w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-              @click="downloadByDate"
-            >
-              <HardDriveUpload class="inline-block w-4 h-4 mr-2" />
-              By Date
-            </button>
-            <button
-              class="block w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border-t border-slate-700"
-              @click="downloadByMonth"
-            >
-              <FileChartColumn class="inline-block w-4 h-4 mr-2" />
-              By Month
-            </button>
-          </div>
-        </div>
-      </div>
+      <input
+        type="date"
+        v-model="selectedDate"
+        class="bg-slate-800 border border-slate-600 rounded px-3 py-2"
+      />
     </div>
 
-    <!-- Main Content -->
-    <div class="bg-slate-900 border border-slate-700 rounded-lg shadow-lg overflow-hidden">
-      <!-- Tabs -->
-      <div class="border-b border-slate-700 bg-slate-800/50">
-        <div class="flex">
-          <button
-            @click="activeTab = 'shift'"
-            :class="[
-              'px-6 py-3 text-sm font-bold flex items-center gap-2 transition-all border-b-2',
-              activeTab === 'shift'
-                ? 'border-blue-500 text-blue-400 bg-slate-800'
-                : 'border-transparent text-slate-400 hover:text-white'
-            ]"
-          >
-            <ClockFading class="w-4 h-4" />
-            Shift Reports
-          </button>
+    <!-- TABS -->
+    <div class="flex gap-4 border-b border-slate-700 mb-6">
+      <button
+        class="pb-2 font-semibold"
+        :class="activeTab === 'shift' ? 'text-blue-400 border-b-2 border-blue-500' : 'text-slate-400'"
+        @click="activeTab = 'shift'"
+      >
+        <ClockFading class="inline w-4 h-4 mr-1" /> Shift
+      </button>
 
-          <button
-            @click="activeTab = 'hourly'"
-            :class="[
-              'px-6 py-3 text-sm font-bold flex items-center gap-2 transition-all border-b-2',
-              activeTab === 'hourly'
-                ? 'border-blue-500 text-blue-400 bg-slate-800'
-                : 'border-transparent text-slate-400 hover:text-white'
-            ]"
-          >
-            <Clock class="w-4 h-4" />
-            Hourly Reports
-          </button>
-        </div>
-      </div>
-
-      <!-- Content -->
-      <div class="p-6">
-        <!-- Shift Reports Tab -->
-        <div v-if="activeTab === 'shift'">
-          <div v-if="loadingShift" class="text-center py-8 text-slate-400">
-            Loading shift data...
-          </div>
-          <div v-else-if="errorShift" class="text-center py-8 text-red-400">
-            {{ errorShift }}
-          </div>
-          <div v-else-if="shiftReports.length === 0" class="text-center py-8 text-slate-400">
-            No shift data available for this date
-          </div>
-          <div v-else>
-            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <ClockFading class="w-5 h-5" />
-              Detailed Shift Data
-            </h3>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="bg-blue-600 text-white">
-                    <th class="px-4 py-3 text-left font-bold">SHIFT</th>
-                    <th class="px-4 py-3 text-left font-bold">TOTAL KWH</th>
-                    <th class="px-4 py-3 text-left font-bold">AVG POWER (KW)</th>
-                    <th class="px-4 py-3 text-left font-bold">AVG CURRENT (A)</th>
-                    <th class="px-4 py-3 text-left font-bold">MIN CURRENT (A)</th>
-                    <th class="px-4 py-3 text-left font-bold">MAX CURRENT (A)</th>
-                    <th class="px-4 py-3 text-left font-bold">LOAD (%)</th>
-                    <th class="px-4 py-3 text-left font-bold">POWER FACTOR</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(report, idx) in shiftReports" :key="idx" class="border-t border-slate-700 hover:bg-slate-800 transition-colors">
-                    <td class="px-4 py-3 font-bold text-white">SHIFT {{ report.shift }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.totalKwh) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.avgKwh) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.iavg) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.imin) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.imax) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber((report.iavg / 2500) * 100) }}%</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.cosPhi) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hourly Reports Tab -->
-        <div v-if="activeTab === 'hourly'">
-          <div v-if="loadingHourly" class="text-center py-8 text-slate-400">
-            Loading hourly data...
-          </div>
-          <div v-else-if="errorHourly" class="text-center py-8 text-red-400">
-            {{ errorHourly }}
-          </div>
-          <div v-else-if="hourlyReports.length === 0" class="text-center py-8 text-slate-400">
-            No hourly data available for this date
-          </div>
-          <div v-else>
-            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Clock class="w-5 h-5" />
-              Hourly Data
-            </h3>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="bg-blue-600 text-white">
-                    <th class="px-4 py-3 text-left font-bold">WAKTU</th>
-                    <th class="px-4 py-3 text-left font-bold">TOTAL KWH</th>
-                    <th class="px-4 py-3 text-left font-bold">AVG POWER (KW)</th>
-                    <th class="px-4 py-3 text-left font-bold">POWER FACTOR</th>
-                    <th class="px-4 py-3 text-left font-bold">AVG CURRENT (A)</th>
-                    <th class="px-4 py-3 text-left font-bold">MIN CURRENT (A)</th>
-                    <th class="px-4 py-3 text-left font-bold">MAX CURRENT (A)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(report, idx) in hourlyReports" :key="idx" class="border-t border-slate-700 hover:bg-slate-800 transition-colors">
-                    <td class="px-4 py-3 font-bold text-white">{{ formatTime(report.hour) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.totalKwh) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.avgKwh) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.cosPhi) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.avgCurrent) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.minCurrent || 0) }}</td>
-                    <td class="px-4 py-3 text-slate-300">{{ formatNumber(report.maxCurrent || 0) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+      <button
+        class="pb-2 font-semibold"
+        :class="activeTab === 'hourly' ? 'text-blue-400 border-b-2 border-blue-500' : 'text-slate-400'"
+        @click="activeTab = 'hourly'"
+      >
+        <Clock class="inline w-4 h-4 mr-1" /> Hourly
+      </button>
     </div>
-  </div>
-</template>
 
-<style scoped>
-/* All styles handled by Tailwind CSS */
-</style>
-            <!-- Back Button -->
-            <button
-              @click="goBack"
-              class="back-button"
-              title="Back to LVMDP Panel"
-            >
-              <ArrowLeft class="w-5 h-5" />
-            </button>
+    <!-- TABLE -->
+    <div v-if="loading" class="text-center py-10 text-slate-400">
+      Loading...
+    </div>
 
-            <div>
-              <h1 class="page-title">Daily Report</h1>
-              <p class="page-subtitle">LVMDP {{ panelId }}</p>
-            </div>
-          </div>
-
-          <div class="header-controls">
-            <!-- DATE PICKER -->
-            <div class="date-picker-group" @click="openDatePicker">
-              <span class="date-label">Select Date:</span>
-
-              <div class="date-input-wrapper">
-                <input
-                  ref="dateInput"
-                  v-model="selectedDate"
-                  type="date"
-                  :min="minDate"
-                  :max="maxDate"
-                  class="date-input"
-                />
-              </div>
-
-              <span class="date-display">
-                {{ formatDate(selectedDate) }}
-              </span>
-            </div>
-
-            <!-- Download Dropdown (click toggle) -->
-            <div class="download-menu" @click.stop>
-              <button
-                type="button"
-                class="download-button"
-                title="Download as CSV"
-                @click="toggleDownloadMenu"
-              >
-                <Download class="download-icon-svg" />
-                <span class="download-text">Download</span>
-              </button>
-
-              <div v-if="showDownloadMenu" class="download-dropdown">
-                <button
-                  class="dropdown-item"
-                  @click="downloadByDate"
-                  title="Download data for selected date"
-                >
-                  <span class="icon">
-                    <CalendarSearch class="icon-svg" />
-                  </span>
-                  <span>By Date</span>
-                </button>
-                <button
-                  class="dropdown-item"
-                  @click="downloadByMonth"
-                  title="Download data for selected month"
-                >
-                  <span class="icon">
-                    <HardDriveUpload class="icon-svg" />
-                  </span>
-                  <span>By Month</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tabs -->
-      <div class="tabs-header">
-        <button
-          v-for="tab in ['shift', 'hourly']"
-          :key="tab"
-          :class="['tab-button', { active: activeTab === tab }]"
-          @click="activeTab = tab as any"
+    <table v-else class="w-full text-sm border border-slate-700">
+      <thead class="bg-blue-600 text-white">
+        <tr>
+          <th class="px-4 py-2">SHIFT</th>
+          <th class="px-4 py-2">TOTAL KWH</th>
+          <th class="px-4 py-2">AVG POWER</th>
+          <th class="px-4 py-2">AVG CURRENT</th>
+          <th class="px-4 py-2">MIN</th>
+          <th class="px-4 py-2">MAX</th>
+          <th class="px-4 py-2">PF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="r in activeTab === 'shift' ? shiftReports : hourlyReports"
+          :key="r.shift || r.hour"
+          class="border-t border-slate-700"
         >
-          <FileChartColumn v-if="tab === 'shift'" class="tab-icon-svg" />
-          <ClockFading v-else class="tab-icon-svg" />
-          {{ tab === "shift" ? "Shift Reports" : "Hourly Reports" }}
-        </button>
-      </div>
-
-      <!-- Content -->
-      <div class="content-section">
-        <!-- Shift Reports Tab -->
-        <div v-if="activeTab === 'shift'" class="tab-content">
-          <div v-if="loadingShift" class="loading">Loading shift data...</div>
-          <div v-else-if="errorShift" class="error">{{ errorShift }}</div>
-          <div v-else-if="shiftReports.length === 0" class="empty-state">
-            <p>No shift data available for this date</p>
-          </div>
-          <div v-else>
-            <!-- Detailed Table -->
-            <div class="shift-table-wrapper">
-              <h3 class="table-title">Detailed Shift Data</h3>
-              <table class="shift-table">
-                <thead>
-                  <tr>
-                    <th>Shift</th>
-                    <th>Total kWh</th>
-                    <th>Avg Power (kW)</th>
-                    <th>Avg Current (A)</th>
-                    <th>Min Current (A)</th>
-                    <th>Max Current (A)</th>
-                    <th>Load (%)</th>
-                    <th>Power Factor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(row, idx) in shiftReports"
-                    :key="idx"
-                    class="shift-row"
-                  >
-                    <td class="shift-name">SHIFT {{ row.shift }}</td>
-                    <td class="numeric">{{ formatNumber(row.totalKwh) }}</td>
-                    <td class="numeric">{{ formatNumber(row.avgKwh) }}</td>
-                    <td class="numeric">{{ formatNumber(row.iavg) }}</td>
-                    <td class="numeric">{{ formatNumber(row.imin) }}</td>
-                    <td class="numeric">{{ formatNumber(row.imax) }}</td>
-                    <td class="numeric load-percentage">
-                      {{ formatNumber((row.iavg / 2500) * 100) }}%
-                    </td>
-                    <td class="numeric power-factor">
-                      {{ formatNumber(row.cosPhi) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hourly Reports Tab -->
-        <div v-if="activeTab === 'hourly'" class="tab-content">
-          <div v-if="loadingHourly" class="loading">Loading hourly data...</div>
-          <div v-else-if="errorHourly" class="error">{{ errorHourly }}</div>
-          <div v-else-if="hourlyReports.length === 0" class="empty-state">
-            <p>No hourly data available for this date</p>
-          </div>
-          <div v-else class="hourly-table-wrapper">
-            <table class="hourly-table">
-              <thead>
-                <tr>
-                  <th>Waktu</th>
-                  <th>Total kWh</th>
-                  <th>Avg Power (kW)</th>
-                  <th>Avg Current (A)</th>
-                  <th>Min Current (A)</th>
-                  <th>Max Current (A)</th>
-                  <th>Load (%)</th>
-                  <th>Power Factor</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="(row, idx) in hourlyReports"
-                  :key="idx"
-                  class="hourly-row"
-                >
-                  <td class="time">{{ formatTime(row.hour) }}</td>
-                  <td class="numeric">{{ formatNumber(row.totalKwh) }}</td>
-                  <td class="numeric">{{ formatNumber(row.avgKwh) }}</td>
-                  <td class="numeric">{{ formatNumber(row.avgCurrent) }}</td>
-                  <td class="numeric">
-                    {{ formatNumber(row.minCurrent || 0) }}
-                  </td>
-                  <td class="numeric">
-                    {{ formatNumber(row.maxCurrent || 0) }}
-                  </td>
-                  <td class="numeric">
-                    {{ formatNumber((row.avgCurrent / 2500) * 100) }}%
-                  </td>
-                  <td class="numeric power-factor">
-                    {{ formatNumber(row.cosPhi) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Cache Info -->
-      <div class="cache-info">
-        <p class="cache-text">
-          <span class="cache-icon">💾</span>
-          Data is automatically loaded
-        </p>
-      </div>
-    </div>
+          <td class="px-4 py-2 font-bold">
+            {{ r.shift ? `SHIFT ${r.shift}` : r.hour }}
+          </td>
+          <td class="px-4 py-2">{{ format(r.total || r.totalKwh) }}</td>
+          <td class="px-4 py-2">{{ format(r.power || r.avgKwh) }}</td>
+          <td class="px-4 py-2">{{ format(r.avgI || r.avgCurrent) }}</td>
+          <td class="px-4 py-2">{{ format(r.minI || r.minCurrent) }}</td>
+          <td class="px-4 py-2">{{ format(r.maxI || r.maxCurrent) }}</td>
+          <td class="px-4 py-2">{{ format(r.pf || r.cosPhi) }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
 <style scoped>
-.report-wrapper {
-  width: 100%;
-  background: #0f172a;
-  min-height: 100vh;
-  padding: 24px 16px;
-}
-
-.report-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-}
-
-/* Header Section */
-.header-section {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  padding: 32px 24px;
-  color: white;
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-/* Back Button */
-.back-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.back-button:hover {
-  color: #ffffff;
-  background: rgba(100, 116, 139, 0.1);
-}
-
-.back-button:active {
-  transform: scale(0.95);
-}
-
-.page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0 0 4px 0;
-  letter-spacing: -0.5px;
-}
-
-.page-subtitle {
-  font-size: 0.95rem;
-  opacity: 0.9;
-  margin: 0;
-}
-
-/* Header Controls */
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-/* Date picker group */
-.date-picker-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  cursor: pointer;
-}
-
-.date-label {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-/* Hanya kotak tanggal yang dibungkus */
-.date-input-wrapper {
-  padding: 2px;
-  border-radius: 10px;
-  background: rgba(15, 23, 42, 0.3);
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  transition: all 0.2s ease;
-}
-
-.date-picker-group:hover .date-input-wrapper {
-  background: rgba(15, 23, 42, 0.5);
-  border-color: rgba(248, 250, 252, 0.9);
-}
-
-.date-input {
-  border: none;
-  background: transparent;
-  color: #f9fafb;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.date-input::-webkit-calendar-picker-indicator {
-  filter: brightness(0) invert(1);
-  cursor: pointer;
-}
-
-.date-input:focus {
-  outline: none;
-}
-
-.date-display {
-  font-size: 0.9rem;
-  opacity: 0.9;
-  font-weight: 500;
-}
-
-/* Download Menu */
-.download-menu {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.download-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-radius: 8px;
-  color: white;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.download-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.download-icon-svg {
-  width: 18px;
-  height: 18px;
-}
-
-.download-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  margin-top: 8px;
-  min-width: 190px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  z-index: 100;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: none;
-  border: none;
-  color: #f1f5f9;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-  font-size: 0.95rem;
-}
-
-.dropdown-item:hover {
-  background: #334155;
-  color: #0ea5e9;
-}
-
-.dropdown-item:first-child {
-  border-bottom: 1px solid #334155;
-}
-
-.dropdown-item .icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.icon-svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* Tabs */
-.tabs-header {
-  display: flex;
-  border-bottom: 2px solid #334155;
-  background: #0f172a;
-}
-
-.tab-button {
-  flex: 1;
-  padding: 16px 24px;
-  background: none;
-  border: none;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  position: relative;
-}
-
-.tab-button:hover {
-  color: #0ea5e9;
-  background: rgba(14, 165, 233, 0.05);
-}
-
-.tab-button.active {
-  color: #0ea5e9;
-}
-
-.tab-button.active::after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(to right, #0ea5e9, #06b6d4);
-}
-
-.tab-icon-svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* Content Section */
-.content-section {
-  padding: 32px 24px;
-  min-height: 400px;
-}
-
-.tab-content {
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Loading & Error States */
-.loading,
-.error {
-  text-align: center;
-  padding: 40px 24px;
-  font-size: 1rem;
-  color: #94a3b8;
-}
-
-.error {
-  color: #dc2626;
-  background: #fee2e2;
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 24px;
-  color: #94a3b8;
-  font-size: 1.05rem;
-  background: #0f172a;
-  border-radius: 16px;
-  border: 2px dashed #334155;
-}
-
-/* Tables */
-.shift-table-wrapper,
-.hourly-table-wrapper {
-  overflow-x: auto;
-  overflow-y: hidden;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
-}
-
-.shift-table-wrapper:hover,
-.hourly-table-wrapper:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-}
-
-.shift-table,
-.hourly-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0;
-}
-
-.shift-table thead,
-.hourly-table thead {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  border-bottom: 3px solid #0891b2;
-}
-
-.shift-table th,
-.hourly-table th {
-  padding: 18px 20px;
-  text-align: center;
-  font-weight: 700;
-  color: white;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  position: relative;
-}
-
-.shift-table th::after,
-.hourly-table th::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 20%;
-  right: 20%;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.shift-row,
-.hourly-row {
-  border-bottom: 1px solid #334155;
-  transition: background 0.2s ease, border-left 0.2s ease, box-shadow 0.2s ease;
-  background: #1e293b;
-  border-left: 4px solid transparent;
-}
-
-.shift-row:hover,
-.hourly-row:hover {
-  background: linear-gradient(135deg, #1e3a4f 0%, #1e4559 100%);
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
-  border-left: 4px solid #0ea5e9;
-}
-
-.shift-row:last-child,
-.hourly-row:last-child {
-  border-bottom: none;
-}
-
-.shift-table td,
-.hourly-table td {
-  padding: 16px 20px;
-  color: #f1f5f9;
-  font-size: 1rem;
-  text-align: center;
-  transition: all 0.2s ease;
-}
-
-.numeric {
-  text-align: center;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: #0ea5e9;
-  font-size: 1.05rem;
-}
-
-.shift-row:hover .numeric,
-.hourly-row:hover .numeric {
-  color: #0284c7;
-}
-
-.power-factor {
-  color: #10b981;
-  font-weight: 700;
-}
-
-.shift-row:hover .power-factor,
-.hourly-row:hover .power-factor {
-  color: #059669;
-}
-
-.load-percentage {
-  color: #f59e0b;
-  font-weight: 800;
-}
-
-.shift-row:hover .load-percentage,
-.hourly-row:hover .load-percentage {
-  color: #d97706;
-}
-
-.shift-name,
-.time {
-  font-weight: 700;
-  color: #f1f5f9;
-  font-size: 1.05rem;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  padding: 12px 16px !important;
-  border-radius: 8px;
-}
-
-.shift-row:hover .shift-name,
-.hourly-row:hover .time {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
-}
-
-/* Cache Info */
-.cache-info {
-  padding: 12px 24px;
-  background: #0f172a;
-  border-top: 1px solid #334155;
-  text-align: center;
-}
-
-.cache-text {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #0284c7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.cache-icon {
-  font-size: 1rem;
-}
-
-.table-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #f1f5f9;
-  margin: 0 0 16px 0;
-  padding: 0 4px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .report-wrapper {
-    padding: 12px;
-  }
-
-  .header-section {
-    padding: 20px 16px;
-  }
-
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
-  }
-
-  .header-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .date-picker-group {
-    flex: 1;
-  }
-
-  .content-section {
-    padding: 20px 16px;
-  }
-
-  .shift-table,
-  .hourly-table {
-    font-size: 0.85rem;
-  }
-
-  .shift-table th,
-  .hourly-table th {
-    padding: 12px 8px;
-    font-size: 0.8rem;
-  }
-
-  .shift-table td,
-  .hourly-table td {
-    padding: 10px 8px;
-  }
-
-  .tabs-header {
-    overflow-x: auto;
-  }
-
-  .tab-button {
-    padding: 12px 16px;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-title {
-    font-size: 1.25rem;
-  }
-
-  .date-display {
-    display: none;
-  }
-
-  .numeric {
-    font-size: 0.85rem;
-  }
-}
+/* intentionally minimal */
 </style>
