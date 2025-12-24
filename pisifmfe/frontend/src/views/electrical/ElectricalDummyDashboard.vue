@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import axios from "axios";
 import { Zap, Activity, TrendingUp } from "lucide-vue-next";
+
+const API_URL = "http://localhost:2000/api";
 
 const route = useRoute();
 const plantId = computed(() => (route.params.plantId as string) || "CIKUPA");
@@ -75,23 +78,50 @@ const getDummyTrend = (seed: number) => {
   return base.map((value, index) => value + ((seed + index * 3) % 25) - 12);
 };
 
+const reactivePower = (kva: number, kw: number) =>
+  Math.sqrt(Math.max(kva * kva - kw * kw, 0));
+
+const trendFromTotalEnergy = (totalEnergy: number) => {
+  if (!totalEnergy || Number.isNaN(totalEnergy)) {
+    return [320, 300, 280, 310, 330, 340, 345, 335];
+  }
+
+  const base = totalEnergy / 8;
+  return Array.from({ length: 8 }, (_, idx) => {
+    const variance = 0.8 + idx * 0.05 + Math.sin(idx) * 0.04;
+    return Number((base * variance).toFixed(2));
+  });
+};
+
+const realPlantData = ref<any | null>(null);
+const loadingReal = ref(false);
+const loadError = ref("");
+
 const plantData = computed(() => {
   if (isCikupa.value) {
-    return {
-      plantTitle: "Power Monitoring System",
-      site: "BDC 1",
-      capacity: 514.8,
-      loadPercent: 33.46,
-      currentLoad: 1853.9,
-      summaryCards: [
-        { label: "Load", value: 51.1, unit: "%", accent: "#22c55e" },
-        { label: "PF (cos φ)", value: 0.87, unit: "cos φ", accent: "#14b8a6" },
-        { label: "Real Power (P)", value: 1853.9, unit: "kW", accent: "#38bdf8" },
-        { label: "Reactive Power (Q)", value: 671.8, unit: "kVar", accent: "#fbbf24" },
-      ],
-      energyTrend: [320, 300, 280, 310, 330, 340, 345, 335],
-      panels: basePanels,
-    };
+    return (
+      realPlantData.value || {
+        plantTitle: "Power Monitoring System",
+        site: "BDC 1",
+        capacity: 5540,
+        loadPercent: 0,
+        currentLoad: 0,
+        summaryCards: [
+          { label: "Load", value: 0, unit: "%", accent: "#22c55e" },
+          { label: "PF (cos φ)", value: 0, unit: "cos φ", accent: "#14b8a6" },
+          { label: "Real Power (P)", value: 0, unit: "kW", accent: "#38bdf8" },
+          { label: "Reactive Power (Q)", value: 0, unit: "kVar", accent: "#fbbf24" },
+        ],
+        energyTrend: Array(8).fill(0),
+        panels: basePanels.map((panel) => ({
+          ...panel,
+          totalKwh: 0,
+          activeEnergy: 0,
+          pf: 0,
+          reactive: 0,
+        })),
+      }
+    );
   }
 
   const seed =
@@ -135,6 +165,124 @@ const plantData = computed(() => {
     panels: createDummyPanels(seed),
   };
 });
+
+const fetchRealPlantData = async () => {
+  if (!isCikupa.value) {
+    realPlantData.value = null;
+    return;
+  }
+
+  loadingReal.value = true;
+  loadError.value = "";
+
+  try {
+    const [dashboardRes, summaryRes] = await Promise.all([
+      axios.get(`${API_URL}/dashboard/plant/${plantId.value}`),
+      axios.get(`${API_URL}/summary/electrical`),
+    ]);
+
+    const dashboard = dashboardRes.data || {};
+    const summary = summaryRes.data?.data;
+
+    const summaryPanels = (summary?.panels || []).map((panel: any) => ({
+      name: panel.name,
+      kva: panel.kva ?? 0,
+      realPower: panel.realPower ?? 0,
+      cosPhi: panel.cosPhi ?? 0,
+      status: panel.status,
+    }));
+
+    const lvmdpPanels = dashboard.lvmdpPanels || [];
+    const totalEnergy = Number(dashboard.kpis?.totalEnergy || 0);
+    const totalRealPower = summaryPanels.reduce(
+      (sum, panel) => sum + (Number(panel.realPower) || 0),
+      0
+    );
+    const totalKva =
+      Number(summary?.totalKVA || 0) ||
+      summaryPanels.reduce((sum, panel) => sum + (Number(panel.kva) || 0), 0);
+    const capacity = Number(summary?.installedCapacity || 5540);
+    const loadPercent =
+      Number(summary?.loadPercentage) ||
+      (capacity ? (totalKva / capacity) * 100 : 0);
+
+    const avgCosPhi =
+      summaryPanels.length > 0
+        ?
+          summaryPanels.reduce((sum, panel) => sum + (Number(panel.cosPhi) || 0), 0) /
+          summaryPanels.length
+        : 0;
+
+    const mergedPanels = summaryPanels.map((panel) => {
+      const matched = lvmdpPanels.find(
+        (item: any) => item.panelName?.toLowerCase() === panel.name.toLowerCase()
+      );
+      const totalKwh = matched
+        ? Number(matched.totalKwh ?? matched.total_energy ?? 0)
+        : 0;
+      return {
+        title: panel.name,
+        totalKwh,
+        activeEnergy: totalKwh,
+        pf: Number(panel.cosPhi) || 0,
+        reactive: reactivePower(Number(panel.kva) || 0, Number(panel.realPower) || 0),
+        status: (panel.status || "online") === "online" ? "Online" : "Offline",
+      };
+    });
+
+    const panelList = mergedPanels.length ? mergedPanels : basePanels;
+
+    realPlantData.value = {
+      plantTitle: "Power Monitoring System",
+      site: "BDC 1",
+      capacity,
+      loadPercent,
+      currentLoad: totalKva || capacity * (loadPercent / 100),
+      summaryCards: [
+        { label: "Load", value: loadPercent, unit: "%", accent: "#22c55e" },
+        {
+          label: "PF (cos φ)",
+          value: avgCosPhi || 0,
+          unit: "cos φ",
+          accent: "#14b8a6",
+        },
+        {
+          label: "Real Power (P)",
+          value: totalRealPower || totalEnergy,
+          unit: "kW",
+          accent: "#38bdf8",
+        },
+        {
+          label: "Reactive Power (Q)",
+          value: reactivePower(totalKva || 0, totalRealPower || 0),
+          unit: "kVar",
+          accent: "#fbbf24",
+        },
+      ],
+      energyTrend: trendFromTotalEnergy(totalEnergy || totalRealPower || totalKva),
+      panels: panelList,
+    };
+  } catch (error: any) {
+    console.error("Failed to load Cikupa electrical data", error);
+    loadError.value =
+      error?.response?.data?.message || error.message || "Failed to load real data";
+  } finally {
+    loadingReal.value = false;
+  }
+};
+
+onMounted(fetchRealPlantData);
+
+watch(
+  () => plantId.value,
+  () => {
+    if (isCikupa.value) {
+      fetchRealPlantData();
+    } else {
+      realPlantData.value = null;
+    }
+  }
+);
 
 const chartWidth = 320;
 const chartHeight = 140;
