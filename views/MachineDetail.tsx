@@ -5,18 +5,16 @@ import { Machine, UserRole, MachineType, PlantCode, BagmakerDetails, WeigherDeta
 import { Card, StatusBadge, MetricCard, formatNumber } from '../components/SharedComponents';
 import { isDataItemVisible } from '../services/visibilityStore';
 import { maintenanceService } from '../services/maintenanceService';
-import { plantService as ps } from '../services/plantService'; // Using correct import path
+import { plantService as ps } from '../services/plantService'; 
 import { 
     Activity, Zap, AlertTriangle, ArrowLeft, 
-    ClipboardPen, Wrench, X, CheckCircle2, 
-    Wind, Droplets, Cloud, Box, Clock, Camera, Plus, History, Save, FileText, Loader2,
-    Scale, Package, Film, Thermometer, Gauge, TrendingUp, Trash2, ScanSearch, Printer, Archive, Scissors, GaugeCircle, Server, Eye,
-    // FIX: Add missing icons for alarm tab
-    AlertOctagon, Info, AlertCircle, LayoutDashboard
+    Wrench, CheckCircle2, 
+    Wind, Droplets, Cloud, Box, Clock, Save, FileText, Loader2,
+    Thermometer, Gauge, TrendingUp, ScanSearch, Scissors, LayoutDashboard, Settings2, Waves, Droplet, Layers,
+    Target as TargetIcon, Power, Package, ChevronRight, ActivitySquare
 } from 'lucide-react';
 import { 
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-    BarChart, Bar, AreaChart, Area, Legend, PieChart, Pie, Cell
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Legend
 } from 'recharts';
 
 interface MachineDetailProps {
@@ -38,6 +36,268 @@ const ALL_TABS_BASE = [
     { key: 'Maintenance', visibilityKey: 'MACHINE_TAB_MAINTENANCE' }
 ];
 
+// --- Professional Corporate Instrument Component ---
+const Instrument: React.FC<{ 
+    label: string; 
+    value: string | number; 
+    unit?: string; 
+    stpt?: string | number; 
+    color?: string; 
+    status?: string;
+    subValue?: string;
+    compact?: boolean;
+}> = ({ label, value, unit, stpt, color = "text-blue-400", status, subValue, compact = false }) => (
+    <div className={`bg-slate-900/60 border border-slate-800 rounded-lg transition-all hover:bg-slate-800/80 ${compact ? 'p-2' : 'p-3'}`}>
+        <div className="flex justify-between items-start mb-1.5">
+            <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider truncate mr-2">{label}</span>
+            {status && (
+                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase shrink-0 ${
+                    ['AUTO', 'ON', 'ENABLED', 'FRESH'].includes(status) 
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+                    : 'bg-slate-700/50 text-slate-400 border-slate-600'
+                }`}>
+                    {status}
+                </span>
+            )}
+        </div>
+        <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline gap-1">
+                <span className={`text-xl font-mono font-bold tracking-tight drop-shadow-sm ${color}`}>{value}</span>
+                {unit && <span className="text-[9px] font-bold text-slate-400 uppercase">{unit}</span>}
+            </div>
+            {subValue && <span className="text-[10px] font-mono font-bold text-slate-300">{subValue}</span>}
+        </div>
+        {stpt !== undefined && (
+            <div className="mt-1.5 pt-1.5 border-t border-slate-800/50 flex justify-between items-center">
+                <span className="text-[8px] font-bold text-slate-600 uppercase">Setpoint</span>
+                <span className="text-[10px] font-mono font-bold text-slate-400">{stpt}</span>
+            </div>
+        )}
+    </div>
+);
+
+// --- PC39 PROCESS DASHBOARD (EXACT HMI REPLICA RE-REDESIGN) ---
+const PC39FryerDashboard: React.FC<{ machine: Machine }> = ({ machine }) => {
+    return (
+        <div className="space-y-4 animate-in fade-in duration-500">
+            {/* 1. COMPACT TOP HEADER */}
+            <div className="bg-[#0f172a] border border-slate-800 rounded-xl px-6 py-4 shadow-2xl flex flex-wrap items-center justify-between gap-6">
+                <div className="flex items-center gap-8">
+                    <div>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Product</span>
+                        <span className="text-lg font-black text-white tracking-widest">WAVY</span>
+                    </div>
+                    <div className="h-10 w-px bg-slate-800"></div>
+                    <div>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Current Login</span>
+                        <span className="text-sm font-bold text-blue-400">OPERATOR</span>
+                    </div>
+                </div>
+                
+                <div className="flex-1 flex justify-center">
+                    <div className="flex flex-col items-center">
+                        <div className="px-6 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md mb-1">
+                            <span className="text-sm font-black text-emerald-400 tracking-[0.2em] flex items-center gap-2">
+                                <Power size={14}/> NORMAL MODE
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">PLC Comms OK</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-6">
+                    <div className="text-right">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Status</span>
+                        <div className="flex items-center gap-3">
+                            <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/30 text-[9px] font-black uppercase tracking-wider">MOISTURE AUTO</span>
+                            <span className="text-2xl font-mono font-bold text-blue-400">1.94</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 2. THREE-COLUMN INDUSTRIAL GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                
+                {/* COLUMN 1: PREP / SLICING */}
+                <div className="space-y-4">
+                    <div className="bg-[#0f172a] border border-slate-800 border-t-4 border-t-emerald-500 rounded-xl p-4 shadow-lg flex flex-col h-full">
+                        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-800/50">
+                            <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                                <Layers size={14} className="text-emerald-500" /> Prep / Slicing Systems
+                            </h3>
+                        </div>
+                        <div className="space-y-2.5">
+                            <Instrument label="Feed From Crates" value="ON" status="ON" color="text-emerald-400" />
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <div className="p-2.5 bg-slate-900/50 rounded-lg border border-slate-800">
+                                    <div className="flex justify-between items-center mb-1.5">
+                                        <span className="text-[9px] font-bold text-slate-500 uppercase">Peeler</span>
+                                        <div className="flex gap-1">
+                                            {[1, 2, 3].map(i => <div key={i} className="w-2 h-2 rounded-full bg-emerald-500"></div>)}
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-bold text-emerald-400">ACTIVE</span>
+                                </div>
+                                <Instrument label="Potato Prep" value="AUTO" status="AUTO" compact />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <Instrument label="Slicers" value="AUTO" status="AUTO" compact />
+                                <Instrument label="Washer Drives" value="AUTO" status="AUTO" compact />
+                            </div>
+                            <Instrument label="Potato Feed" value="ON" status="ENABLED" color="text-emerald-400" subValue="(to Slicers)" />
+                            <Instrument label="Slicers Incline" value="23.0" unit="%" color="text-white" />
+                            <div className="p-3 bg-slate-900/40 rounded-lg border border-slate-800">
+                                <span className="text-[9px] font-extrabold text-slate-500 uppercase mb-2 block tracking-wider">Slicer Gates</span>
+                                <div className="grid grid-cols-4 gap-1.5">
+                                    {[1, 2, 3, 4].map(g => (
+                                        <div key={g} className="text-center bg-emerald-500/10 text-emerald-400 py-1.5 rounded-md border border-emerald-500/20 font-black text-xs">{g}</div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="mt-auto pt-2">
+                                <Instrument label="Head Temp" value="39" unit="deg" color="text-amber-400" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* COLUMN 2: FLUID & THERMAL */}
+                <div className="space-y-4 flex flex-col">
+                    {/* Oil Flow Control */}
+                    <div className="bg-[#0f172a] border border-slate-800 border-t-4 border-t-cyan-500 rounded-xl p-4 shadow-lg">
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] mb-4 pb-2 border-b border-slate-800/50 flex items-center gap-2">
+                            <Waves size={14} className="text-cyan-400" /> Oil Flow Control
+                        </h3>
+                        <Instrument label="Main Oil Circ" value="4,357" unit="L/M" stpt="4,366" status="AUTO" color="text-cyan-400" subValue="Ctrl: 97" />
+                    </div>
+
+                    {/* Fryer Inlet Temp Control */}
+                    <div className="bg-[#0f172a] border border-slate-800 border-t-4 border-t-amber-500 rounded-xl p-4 shadow-lg flex-1">
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] mb-4 pb-2 border-b border-slate-800/50 flex items-center gap-2">
+                            <Thermometer size={14} className="text-amber-400" /> Fryer Inlet Temp Control
+                        </h3>
+                        <div className="space-y-2.5">
+                            <Instrument label="Fryer Inlet" value="178.1" unit="°C" stpt="178.8" status="AUTO" color="text-amber-400" />
+                            <Instrument label="Fryer Outlet" value="154.0" unit="°C" color="text-blue-400" />
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <Instrument label="Delta T" value="24.0" unit="°C" color="text-slate-200" compact />
+                                <Instrument label="Burner Output" value="43.7" unit="%" color="text-rose-500" compact />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Oil Make-Up */}
+                    <div className="bg-[#0f172a] border border-slate-800 border-t-4 border-t-emerald-500 rounded-xl p-4 shadow-lg">
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] mb-4 pb-2 border-b border-slate-800/50 flex items-center gap-2">
+                            <Droplet size={14} className="text-emerald-400" /> Oil Make-up
+                        </h3>
+                        <div className="space-y-2.5">
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <Instrument label="Used Oil %" value="0" color="text-slate-400" compact />
+                                <Instrument label="New Oil %" value="100" color="text-emerald-400" compact />
+                            </div>
+                            <Instrument label="Oil Level" value="148" unit="MM" stpt="151" status="FRESH" color="text-emerald-400" />
+                            <Instrument label="Valve Output" value="54.5" unit="%" status="AUTO" color="text-blue-400" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* COLUMN 3: MOISTURE, QUALITY & DRIVES */}
+                <div className="space-y-4 flex flex-col">
+                    {/* Moisture Control */}
+                    <div className="bg-[#0f172a] border border-slate-800 border-t-4 border-t-blue-500 rounded-xl p-4 shadow-lg">
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] mb-4 pb-2 border-b border-slate-800/50 flex items-center gap-2">
+                            <Cloud size={14} className="text-blue-400" /> Moisture Control
+                        </h3>
+                        <div className="space-y-2.5">
+                            <Instrument label="Actual Moisture" value="1.94" unit="%" stpt="1.35" status="ENABLED" color="text-white" />
+                            <Instrument label="Actual Oil" value="27.1" unit="%" stpt="35.0" color="text-amber-400" />
+                        </div>
+                    </div>
+
+                    {/* Fryer Drives / Other Systems */}
+                    <div className="bg-[#0f172a] border border-slate-800 border-t-4 border-t-slate-500 rounded-xl p-4 shadow-lg flex-1">
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] mb-4 pb-2 border-b border-slate-800/50 flex items-center gap-2">
+                            <Settings2 size={14} className="text-slate-400" /> Other Systems / Drives
+                        </h3>
+                        <div className="space-y-3">
+                            <Instrument label="Master Speed" value="70.0" unit="%" status="AUTO" color="text-emerald-400" subValue="Lim: 76/64" />
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    {l: 'Paddle', v: '41%'},
+                                    {l: 'Submerger', v: '51%'},
+                                    {l: 'Take-out', v: '45%'}
+                                ].map(d => (
+                                    <div key={d.l} className="p-2 bg-slate-900/50 border border-slate-800 rounded text-center">
+                                        <div className="text-[7px] text-slate-500 font-black uppercase mb-0.5">{d.l}</div>
+                                        <div className="text-xs text-white font-bold">{d.v}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <Instrument label="Fryer Outfeed" value="AUTO" status="AUTO" compact />
+                                <Instrument label="Take-Out Conv" value="ON" status="ENABLED" color="text-emerald-400" compact />
+                            </div>
+                            <Instrument label="Post Fryer" value="AUTO" status="AUTO" />
+                        </div>
+                    </div>
+
+                    {/* Quality Specs */}
+                    <div className="bg-[#0f172a] border border-slate-800 border-t-4 border-t-indigo-500 rounded-xl p-4 shadow-lg">
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] mb-4 pb-2 border-b border-slate-800/50 flex items-center gap-2">
+                            <Package size={14} className="text-indigo-400" /> Quality Specs
+                        </h3>
+                        <div className="grid grid-cols-2 gap-2.5">
+                            <Instrument label="Slice Thick" value="1.750" color="text-white" />
+                            <Instrument label="Potato Solids" value="20.0" unit="%" color="text-slate-300" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+// --- Standard generic horizontal dashboard for non-PC39 machines ---
+const HorizontalProcessDashboard: React.FC<{ machine: Machine }> = ({ machine }) => {
+    const horizontalData = {
+        speed: { actual: 125, target: 130, infeed: 14.5 },
+        sealing: { finLeft: 145.2, finRight: 144.8, finStpt: 145.0, finPressure: 3.2, endFront: 162.5, endRear: 161.9, endStpt: 162.0, endPressure: 4.5 },
+        material: { tension: 12.4, offset: 0.25, regMark: 'OK', filmLeft: 68 },
+        gas: { n2Flow: 25.4, o2Level: 0.8, pressure: 1.2 }
+    };
+
+    return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card title="Motion Control" className="bg-slate-800/40">
+                    <div className="grid grid-cols-2 gap-3">
+                        <Instrument label="Machine Speed" value={horizontalData.speed.actual} unit="PPM" stpt={horizontalData.speed.target} color="text-emerald-400" />
+                        <Instrument label="Infeed Speed" value={horizontalData.speed.infeed} unit="M/M" />
+                    </div>
+                </Card>
+                <Card title="Sealing System" className="bg-slate-800/40">
+                    <div className="grid grid-cols-2 gap-3">
+                        <Instrument label="Fin Temp" value={horizontalData.sealing.finLeft} unit="°C" stpt={horizontalData.sealing.finStpt} color="text-amber-400" />
+                        <Instrument label="Jaw Temp" value={horizontalData.sealing.endFront} unit="°C" stpt={horizontalData.sealing.endStpt} color="text-rose-400" />
+                    </div>
+                </Card>
+                <Card title="Film Control" className="bg-slate-800/40">
+                    <div className="grid grid-cols-2 gap-3">
+                        <Instrument label="Reg. Offset" value={horizontalData.material.offset} unit="MM" color="text-blue-400" />
+                        <Instrument label="Eye-mark" value={horizontalData.material.regMark} color="text-emerald-400" status="OK" />
+                    </div>
+                </Card>
+            </div>
+        </div>
+    );
+};
+
 // --- ISO Standard Overview Component (Shared) ---
 const MachineISOOverview: React.FC<{ machine: Machine; period: Period }> = ({ machine, period }) => {
     const timeSeriesData = useMemo(() => ps.getMachineTimeSeries(machine.id, period), [machine.id, period]);
@@ -46,43 +306,29 @@ const MachineISOOverview: React.FC<{ machine: Machine; period: Period }> = ({ ma
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-             {/* Top KPIs Row (ISO 22400) - Adjusted for 2 columns since Resource & Health is removed */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* 1. OEE Hero Card */}
-                <Card className="relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
+                <Card className="relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 shadow-xl">
                     <div className="absolute top-0 right-0 p-4 opacity-10"><Activity size={120} className="text-blue-500" /></div>
-                    <div className="flex flex-col h-full justify-between">
+                    <div className="flex flex-col h-full justify-between relative z-10">
                         <div>
                             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Overall Equipment Effectiveness</h3>
                             <div className="flex items-end gap-3 mb-4">
                                 <span className={`text-6xl font-bold font-mono tracking-tighter ${machine.oee >= 0.85 ? 'text-emerald-400' : machine.oee >= 0.65 ? 'text-amber-400' : 'text-rose-400'}`}>
                                     {formatNumber(machine.oee * 100, 1)}%
                                 </span>
-                                <span className="text-sm text-slate-400 font-medium mb-2 bg-slate-800/80 px-2 py-1 rounded">ISO 22400-2</span>
+                                <span className="text-sm text-slate-400 font-medium mb-2 bg-slate-800/80 px-2 py-1 rounded border border-slate-700">ISO 22400-2</span>
                             </div>
                         </div>
-                        
                         <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-700/50">
-                            <div>
-                                <span className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Availability</span>
-                                <span className="text-2xl font-bold text-blue-400">{formatNumber((machine.availability || 0.9) * 100)}%</span>
-                            </div>
-                            <div>
-                                <span className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Performance</span>
-                                <span className="text-2xl font-bold text-purple-400">{formatNumber((machine.performance || 0.85) * 100)}%</span>
-                            </div>
-                            <div>
-                                <span className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Quality</span>
-                                <span className="text-2xl font-bold text-emerald-400">{formatNumber((machine.quality || 0.99) * 100)}%</span>
-                            </div>
+                            <div><span className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Availability</span><span className="text-2xl font-bold text-blue-400">{formatNumber((machine.availability || 0.9) * 100)}%</span></div>
+                            <div><span className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Performance</span><span className="text-2xl font-bold text-purple-400">{formatNumber((machine.performance || 0.85) * 100)}%</span></div>
+                            <div><span className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Quality</span><span className="text-2xl font-bold text-emerald-400">{formatNumber((machine.quality || 0.99) * 100)}%</span></div>
                         </div>
                     </div>
                 </Card>
 
-                {/* 2. Output & Targets */}
-                <Card className="flex flex-col justify-between relative overflow-hidden">
-                     <div className="absolute top-0 right-0 p-4 opacity-5"><Box size={120} className="text-white" /></div>
+                <Card className="flex flex-col justify-between relative overflow-hidden shadow-xl">
+                    <div className="absolute top-0 right-0 p-4 opacity-5"><Box size={120} className="text-white" /></div>
                     <div>
                         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"><Box size={16}/> Production Volume</h3>
                         <div className="flex justify-between items-baseline mb-2">
@@ -90,233 +336,84 @@ const MachineISOOverview: React.FC<{ machine: Machine; period: Period }> = ({ ma
                             <span className="text-sm text-slate-400 font-medium">Target: {formatNumber(machine.targetShift)} kg</span>
                         </div>
                         <div className="w-full bg-slate-700 rounded-full h-4 mb-2 overflow-hidden">
-                            <div 
-                                className={`h-full rounded-full transition-all duration-1000 ${machine.totalOutputShift >= machine.targetShift * 0.9 ? 'bg-emerald-500' : 'bg-amber-500'}`}
-                                style={{ width: `${Math.min(100, (machine.totalOutputShift / machine.targetShift) * 100)}%` }}
-                            >
-                                <div className="w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] opacity-30"></div>
-                            </div>
+                            <div className={`h-full rounded-full transition-all duration-1000 ${machine.totalOutputShift >= machine.targetShift * 0.9 ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{ width: `${Math.min(100, (machine.totalOutputShift / machine.targetShift) * 100)}%` }}></div>
                         </div>
-                        <div className="text-right">
-                            <span className={`text-sm font-bold ${machine.totalOutputShift >= machine.targetShift * 0.9 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                {formatNumber((machine.totalOutputShift / machine.targetShift) * 100, 1)}% Attainment
-                            </span>
-                        </div>
+                        <div className="text-right"><span className={`text-sm font-bold ${machine.totalOutputShift >= machine.targetShift * 0.9 ? 'text-emerald-400' : 'text-amber-400'}`}>{formatNumber((machine.totalOutputShift / machine.targetShift) * 100, 1)}% Attainment</span></div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-slate-700/50">
-                        <div className="bg-slate-900/50 p-3 rounded-lg">
-                            <p className="text-[10px] uppercase font-bold text-slate-500">Run Rate</p>
-                            <p className="text-xl font-bold text-white">{formatNumber(machine.outputPerHour)} <span className="text-xs text-slate-500 font-normal">kg/h</span></p>
-                        </div>
-                        <div className="bg-slate-900/50 p-3 rounded-lg">
-                            <p className="text-[10px] uppercase font-bold text-slate-500">Reject Rate</p>
-                            <p className="text-xl font-bold text-rose-400">{formatNumber(machine.rejectRate)}<span className="text-xs text-slate-500 font-normal">%</span></p>
-                        </div>
+                        <div className="bg-slate-900/50 p-3 rounded-lg"><p className="text-[10px] uppercase font-bold text-slate-500">Run Rate</p><p className="text-xl font-bold text-white">{formatNumber(machine.outputPerHour)} <span className="text-xs text-slate-500 font-normal">kg/h</span></p></div>
+                        <div className="bg-slate-900/50 p-3 rounded-lg"><p className="text-[10px] uppercase font-bold text-slate-500">Reject Rate</p><p className="text-xl font-bold text-rose-400">{formatNumber(machine.rejectRate)}<span className="text-xs text-slate-500 font-normal">%</span></p></div>
                     </div>
                 </Card>
-            </div>
-
-            {/* Secondary Row: Trends & Alerts */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Production Trend */}
-                <div className="lg:col-span-2">
-                    <Card title={`Production Trend (${period})`}>
-                        <div className="h-[280px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={timeSeriesData.output} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                    <defs><linearGradient id="colorOutputSum" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient></defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                                    <XAxis dataKey="time" stroke="#64748b" tick={{fontSize: 12}} axisLine={false} tickLine={false} />
-                                    <YAxis stroke="#64748b" tick={{fontSize: 12}} tickFormatter={(val) => formatNumber(val, 0)} axisLine={false} tickLine={false} />
-                                    <Tooltip formatter={(val) => [`${formatNumber(Number(val))} kg`, 'Output']} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '8px' }} />
-                                    <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorOutputSum)" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </Card>
-                </div>
-
-                {/* Active Alerts (Read Only) */}
-                <div>
-                    <Card title="Active Alerts">
-                        {topAlarms.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-[280px] text-center text-slate-500">
-                                <CheckCircle2 size={48} className="text-emerald-500/20 mb-3" />
-                                <p className="text-sm font-medium">No active alarms.</p>
-                                <p className="text-xs">Machine operating normally.</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3 h-[280px] overflow-y-auto pr-1 custom-scrollbar">
-                                {topAlarms.map(alarm => (
-                                    <div key={alarm.id} className="p-3 bg-slate-900/50 border border-slate-700/50 rounded-lg flex items-start gap-3">
-                                        <div className="mt-0.5"><AlertTriangle size={16} className="text-rose-500" /></div>
-                                        <div>
-                                            <p className="text-sm font-bold text-white leading-tight">{alarm.message}</p>
-                                            <p className="text-xs text-slate-400 mt-1">{alarm.timestamp} • Code: {alarm.code}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                                {activeAlarms.length > 3 && (
-                                    <p className="text-center text-xs text-slate-500 mt-2">
-                                        + {activeAlarms.length - 3} more alarms
-                                    </p>
-                                )}
-                            </div>
-                        )}
-                    </Card>
-                </div>
             </div>
         </div>
     );
 };
 
-// --- Machine Summary Dashboard (Restricted View for Management/Viewer) ---
+// --- Summary Dashboard for Management/Viewer ---
 const MachineSummaryDashboard: React.FC<{ machine: Machine; period: Period; onBack: () => void; }> = ({ machine, period, onBack }) => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 w-full pb-10">
-            {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white">
-                        <ArrowLeft size={24} />
-                    </button>
+                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white"><ArrowLeft size={24} /></button>
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                            <LayoutDashboard className="text-blue-500" />
-                            {machine.name}
-                        </h1>
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-3"><LayoutDashboard className="text-blue-500" />{machine.name}</h1>
                         <p className="text-slate-400 text-sm font-medium">{machine.plantId} • Executive Summary</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <StatusBadge status={machine.status} />
-                    <div className="px-3 py-1 bg-slate-800 rounded border border-slate-700 text-xs font-bold text-slate-300 uppercase tracking-wider">
-                        ISO 22400 Standard
-                    </div>
+                    <div className="px-3 py-1 bg-slate-800 rounded border border-slate-700 text-xs font-bold text-slate-300 uppercase tracking-wider">ISO 22400 Standard</div>
                 </div>
             </div>
-
             <MachineISOOverview machine={machine} period={period} />
         </div>
     );
 };
 
-
 const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole, currentUser }) => {
     const location = useLocation();
     const visibilityContext = { plantId: machine.plantId, machineId: machine.id };
-    
     const [period, setPeriod] = useState<Period>('Day');
 
-    // --- ROLE CHECK FOR SUMMARY DASHBOARD ---
-    // If user is Management or Viewer, show only the summary dashboard.
-    // They cannot access the tabs.
     if (userRole === UserRole.MANAGEMENT || userRole === UserRole.VIEWER) {
         return <MachineSummaryDashboard machine={machine} period={period} onBack={onBack} />;
     }
 
-    // --- NORMAL OPERATIONAL VIEW (Tabs) ---
-    const visibleTabs = useMemo(() => {
-        return ALL_TABS_BASE.filter(t => {
-            return isDataItemVisible(userRole, t.visibilityKey, visibilityContext)
-        });
-    }, [userRole, visibilityContext]);
-    
-    // Set active tab with priority:
-    // 1. Navigation state (e.g. from clicking an alarm on dashboard)
-    // 2. First visible tab
+    const visibleTabs = useMemo(() => ALL_TABS_BASE.filter(t => isDataItemVisible(userRole, t.visibilityKey, visibilityContext)), [userRole, visibilityContext]);
     const [activeTab, setActiveTab] = useState(() => {
         const requestedTab = location.state?.initialTab;
-        if (requestedTab && visibleTabs.find(t => t.key === requestedTab)) {
-            return requestedTab;
-        }
+        if (requestedTab && visibleTabs.find(t => t.key === requestedTab)) return requestedTab;
         return visibleTabs.length > 0 ? visibleTabs[0].key : '';
     });
 
-    
-    // Download State
     const [isDownloading, setIsDownloading] = useState(false);
     const [showDownloadToast, setShowDownloadToast] = useState(false);
-    
-    // Ref for scrolling to maintenance form
     const maintenanceRef = useRef<HTMLDivElement>(null);
-
-    // Scroll to maintenance tab content if requested via navigation
-    useEffect(() => {
-        if (activeTab === 'Maintenance' && location.state?.initialTab === 'Maintenance' && maintenanceRef.current) {
-             maintenanceRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [activeTab, location.state]);
-    
-    // Force re-render helper
     const [tick, setTick] = useState(0);
     const forceUpdate = () => setTick(t => t + 1);
 
-    // Fetch real data from services with Period context
     const timeSeriesData = useMemo(() => ps.getMachineTimeSeries(machine.id, period), [machine.id, period]);
     const accumulatedStats = useMemo(() => ps.getMachineStats(machine.id, period), [machine.id, period]);
-
-    const alarmHistory = useMemo(() => maintenanceService.getAlarmHistory(machine.id), [machine.id, tick]); // Refresh on maintenance action
+    const alarmHistory = useMemo(() => maintenanceService.getAlarmHistory(machine.id), [machine.id, tick]);
     const maintenanceHistoryRecords = useMemo(() => maintenanceService.getMaintenanceHistory(machine.id), [machine.id, tick]);
     const activeAlarms = maintenanceService.getMachineActiveAlarms(machine.id);
     const downtimeLogs = useMemo(() => maintenanceService.getDowntimeLogs(machine.id), [machine.id, tick]);
-    
     const primaryAlarm = activeAlarms.length > 0 ? activeAlarms[0] : null;
 
-    // Maintenance Form State
     const [startTechnicianName, setStartTechnicianName] = useState('');
     const [formCheckedBy, setFormCheckedBy] = useState('');
     const [maintenanceNote, setMaintenanceNote] = useState('');
     const [maintenanceSolved, setMaintenanceSolved] = useState(true);
     const [formSubmitting, setFormSubmitting] = useState(false);
 
-    // Downtime Form State
-    const [isDowntimeModalOpen, setIsDowntimeModalOpen] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [newDowntime, setNewDowntime] = useState({
-        start: '',
-        end: '',
-        reason: 'Jam',
-        description: ''
-    });
-
-    // Permissions
-    const canAddDowntime = userRole === UserRole.OPERATOR || userRole === UserRole.ADMINISTRATOR || userRole === UserRole.SUPERVISOR;
-    const canPerformMaintenance = userRole === UserRole.MAINTENANCE;
-    const canViewHistory = true;
-    const canDownloadReport = [UserRole.ADMINISTRATOR, UserRole.SUPERVISOR, UserRole.MANAGEMENT].includes(userRole);
-    
-    // Handle tab switching safety
-    useEffect(() => {
-        if (!visibleTabs.find(t => t.key === activeTab) && visibleTabs.length > 0) {
-            setActiveTab(visibleTabs[0].key);
-        }
-    }, [userRole, visibleTabs, activeTab]);
-
-    const handleStartMaintenance = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!primaryAlarm || !startTechnicianName.trim()) return;
-        
-        maintenanceService.startMaintenance(primaryAlarm.id, startTechnicianName);
-        setFormCheckedBy(startTechnicianName); 
-        forceUpdate();
-    };
-
     const handleMaintenanceSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!primaryAlarm || !formCheckedBy.trim()) return;
-        
         setFormSubmitting(true);
         setTimeout(() => {
-            maintenanceService.submitMaintenanceAction({
-                alarmId: primaryAlarm.id,
-                machineId: machine.id,
-                checkedBy: formCheckedBy, 
-                solved: maintenanceSolved,
-                note: maintenanceNote,
-                photoUrl: '' 
-            });
+            maintenanceService.submitMaintenanceAction({ alarmId: primaryAlarm.id, machineId: machine.id, checkedBy: formCheckedBy, solved: maintenanceSolved, note: maintenanceNote });
             setFormSubmitting(false);
             setMaintenanceNote('');
             setStartTechnicianName('');
@@ -325,705 +422,97 @@ const MachineDetail: React.FC<MachineDetailProps> = ({ machine, onBack, userRole
         }, 800);
     };
 
-    const handleAddDowntimeSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newDowntime.start || !newDowntime.end) return;
-
-        // Simple duration calculation for demo (assuming same day)
-        let duration = "0m";
-        try {
-            // Using arbitrary date to calculate time difference
-            const d1 = new Date(`2024-01-01T${newDowntime.start}`);
-            const d2 = new Date(`2024-01-01T${newDowntime.end}`);
-            let diffMs = d2.getTime() - d1.getTime();
-            
-            // Handle cross-midnight by adding 24 hours if end is before start
-            if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000;
-            
-            const totalMinutes = Math.floor(diffMs / 60000);
-            const h = Math.floor(totalMinutes / 60);
-            const m = Math.floor(totalMinutes % 60);
-            
-            if (h > 0) duration = `${h}h ${m}m`;
-            else duration = `${m}m`;
-
-        } catch (err) {
-            console.error("Date calc error", err);
-        }
-
-        maintenanceService.addDowntimeLog({
-            machineId: machine.id,
-            start: newDowntime.start,
-            end: newDowntime.end,
-            duration: duration,
-            reason: newDowntime.reason,
-            description: newDowntime.description,
-            source: 'MANUAL'
-        });
-
-        setIsDowntimeModalOpen(false);
-        setNewDowntime({ start: '', end: '', reason: 'Jam', description: '' });
-        forceUpdate();
-        
-        // Show success toast
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
-    };
-    
-    const handleDownloadReport = () => {
-        if (isDownloading) return;
-        setIsDownloading(true);
-
-        // Simulate PDF generation delay
-        setTimeout(() => {
-            setIsDownloading(false);
-            setShowDownloadToast(true);
-            // Hide toast after 3 seconds
-            setTimeout(() => setShowDownloadToast(false), 3000);
-        }, 2000);
-    };
-    
-    const FilterButton = ({ label }: { label: Period }) => {
-        // Restricted: Operators can only see Day
-        if (userRole === UserRole.OPERATOR && label !== 'Day') return null;
-
-        return (
-            <button 
-                onClick={() => setPeriod(label)}
-                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                    period === label 
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
-            >
-                {label}
-            </button>
-        );
-    };
-
-    // Replaced the old renderPerformanceTab with the ISO Overview for consistency across roles
-    const renderPerformanceTab = () => (
-        <MachineISOOverview machine={machine} period={period} />
-    );
-    
-    // Sub-component for the multi-unit Cikupa dashboard
-    const MultiUnitPackingDashboard = ({ machine, userRole, visibilityContext }: { machine: Machine, userRole: UserRole, visibilityContext: any }) => {
-        const [selectedUnit, setSelectedUnit] = useState<{ type: 'bagmaker' | 'weigher', index: number } | null>(null);
-        const { bagmakerUnits = [], weigherUnits = [], code } = machine;
-
-        const totalBagmakers = bagmakerUnits.length;
-        const onlineBagmakers = bagmakerUnits.filter(u => u.status === 'Production').length;
-        const totalWeighers = weigherUnits.length;
-        const onlineWeighers = weigherUnits.filter(u => u.status === 'Production').length;
-        const overallEfficiency = totalBagmakers > 0 ? (bagmakerUnits.reduce((acc, u) => acc + u.totalEfficiency, 0) / totalBagmakers) * 100 : 0;
-    
-        const getStatusColor = (status: 'Production' | 'Stop' | 'Offline' | 'Idle') => {
-            if (status === 'Production') return 'bg-emerald-500 hover:bg-emerald-400';
-            if (status === 'Stop') return 'bg-rose-500 hover:bg-rose-400';
-            if (status === 'Idle') return 'bg-amber-500 hover:bg-amber-400';
-            return 'bg-slate-700 hover:bg-slate-600';
-        };
-
-        const getStatusTextColor = (status: 'Production' | 'Stop' | 'Offline' | 'Idle') => {
-            if (status === 'Production') return 'text-emerald-400';
-            if (status === 'Stop') return 'text-rose-400';
-            if (status === 'Idle') return 'text-amber-400';
-            return 'text-slate-500';
-        };
-    
-        const renderDetailPanel = () => {
-            if (!selectedUnit) {
-                 return (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-slate-500 p-8">
-                        <Eye size={40} className="mb-4" />
-                        <h4 className="text-lg font-bold text-slate-300">Select a Unit</h4>
-                        <p className="text-sm">Click on a bagmaker or weigher from the grid to view its detailed performance data.</p>
-                    </div>
-                );
-            }
-    
-            if (selectedUnit.type === 'bagmaker') {
-                const unit = bagmakerUnits[selectedUnit.index];
-                if (!unit) return null;
-                return <SingleBagmakerDetailPanel unit={unit} unitNumber={selectedUnit.index + 1} userRole={userRole} visibilityContext={visibilityContext} />;
-            }
-    
-            if (selectedUnit.type === 'weigher') {
-                const unit = weigherUnits[selectedUnit.index];
-                if (!unit) return null;
-                return <SingleWeigherDetailPanel unit={unit} unitNumber={selectedUnit.index + 1} userRole={userRole} visibilityContext={visibilityContext} />;
-            }
-            return null;
-        };
-    
-        return (
-            <div className="space-y-6">
-                <Card title={`${code} Line Control Center`}>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                        {isDataItemVisible(userRole, 'PACKING_MULTI_UNIT_SUMMARY_TOTALS', visibilityContext) && (
-                            <>
-                                <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-300 uppercase font-bold">Total Bagmakers</p><p className="text-2xl font-bold text-white">{onlineBagmakers}/{totalBagmakers}</p></div>
-                                <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-300 uppercase font-bold">Total Weighers</p><p className="text-2xl font-bold text-white">{onlineWeighers}/{totalWeighers}</p></div>
-                            </>
-                        )}
-                        {isDataItemVisible(userRole, 'PACKING_MULTI_UNIT_SUMMARY_EFFICIENCY', visibilityContext) && (
-                            <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-300 uppercase font-bold">Overall Efficiency</p><p className="text-2xl font-bold text-emerald-400">{formatNumber(overallEfficiency, 1)}%</p></div>
-                        )}
-                        {isDataItemVisible(userRole, 'PACKING_MULTI_UNIT_SUMMARY_STATUS', visibilityContext) && (
-                            <div className="p-4 bg-slate-900 rounded-lg"><p className="text-xs text-slate-300 uppercase font-bold">Line Status</p><p className="text-2xl font-bold text-emerald-400">OPERATIONAL</p></div>
-                        )}
-                    </div>
-                </Card>
-    
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <div className="space-y-6">
-                        <Card title={`Bagmaker Units (${totalBagmakers})`}>
-                            <div className="grid grid-cols-11 gap-2">
-                                {bagmakerUnits.map((unit, index) => (
-                                    <button 
-                                        key={`b-${index}`}
-                                        onClick={() => setSelectedUnit({ type: 'bagmaker', index })}
-                                        className={`w-full aspect-square rounded-md text-white text-xs font-bold transition-all duration-200 ${getStatusColor(unit.status)} ${selectedUnit?.type === 'bagmaker' && selectedUnit.index === index ? 'ring-2 ring-offset-2 ring-offset-slate-800 ring-white' : ''}`}
-                                    >
-                                        B{index + 1}
-                                    </button>
-                                ))}
-                            </div>
-                        </Card>
-                        <Card title={`Weigher Units (${totalWeighers})`}>
-                            <div className="grid grid-cols-11 gap-2">
-                                {weigherUnits.map((unit, index) => (
-                                    <button 
-                                        key={`w-${index}`}
-                                        onClick={() => setSelectedUnit({ type: 'weigher', index })}
-                                        className={`w-full aspect-square rounded-md text-white text-xs font-bold transition-all duration-200 ${getStatusColor(unit.status)} ${selectedUnit?.type === 'weigher' && selectedUnit.index === index ? 'ring-2 ring-offset-2 ring-offset-slate-800 ring-white' : ''}`}
-                                    >
-                                        W{index + 1}
-                                    </button>
-                                ))}
-                            </div>
-                        </Card>
-                    </div>
-                    
-                    <Card title="Selected Unit Details" className="min-h-[400px]">
-                        {renderDetailPanel()}
-                    </Card>
-                </div>
-            </div>
-        );
-    };
-
-    const SingleBagmakerDetailPanel = ({ unit, unitNumber, userRole, visibilityContext }: { unit: BagmakerDetails, unitNumber: number, userRole: UserRole, visibilityContext: any }) => {
-        const getStatusTextColor = (status: 'Production' | 'Stop' | 'Offline' | 'Idle') => {
-            if (status === 'Production') return 'text-emerald-400';
-            if (status === 'Stop') return 'text-rose-400';
-            if (status === 'Idle') return 'text-amber-400';
-            return 'text-slate-500';
-        };
-        const StopEventCounter: React.FC<{ icon: any; label: string; value: number; color: string; visible: boolean }> = ({ icon: Icon, label, value, color, visible }) => {
-            if (!visible) return null;
-            return (
-                <div className="flex items-center justify-between p-2 bg-slate-950/50 rounded-lg border border-slate-700/50">
-                    <div className="flex items-center gap-3"><Icon size={16} className={color} /><span className="text-xs font-medium text-slate-300">{label}</span></div>
-                    <span className="font-mono text-base font-bold text-white">{value}</span>
-                </div>
-            );
-        };
-        return (
-             <div className="space-y-4 animate-in fade-in duration-300">
-                <h3 className="text-lg font-bold text-white">Bagmaker #{unitNumber} - <span className={getStatusTextColor(unit.status)}>{unit.status}</span></h3>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                    {isDataItemVisible(userRole, 'PACKING_ACTUAL_SPEED', visibilityContext) && <MetricCard title="Actual Speed" value={formatNumber(unit.actualSpeed)} unit="bpm" icon={Gauge} color="text-blue-400" />}
-                    {isDataItemVisible(userRole, 'PACKING_GOOD_BAG_PERCENT', visibilityContext) && <MetricCard title="Good Bag %" value={formatNumber(unit.bagPercentage, 2)} unit="%" icon={CheckCircle2} color="text-emerald-400" />}
-                    {isDataItemVisible(userRole, 'PACKING_WASTED_FILM', visibilityContext) && <MetricCard title="Wasted Film" value={formatNumber(unit.wastedFilmPercentage, 2)} unit="%" icon={Trash2} color="text-rose-400" />}
-                </div>
-                <div>
-                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Stop Event Counters (Shift)</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <StopEventCounter icon={ScanSearch} label="Metal Detect" value={unit.metalDetectCount} color="text-rose-400" visible={isDataItemVisible(userRole, 'PACKING_METAL_DETECT', visibilityContext)} />
-                        <StopEventCounter icon={Printer} label="Printer Error" value={unit.printerDateErrorCount} color="text-amber-400" visible={isDataItemVisible(userRole, 'PACKING_PRINTER_ERROR', visibilityContext)} />
-                        <StopEventCounter icon={Archive} label="Product in Seal" value={unit.productInSealCount} color="text-amber-400" visible={isDataItemVisible(userRole, 'PACKING_PRODUCT_IN_SEAL', visibilityContext)} />
-                        <StopEventCounter icon={Scissors} label="Splice Detect" value={unit.spliceDetectCount} color="text-blue-400" visible={isDataItemVisible(userRole, 'PACKING_SPLICE_DETECT', visibilityContext)} />
-                    </div>
-                </div>
-            </div>
-        )
-    };
-    
-    const SingleWeigherDetailPanel = ({ unit, unitNumber, userRole, visibilityContext }: { unit: WeigherDetails, unitNumber: number, userRole: UserRole, visibilityContext: any }) => {
-        const getStatusTextColor = (status: 'Production' | 'Stop' | 'Offline' | 'Idle') => {
-            if (status === 'Production') return 'text-emerald-400';
-            if (status === 'Stop') return 'text-rose-400';
-            if (status === 'Idle') return 'text-amber-400';
-            return 'text-slate-500';
-        };
-        const StatItem: React.FC<{ label: string; value: string | number; unit?: string; visible: boolean }> = ({ label, value, unit, visible }) => {
-            if (!visible) return null;
-            return (
-                <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">{label}</span><div><span className="font-mono text-base font-bold text-white">{value}</span>{unit && <span className="ml-1.5 text-xs text-slate-400">{unit}</span>}</div></div>
-            );
-        };
-        return (
-            <div className="space-y-4 animate-in fade-in duration-300">
-                 <h3 className="text-lg font-bold text-white">Weigher #{unitNumber} - <span className={getStatusTextColor(unit.status)}>{unit.status}</span></h3>
-                 <div className="grid grid-cols-2 gap-3">
-                    {isDataItemVisible(userRole, 'PACKING_WEIGHER_GIVEAWAY', visibilityContext) && <MetricCard title="Giveaway" value={formatNumber(unit.giveaway, 2)} unit="%" icon={AlertTriangle} color="text-amber-400" />}
-                    {isDataItemVisible(userRole, 'PACKING_WEIGHER_STD_DEV', visibilityContext) && <MetricCard title="Std. Deviation" value={formatNumber(unit.standardDeviation, 3)} unit="g" icon={Activity} color="text-purple-400" />}
-                </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-2 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50">
-                        <h5 className="font-bold text-white text-sm">Weigher 1</h5>
-                        <StatItem label="Speed" value={formatNumber(unit.speed1, 0)} unit="bpm" visible={isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_1', visibilityContext)} />
-                        <StatItem label="Total Weight" value={formatNumber(unit.totalWeight1, 0)} unit="kg" visible={isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_1', visibilityContext)} />
-                    </div>
-                    <div className="space-y-2 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50">
-                        <h5 className="font-bold text-white text-sm">Weigher 2</h5>
-                        <StatItem label="Speed" value={formatNumber(unit.speed2, 0)} unit="bpm" visible={isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_2', visibilityContext)} />
-                        <StatItem label="Total Weight" value={formatNumber(unit.totalWeight2, 0)} unit="kg" visible={isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_2', visibilityContext)} />
-                    </div>
-                </div>
-            </div>
-        )
-    };
-
-
-    const renderSingleUnitPackingTab = () => {
-        const { weigher, bagmaker } = machine;
-        if (!weigher || !bagmaker) return <div className="p-4 text-slate-500">Packing data not available.</div>;
-        
-        return (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <Card title="Line Performance Summary">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        {isDataItemVisible(userRole, 'PACKING_TOTAL_EFFICIENCY', visibilityContext) && 
-                            <MetricCard icon={GaugeCircle} title="Total Efficiency" value={formatNumber(bagmaker.totalEfficiency * 100, 1)} unit="%" color="text-blue-400" />}
-                        {isDataItemVisible(userRole, 'PACKING_EFFICIENCY_WEIGHER', visibilityContext) && 
-                            <MetricCard icon={Scale} title="Weigher Efficiency" value={formatNumber(bagmaker.efficiencyWeigher * 100, 1)} unit="%" color="text-emerald-400" />}
-                        {isDataItemVisible(userRole, 'PACKING_EFFICIENCY_BAGMAKER', visibilityContext) && 
-                            <MetricCard icon={Package} title="Bagmaker Efficiency" value={formatNumber(bagmaker.efficiencyBagmaker * 100, 1)} unit="%" color="text-purple-400" />}
-                    </div>
-                </Card>
-    
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <Card title="Multihead Weigher Analysis">
-                        <div className="space-y-4">
-                            <div>
-                                <h4 className="text-sm font-bold text-slate-300 mb-3 pb-2 border-b border-slate-700/80">Overall Performance</h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {isDataItemVisible(userRole, 'PACKING_WEIGHER_GIVEAWAY', visibilityContext) && <MetricCard title="Giveaway" value={formatNumber(weigher.giveaway, 2)} unit="%" icon={AlertTriangle} color="text-amber-400" />}
-                                    {isDataItemVisible(userRole, 'PACKING_WEIGHER_STD_DEV', visibilityContext) && <MetricCard title="Std. Deviation" value={formatNumber(weigher.standardDeviation, 3)} unit="g" icon={Activity} color="text-purple-400" />}
-                                </div>
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-slate-300 mb-3 mt-4 pb-2 border-b border-slate-700/80">Individual Weigher Stats</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-3 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50"><h5 className="font-bold text-white text-sm">Weigher 1</h5>{isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_1', visibilityContext) && <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">Speed</span><div><span className="font-mono text-base font-bold text-white">{formatNumber(weigher.speed1, 0)}</span><span className="ml-1.5 text-xs text-slate-400">bpm</span></div></div>}{isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_1', visibilityContext) && <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">Total Weight</span><div><span className="font-mono text-base font-bold text-white">{formatNumber(weigher.totalWeight1, 0)}</span><span className="ml-1.5 text-xs text-slate-400">kg</span></div></div>}</div>
-                                    <div className="space-y-3 p-3 bg-slate-900/40 rounded-lg border border-slate-700/50"><h5 className="font-bold text-white text-sm">Weigher 2</h5>{isDataItemVisible(userRole, 'PACKING_WEIGHER_SPEED_2', visibilityContext) && <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">Speed</span><div><span className="font-mono text-base font-bold text-white">{formatNumber(weigher.speed2, 0)}</span><span className="ml-1.5 text-xs text-slate-400">bpm</span></div></div>}{isDataItemVisible(userRole, 'PACKING_WEIGHER_TOTAL_WEIGHT_2', visibilityContext) && <div className="flex justify-between items-baseline"><span className="text-sm font-medium text-slate-300">Total Weight</span><div><span className="font-mono text-base font-bold text-white">{formatNumber(weigher.totalWeight2, 0)}</span><span className="ml-1.5 text-xs text-slate-400">kg</span></div></div>}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-    
-                    <Card title="Bagmaker Analysis">
-                        <div className="space-y-4">
-                            <div>
-                                <h4 className="text-sm font-bold text-slate-300 mb-3 pb-2 border-b border-slate-700/80">Key Metrics</h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {isDataItemVisible(userRole, 'PACKING_GOOD_BAG_PERCENT', visibilityContext) && <MetricCard title="Good Bag %" value={formatNumber(bagmaker.bagPercentage, 2)} unit="%" icon={CheckCircle2} color="text-emerald-400" />}
-                                    {isDataItemVisible(userRole, 'PACKING_WASTED_FILM', visibilityContext) && <MetricCard title="Wasted Film" value={formatNumber(bagmaker.wastedFilmPercentage, 2)} unit="%" icon={Trash2} color="text-rose-400" />}
-                                    {isDataItemVisible(userRole, 'PACKING_ACTUAL_SPEED', visibilityContext) && <MetricCard title="Actual Speed" value={formatNumber(bagmaker.actualSpeed)} unit="bpm" icon={Gauge} color="text-blue-400" />}
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <h4 className="text-sm font-bold text-slate-300 mb-3 mt-4 pb-2 border-b border-slate-700/80">Stop Event Counters (Shift)</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                                    {isDataItemVisible(userRole, 'PACKING_METAL_DETECT', visibilityContext) && <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded-lg border border-slate-700/50"><div className="flex items-center gap-3"><ScanSearch size={18} className="text-rose-400" /><span className="text-sm font-medium text-slate-300">Metal Detect</span></div><span className="font-mono text-lg font-bold text-white">{bagmaker.metalDetectCount}</span></div>}
-                                    {isDataItemVisible(userRole, 'PACKING_PRINTER_ERROR', visibilityContext) && <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded-lg border border-slate-700/50"><div className="flex items-center gap-3"><Printer size={18} className="text-amber-400" /><span className="text-sm font-medium text-slate-300">Printer Error</span></div><span className="font-mono text-lg font-bold text-white">{bagmaker.printerDateErrorCount}</span></div>}
-                                    {isDataItemVisible(userRole, 'PACKING_PRODUCT_IN_SEAL', visibilityContext) && <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded-lg border border-slate-700/50"><div className="flex items-center gap-3"><Archive size={18} className="text-amber-400" /><span className="text-sm font-medium text-slate-300">Product in Seal</span></div><span className="font-mono text-lg font-bold text-white">{bagmaker.productInSealCount}</span></div>}
-                                    {isDataItemVisible(userRole, 'PACKING_SPLICE_DETECT', visibilityContext) && <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded-lg border border-slate-700/50"><div className="flex items-center gap-3"><Scissors size={18} className="text-blue-400" /><span className="text-sm font-medium text-slate-300">Splice Detect</span></div><span className="font-mono text-lg font-bold text-white">{bagmaker.spliceDetectCount}</span></div>}
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            </div>
-        );
-    };
-
-    const renderPackingTab = () => {
-        // If the machine has multi-unit data, render the special dashboard
-        if (machine.bagmakerUnits && machine.bagmakerUnits.length > 0) {
-            return <MultiUnitPackingDashboard machine={machine} userRole={userRole} visibilityContext={visibilityContext} />;
-        }
-        return renderSingleUnitPackingTab();
-    };
-
-
-    const renderProcessTab = () => {
-        const params = machine.processParams || {};
-        return (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
-                    {Object.entries(params).map(([key, value]) => (
-                        isDataItemVisible(userRole, `PARAM_${key.toUpperCase().replace(/\s/g,'_')}`, visibilityContext) && (
-                            <Card key={key} className="flex flex-col justify-center items-center text-center p-6 bg-slate-800/50">
-                                <span className="text-slate-300 text-xs font-bold uppercase tracking-wider mb-2">{key}</span>
-                                <span className="text-2xl font-bold text-white font-mono">{typeof value === 'number' ? formatNumber(value) : value}</span>
-                            </Card>
-                        )
-                    ))}
-                </div>
-                {isDataItemVisible(userRole, 'MACHINE_PROCESS_TREND_CHART', visibilityContext) && (
-                    <Card title="Process Parameter Trend">
-                        <ResponsiveContainer width="100%" height={350}>
-                            <LineChart data={timeSeriesData.params} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="time" stroke="#94a3b8" label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
-                                <YAxis stroke="#94a3b8" tickFormatter={(val) => formatNumber(val, 0)} label={{ value: 'Value', angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
-                                <Tooltip formatter={(val) => formatNumber(Number(val))} contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                                <Legend verticalAlign="top" />
-                                <Line type="monotone" dataKey="temp" stroke="#f59e0b" name="Temp" dot={false} strokeWidth={2} />
-                                <Line type="monotone" dataKey="pressure" stroke="#3b82f6" name="Pressure" dot={false} strokeWidth={2} />
-                                <Line type="monotone" dataKey="speed" stroke="#10b981" name="Speed" dot={false} strokeWidth={2} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </Card>
-                )}
-            </div>
-        );
-    };
-
-    const renderUtilityTab = () => {
-        const util = accumulatedStats?.utility || { electricity: 0, steam: 0, water: 0, air: 0 };
-        return (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_ELECTRICITY', visibilityContext) && <MetricCard title={`Electricity (${period})`} value={formatNumber(util.electricity)} unit="kWh" icon={Zap} color="text-yellow-400" />}
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_STEAM', visibilityContext) && <MetricCard title={`Steam (${period})`} value={formatNumber(util.steam)} unit="kg" icon={Cloud} color="text-slate-200" />}
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_WATER', visibilityContext) && <MetricCard title={`Water (${period})`} value={formatNumber(util.water)} unit="m³" icon={Droplets} color="text-blue-400" />}
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_AIR', visibilityContext) && <MetricCard title={`Air (${period})`} value={formatNumber(util.air)} unit="Nm³" icon={Wind} color="text-cyan-400" />}
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {isDataItemVisible(userRole, 'MACHINE_UTIL_ELEC_CHART', visibilityContext) && (
-                        <Card title="Electricity Consumption Trend">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <AreaChart data={timeSeriesData.utility.electricity} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
-                                    <defs><linearGradient id="colorElec" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#facc15" stopOpacity={0.3}/><stop offset="95%" stopColor="#facc15" stopOpacity={0}/></linearGradient></defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis dataKey="time" stroke="#94a3b8" label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
-                                    <YAxis stroke="#94a3b8" label={{ value: 'Energy (kWh)', angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                                    <Area type="monotone" dataKey="value" stroke="#facc15" fill="url(#colorElec)" name="kWh" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </Card>
-                    )}
-                     {isDataItemVisible(userRole, 'MACHINE_UTIL_STEAM_CHART', visibilityContext) && (
-                        <Card title="Steam Consumption Trend">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <AreaChart data={timeSeriesData.utility.steam} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
-                                    <defs><linearGradient id="colorSteam" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#e2e8f0" stopOpacity={0.3}/><stop offset="95%" stopColor="#e2e8f0" stopOpacity={0}/></linearGradient></defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis dataKey="time" stroke="#94a3b8" label={{ value: `Time (${period})`, position: 'insideBottom', dy: 15, fill: '#94a3b8', fontSize: 12 }} />
-                                    <YAxis stroke="#94a3b8" label={{ value: 'Usage (kg)', angle: -90, position: 'insideLeft', dx: -15, fill: '#94a3b8', fontSize: 12 }} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155' }} />
-                                    <Area type="monotone" dataKey="value" stroke="#e2e8f0" fill="url(#colorSteam)" name="kg" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </Card>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
-    const renderAlarmsTab = () => (
-        <Card title="Alarm History" className="animate-in fade-in slide-in-from-bottom-2">
-            <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                    <thead className="text-xs text-slate-300 uppercase font-bold bg-slate-900/50">
-                        <tr>
-                            <th className="p-3">Time</th>
-                            <th className="p-3">Code</th>
-                            <th className="p-3">Message</th>
-                            <th className="p-3">Severity</th>
-                            <th className="p-3">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800">
-                        {alarmHistory.map((alarm : Alarm) => (
-                             <tr key={alarm.id} className="hover:bg-slate-800/50">
-                                <td className="p-3 font-mono text-slate-300">{alarm.timestamp}</td>
-                                <td className="p-3 font-mono text-slate-300">{alarm.code}</td>
-                                <td className="p-3 font-semibold text-white">{alarm.message}</td>
-                                <td className="p-3"><StatusBadge status={alarm.severity} /></td>
-                                <td className="p-3">
-                                    <span className={`text-xs font-bold ${alarm.isActive ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                        {alarm.isActive ? 'ACTIVE' : 'CLEARED'}
-                                    </span>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </Card>
-    );
-
-    const renderDowntimeTab = () => (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-            {canAddDowntime && (
-                <div className="flex justify-end">
-                    <button onClick={() => setIsDowntimeModalOpen(true)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md">
-                        <Plus size={16} /> Add Downtime Log
-                    </button>
-                </div>
-            )}
-            <Card title="Downtime Logs">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="text-xs text-slate-300 uppercase font-bold bg-slate-900/50">
-                            <tr>
-                                <th className="p-3">Start</th>
-                                <th className="p-3">End</th>
-                                <th className="p-3">Duration</th>
-                                <th className="p-3">Reason</th>
-                                <th className="p-3">Description</th>
-                                <th className="p-3">Source</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800">
-                            {downtimeLogs.map(log => (
-                                <tr key={log.id} className="hover:bg-slate-800/50">
-                                    <td className="p-3 font-mono text-slate-300">{log.start}</td>
-                                    <td className="p-3 font-mono text-slate-300">{log.end}</td>
-                                    <td className="p-3 font-bold text-white">{log.duration}</td>
-                                    <td className="p-3"><span className="bg-slate-700 px-2 py-1 rounded-md text-xs font-semibold">{log.reason}</span></td>
-                                    <td className="p-3 text-slate-300">{log.description}</td>
-                                    <td className="p-3 font-mono text-xs">{log.source}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </Card>
-        </div>
-    );
-
-    const renderMaintenanceTab = () => (
-        <div ref={maintenanceRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-             {isDataItemVisible(userRole, 'MACHINE_MAINTENANCE_ACTIVE_ALARM', visibilityContext) && (
-                primaryAlarm ? (
-                     <Card title="Active Alarm" className="bg-rose-900/20 border border-rose-500/50">
-                        <div className="flex flex-col lg:flex-row gap-6">
-                            <div className="flex-1">
-                                <h3 className="text-xl font-bold text-white mb-2">{primaryAlarm.message}</h3>
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-rose-300 font-mono">
-                                    <span>Code: {primaryAlarm.code}</span>
-                                    <span>Time: {primaryAlarm.timestamp}</span>
-                                    <span>Severity: <StatusBadge status={primaryAlarm.severity} /></span>
-                                </div>
-                            </div>
-                            {canPerformMaintenance && isDataItemVisible(userRole, 'MACHINE_MAINTENANCE_FORM', visibilityContext) && (
-                                <div className="w-full lg:w-[400px] bg-slate-900/50 border border-slate-700 rounded-lg p-4">
-                                     {!primaryAlarm.inProgressBy ? (
-                                        <form onSubmit={handleStartMaintenance}>
-                                            <label className="text-xs font-bold text-slate-300 uppercase mb-2 block">Technician Name</label>
-                                            <input type="text" value={startTechnicianName} onChange={e => setStartTechnicianName(e.target.value)} required className="w-full bg-slate-800 p-2 rounded border border-slate-600 mb-3" />
-                                            <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded font-bold">Start Maintenance</button>
-                                        </form>
-                                    ) : (
-                                         <form onSubmit={handleMaintenanceSubmit} className="space-y-3">
-                                            <div><label className="text-xs font-bold text-slate-300 uppercase block">Checked By</label><input type="text" value={formCheckedBy} onChange={e => setFormCheckedBy(e.target.value)} required className="w-full bg-slate-800 p-2 rounded border border-slate-600" /></div>
-                                            <div><label className="text-xs font-bold text-slate-300 uppercase block">Note</label><textarea value={maintenanceNote} onChange={e => setMaintenanceNote(e.target.value)} required className="w-full bg-slate-800 p-2 rounded border border-slate-600 h-24" /></div>
-                                            <div className="flex items-center gap-4"><label className="text-xs font-bold text-slate-300 uppercase">Solved?</label><input type="checkbox" checked={maintenanceSolved} onChange={e => setMaintenanceSolved(e.target.checked)} className="w-5 h-5 accent-emerald-500" /></div>
-                                            <button disabled={formSubmitting} type="submit" className="w-full bg-emerald-600 text-white p-2 rounded font-bold flex items-center justify-center gap-2 disabled:opacity-50">
-                                                {formSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Submit Report
-                                            </button>
-                                        </form>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-                ) : (
-                    <Card className="text-center py-12 bg-emerald-900/10 border-emerald-500/20">
-                        <CheckCircle2 size={40} className="text-emerald-500 mx-auto mb-3" />
-                        <h3 className="font-bold text-white text-lg">System Healthy</h3>
-                        <p className="text-sm text-slate-300">No active alarms on this machine.</p>
-                    </Card>
-                )
-            )}
-             {canViewHistory && isDataItemVisible(userRole, 'MACHINE_MAINTENANCE_HISTORY_TABLE', visibilityContext) && (
-                 <Card title="Maintenance History">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="text-xs text-slate-300 uppercase font-bold bg-slate-900/50">
-                                <tr>
-                                    <th className="p-3">Time</th>
-                                    <th className="p-3">Technician</th>
-                                    <th className="p-3">Status</th>
-                                    <th className="p-3">Note</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800">
-                                {maintenanceHistoryRecords.map(record => (
-                                     <tr key={record.id} className="hover:bg-slate-800/50">
-                                        <td className="p-3 font-mono text-slate-300">{record.timestamp}</td>
-                                        <td className="p-3 font-semibold text-white">{record.checkedBy}</td>
-                                        <td className="p-3">
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${record.solved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                                                {record.solved ? 'SOLVED' : 'PENDING'}
-                                            </span>
-                                        </td>
-                                        <td className="p-3 text-slate-300">{record.note}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </Card>
-            )}
-        </div>
-    );
-
     const renderActiveTab = () => {
         switch (activeTab) {
-            case 'Performance': return renderPerformanceTab();
-            case 'Process': return renderProcessTab();
-            case 'Packing': return renderPackingTab();
-            case 'Utility': return renderUtilityTab();
-            case 'Alarms': return renderAlarmsTab();
-            case 'Downtime': return renderDowntimeTab();
-            case 'Maintenance': return renderMaintenanceTab();
+            case 'Performance': return <MachineISOOverview machine={machine} period={period} />;
+            case 'Process': return (machine.name.toUpperCase().includes('PC39') || machine.code.includes('PC39')) ? <PC39FryerDashboard machine={machine} /> : <HorizontalProcessDashboard machine={machine} />;
+            case 'Packing': return <div className="p-8 text-center text-slate-400 border border-dashed border-slate-800 rounded-3xl">Packing analytics module.</div>;
+            case 'Utility': 
+                const util = accumulatedStats?.utility || { electricity: 0, steam: 0, water: 0, air: 0 };
+                return (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <MetricCard title="Electricity" value={formatNumber(util.electricity)} unit="kWh" icon={Zap} color="text-yellow-400" />
+                        <MetricCard title="Steam" value={formatNumber(util.steam)} unit="kg" icon={Cloud} color="text-slate-200" />
+                        <MetricCard title="Water" value={formatNumber(util.water)} unit="m³" icon={Droplets} color="text-blue-400" />
+                        <MetricCard title="Air" value={formatNumber(util.air)} unit="Nm³" icon={Wind} color="text-cyan-400" />
+                    </div>
+                );
+            case 'Alarms': 
+                return (
+                    <Card title="Alarm History">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="text-xs text-slate-300 uppercase font-bold bg-slate-900/50"><tr><th className="p-3">Time</th><th className="p-3">Code</th><th className="p-3">Message</th><th className="p-3 text-right">Status</th></tr></thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    {alarmHistory.map(alarm => (
+                                        <tr key={alarm.id} className="hover:bg-slate-800/50 transition-colors"><td className="p-3 text-slate-400 font-mono">{alarm.timestamp}</td><td className="p-3 font-mono text-xs">{alarm.code}</td><td className="p-3 font-bold text-white">{alarm.message}</td><td className="p-3 text-right"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${alarm.isActive ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400'}`}>{alarm.isActive ? 'ACTIVE' : 'CLEARED'}</span></td></tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                );
+            case 'Downtime': return <div className="p-8 text-center text-slate-400 border border-dashed border-slate-800 rounded-3xl">Downtime diagnostics module.</div>;
+            case 'Maintenance': 
+                return (
+                    <div className="space-y-6">
+                        {primaryAlarm ? (
+                            <Card className="border-rose-500/30 bg-rose-500/5 shadow-xl">
+                                <div className="flex flex-col md:flex-row justify-between gap-6">
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2"><AlertTriangle className="text-rose-500" /> {primaryAlarm.message}</h3>
+                                        <div className="text-sm text-slate-400">Alarm Code: <span className="font-mono text-rose-400 font-bold">{primaryAlarm.code}</span> • Triggered at {primaryAlarm.timestamp}</div>
+                                    </div>
+                                    <form onSubmit={handleMaintenanceSubmit} className="space-y-4 w-full md:w-[450px]">
+                                        <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-xl space-y-4">
+                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Technician Response</label>
+                                            <input value={formCheckedBy} onChange={e => setFormCheckedBy(e.target.value)} required placeholder="Employee ID / Name" className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-blue-500 outline-none transition-all" />
+                                            <textarea value={maintenanceNote} onChange={e => setMaintenanceNote(e.target.value)} required placeholder="Correction action details..." className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm h-28 focus:border-blue-500 outline-none transition-all" />
+                                            <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 group">
+                                                <Save size={18} className="group-hover:scale-110 transition-transform" /> Submit Maintenance Log
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </Card>
+                        ) : (
+                            <div className="p-20 text-center flex flex-col items-center gap-4 bg-slate-900/30 rounded-3xl border border-dashed border-slate-800 shadow-inner">
+                                <CheckCircle2 size={56} className="text-emerald-500/20" />
+                                <span className="text-slate-500 font-black uppercase tracking-[0.3em] text-sm">Plant Systems Integral</span>
+                            </div>
+                        )}
+                    </div>
+                );
             default: return null;
         }
     };
-    
+
     return (
         <div className="space-y-6 animate-in fade-in duration-300 w-full pb-10 relative">
-             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white">
-                        <ArrowLeft size={24} />
-                    </button>
+                    <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white"><ArrowLeft size={24} /></button>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-2xl font-bold text-white tracking-tight">{machine.name}</h1>
+                            <h1 className="text-2xl font-black text-white tracking-tighter uppercase">{machine.name}</h1>
                             <StatusBadge status={machine.status} />
                         </div>
-                        <p className="text-slate-300 text-sm mt-0.5 font-medium">{machine.plantId} / {machine.type}</p>
+                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-0.5">{machine.plantId} • {machine.type} INFRASTRUCTURE</p>
                     </div>
                 </div>
-                
-                 <div className="flex flex-wrap items-center gap-3 self-end sm:self-auto">
-                    <div className="bg-slate-900 border border-slate-700 p-1 rounded-lg flex gap-1">
-                        <FilterButton label="Day" />
-                        <FilterButton label="Week" />
-                        <FilterButton label="Month" />
-                        <FilterButton label="Year" />
-                    </div>
-                    {canDownloadReport && (
-                        <button 
-                            onClick={handleDownloadReport}
-                            disabled={isDownloading}
-                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-500 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed group shadow-sm"
-                        >
-                            {isDownloading ? (
-                                <Loader2 size={16} className="animate-spin text-blue-400" />
-                            ) : (
-                                <FileText size={16} className="text-blue-400 group-hover:text-blue-300" />
-                            )}
-                            <span className="hidden sm:inline">{isDownloading ? 'Generating...' : 'Export PDF'}</span>
-                        </button>
-                    )}
-                </div>
-            </div>
-            
-             {visibleTabs.length > 1 && (
-                <div className="border-b border-slate-800">
-                    <nav className="-mb-px flex space-x-6 overflow-x-auto">
-                        {visibleTabs.map(tab => (
-                            <button
-                                key={tab.key}
-                                onClick={() => setActiveTab(tab.key)}
-                                className={`whitespace-nowrap py-3 px-1 border-b-2 font-bold text-sm transition-colors ${
-                                    activeTab === tab.key
-                                    ? 'border-blue-500 text-blue-400'
-                                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-300'
-                                }`}
-                            >
-                                {tab.key}
-                            </button>
+                <div className="flex flex-wrap items-center gap-3 self-end sm:self-auto">
+                    <div className="bg-slate-900 border border-slate-800 p-1 rounded-lg flex gap-1 shadow-inner">
+                        {['Day', 'Week', 'Month', 'Year'].map(l => (
+                            <button key={l} onClick={() => setPeriod(l as Period)} className={`px-4 py-1.5 text-[10px] font-black rounded-md uppercase tracking-widest transition-all ${period === l ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>{l}</button>
                         ))}
-                    </nav>
+                    </div>
+                    {([UserRole.ADMINISTRATOR, UserRole.SUPERVISOR, UserRole.MANAGEMENT].includes(userRole)) && <button className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"><FileText size={14} className="text-blue-500" /> Export PDF</button>}
                 </div>
-            )}
-            
-            <div className="mt-6">
-                {renderActiveTab()}
             </div>
             
-            {/* Downtime Modal */}
-            {isDowntimeModalOpen && (
-                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                    <Card title="Add Manual Downtime Log" className="w-full max-w-lg bg-slate-900 border-slate-700">
-                        <form onSubmit={handleAddDowntimeSubmit} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">Start Time</label>
-                                    <input type="time" value={newDowntime.start} onChange={e => setNewDowntime({...newDowntime, start: e.target.value})} required className="w-full bg-slate-800 p-2 rounded border border-slate-600"/>
-                                </div>
-                                 <div>
-                                    <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">End Time</label>
-                                    <input type="time" value={newDowntime.end} onChange={e => setNewDowntime({...newDowntime, end: e.target.value})} required className="w-full bg-slate-800 p-2 rounded border border-slate-600"/>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">Reason</label>
-                                <select value={newDowntime.reason} onChange={e => setNewDowntime({...newDowntime, reason: e.target.value})} className="w-full bg-slate-800 p-2 rounded border border-slate-600">
-                                    <option>Jam</option>
-                                    <option>Changeover</option>
-                                    <option>Cleaning</option>
-                                    <option>No Material</option>
-                                    <option>Operator Break</option>
-                                    <option>Other</option>
-                                </select>
-                            </div>
-                             <div>
-                                <label className="text-xs font-bold text-slate-300 uppercase mb-1 block">Description (Optional)</label>
-                                <textarea value={newDowntime.description} onChange={e => setNewDowntime({...newDowntime, description: e.target.value})} className="w-full bg-slate-800 p-2 rounded border border-slate-600 h-20" />
-                            </div>
-                            <div className="flex justify-end gap-3 pt-2">
-                                <button type="button" onClick={() => setIsDowntimeModalOpen(false)} className="px-4 py-2 rounded font-bold text-slate-300 hover:text-white">Cancel</button>
-                                <button type="submit" className="px-6 py-2 rounded bg-blue-600 text-white font-bold flex items-center gap-2"><Save size={16}/> Save Log</button>
-                            </div>
-                        </form>
-                    </Card>
-                 </div>
-            )}
+            <div className="border-b border-slate-800"><nav className="-mb-px flex space-x-8 overflow-x-auto">{visibleTabs.map(tab => (<button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`whitespace-nowrap py-4 px-1 border-b-2 font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === tab.key ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-300 hover:border-slate-700'}`}>{tab.key}</button>))}</nav></div>
             
-            {/* Success Toast */}
-             {showSuccess && (
-                <div className="fixed bottom-8 right-8 z-50 bg-emerald-600 text-white px-5 py-3 rounded-lg shadow-xl flex items-center gap-3">
-                    <CheckCircle2 size={20} />
-                    <p className="font-bold text-sm">Downtime logged successfully!</p>
-                </div>
-            )}
-
-            {/* Download Toast */}
-             {showDownloadToast && (
-                <div className="fixed bottom-8 right-8 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
-                    <div className="bg-emerald-600 text-white px-5 py-3 rounded-lg shadow-xl shadow-emerald-900/30 flex items-center gap-3 border border-emerald-500/50">
-                        <div className="bg-white/20 p-1 rounded-full"><CheckCircle2 size={18} className="text-white" /></div>
-                        <div>
-                            <p className="font-bold text-sm">Report Downloaded</p>
-                            <p className="text-emerald-100 text-xs mt-0.5">{machine.code}_Report_{period}.pdf</p>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <div className="mt-8">{renderActiveTab()}</div>
         </div>
     );
 };
