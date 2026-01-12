@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { PLANTS, type PlantId } from "@/config/app.config";
 import { useAuth } from "@/stores/auth";
@@ -49,7 +49,12 @@ const { isVisible, isReady, visibilityVersion } = useVisibility();
 // Sidebar grouping state
 const energyExpanded = ref(true);
 const electricityExpanded = ref(false);
-const productionExpanded = ref(true);
+const productionExpanded = ref(false);
+
+// Reset production dropdown when switching plants
+watch(currentPlantId, () => {
+    productionExpanded.value = false;
+});
 
 // Filter plants based on user access
 const accessiblePlants = computed(() => {
