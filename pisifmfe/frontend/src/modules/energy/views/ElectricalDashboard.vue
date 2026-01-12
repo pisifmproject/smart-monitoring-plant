@@ -38,10 +38,10 @@ const isGenerating = ref(false);
 const showHelpModal = ref(false);
 
 const PANEL_CONFIG = [
-  { capacity: 1152.75, maxCurrent: 2500 },
-  { capacity: 1271.36, maxCurrent: 2500 },
-  { capacity: 1270.59, maxCurrent: 2500 },
-  { capacity: 1641.35, maxCurrent: 3200 },
+  { capacity: 5540, maxCurrent: 2500 },
+  { capacity: 5540, maxCurrent: 2500 },
+  { capacity: 5540, maxCurrent: 2500 },
+  { capacity: 5540, maxCurrent: 3200 },
 ];
 
 const indofoodRanges2025: Record<string, { start: string; end: string }> = {
