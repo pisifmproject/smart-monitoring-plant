@@ -835,72 +835,79 @@ const generateReport = async () => {
             <X class="w-5 h-5" />
           </button>
         </div>
+
         <div class="modal-body">
+
+          <!-- LVMDP 1 -->
           <div class="help-section">
             <h3>LVMDP 1 (Main Production Area)</h3>
             <ul>
-              <li>SDP Process A</li>
-              <li>SDP Process B</li>
-              <li>SDP Process C</li>
-              <li>SDP Process</li>
-              <li>SDP Raw Material Warehouse</li>
-              <li>SDP Finished Goods Warehouse</li>
-              <li>SDP Packing</li>
-              <li>SDP Process Line B</li>
-              <li>SDP X&amp;P</li>
+              <li>SDP Process A — Daya: 360 kW | Breaker: 1600 A</li>
+              <li>SDP Process B — Daya: 300 kW | Breaker: 630 A</li>
+              <li>SDP Process C — Daya: 120 kW | Breaker: 500 A</li>
+              <li>SDP Process — Daya: 160 kW | Breaker: 1250 A</li>
+              <li>SDP Raw Material Warehouse — Daya: 20 kW | Breaker: 250 A</li>
+              <li>SDP Finished Goods Warehouse — Daya: 30 kW | Breaker: 400 A</li>
+              <li>SDP Packing — Daya: 145 kW | Breaker: 630 A</li>
+              <li>SDP Process Line B — Daya: 85 kW | Breaker: 200 A</li>
+              <li>SDP X&amp;P — Daya: 250 kW | Breaker: 800 A</li>
             </ul>
           </div>
 
+          <!-- LVMDP 2 -->
           <div class="help-section">
             <h3>LVMDP 2 (Utilities & Supporting Facilities)</h3>
             <ul>
-              <li>SDP Office</li>
-              <li>SDP Workshop</li>
-              <li>SDP Compressor</li>
-              <li>SDP Nitrogen</li>
-              <li>SDP Cooking Oil Pump</li>
-              <li>SDP Fuel Pump</li>
-              <li>SDP Deepwell</li>
-              <li>SDP WWTP 1 (By WWTP)</li>
-              <li>SDP Water Pump</li>
-              <li>SDP Oil</li>
-              <li>SDP pH System</li>
-              <li>SDP Booster Pump</li>
-              <li>SDP Compressor 5</li>
+              <li>SDP Office — Daya: 575 kW | Breaker: 800 A</li>
+              <li>SDP Workshop — Daya: 40 kW | Breaker: 100 A</li>
+              <li>SDP Compressor — Daya: 420 kW | Breaker: 630 A</li>
+              <li>SDP Nitrogen — Daya: 100 kW | Breaker: 400 A</li>
+              <li>SDP Cooking Oil Pump — Daya: 8 kW | Breaker: 100 A</li>
+              <li>SDP Fuel Pump — Daya: 8 kW | Breaker: 25 A</li>
+              <li>SDP Deepwell — Daya: 50 kW | Breaker: 80 A</li>
+              <li>SDP WWTP 1 (By WWTP) — Daya: 160 kW | Breaker: 630 A</li>
+              <li>SDP Water Pump — Daya: 60 kW | Breaker: 100 A</li>
+              <li>SDP Oil — Daya: 15 kW | Breaker: 63 A</li>
+              <li>SDP pH System — Daya: 5 kW | Breaker: 63 A</li>
+              <li>SDP Booster Pump — Daya: 50 kW | Breaker: 100 A</li>
+              <li>SDP Compressor 5 — Daya: 130 kW | Breaker: 250 A</li>
             </ul>
           </div>
 
+          <!-- LVMDP 3 -->
           <div class="help-section">
             <h3>LVMDP 3 (Extended Production & Storage Areas)</h3>
             <ul>
-              <li>SDP TC Line</li>
-              <li>SDP Raw Material Warehouse 2</li>
-              <li>SDP Finished Goods Warehouse 2</li>
-              <li>P VAC 2</li>
-              <li>P WWTP 2</li>
-              <li>P WTP</li>
-              <li>P Cold Room</li>
-              <li>PDQC</li>
-              <li>SDP Process Line 7</li>
-              <li>SDP Compressor 4</li>
+              <li>SDP TC Line — Daya: 520 kW | Breaker: 1250 A</li>
+              <li>SDP Raw Material Warehouse 2 — Daya: 40 kW | Breaker: 400 A</li>
+              <li>SDP Finished Goods Warehouse 2 — Daya: 50 kW | Breaker: 200 A</li>
+              <li>P VAC 2 — Daya: 320 kW | Breaker: 800 A</li>
+              <li>P WWTP 2 — Daya: 80 kW | Breaker: 250 A</li>
+              <li>P WTP — Daya: 30 kW | Breaker: 50 A</li>
+              <li>P Cold Room — Daya: 60 kW | Breaker: 160 A</li>
+              <li>PDQC — Daya: 15 kW | Breaker: 400 A</li>
+              <li>SDP Process Line 7 — Daya: 375 kW | Breaker: 1000 A</li>
+              <li>SDP Compressor 4 — Daya: 130 kW | Breaker: 250 A</li>
             </ul>
           </div>
 
+          <!-- LVMDP 4 -->
           <div class="help-section">
             <h3>LVMDP 4 (Boiler & Specialized Production Lines)</h3>
             <ul>
-              <li>SDB Line 9</li>
-              <li>SDB Line 10</li>
-              <li>P Boiler</li>
-              <li>SDB Finished Goods Mezzanine</li>
-              <li>SDB VAC 3.1</li>
-              <li>P Compressor 3</li>
-              <li>SDB VAC 3.2</li>
-              <li>SDB Raw Material 3</li>
-              <li>P WTP</li>
-              <li>SDB Line 11</li>
+              <li>SDB Line 9 — Daya: 490 kW | Breaker: 400–1000 A</li>
+              <li>SDB Line 10 — Daya: 385 kW | Breaker: 320–800 A</li>
+              <li>P Boiler — Daya: 42,32 kW | Breaker: 70–100 A</li>
+              <li>SDB Finished Goods Mezzanine — Daya: 14,28 kW | Breaker: 44–63 A</li>
+              <li>SDB VAC 3.1 — Daya: 223,36 kW | Breaker: 250–630 A</li>
+              <li>P Compressor 3 — Daya: 270 kW | Breaker: 250–630 A</li>
+              <li>SDB VAC 3.2 — Daya: 308,1 kW | Breaker: 250–630 A</li>
+              <li>SDB Raw Material 3 — Daya: 174,25 kW | Breaker: 160–400 A</li>
+              <li>P WTP — Daya: 110,43 kW | Breaker: 175–250 A</li>
+              <li>SDB Line 11 — Daya: 75 kW | Breaker: 112–160 A</li>
             </ul>
           </div>
+
         </div>
       </div>
     </div>
