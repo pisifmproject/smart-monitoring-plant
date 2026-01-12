@@ -24,7 +24,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 export const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
-  timeout: 10000,
+  timeout: 60000,
   headers: {
     "Cache-Control": "no-cache, no-store, must-revalidate",
     Pragma: "no-cache",
