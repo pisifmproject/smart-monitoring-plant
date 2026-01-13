@@ -51,12 +51,14 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
+    /* 
     if (!isBackendConnected) {
       isBackendConnected = true;
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('backend-reconnected'));
       }
     }
+    */
     return response;
   },
   (error) => {
@@ -73,6 +75,7 @@ api.interceptors.response.use(
     }
     
     // Only show warning once per 10 seconds
+    /*
     if (now - lastErrorTime > 10000) {
       if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
         isBackendConnected = false;
@@ -87,6 +90,7 @@ api.interceptors.response.use(
         }
       }
     }
+    */
     
     return Promise.reject(error);
   }
