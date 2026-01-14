@@ -110,20 +110,22 @@ export const getDailyReportByMonth = async (year: number, month: number) => {
 };
 
 /**
- * Semua laporan
+ * Semua laporan (no limit - fetch all for monthly reports)
  */
 export const getAllDailyReports = async () => {
   return await db
     .select()
     .from(dailyReportLVMDP3)
-    .orderBy(desc(dailyReportLVMDP3.reportDate))
-    .limit(30);
+    .orderBy(desc(dailyReportLVMDP3.reportDate));
 };
 
 /**
  * Get daily reports by date range
  */
-export const getDailyReportsByDateRange = async (startDate: string, endDate: string) => {
+export const getDailyReportsByDateRange = async (
+  startDate: string,
+  endDate: string
+) => {
   return await db
     .select()
     .from(dailyReportLVMDP3)

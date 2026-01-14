@@ -1,5 +1,5 @@
 import { PLANTS } from "@/config/app.config";
-import { getLvmdpLatest, getLvmdpHMI, type LvmdpRaw } from "@/lib/api";
+import { getLvmdpLatest, getLvmdpHMI, getLvmdpAllLatest, type LvmdpRaw } from "@/lib/api";
 import type { LVMDPData, LVMDPCallback } from "../models";
 
 export class LvmdpService {
@@ -10,7 +10,14 @@ export class LvmdpService {
   private nextSubscriptionId = 0;
   private cache: Map<string, { data: LVMDPData; timestamp: number }> =
     new Map();
-  private readonly CACHE_TTL = 2000; // 2 seconds cache
+  private readonly CACHE_TTL = 5000; // 5 seconds cache (increased from 2s)
+  private readonly POLL_INTERVAL = 5000; // 5 seconds polling (increased from 2s)
+  
+  // Batch fetch optimization - fetch all panels at once
+  private batchFetchInProgress = false;
+  private lastBatchFetch = 0;
+  private batchInterval: number | null = null;
+  private plantCallbacks: Map<string, Map<number, LVMDPCallback>> = new Map();
 
   constructor() {}
 
@@ -110,8 +117,8 @@ export class LvmdpService {
     // Fetch immediately
     fetchData();
 
-    // Then poll every 2 seconds (balanced between freshness and performance)
-    const intervalId = window.setInterval(fetchData, 2000);
+    // Then poll every 5 seconds (balanced between freshness and performance)
+    const intervalId = window.setInterval(fetchData, this.POLL_INTERVAL);
 
     this.intervals.set(key, intervalId);
 
@@ -248,6 +255,104 @@ export class LvmdpService {
         s: { current: 0, voltageST: 0 },
         t: { current: 0, voltageTR: 0 },
       },
+    };
+  }
+
+  /**
+   * Subscribe to all 4 LVMDP panels at once using batch API (optimized).
+   * This reduces 4 API calls to 1, significantly improving performance.
+   * Returns a cleanup function to stop all subscriptions.
+   */
+  subscribeAll(
+    plantId: string,
+    callbacks: { [key: number]: LVMDPCallback }
+  ): () => void {
+    const plantConfig = PLANTS[plantId as keyof typeof PLANTS];
+    const useRealData = plantConfig?.useRealData ?? false;
+
+    // Store callbacks for this plant
+    if (!this.plantCallbacks.has(plantId)) {
+      this.plantCallbacks.set(plantId, new Map());
+    }
+    const plantCbs = this.plantCallbacks.get(plantId)!;
+    
+    // Register all callbacks
+    Object.entries(callbacks).forEach(([idx, cb]) => {
+      plantCbs.set(Number(idx), cb);
+      const key = `${plantId}-${idx}`;
+      
+      // Check cache first for instant loading
+      const cached = this.cache.get(key);
+      if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+        cb(cached.data);
+      }
+    });
+
+    // Batch fetch function
+    const batchFetch = async () => {
+      if (this.batchFetchInProgress) return;
+      this.batchFetchInProgress = true;
+
+      try {
+        if (useRealData && plantId === "cikupa") {
+          const result = await getLvmdpAllLatest();
+          
+          if (result && result.panels) {
+            [1, 2, 3, 4].forEach((idx) => {
+              const raw = result.panels[idx as 1|2|3|4];
+              const key = `${plantId}-${idx}`;
+              const cb = plantCbs.get(idx);
+              
+              if (cb) {
+                if (raw) {
+                  const model = this.mapToModel(idx, raw);
+                  this.cache.set(key, { data: model, timestamp: Date.now() });
+                  cb(model);
+                } else {
+                  const dummy = this.generateDummyData(idx);
+                  cb(dummy);
+                }
+              }
+            });
+          }
+        } else {
+          // Use dummy data for non-real plants
+          [1, 2, 3, 4].forEach((idx) => {
+            const cb = plantCbs.get(idx);
+            if (cb) {
+              const dummy = this.generateDummyData(idx);
+              cb(dummy);
+            }
+          });
+        }
+      } catch (err) {
+        // On error, use cached data
+        [1, 2, 3, 4].forEach((idx) => {
+          const key = `${plantId}-${idx}`;
+          const cached = this.cache.get(key);
+          const cb = plantCbs.get(idx);
+          if (cached && cb) {
+            cb(cached.data);
+          }
+        });
+      } finally {
+        this.batchFetchInProgress = false;
+      }
+    };
+
+    // Fetch immediately
+    batchFetch();
+
+    // Then poll every 5 seconds
+    this.batchInterval = window.setInterval(batchFetch, this.POLL_INTERVAL);
+
+    // Return cleanup function
+    return () => {
+      if (this.batchInterval) {
+        clearInterval(this.batchInterval);
+        this.batchInterval = null;
+      }
+      this.plantCallbacks.delete(plantId);
     };
   }
 }

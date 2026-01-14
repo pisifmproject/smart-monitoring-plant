@@ -15,6 +15,64 @@ const REPO_FUNCTIONS: Record<number, () => Promise<any>> = {
   4: findLatestLVMDP4,
 };
 
+// GET /api/lvmdp/all/latest - Batch fetch all panels at once (optimized)
+r.get("/all/latest", async (req, res) => {
+  const startTime = Date.now();
+  
+  try {
+    // Fetch all panels in parallel
+    const [panel1, panel2, panel3, panel4] = await Promise.all([
+      findLatestLVMDP1(),
+      findLatestLVMDP2(),
+      findLatestLVMDP3(),
+      findLatestLVMDP4(),
+    ]);
+
+    const mapPanel = (row: any) => {
+      if (!row) return null;
+      return {
+        waktu: row.waktu,
+        totalKwh: row.totalKwh,
+        realPower: row.realPower,
+        cosPhi: row.cosPhi,
+        freq: row.freq,
+        avgLineLine: row.avgLineLine,
+        avgLineNeut: row.avgLineNeut,
+        avgCurrent: row.avgCurrent,
+        currentR: row.currentR,
+        currentS: row.currentS,
+        currentT: row.currentT,
+        voltageRS: row.voltageRS,
+        voltageST: row.voltageST,
+        voltageTR: row.voltageTR,
+      };
+    };
+
+    const elapsed = Date.now() - startTime;
+    
+    // Set cache headers for 3 seconds
+    res.setHeader("Cache-Control", "public, max-age=3");
+    
+    return res.json({
+      panels: {
+        1: mapPanel(panel1),
+        2: mapPanel(panel2),
+        3: mapPanel(panel3),
+        4: mapPanel(panel4),
+      },
+      _meta: {
+        fetchTime: elapsed,
+        timestamp: new Date().toISOString(),
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ 
+      message: "Internal server error", 
+      error: String(err) 
+    });
+  }
+});
+
 // Test endpoint to check database connection
 r.get("/test", async (req, res) => {
   try {

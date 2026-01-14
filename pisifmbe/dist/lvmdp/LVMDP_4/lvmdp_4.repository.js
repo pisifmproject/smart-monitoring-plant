@@ -95,17 +95,24 @@ async function findLVMDPs(dateFrom, dateTo) {
 /**
  * Try to get data dari v_lvmdp_4 view atau lvmdp_hmi table (LVMDP4 columns)
  */
+// In-memory cache for latest data (reduces DB queries)
+let latestCache4 = null;
+const LATEST_CACHE_TTL_4 = 3000; // 3 seconds cache
 async function findLatestLVMDP4() {
-    // Try v_lvmdp_4 first with optimized query
+    // Check cache first
+    if (latestCache4 && Date.now() - latestCache4.timestamp < LATEST_CACHE_TTL_4) {
+        return latestCache4.data;
+    }
+    // Try v_lvmdp_4 first with optimized query (no date filter for faster index scan)
     try {
         const result = await db_1.db.execute((0, drizzle_orm_1.sql) `SELECT * FROM public.v_lvmdp_4 
-          WHERE waktu >= CURRENT_DATE - interval '1 day'
           ORDER BY waktu DESC 
           LIMIT 1`);
         const rows = result.rows || result;
         const row = Array.isArray(rows) ? rows[0] : null;
         if (row) {
             const mapped = mapRow(row);
+            latestCache4 = { data: mapped, timestamp: Date.now() };
             return mapped;
         }
     }
@@ -115,13 +122,13 @@ async function findLatestLVMDP4() {
     // Fallback ke lvmdp_hmi for LVMDP4 data with optimized query
     try {
         const result = await db_1.db.execute((0, drizzle_orm_1.sql) `SELECT * FROM public.lvmdp_hmi 
-          WHERE datetimefield >= CURRENT_DATE - interval '1 day'
           ORDER BY datetimefield DESC 
           LIMIT 1`);
         const rows = result.rows || result;
         const row = Array.isArray(rows) ? rows[0] : null;
         if (row) {
             const mapped = mapHMIRow(row);
+            latestCache4 = { data: mapped, timestamp: Date.now() };
             return mapped;
         }
     }

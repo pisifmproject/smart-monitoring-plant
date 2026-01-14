@@ -105,12 +105,20 @@ export async function findLVMDPs(dateFrom?: string, dateTo?: string) {
 }
 
 // ambil data paling baru (untuk gauge realtime)
+// In-memory cache for latest data (reduces DB queries)
+let latestCache: { data: any; timestamp: number } | null = null;
+const LATEST_CACHE_TTL = 3000; // 3 seconds cache
+
 export async function findLatestLVMDP1() {
   try {
-    // Optimized query with index hint and limit
+    // Check cache first
+    if (latestCache && Date.now() - latestCache.timestamp < LATEST_CACHE_TTL) {
+      return latestCache.data;
+    }
+
+    // Optimized query - only get the most recent row with minimal scan
     const result = await db.execute(
       sql`SELECT * FROM public.v_lvmdp_1 
-          WHERE waktu >= CURRENT_DATE - interval '1 day'
           ORDER BY waktu DESC 
           LIMIT 1`
     );
@@ -119,13 +127,14 @@ export async function findLatestLVMDP1() {
 
     if (row) {
       const mapped = mapRow(row);
+      // Update cache
+      latestCache = { data: mapped, timestamp: Date.now() };
       return mapped;
     }
 
     // Fallback to lvmdp_hmi with optimized query
     const hmiResult = await db.execute(
       sql`SELECT * FROM public.lvmdp_hmi 
-          WHERE datetimefield >= CURRENT_DATE - interval '1 day'
           ORDER BY datetimefield DESC 
           LIMIT 1`
     );
@@ -134,6 +143,7 @@ export async function findLatestLVMDP1() {
 
     if (hmiRow) {
       const mapped = mapHMIRow1(hmiRow);
+      latestCache = { data: mapped, timestamp: Date.now() };
       return mapped;
     }
 

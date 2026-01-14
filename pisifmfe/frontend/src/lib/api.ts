@@ -127,6 +127,29 @@ export const getLvmdp2Latest = () => getLvmdpLatest(2);
 export const getLvmdp3Latest = () => getLvmdpLatest(3);
 export const getLvmdp4Latest = () => getLvmdpLatest(4);
 
+// Batch fetch all LVMDP panels at once (optimized - single API call)
+export async function getLvmdpAllLatest() {
+  try {
+    const { data } = await api.get(`/lvmdp/all/latest`, {
+      params: { _t: Date.now() },
+    });
+    return data as {
+      panels: {
+        1: LvmdpRaw | null;
+        2: LvmdpRaw | null;
+        3: LvmdpRaw | null;
+        4: LvmdpRaw | null;
+      };
+      _meta: {
+        fetchTime: number;
+        timestamp: string;
+      };
+    };
+  } catch (error: any) {
+    throw error;
+  }
+}
+
 // Get shift data for today
 export async function getLvmdpShiftToday(panelId: 1 | 2 | 3 | 4, date?: string) {
   try {

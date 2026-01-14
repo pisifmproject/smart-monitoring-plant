@@ -12,11 +12,15 @@ import {
   X,
   ChevronDown,
   FileText,
-  Table
+  Table,
 } from "lucide-vue-next";
 import { lvmdpService } from "@/modules/energy/services/lvmdp.service";
 import type { LVMDPData } from "@/modules/energy/models";
-import { getLvmdpShiftToday, getLvmdpTrend, getDailyReportAll } from "@/lib/api";
+import {
+  getLvmdpShiftToday,
+  getLvmdpTrend,
+  getDailyReportAll,
+} from "@/lib/api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -45,15 +49,18 @@ const downloadMenuRef = ref<HTMLElement | null>(null);
 
 // Close dropdown when clicking outside
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
+  document.addEventListener("click", handleClickOutside);
 });
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener("click", handleClickOutside);
 });
 
 function handleClickOutside(event: MouseEvent) {
-  if (downloadMenuRef.value && !downloadMenuRef.value.contains(event.target as Node)) {
+  if (
+    downloadMenuRef.value &&
+    !downloadMenuRef.value.contains(event.target as Node)
+  ) {
     showDownloadMenu.value = false;
   }
 }
@@ -182,13 +189,26 @@ const plantStats = computed(() => {
 });
 
 onMounted(() => {
-  [1, 2, 3, 4].forEach((index) => {
-    const unsub = lvmdpService.subscribe(plantId.value, index, (data) => {
-      panels.value[index - 1] = data;
+  // Use batch subscribe for better performance (1 API call instead of 4)
+  const unsub = lvmdpService.subscribeAll(plantId.value, {
+    1: (data) => {
+      panels.value[0] = data;
       lastUpdate.value = new Date();
-    });
-    unwatchers.push(unsub);
+    },
+    2: (data) => {
+      panels.value[1] = data;
+      lastUpdate.value = new Date();
+    },
+    3: (data) => {
+      panels.value[2] = data;
+      lastUpdate.value = new Date();
+    },
+    4: (data) => {
+      panels.value[3] = data;
+      lastUpdate.value = new Date();
+    },
   });
+  unwatchers.push(unsub);
 });
 
 onUnmounted(() => {
@@ -603,148 +623,253 @@ const generateReport = async () => {
 };
 
 const toggleDownloadMenu = () => {
-    showDownloadMenu.value = !showDownloadMenu.value;
+  showDownloadMenu.value = !showDownloadMenu.value;
 };
 
-const handleDownload = (type: 'pdf' | 'excel') => {
-    showDownloadMenu.value = false;
-    if (type === 'pdf') {
-        generateReport();
-    } else {
-        generateExcel();
-    }
+const handleDownload = (type: "pdf" | "excel") => {
+  showDownloadMenu.value = false;
+  if (type === "pdf") {
+    generateReport();
+  } else {
+    generateExcel();
+  }
 };
 
 const generateExcel = async () => {
   isGenerating.value = true;
   try {
     const workbook = XLSX.utils.book_new();
-    const dateStr = reportType.value === 'date' ? selectedDate.value : selectedMonth.value;
-    
-    // Process each LVMDP
-    for (let i = 1; i <= 4; i++) {
-        const panelName = `LVMDP ${i}`;
-        let sheetData: any[] = [];
-        
-        if (reportType.value === 'date') {
-            // --- DAILY DETAIL REPORT ---
-            // 1. Shift Data
-            const shiftData = await getLvmdpShiftToday(i as 1|2|3|4, selectedDate.value).catch(() => null);
-            
-            sheetData.push(["DAILY REPORT DETAIL", panelName]);
-            sheetData.push(["Date", selectedDate.value]);
-            sheetData.push([]);
-            
-            // Shift Summary Section
-            sheetData.push(["SHIFT SUMMARY"]);
-            sheetData.push(["Shift", "Total Energy (kWh)", "Avg Power (kW)", "Avg Current (A)", "PF"]);
-            
-             if (shiftData) {
-                ['shift1', 'shift2', 'shift3'].forEach((k, idx) => {
-                    const s = shiftData[k as keyof typeof shiftData] as any;
-                    if (s) {
-                         const avgPower = (s.avgKwh && s.cosPhi) ? (s.avgKwh / s.cosPhi) : 0;
-                         sheetData.push([
-                             `Shift ${idx + 1}`,
-                             s.totalKwh || 0,
-                             avgPower.toFixed(2),
-                             s.avgCurrent || 0,
-                             s.cosPhi || 0
-                         ]);
-                    } else {
-                        sheetData.push([`Shift ${idx + 1}`, "-", "-", "-", "-"]);
-                    }
-                });
+    const dateStr =
+      reportType.value === "date" ? selectedDate.value : selectedMonth.value;
+
+    // Fetch all data in parallel for better performance
+    const panelPromises = [1, 2, 3, 4].map(async (i) => {
+      const panelName = `LVMDP ${i}`;
+      let sheetData: any[] = [];
+
+      if (reportType.value === "date") {
+        // Fetch shift and trend data in parallel
+        const [shiftData, trend] = await Promise.all([
+          getLvmdpShiftToday(i as 1 | 2 | 3 | 4, selectedDate.value).catch(
+            () => null
+          ),
+          getLvmdpTrend(i as 1 | 2 | 3 | 4, "day", selectedDate.value).catch(
+            () => null
+          ),
+        ]);
+
+        sheetData.push(["DAILY REPORT DETAIL", panelName]);
+        sheetData.push(["Date", selectedDate.value]);
+        sheetData.push([]);
+
+        // Shift Summary Section
+        sheetData.push(["SHIFT SUMMARY"]);
+        sheetData.push([
+          "Shift",
+          "Total Energy (kWh)",
+          "Avg Power (kW)",
+          "Avg Current (A)",
+          "PF",
+        ]);
+
+        if (shiftData) {
+          ["shift1", "shift2", "shift3"].forEach((k, idx) => {
+            const s = shiftData[k as keyof typeof shiftData] as any;
+            if (s) {
+              const totalKwh =
+                Math.round((Number(s.totalKwh) || 0) * 100) / 100;
+              const avgCurrent =
+                Math.round((Number(s.avgCurrent) || 0) * 100) / 100;
+              const cosPhi = Math.round((Number(s.cosPhi) || 0) * 1000) / 1000;
+              const avgPower =
+                s.avgKwh && s.cosPhi
+                  ? Math.round((s.avgKwh / s.cosPhi) * 100) / 100
+                  : 0;
+              sheetData.push([
+                `Shift ${idx + 1}`,
+                totalKwh,
+                avgPower,
+                avgCurrent,
+                cosPhi,
+              ]);
+            } else {
+              sheetData.push([`Shift ${idx + 1}`, 0, 0, 0, 0]);
             }
-            sheetData.push([]);
+          });
+        }
+        sheetData.push([]);
 
-            // Hourly Trend Section
-            sheetData.push(["HOURLY ENERGY USAGE (00:00 - 23:59)"]);
-            sheetData.push(["Hour", "Energy (kWh)"]);
-            
-            const trend = await getLvmdpTrend(i as 1|2|3|4, 'day', selectedDate.value).catch(() => null);
-            if (trend && trend.data && trend.labels) {
-                trend.labels.forEach((label, idx) => {
-                    sheetData.push([label, trend.data[idx] || 0]);
-                });
-            }
+        // Hourly Trend Section
+        sheetData.push(["HOURLY ENERGY USAGE (00:00 - 23:59)"]);
+        sheetData.push(["Hour", "Energy (kWh)"]);
 
-        } else {
-            // --- MONTHLY DETAIL REPORT ---
-             const [year, month] = selectedMonth.value.split('-').map(Number);
-             
-             sheetData.push(["MONTHLY REPORT DETAIL", panelName]);
-             sheetData.push(["Period", computedPeriod.value]);
-             sheetData.push([]);
+        if (trend && trend.data && trend.labels) {
+          trend.labels.forEach((label, idx) => {
+            const value =
+              Math.round((Number(trend.data[idx]) || 0) * 100) / 100;
+            sheetData.push([label, value]);
+          });
+        }
+      } else {
+        // --- MONTHLY DETAIL REPORT ---
+        const [year, month] = selectedMonth.value.split("-").map(Number);
 
-             sheetData.push(["DAILY SHIFT BREAKDOWN"]);
-             sheetData.push([
-                 "Date", 
-                 "Shift 1 (kWh)", "Shift 1 Avg(A)",
-                 "Shift 2 (kWh)", "Shift 2 Avg(A)",
-                 "Shift 3 (kWh)", "Shift 3 Avg(A)",
-                 "Total Daily (kWh)"
-             ]);
+        sheetData.push(["MONTHLY REPORT DETAIL", panelName]);
+        sheetData.push(["Period", computedPeriod.value]);
+        sheetData.push([]);
 
-             // Fetch all reports
-             const allReports = await getDailyReportAll(i as 1|2|3|4).catch(() => []);
-             const filteredReports = allReports.filter((r: any) => {
-                 const rDate = new Date(r.date);
-                 
-                 if (dateType.value === 'nasional') {
-                     return rDate.getFullYear() === year && (rDate.getMonth() + 1) === month;
-                 } else {
-                      let range = null;
-                      const yStr = year.toString();
-                      const mStr = month.toString().padStart(2, '0');
-                      if (yStr === '2025') range = indofoodRanges2025[mStr];
-                      if (yStr === '2026') range = indofoodRanges2026[mStr];
-                      
-                      if (range) {
-                          const start = new Date(range.start);
-                          const end = new Date(range.end);
-                          return rDate >= start && rDate <= end;
-                      }
-                      return false;
-                 }
-             });
+        sheetData.push(["DAILY SHIFT BREAKDOWN"]);
+        sheetData.push([
+          "Date",
+          "Shift 1 (kWh)",
+          "Shift 1 Avg(A)",
+          "Shift 2 (kWh)",
+          "Shift 2 Avg(A)",
+          "Shift 3 (kWh)",
+          "Shift 3 Avg(A)",
+          "Total Daily (kWh)",
+        ]);
 
-             // Sort by date
-             filteredReports.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        // Fetch all reports
+        const allReports = await getDailyReportAll(i as 1 | 2 | 3 | 4).catch(
+          (err) => {
+            console.error(`[Excel Export] Error fetching LVMDP${i}:`, err);
+            return [];
+          }
+        );
 
-             filteredReports.forEach((r: any) => {
-                 const s1 = r.shift1 || {};
-                 const s2 = r.shift2 || {};
-                 const s3 = r.shift3 || {};
-                 const total = (s1.totalKwh||0) + (s2.totalKwh||0) + (s3.totalKwh||0);
-                 
-                 sheetData.push([
-                     r.date,
-                     s1.totalKwh || 0, s1.avgCurrent || 0,
-                     s2.totalKwh || 0, s2.avgCurrent || 0,
-                     s3.totalKwh || 0, s3.avgCurrent || 0,
-                     total
-                 ]);
-             });
-             
-             sheetData.push([]);
-             sheetData.push(["ENERGY USAGE TREND WEEK/PERIOD"]);
-             sheetData.push(["Note:", "See daily breakdown above for full trend details."]);
+        console.log(
+          `[Excel Export] LVMDP${i} - Fetched ${allReports.length} reports`
+        );
+        if (allReports.length > 0) {
+          console.log(
+            `[Excel Export] LVMDP${i} - Sample report:`,
+            JSON.stringify(allReports[0], null, 2)
+          );
         }
 
-        const sheet = XLSX.utils.aoa_to_sheet(sheetData);
-        XLSX.utils.book_append_sheet(workbook, sheet, panelName);
-    }
-    
-    // Save file
-    const safeName = reportType.value === 'date' ? selectedDate.value : selectedMonth.value;
-    XLSX.writeFile(workbook, `Electrical_Report_${safeName}.xlsx`);
+        const filteredReports = allReports.filter((r: any) => {
+          // Backend may return 'date' or 'reportDate'
+          const dateStr = r.date || r.reportDate;
+          if (!dateStr) return false;
 
+          // Use string comparison to avoid timezone issues
+          // dateStr format is "YYYY-MM-DD"
+          const dateParts = dateStr.split("-");
+          const rYear = parseInt(dateParts[0], 10);
+          const rMonth = parseInt(dateParts[1], 10);
+          const rDay = parseInt(dateParts[2], 10);
+
+          if (dateType.value === "nasional") {
+            return rYear === year && rMonth === month;
+          } else {
+            let range = null;
+            const yStr = year.toString();
+            const mStr = month.toString().padStart(2, "0");
+            if (yStr === "2025") range = indofoodRanges2025[mStr];
+            if (yStr === "2026") range = indofoodRanges2026[mStr];
+
+            if (range) {
+              // Compare strings directly (YYYY-MM-DD format is sortable)
+              return dateStr >= range.start && dateStr <= range.end;
+            }
+            return false;
+          }
+        });
+
+        // Sort by date using string comparison (YYYY-MM-DD is naturally sortable)
+        filteredReports.sort((a: any, b: any) => {
+          const dateA = a.date || a.reportDate || "";
+          const dateB = b.date || b.reportDate || "";
+          return dateA.localeCompare(dateB);
+        });
+
+        console.log(
+          `[Excel Export] LVMDP${i} - After filter: ${filteredReports.length} reports`
+        );
+        if (filteredReports.length > 0) {
+          console.log(
+            `[Excel Export] LVMDP${i} - First filtered report:`,
+            JSON.stringify(filteredReports[0], null, 2)
+          );
+        }
+
+        filteredReports.forEach((r: any) => {
+          // Backend returns flat structure: shift1TotalKwh, shift2TotalKwh, etc.
+          // NOT nested: r.shift1.totalKwh
+          // Use Number() to ensure proper conversion from any type
+          // Round to 2 decimal places for cleaner output
+          const s1TotalKwh =
+            Math.round(
+              (Number(r.shift1TotalKwh ?? r.shift1?.totalKwh ?? 0) || 0) * 100
+            ) / 100;
+          const s1AvgCurrent =
+            Math.round(
+              (Number(r.shift1AvgCurrent ?? r.shift1?.avgCurrent ?? 0) || 0) *
+                100
+            ) / 100;
+          const s2TotalKwh =
+            Math.round(
+              (Number(r.shift2TotalKwh ?? r.shift2?.totalKwh ?? 0) || 0) * 100
+            ) / 100;
+          const s2AvgCurrent =
+            Math.round(
+              (Number(r.shift2AvgCurrent ?? r.shift2?.avgCurrent ?? 0) || 0) *
+                100
+            ) / 100;
+          const s3TotalKwh =
+            Math.round(
+              (Number(r.shift3TotalKwh ?? r.shift3?.totalKwh ?? 0) || 0) * 100
+            ) / 100;
+          const s3AvgCurrent =
+            Math.round(
+              (Number(r.shift3AvgCurrent ?? r.shift3?.avgCurrent ?? 0) || 0) *
+                100
+            ) / 100;
+          const total =
+            Math.round((s1TotalKwh + s2TotalKwh + s3TotalKwh) * 100) / 100;
+
+          sheetData.push([
+            r.date || r.reportDate,
+            s1TotalKwh,
+            s1AvgCurrent,
+            s2TotalKwh,
+            s2AvgCurrent,
+            s3TotalKwh,
+            s3AvgCurrent,
+            total,
+          ]);
+        });
+
+        sheetData.push([]);
+        sheetData.push(["ENERGY USAGE TREND WEEK/PERIOD"]);
+        sheetData.push([
+          "Note:",
+          "See daily breakdown above for full trend details.",
+        ]);
+      }
+
+      return { panelName, sheetData };
+    });
+
+    // Wait for all panels to complete
+    const panelResults = await Promise.all(panelPromises);
+
+    // Add sheets to workbook
+    panelResults.forEach(({ panelName, sheetData }) => {
+      const sheet = XLSX.utils.aoa_to_sheet(sheetData);
+      XLSX.utils.book_append_sheet(workbook, sheet, panelName);
+    });
+
+    // Save file
+    const safeName =
+      reportType.value === "date" ? selectedDate.value : selectedMonth.value;
+    XLSX.writeFile(workbook, `Electrical_Report_${safeName}.xlsx`);
   } catch (e) {
-      console.error("Excel Generation Error", e);
-      alert("Failed to generate Excel report");
+    console.error("Excel Generation Error", e);
+    alert("Failed to generate Excel report");
   } finally {
-      isGenerating.value = false;
+    isGenerating.value = false;
   }
 };
 </script>
@@ -813,10 +938,10 @@ const generateExcel = async () => {
               <span>Download Report</span>
               <ChevronDown class="w-4 h-4 ml-2" />
             </button>
-              
+
             <!-- Dropdown Menu -->
-            <div 
-              v-if="showDownloadMenu" 
+            <div
+              v-if="showDownloadMenu"
               class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-[#1e293b] ring-1 ring-black ring-opacity-5 focus:outline-none z-50 border border-slate-700"
             >
               <div class="py-1">
@@ -824,14 +949,18 @@ const generateExcel = async () => {
                   @click="handleDownload('pdf')"
                   class="group flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white w-full text-left"
                 >
-                  <FileText class="mr-3 h-4 w-4 text-slate-400 group-hover:text-white" />
+                  <FileText
+                    class="mr-3 h-4 w-4 text-slate-400 group-hover:text-white"
+                  />
                   Download PDF
                 </button>
                 <button
                   @click="handleDownload('excel')"
                   class="group flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white w-full text-left"
                 >
-                  <Table class="mr-3 h-4 w-4 text-slate-400 group-hover:text-white" />
+                  <Table
+                    class="mr-3 h-4 w-4 text-slate-400 group-hover:text-white"
+                  />
                   Download Excel
                 </button>
               </div>
@@ -1030,7 +1159,6 @@ const generateExcel = async () => {
         </div>
 
         <div class="modal-body">
-
           <!-- LVMDP 1 -->
           <div class="help-section">
             <h3>LVMDP 1 (Main Production Area)</h3>
@@ -1040,7 +1168,9 @@ const generateExcel = async () => {
               <li>SDP Process C — Daya: 120 kW | Breaker: 500 A</li>
               <li>SDP Process — Daya: 160 kW | Breaker: 1250 A</li>
               <li>SDP Raw Material Warehouse — Daya: 20 kW | Breaker: 250 A</li>
-              <li>SDP Finished Goods Warehouse — Daya: 30 kW | Breaker: 400 A</li>
+              <li>
+                SDP Finished Goods Warehouse — Daya: 30 kW | Breaker: 400 A
+              </li>
               <li>SDP Packing — Daya: 145 kW | Breaker: 630 A</li>
               <li>SDP Process Line B — Daya: 85 kW | Breaker: 200 A</li>
               <li>SDP X&amp;P — Daya: 250 kW | Breaker: 800 A</li>
@@ -1072,8 +1202,12 @@ const generateExcel = async () => {
             <h3>LVMDP 3 (Extended Production & Storage Areas)</h3>
             <ul>
               <li>SDP TC Line — Daya: 520 kW | Breaker: 1250 A</li>
-              <li>SDP Raw Material Warehouse 2 — Daya: 40 kW | Breaker: 400 A</li>
-              <li>SDP Finished Goods Warehouse 2 — Daya: 50 kW | Breaker: 200 A</li>
+              <li>
+                SDP Raw Material Warehouse 2 — Daya: 40 kW | Breaker: 400 A
+              </li>
+              <li>
+                SDP Finished Goods Warehouse 2 — Daya: 50 kW | Breaker: 200 A
+              </li>
               <li>P VAC 2 — Daya: 320 kW | Breaker: 800 A</li>
               <li>P WWTP 2 — Daya: 80 kW | Breaker: 250 A</li>
               <li>P WTP — Daya: 30 kW | Breaker: 50 A</li>
@@ -1091,7 +1225,9 @@ const generateExcel = async () => {
               <li>SDB Line 9 — Daya: 490 kW | Breaker: 400–1000 A</li>
               <li>SDB Line 10 — Daya: 385 kW | Breaker: 320–800 A</li>
               <li>P Boiler — Daya: 42,32 kW | Breaker: 70–100 A</li>
-              <li>SDB Finished Goods Mezzanine — Daya: 14,28 kW | Breaker: 44–63 A</li>
+              <li>
+                SDB Finished Goods Mezzanine — Daya: 14,28 kW | Breaker: 44–63 A
+              </li>
               <li>SDB VAC 3.1 — Daya: 223,36 kW | Breaker: 250–630 A</li>
               <li>P Compressor 3 — Daya: 270 kW | Breaker: 250–630 A</li>
               <li>SDB VAC 3.2 — Daya: 308,1 kW | Breaker: 250–630 A</li>
@@ -1100,7 +1236,6 @@ const generateExcel = async () => {
               <li>SDB Line 11 — Daya: 75 kW | Breaker: 112–160 A</li>
             </ul>
           </div>
-
         </div>
       </div>
     </div>
