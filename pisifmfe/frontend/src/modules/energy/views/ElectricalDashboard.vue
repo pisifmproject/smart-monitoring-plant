@@ -10,12 +10,16 @@ import {
   Calendar,
   HelpCircle,
   X,
+  ChevronDown,
+  FileText,
+  Table
 } from "lucide-vue-next";
 import { lvmdpService } from "@/modules/energy/services/lvmdp.service";
 import type { LVMDPData } from "@/modules/energy/models";
-import { getLvmdpShiftToday, getLvmdpTrend } from "@/lib/api";
+import { getLvmdpShiftToday, getLvmdpTrend, getDailyReportAll } from "@/lib/api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 const route = useRoute();
 const router = useRouter();
@@ -36,6 +40,23 @@ const selectedDate = ref(new Date().toISOString().split("T")[0]); // YYYY-MM-DD
 const selectedMonth = ref(new Date().toISOString().slice(0, 7)); // YYYY-MM
 const isGenerating = ref(false);
 const showHelpModal = ref(false);
+const showDownloadMenu = ref(false);
+const downloadMenuRef = ref<HTMLElement | null>(null);
+
+// Close dropdown when clicking outside
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
+
+function handleClickOutside(event: MouseEvent) {
+  if (downloadMenuRef.value && !downloadMenuRef.value.contains(event.target as Node)) {
+    showDownloadMenu.value = false;
+  }
+}
 
 const PANEL_CONFIG = [
   { capacity: 5540, maxCurrent: 2500 },
@@ -580,6 +601,152 @@ const generateReport = async () => {
     isGenerating.value = false;
   }
 };
+
+const toggleDownloadMenu = () => {
+    showDownloadMenu.value = !showDownloadMenu.value;
+};
+
+const handleDownload = (type: 'pdf' | 'excel') => {
+    showDownloadMenu.value = false;
+    if (type === 'pdf') {
+        generateReport();
+    } else {
+        generateExcel();
+    }
+};
+
+const generateExcel = async () => {
+  isGenerating.value = true;
+  try {
+    const workbook = XLSX.utils.book_new();
+    const dateStr = reportType.value === 'date' ? selectedDate.value : selectedMonth.value;
+    
+    // Process each LVMDP
+    for (let i = 1; i <= 4; i++) {
+        const panelName = `LVMDP ${i}`;
+        let sheetData: any[] = [];
+        
+        if (reportType.value === 'date') {
+            // --- DAILY DETAIL REPORT ---
+            // 1. Shift Data
+            const shiftData = await getLvmdpShiftToday(i as 1|2|3|4, selectedDate.value).catch(() => null);
+            
+            sheetData.push(["DAILY REPORT DETAIL", panelName]);
+            sheetData.push(["Date", selectedDate.value]);
+            sheetData.push([]);
+            
+            // Shift Summary Section
+            sheetData.push(["SHIFT SUMMARY"]);
+            sheetData.push(["Shift", "Total Energy (kWh)", "Avg Power (kW)", "Avg Current (A)", "PF"]);
+            
+             if (shiftData) {
+                ['shift1', 'shift2', 'shift3'].forEach((k, idx) => {
+                    const s = shiftData[k as keyof typeof shiftData] as any;
+                    if (s) {
+                         const avgPower = (s.avgKwh && s.cosPhi) ? (s.avgKwh / s.cosPhi) : 0;
+                         sheetData.push([
+                             `Shift ${idx + 1}`,
+                             s.totalKwh || 0,
+                             avgPower.toFixed(2),
+                             s.avgCurrent || 0,
+                             s.cosPhi || 0
+                         ]);
+                    } else {
+                        sheetData.push([`Shift ${idx + 1}`, "-", "-", "-", "-"]);
+                    }
+                });
+            }
+            sheetData.push([]);
+
+            // Hourly Trend Section
+            sheetData.push(["HOURLY ENERGY USAGE (00:00 - 23:59)"]);
+            sheetData.push(["Hour", "Energy (kWh)"]);
+            
+            const trend = await getLvmdpTrend(i as 1|2|3|4, 'day', selectedDate.value).catch(() => null);
+            if (trend && trend.data && trend.labels) {
+                trend.labels.forEach((label, idx) => {
+                    sheetData.push([label, trend.data[idx] || 0]);
+                });
+            }
+
+        } else {
+            // --- MONTHLY DETAIL REPORT ---
+             const [year, month] = selectedMonth.value.split('-').map(Number);
+             
+             sheetData.push(["MONTHLY REPORT DETAIL", panelName]);
+             sheetData.push(["Period", computedPeriod.value]);
+             sheetData.push([]);
+
+             sheetData.push(["DAILY SHIFT BREAKDOWN"]);
+             sheetData.push([
+                 "Date", 
+                 "Shift 1 (kWh)", "Shift 1 Avg(A)",
+                 "Shift 2 (kWh)", "Shift 2 Avg(A)",
+                 "Shift 3 (kWh)", "Shift 3 Avg(A)",
+                 "Total Daily (kWh)"
+             ]);
+
+             // Fetch all reports
+             const allReports = await getDailyReportAll(i as 1|2|3|4).catch(() => []);
+             const filteredReports = allReports.filter((r: any) => {
+                 const rDate = new Date(r.date);
+                 
+                 if (dateType.value === 'nasional') {
+                     return rDate.getFullYear() === year && (rDate.getMonth() + 1) === month;
+                 } else {
+                      let range = null;
+                      const yStr = year.toString();
+                      const mStr = month.toString().padStart(2, '0');
+                      if (yStr === '2025') range = indofoodRanges2025[mStr];
+                      if (yStr === '2026') range = indofoodRanges2026[mStr];
+                      
+                      if (range) {
+                          const start = new Date(range.start);
+                          const end = new Date(range.end);
+                          return rDate >= start && rDate <= end;
+                      }
+                      return false;
+                 }
+             });
+
+             // Sort by date
+             filteredReports.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+             filteredReports.forEach((r: any) => {
+                 const s1 = r.shift1 || {};
+                 const s2 = r.shift2 || {};
+                 const s3 = r.shift3 || {};
+                 const total = (s1.totalKwh||0) + (s2.totalKwh||0) + (s3.totalKwh||0);
+                 
+                 sheetData.push([
+                     r.date,
+                     s1.totalKwh || 0, s1.avgCurrent || 0,
+                     s2.totalKwh || 0, s2.avgCurrent || 0,
+                     s3.totalKwh || 0, s3.avgCurrent || 0,
+                     total
+                 ]);
+             });
+             
+             sheetData.push([]);
+             sheetData.push(["ENERGY USAGE TREND WEEK/PERIOD"]);
+             sheetData.push(["Note:", "See daily breakdown above for full trend details."]);
+        }
+
+        const sheet = XLSX.utils.aoa_to_sheet(sheetData);
+        XLSX.utils.book_append_sheet(workbook, sheet, panelName);
+    }
+    
+    // Save file
+    const safeName = reportType.value === 'date' ? selectedDate.value : selectedMonth.value;
+    XLSX.writeFile(workbook, `Electrical_Report_${safeName}.xlsx`);
+
+  } catch (e) {
+      console.error("Excel Generation Error", e);
+      alert("Failed to generate Excel report");
+  } finally {
+      isGenerating.value = false;
+  }
+};
 </script>
 
 <template>
@@ -634,16 +801,42 @@ const generateReport = async () => {
             <span>Period: {{ computedPeriod }}</span>
           </div>
 
-          <!-- Download Button -->
-          <button
-            class="download-btn-primary"
-            @click="generateReport"
-            :disabled="isGenerating"
-          >
-            <Download v-if="!isGenerating" class="w-4 h-4" />
-            <span v-else>...</span>
-            <span>Download PDF</span>
-          </button>
+          <!-- Download Dropdown -->
+          <div class="relative inline-block text-left" ref="downloadMenuRef">
+            <button
+              class="download-btn-primary"
+              @click="toggleDownloadMenu"
+              :disabled="isGenerating"
+            >
+              <Download v-if="!isGenerating" class="w-4 h-4" />
+              <span v-else>...</span>
+              <span>Download Report</span>
+              <ChevronDown class="w-4 h-4 ml-2" />
+            </button>
+              
+            <!-- Dropdown Menu -->
+            <div 
+              v-if="showDownloadMenu" 
+              class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-[#1e293b] ring-1 ring-black ring-opacity-5 focus:outline-none z-50 border border-slate-700"
+            >
+              <div class="py-1">
+                <button
+                  @click="handleDownload('pdf')"
+                  class="group flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white w-full text-left"
+                >
+                  <FileText class="mr-3 h-4 w-4 text-slate-400 group-hover:text-white" />
+                  Download PDF
+                </button>
+                <button
+                  @click="handleDownload('excel')"
+                  class="group flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white w-full text-left"
+                >
+                  <Table class="mr-3 h-4 w-4 text-slate-400 group-hover:text-white" />
+                  Download Excel
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
